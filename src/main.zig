@@ -13,10 +13,9 @@ const values = ziglyph.values;
 // rune belongs to. Note that runes may fit into more than one range.
 test "runeIs" {
     // constant with mixed type runes
-    const mixed = [_]u21{ '5', 'o', '9', '!', ' ', '℃', 'ᾭ', 'G' };
-    for (mixed) |c| {
-        const r = @intCast(values.rune, c);
-        std.debug.print("\nFor {u}:\n", .{c});
+    const mixed = [_]ziglyph.rune{ '5', 'o', '9', '!', ' ', '℃', 'ᾭ', 'G' };
+    for (mixed) |r| {
+        std.debug.print("\nFor {u}:\n", .{r});
         if ((ziglyph.isControl(r))) {
             std.debug.print("\tis control rune\n", .{});
         }
