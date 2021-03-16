@@ -1,5 +1,6 @@
-/// ziglyph provides functions and values to process Unicode encoded data. This library is based on
-/// the unicode base package from the Go standard library.
+//! ziglyph provides functions and values to process Unicode encoded data. This library is based on
+//! the unicode base package from the Go standard library.
+
 pub const casing = @import("casing.zig");
 pub const kinds = @import("kinds.zig");
 pub const tables = @import("tables.zig");
