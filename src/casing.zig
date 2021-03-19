@@ -60,7 +60,7 @@ pub const upper_lower = max_rune + 1; // (Cannot be a valid delta.)
 
 /// isUpper reports whether the rune is an upper case letter.
 pub fn isUpper(r: rune) bool {
-    // See comment in IsGraphic.
+    // See comment in isGraphic.
     if (r <= max_latin_1) {
         return properties[r] & pLmask == pLu;
     }
