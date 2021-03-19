@@ -110,7 +110,7 @@ pub fn isOneOf(ranges: []RangeTable, r: rune) bool {
 }
 
 /// runeIn reports whether the rune is a member of one of the ranges.
-pub fn reuneIn(r: rune, ranges: []RangeTable) bool {
+pub fn runeIn(r: rune, ranges: []RangeTable) bool {
     for (ranges) |inside| {
         if (runeIs(inside, r)) {
             return true;
@@ -136,7 +136,6 @@ pub fn runeIs(rangeTab: RangeTable, r: rune) bool {
 /// Checks non Latin-1 runes.
 pub fn isExcludingLatin(rangeTab: RangeTable, r: rune) bool {
     const r16 = rangeTab.r16;
-    // Compare as u32 to correctly handle negative runes.
     if (rangeTab.latin_offset) |off| {
         if (r16.len > off and r <= r16[r16.len - 1].high) {
             return is16(r16[off..], r);
