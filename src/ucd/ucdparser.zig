@@ -15,14 +15,6 @@ const unicode = std.unicode;
 const Ziglyph = struct {
     allocator: *mem.Allocator,
 
-    u8_lower_map: AutoHashMap(u8, void),
-    u16_lower_map: AutoHashMap(u16, void),
-    u21_lower_map: AutoHashMap(u21, void),
-
-    u8_upper_map: AutoHashMap(u8, void),
-    u16_upper_map: AutoHashMap(u16, void),
-    u21_upper_map: AutoHashMap(u21, void),
-
     u8_control_map: AutoHashMap(u8, void),
     u16_control_map: AutoHashMap(u16, void),
     u21_control_map: AutoHashMap(u21, void),
@@ -30,6 +22,14 @@ const Ziglyph = struct {
     u8_letter_map: AutoHashMap(u8, void),
     u16_letter_map: AutoHashMap(u16, void),
     u21_letter_map: AutoHashMap(u21, void),
+
+    u8_lower_map: AutoHashMap(u8, void),
+    u16_lower_map: AutoHashMap(u16, void),
+    u21_lower_map: AutoHashMap(u21, void),
+
+    u8_mark_map: AutoHashMap(u8, void),
+    u16_mark_map: AutoHashMap(u16, void),
+    u21_mark_map: AutoHashMap(u21, void),
 
     u8_number_map: AutoHashMap(u8, void),
     u16_number_map: AutoHashMap(u16, void),
@@ -50,6 +50,10 @@ const Ziglyph = struct {
     u8_title_map: AutoHashMap(u8, void),
     u16_title_map: AutoHashMap(u16, void),
     u21_title_map: AutoHashMap(u21, void),
+
+    u8_upper_map: AutoHashMap(u8, void),
+    u16_upper_map: AutoHashMap(u16, void),
+    u21_upper_map: AutoHashMap(u21, void),
 
     u8_2l_map: AutoHashMap(u8, u21),
     u16_2l_map: AutoHashMap(u16, u21),
@@ -75,13 +79,6 @@ const Ziglyph = struct {
 
         var z = Ziglyph{
             .allocator = allocator,
-            .u8_lower_map = AutoHashMap(u8, void).init(allocator),
-            .u16_lower_map = AutoHashMap(u16, void).init(allocator),
-            .u21_lower_map = AutoHashMap(u21, void).init(allocator),
-
-            .u8_upper_map = AutoHashMap(u8, void).init(allocator),
-            .u16_upper_map = AutoHashMap(u16, void).init(allocator),
-            .u21_upper_map = AutoHashMap(u21, void).init(allocator),
 
             .u8_control_map = AutoHashMap(u8, void).init(allocator),
             .u16_control_map = AutoHashMap(u16, void).init(allocator),
@@ -90,6 +87,14 @@ const Ziglyph = struct {
             .u8_letter_map = AutoHashMap(u8, void).init(allocator),
             .u16_letter_map = AutoHashMap(u16, void).init(allocator),
             .u21_letter_map = AutoHashMap(u21, void).init(allocator),
+
+            .u8_lower_map = AutoHashMap(u8, void).init(allocator),
+            .u16_lower_map = AutoHashMap(u16, void).init(allocator),
+            .u21_lower_map = AutoHashMap(u21, void).init(allocator),
+
+            .u8_mark_map = AutoHashMap(u8, void).init(allocator),
+            .u16_mark_map = AutoHashMap(u16, void).init(allocator),
+            .u21_mark_map = AutoHashMap(u21, void).init(allocator),
 
             .u8_number_map = AutoHashMap(u8, void).init(allocator),
             .u16_number_map = AutoHashMap(u16, void).init(allocator),
@@ -110,6 +115,10 @@ const Ziglyph = struct {
             .u8_title_map = AutoHashMap(u8, void).init(allocator),
             .u16_title_map = AutoHashMap(u16, void).init(allocator),
             .u21_title_map = AutoHashMap(u21, void).init(allocator),
+
+            .u8_upper_map = AutoHashMap(u8, void).init(allocator),
+            .u16_upper_map = AutoHashMap(u16, void).init(allocator),
+            .u21_upper_map = AutoHashMap(u21, void).init(allocator),
 
             .u8_2l_map = AutoHashMap(u8, u21).init(allocator),
             .u16_2l_map = AutoHashMap(u16, u21).init(allocator),
@@ -223,6 +232,15 @@ const Ziglyph = struct {
                     } else {
                         try z.u21_title_map.put(code_point, {});
                     }
+                } else if (i == 2 and field.len != 0 and field[0] == 'M') {
+                    // Mark.
+                    if (code_point < 256) {
+                        try z.u8_mark_map.put(@intCast(u8, code_point), {});
+                    } else if (code_point < 65536) {
+                        try z.u16_mark_map.put(@intCast(u16, code_point), {});
+                    } else {
+                        try z.u21_mark_map.put(code_point, {});
+                    }
                 } else if (i == 5 and field.len != 0) {
                     // Decomposition.
                     var seq = mem.split(field, " ");
@@ -283,14 +301,6 @@ const Ziglyph = struct {
     const Self = @This();
 
     pub fn deinit(self: *Self) void {
-        self.u8_lower_map.deinit();
-        self.u16_lower_map.deinit();
-        self.u21_lower_map.deinit();
-
-        self.u8_upper_map.deinit();
-        self.u16_upper_map.deinit();
-        self.u21_upper_map.deinit();
-
         self.u8_control_map.deinit();
         self.u16_control_map.deinit();
         self.u21_control_map.deinit();
@@ -298,6 +308,14 @@ const Ziglyph = struct {
         self.u8_letter_map.deinit();
         self.u16_letter_map.deinit();
         self.u21_letter_map.deinit();
+
+        self.u8_lower_map.deinit();
+        self.u16_lower_map.deinit();
+        self.u21_lower_map.deinit();
+
+        self.u8_mark_map.deinit();
+        self.u16_mark_map.deinit();
+        self.u21_mark_map.deinit();
 
         self.u8_number_map.deinit();
         self.u16_number_map.deinit();
@@ -318,6 +336,10 @@ const Ziglyph = struct {
         self.u8_title_map.deinit();
         self.u16_title_map.deinit();
         self.u21_title_map.deinit();
+
+        self.u8_upper_map.deinit();
+        self.u16_upper_map.deinit();
+        self.u21_upper_map.deinit();
 
         self.u8_2l_map.deinit();
         self.u16_2l_map.deinit();
@@ -348,106 +370,18 @@ const Ziglyph = struct {
         self.u21_decomp_map.deinit();
     }
 
-    pub fn isLower(self: Self, cp: u21) bool {
+    pub fn decompose(self: Self, cp: u21) ?[]const u21 {
         if (cp < 256) {
-            return self.u8_lower_map.get(@intCast(u8, cp)) != null;
+            return self.u8_decomp_map.get(@intCast(u8, cp));
         } else if (cp < 65536) {
-            return self.u16_lower_map.get(@intCast(u16, cp)) != null;
+            return self.u16_decomp_map.get(@intCast(u16, cp));
         } else {
-            return self.u21_lower_map.get(cp) != null;
+            return self.u21_decomp_map.get(cp);
         }
     }
 
-    pub fn isUpper(self: Self, cp: u21) bool {
-        if (cp < 256) {
-            return self.u8_upper_map.get(@intCast(u8, cp)) != null;
-        } else if (cp < 65536) {
-            return self.u16_upper_map.get(@intCast(u16, cp)) != null;
-        } else {
-            return self.u21_upper_map.get(cp) != null;
-        }
-    }
-
-    pub fn isTitle(self: Self, cp: u21) bool {
-        if (cp < 256) {
-            return self.u8_title_map.get(@intCast(u8, cp)) != null;
-        } else if (cp < 65536) {
-            return self.u16_title_map.get(@intCast(u16, cp)) != null;
-        } else {
-            return self.u21_title_map.get(cp) != null;
-        }
-    }
-
-    pub fn toLower(self: Self, cp: u21) u21 {
-        if (cp < 256) {
-            if (self.u8_2l_map.get(@intCast(u8, cp))) |lcp| {
-                return lcp;
-            } else {
-                return cp;
-            }
-        }
-
-        if (cp < 65536) {
-            if (self.u16_2l_map.get(@intCast(u16, cp))) |lcp| {
-                return lcp;
-            } else {
-                return cp;
-            }
-        }
-
-        if (self.u16_2l_map.get(@intCast(u16, cp))) |lcp| {
-            return lcp;
-        } else {
-            return cp;
-        }
-    }
-
-    pub fn toUpper(self: Self, cp: u21) u21 {
-        if (cp < 256) {
-            if (self.u8_2u_map.get(@intCast(u8, cp))) |lcp| {
-                return lcp;
-            } else {
-                return cp;
-            }
-        }
-
-        if (cp < 65536) {
-            if (self.u16_2u_map.get(@intCast(u16, cp))) |lcp| {
-                return lcp;
-            } else {
-                return cp;
-            }
-        }
-
-        if (self.u16_2u_map.get(@intCast(u16, cp))) |lcp| {
-            return lcp;
-        } else {
-            return cp;
-        }
-    }
-
-    pub fn toTitle(self: Self, cp: u21) u21 {
-        if (cp < 256) {
-            if (self.u8_2t_map.get(@intCast(u8, cp))) |lcp| {
-                return lcp;
-            } else {
-                return cp;
-            }
-        }
-
-        if (cp < 65536) {
-            if (self.u16_2t_map.get(@intCast(u16, cp))) |lcp| {
-                return lcp;
-            } else {
-                return cp;
-            }
-        }
-
-        if (self.u16_2t_map.get(@intCast(u16, cp))) |lcp| {
-            return lcp;
-        } else {
-            return cp;
-        }
+    pub fn isAlphaNum(self: Self, cp: u21) bool {
+        return self.isLetter(cp) or self.isNumber(cp);
     }
 
     pub fn isControl(self: Self, cp: u21) bool {
@@ -460,6 +394,10 @@ const Ziglyph = struct {
         }
     }
 
+    pub fn isGraphic(self: Self, cp: u21) bool {
+        return self.isPrint(cp) or self.isSpace(cp);
+    }
+
     pub fn isLetter(self: Self, cp: u21) bool {
         if (cp < 256) {
             return self.u8_letter_map.get(@intCast(u8, cp)) != null;
@@ -467,6 +405,26 @@ const Ziglyph = struct {
             return self.u16_letter_map.get(@intCast(u16, cp)) != null;
         } else {
             return self.u21_letter_map.get(cp) != null;
+        }
+    }
+
+    pub fn isLower(self: Self, cp: u21) bool {
+        if (cp < 256) {
+            return self.u8_lower_map.get(@intCast(u8, cp)) != null;
+        } else if (cp < 65536) {
+            return self.u16_lower_map.get(@intCast(u16, cp)) != null;
+        } else {
+            return self.u21_lower_map.get(cp) != null;
+        }
+    }
+
+    pub fn isMark(self: Self, cp: u21) bool {
+        if (cp < 256) {
+            return self.u8_mark_map.get(@intCast(u8, cp)) != null;
+        } else if (cp < 65536) {
+            return self.u16_mark_map.get(@intCast(u16, cp)) != null;
+        } else {
+            return self.u21_mark_map.get(cp) != null;
         }
     }
 
@@ -478,6 +436,10 @@ const Ziglyph = struct {
         } else {
             return self.u21_number_map.get(cp) != null;
         }
+    }
+
+    pub fn isPrint(self: Self, cp: u21) bool {
+        return self.isAlphaNum(cp) or self.isMark(cp) or self.isPunct(cp) or self.isSymbol(cp);
     }
 
     pub fn isPunct(self: Self, cp: u21) bool {
@@ -517,17 +479,23 @@ const Ziglyph = struct {
         }
     }
 
-    pub fn isAlphaNum(self: Self, cp: u21) bool {
-        return self.isLetter(cp) or self.isNumber(cp);
+    pub fn isTitle(self: Self, cp: u21) bool {
+        if (cp < 256) {
+            return self.u8_title_map.get(@intCast(u8, cp)) != null;
+        } else if (cp < 65536) {
+            return self.u16_title_map.get(@intCast(u16, cp)) != null;
+        } else {
+            return self.u21_title_map.get(cp) != null;
+        }
     }
 
-    pub fn decompose(self: Self, cp: u21) ?[]const u21 {
+    pub fn isUpper(self: Self, cp: u21) bool {
         if (cp < 256) {
-            return self.u8_decomp_map.get(@intCast(u8, cp));
+            return self.u8_upper_map.get(@intCast(u8, cp)) != null;
         } else if (cp < 65536) {
-            return self.u16_decomp_map.get(@intCast(u16, cp));
+            return self.u16_upper_map.get(@intCast(u16, cp)) != null;
         } else {
-            return self.u21_decomp_map.get(cp);
+            return self.u21_upper_map.get(cp) != null;
         }
     }
 
@@ -593,6 +561,78 @@ const Ziglyph = struct {
 
         result = self.allocator.shrink(result, len_result);
         return result[0..];
+    }
+
+    pub fn toLower(self: Self, cp: u21) u21 {
+        if (cp < 256) {
+            if (self.u8_2l_map.get(@intCast(u8, cp))) |lcp| {
+                return lcp;
+            } else {
+                return cp;
+            }
+        }
+
+        if (cp < 65536) {
+            if (self.u16_2l_map.get(@intCast(u16, cp))) |lcp| {
+                return lcp;
+            } else {
+                return cp;
+            }
+        }
+
+        if (self.u16_2l_map.get(@intCast(u16, cp))) |lcp| {
+            return lcp;
+        } else {
+            return cp;
+        }
+    }
+
+    pub fn toTitle(self: Self, cp: u21) u21 {
+        if (cp < 256) {
+            if (self.u8_2t_map.get(@intCast(u8, cp))) |lcp| {
+                return lcp;
+            } else {
+                return cp;
+            }
+        }
+
+        if (cp < 65536) {
+            if (self.u16_2t_map.get(@intCast(u16, cp))) |lcp| {
+                return lcp;
+            } else {
+                return cp;
+            }
+        }
+
+        if (self.u16_2t_map.get(@intCast(u16, cp))) |lcp| {
+            return lcp;
+        } else {
+            return cp;
+        }
+    }
+
+    pub fn toUpper(self: Self, cp: u21) u21 {
+        if (cp < 256) {
+            if (self.u8_2u_map.get(@intCast(u8, cp))) |lcp| {
+                return lcp;
+            } else {
+                return cp;
+            }
+        }
+
+        if (cp < 65536) {
+            if (self.u16_2u_map.get(@intCast(u16, cp))) |lcp| {
+                return lcp;
+            } else {
+                return cp;
+            }
+        }
+
+        if (self.u16_2u_map.get(@intCast(u16, cp))) |lcp| {
+            return lcp;
+        } else {
+            return cp;
+        }
     }
 };
 
@@ -679,6 +719,33 @@ test "isControl" {
     expect(!z.isControl('A'));
 }
 
+test "isGraphic" {
+    var z = try Ziglyph.init(std.testing.allocator);
+    defer z.deinit();
+
+    expect(z.isGraphic('A'));
+    expect(z.isGraphic('\u{20E4}'));
+    expect(z.isGraphic('1'));
+    expect(z.isGraphic('?'));
+    expect(z.isGraphic(' '));
+    expect(z.isGraphic('='));
+    expect(!z.isGraphic('\u{0003}'));
+}
+
+test "isPrint" {
+    var z = try Ziglyph.init(std.testing.allocator);
+    defer z.deinit();
+
+    expect(z.isPrint('A'));
+    expect(z.isPrint('\u{20E4}'));
+    expect(z.isPrint('1'));
+    expect(z.isPrint('?'));
+    expect(z.isPrint('='));
+    expect(!z.isPrint(' '));
+    expect(!z.isPrint('\t'));
+    expect(!z.isPrint('\u{0003}'));
+}
+
 test "isLetter" {
     var z = try Ziglyph.init(std.testing.allocator);
     defer z.deinit();
@@ -688,6 +755,14 @@ test "isLetter" {
     expect(!z.isLetter('\u{0003}'));
 }
 
+test "isMark" {
+    var z = try Ziglyph.init(std.testing.allocator);
+    defer z.deinit();
+
+    expect(z.isMark('\u{20E4}'));
+    expect(!z.isMark('='));
+}
+
 test "isNumber" {
     var z = try Ziglyph.init(std.testing.allocator);
     defer z.deinit();
@@ -695,6 +770,7 @@ test "isNumber" {
     expect(z.isNumber('1'));
     expect(z.isNumber('0'));
     expect(!z.isNumber('\u{0003}'));
+    expect(!z.isNumber('A'));
 }
 
 test "isPunct" {
@@ -722,6 +798,7 @@ test "isSymbol" {
     expect(z.isSymbol('>'));
     expect(z.isSymbol('='));
     expect(!z.isSymbol('A'));
+    expect(!z.isSymbol('?'));
 }
 
 test "isAlphaNum" {
