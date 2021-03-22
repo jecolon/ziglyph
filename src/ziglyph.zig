@@ -12,6 +12,26 @@ const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 const unicode = std.unicode;
 
+const MapKind = enum {
+    Control,
+    Decompose,
+    Letter,
+    Lower,
+    Number,
+    Mark,
+    Punct,
+    Space,
+    Symbol,
+    Title,
+    Upper,
+};
+
+const CodePointSize = enum {
+    U8,
+    U16,
+    U21,
+};
+
 pub const Ziglyph = struct {
     allocator: *mem.Allocator,
 
@@ -146,149 +166,39 @@ pub const Ziglyph = struct {
                 // Major categories.
                 if (i == 2 and field.len != 0) {
                     switch (field[0]) {
-                        'C' => {
-                            if (code_point < 256) {
-                                try z.u8_control_map.put(@intCast(u8, code_point), {});
-                            } else if (code_point < 65536) {
-                                try z.u16_control_map.put(@intCast(u16, code_point), {});
-                            } else {
-                                try z.u21_control_map.put(code_point, {});
-                            }
-                        },
-                        'L' => {
-                            if (code_point < 256) {
-                                try z.u8_letter_map.put(@intCast(u8, code_point), {});
-                            } else if (code_point < 65536) {
-                                try z.u16_letter_map.put(@intCast(u16, code_point), {});
-                            } else {
-                                try z.u21_letter_map.put(code_point, {});
-                            }
-                        },
-                        'N' => {
-                            if (code_point < 256) {
-                                try z.u8_number_map.put(@intCast(u8, code_point), {});
-                            } else if (code_point < 65536) {
-                                try z.u16_number_map.put(@intCast(u16, code_point), {});
-                            } else {
-                                try z.u21_number_map.put(code_point, {});
-                            }
-                        },
-                        'P' => {
-                            if (code_point < 256) {
-                                try z.u8_punct_map.put(@intCast(u8, code_point), {});
-                            } else if (code_point < 65536) {
-                                try z.u16_punct_map.put(@intCast(u16, code_point), {});
-                            } else {
-                                try z.u21_punct_map.put(code_point, {});
-                            }
-                        },
-                        'S' => {
-                            if (code_point < 256) {
-                                try z.u8_symbol_map.put(@intCast(u8, code_point), {});
-                            } else if (code_point < 65536) {
-                                try z.u16_symbol_map.put(@intCast(u16, code_point), {});
-                            } else {
-                                try z.u21_symbol_map.put(code_point, {});
-                            }
-                        },
-                        else => if (mem.eql(u8, field, "Zs")) {
-                            if (code_point < 256) {
-                                try z.u8_space_map.put(@intCast(u8, code_point), {});
-                            } else if (code_point < 65536) {
-                                try z.u16_space_map.put(@intCast(u16, code_point), {});
-                            } else {
-                                try z.u21_space_map.put(code_point, {});
-                            }
-                        },
+                        'C' => try z.category_map_add(.Control, code_point),
+                        'L' => try z.category_map_add(.Letter, code_point),
+                        'M' => try z.category_map_add(.Mark, code_point),
+                        'N' => try z.category_map_add(.Number, code_point),
+                        'P' => try z.category_map_add(.Punct, code_point),
+                        'S' => try z.category_map_add(.Symbol, code_point),
+                        else => if (mem.eql(u8, field, "Zs")) try z.category_map_add(.Space, code_point),
                     }
                 }
                 if (i == 0) {
                     // Parse code point.
                     code_point = try fmt.parseInt(u21, field, 16);
                 } else if (i == 2 and mem.eql(u8, field, "Ll")) {
-                    // Lowercase.
-                    if (code_point < 256) {
-                        try z.u8_lower_map.put(@intCast(u8, code_point), {});
-                    } else if (code_point < 65536) {
-                        try z.u16_lower_map.put(@intCast(u16, code_point), {});
-                    } else {
-                        try z.u21_lower_map.put(code_point, {});
-                    }
+                    // Lowercase category.
+                    try z.category_map_add(.Lower, code_point);
                 } else if (i == 2 and mem.eql(u8, field, "Lu")) {
-                    // Uppercase.
-                    if (code_point < 256) {
-                        try z.u8_upper_map.put(@intCast(u8, code_point), {});
-                    } else if (code_point < 65536) {
-                        try z.u16_upper_map.put(@intCast(u16, code_point), {});
-                    } else {
-                        try z.u21_upper_map.put(code_point, {});
-                    }
+                    // Uppercase category.
+                    try z.category_map_add(.Upper, code_point);
                 } else if (i == 2 and mem.eql(u8, field, "Lt")) {
-                    // Titlecase.
-                    if (code_point < 256) {
-                        try z.u8_title_map.put(@intCast(u8, code_point), {});
-                    } else if (code_point < 65536) {
-                        try z.u16_title_map.put(@intCast(u16, code_point), {});
-                    } else {
-                        try z.u21_title_map.put(code_point, {});
-                    }
-                } else if (i == 2 and field.len != 0 and field[0] == 'M') {
-                    // Mark.
-                    if (code_point < 256) {
-                        try z.u8_mark_map.put(@intCast(u8, code_point), {});
-                    } else if (code_point < 65536) {
-                        try z.u16_mark_map.put(@intCast(u16, code_point), {});
-                    } else {
-                        try z.u21_mark_map.put(code_point, {});
-                    }
+                    // Titlecase category.
+                    try z.category_map_add(.Title, code_point);
                 } else if (i == 5 and field.len != 0) {
                     // Decomposition.
-                    var seq = mem.split(field, " ");
-                    var cp_list = try allocator.alloc(u21, 18);
-                    var j: usize = 0;
-                    while (seq.next()) |scp| {
-                        if (scp.len == 0 or scp[0] == '<') continue;
-                        const ncp: u21 = try fmt.parseInt(u21, scp, 16);
-                        cp_list[j] = ncp;
-                        j += 1;
-                    }
-                    if (code_point < 256) {
-                        try z.u8_decomp_map.put(@intCast(u8, code_point), cp_list[0..j]);
-                    } else if (code_point < 65536) {
-                        try z.u16_decomp_map.put(@intCast(u16, code_point), cp_list[0..j]);
-                    } else {
-                        try z.u21_decomp_map.put(code_point, cp_list[0..j]);
-                    }
+                    try z.decomp_map_add(field, code_point);
                 } else if (i == 12 and field.len != 0) {
                     // Map to uppercase.
-                    const ucp: u21 = try fmt.parseInt(u21, field, 16);
-                    if (code_point < 256) {
-                        try z.u8_2u_map.put(@intCast(u8, code_point), ucp);
-                    } else if (code_point < 65536) {
-                        try z.u16_2u_map.put(@intCast(u16, code_point), ucp);
-                    } else {
-                        try z.u21_2u_map.put(code_point, ucp);
-                    }
+                    try z.case_map_add(.Upper, field, code_point);
                 } else if (i == 13 and field.len != 0) {
                     // Map to lowercase.
-                    const lcp: u21 = try fmt.parseInt(u21, field, 16);
-                    if (code_point < 256) {
-                        try z.u8_2l_map.put(@intCast(u8, code_point), lcp);
-                    } else if (code_point < 65536) {
-                        try z.u16_2l_map.put(@intCast(u16, code_point), lcp);
-                    } else {
-                        try z.u21_2l_map.put(code_point, lcp);
-                    }
+                    try z.case_map_add(.Lower, field, code_point);
                 } else if (i == 14 and field.len != 0) {
                     // Map to titlecase.
-                    const tcp: u21 = try fmt.parseInt(u21, field, 16);
-                    if (code_point < 256) {
-                        try z.u8_2t_map.put(@intCast(u8, code_point), tcp);
-                    } else if (code_point < 65536) {
-                        try z.u16_2t_map.put(@intCast(u16, code_point), tcp);
-                    } else {
-                        try z.u21_2t_map.put(code_point, tcp);
-                    }
+                    try z.case_map_add(.Title, field, code_point);
                 } else {
                     continue;
                 }
@@ -370,7 +280,7 @@ pub const Ziglyph = struct {
         self.u21_decomp_map.deinit();
     }
 
-    pub fn decompose(self: Self, cp: u21) ?[]const u21 {
+    pub fn decomposeCodePoint(self: Self, cp: u21) ?[]const u21 {
         if (cp < 256) {
             return self.u8_decomp_map.get(@intCast(u8, cp));
         } else if (cp < 65536) {
@@ -499,8 +409,8 @@ pub const Ziglyph = struct {
         }
     }
 
-    // Caller must free memory.
-    pub fn normalize(self: Self, str: []const u8) ![]const u8 {
+    // Caller must free returned memory.
+    pub fn decomposeString(self: Self, str: []const u8) ![]const u8 {
         var code_points = try self.allocator.alloc(u21, str.len);
         defer self.allocator.free(code_points);
         var index: usize = 0;
@@ -560,7 +470,7 @@ pub const Ziglyph = struct {
         const len_result = index_result;
 
         result = self.allocator.shrink(result, len_result);
-        return result[0..];
+        return result;
     }
 
     pub fn toLower(self: Self, cp: u21) u21 {
@@ -632,6 +542,119 @@ pub const Ziglyph = struct {
             return lcp;
         } else {
             return cp;
+        }
+    }
+
+    fn codePointSize(self: Self, code_point: u21) CodePointSize {
+        if (code_point < 256) {
+            return .U8;
+        } else if (code_point < 65536) {
+            return .U16;
+        } else {
+            return .U21;
+        }
+    }
+
+    fn case_map_add(self: *Self, case_map: MapKind, field: []const u8, code_point: u21) !void {
+        var cp_size = self.codePointSize(code_point);
+        const ucp: u21 = try fmt.parseInt(u21, field, 16);
+
+        switch (case_map) {
+            .Lower => switch (cp_size) {
+                .U8 => try self.u8_2l_map.put(@intCast(u8, code_point), ucp),
+                .U16 => try self.u16_2l_map.put(@intCast(u16, code_point), ucp),
+                .U21 => try self.u21_2l_map.put(code_point, ucp),
+            },
+            .Title => switch (cp_size) {
+                .U8 => try self.u8_2t_map.put(@intCast(u8, code_point), ucp),
+                .U16 => try self.u16_2t_map.put(@intCast(u16, code_point), ucp),
+                .U21 => try self.u21_2t_map.put(code_point, ucp),
+            },
+            .Upper => switch (cp_size) {
+                .U8 => try self.u8_2u_map.put(@intCast(u8, code_point), ucp),
+                .U16 => try self.u16_2u_map.put(@intCast(u16, code_point), ucp),
+                .U21 => try self.u21_2u_map.put(code_point, ucp),
+            },
+            else => unreachable,
+        }
+    }
+
+    fn category_map_add(self: *Self, cat: MapKind, code_point: u21) !void {
+        var cp_size = self.codePointSize(code_point);
+        switch (cat) {
+            .Control => switch (cp_size) {
+                .U8 => try self.u8_control_map.put(@intCast(u8, code_point), {}),
+                .U16 => try self.u16_control_map.put(@intCast(u16, code_point), {}),
+                .U21 => try self.u21_control_map.put(code_point, {}),
+            },
+            .Letter => switch (cp_size) {
+                .U8 => try self.u8_letter_map.put(@intCast(u8, code_point), {}),
+                .U16 => try self.u16_letter_map.put(@intCast(u16, code_point), {}),
+                .U21 => try self.u21_letter_map.put(code_point, {}),
+            },
+            .Lower => switch (cp_size) {
+                .U8 => try self.u8_lower_map.put(@intCast(u8, code_point), {}),
+                .U16 => try self.u16_lower_map.put(@intCast(u16, code_point), {}),
+                .U21 => try self.u21_lower_map.put(code_point, {}),
+            },
+            .Mark => switch (cp_size) {
+                .U8 => try self.u8_mark_map.put(@intCast(u8, code_point), {}),
+                .U16 => try self.u16_mark_map.put(@intCast(u16, code_point), {}),
+                .U21 => try self.u21_mark_map.put(code_point, {}),
+            },
+            .Number => switch (cp_size) {
+                .U8 => try self.u8_number_map.put(@intCast(u8, code_point), {}),
+                .U16 => try self.u16_number_map.put(@intCast(u16, code_point), {}),
+                .U21 => try self.u21_number_map.put(code_point, {}),
+            },
+            .Punct => switch (cp_size) {
+                .U8 => try self.u8_punct_map.put(@intCast(u8, code_point), {}),
+                .U16 => try self.u16_punct_map.put(@intCast(u16, code_point), {}),
+                .U21 => try self.u21_punct_map.put(code_point, {}),
+            },
+            .Space => switch (cp_size) {
+                .U8 => try self.u8_space_map.put(@intCast(u8, code_point), {}),
+                .U16 => try self.u16_space_map.put(@intCast(u16, code_point), {}),
+                .U21 => try self.u21_space_map.put(code_point, {}),
+            },
+            .Symbol => switch (cp_size) {
+                .U8 => try self.u8_symbol_map.put(@intCast(u8, code_point), {}),
+                .U16 => try self.u16_symbol_map.put(@intCast(u16, code_point), {}),
+                .U21 => try self.u21_symbol_map.put(code_point, {}),
+            },
+            .Title => switch (cp_size) {
+                .U8 => try self.u8_title_map.put(@intCast(u8, code_point), {}),
+                .U16 => try self.u16_title_map.put(@intCast(u16, code_point), {}),
+                .U21 => try self.u21_title_map.put(code_point, {}),
+            },
+            .Upper => switch (cp_size) {
+                .U8 => try self.u8_upper_map.put(@intCast(u8, code_point), {}),
+                .U16 => try self.u16_upper_map.put(@intCast(u16, code_point), {}),
+                .U21 => try self.u21_upper_map.put(code_point, {}),
+            },
+            else => unreachable,
+        }
+    }
+
+    fn decomp_map_add(self: *Self, field: []const u8, code_point: u21) !void {
+        var seq = mem.split(field, " ");
+        var cp_list = try self.allocator.alloc(u21, 18); // Max decomp code points = 18
+        errdefer self.allocator.free(cp_list);
+        var i: usize = 0;
+        while (seq.next()) |scp| {
+            if (scp.len == 0 or scp[0] == '<') continue;
+            const ncp: u21 = try fmt.parseInt(u21, scp, 16);
+            cp_list[i] = ncp;
+            i += 1;
+        }
+        cp_list = self.allocator.shrink(cp_list, i);
+
+        if (code_point < 256) {
+            try self.u8_decomp_map.put(@intCast(u8, code_point), cp_list);
+        } else if (code_point < 65536) {
+            try self.u16_decomp_map.put(@intCast(u16, code_point), cp_list);
+        } else {
+            try self.u21_decomp_map.put(code_point, cp_list);
         }
     }
 };
@@ -810,20 +833,20 @@ test "isAlphaNum" {
     expect(!z.isAlphaNum('='));
 }
 
-test "decompose" {
+test "decomposeCodePoint" {
     var z = try Ziglyph.init(std.testing.allocator, "src/UnicodeData.txt");
     defer z.deinit();
 
-    expectEqualSlices(u21, z.decompose('\u{00E9}').?, &[_]u21{ '\u{0065}', '\u{0301}' });
+    expectEqualSlices(u21, z.decomposeCodePoint('\u{00E9}').?, &[_]u21{ '\u{0065}', '\u{0301}' });
 }
 
-test "normalize" {
+test "decomposeString" {
     var z = try Ziglyph.init(std.testing.allocator, "src/UnicodeData.txt");
     defer z.deinit();
 
     const input = "H\u{00E9}llo";
     const want = "H\u{0065}\u{0301}llo";
-    const got = try z.normalize(input);
+    const got = try z.decomposeString(input);
     defer std.testing.allocator.free(got);
     expectEqualSlices(u8, want, got);
 }
