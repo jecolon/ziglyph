@@ -1,5 +1,6 @@
 const std = @import("std");
 
+const ArrayList = std.ArrayList;
 const AutoHashMap = std.AutoHashMap;
 const ascii = std.ascii;
 const fs = std.fs;
@@ -32,8 +33,16 @@ const CodePointSize = enum {
     U21,
 };
 
+const Range = struct {
+    start: u21,
+    end: u21,
+};
+
 pub const Ziglyph = struct {
     allocator: *mem.Allocator,
+
+    control_ranges: ArrayList(Range),
+    letter_ranges: ArrayList(Range),
 
     u8_control_map: AutoHashMap(u8, void),
     u16_control_map: AutoHashMap(u16, void),
@@ -100,6 +109,9 @@ pub const Ziglyph = struct {
         var z = Ziglyph{
             .allocator = allocator,
 
+            .control_ranges = ArrayList(Range).init(allocator),
+            .letter_ranges = ArrayList(Range).init(allocator),
+
             .u8_control_map = AutoHashMap(u8, void).init(allocator),
             .u16_control_map = AutoHashMap(u16, void).init(allocator),
             .u21_control_map = AutoHashMap(u21, void).init(allocator),
@@ -158,35 +170,65 @@ pub const Ziglyph = struct {
         };
 
         var buf: [256]u8 = undefined;
+        var range_start: ?u21 = null;
         while (try stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+            if (range_start) |rscp| {
+                var iter = mem.split(line, ";");
+                var fields: [3][]const u8 = undefined;
+                var i: usize = 0;
+                while (iter.next()) |field| : (i += 1) {
+                    if (i < 3) fields[i] = field else break;
+                }
+                if (!mem.endsWith(u8, fields[1], "Last>")) return error.UnclosedRange;
+
+                const range_end = try fmt.parseInt(u21, fields[0], 16);
+                switch (fields[2][0]) {
+                    'C' => try z.control_ranges.append(.{ .start = rscp, .end = range_end }),
+                    'L' => try z.letter_ranges.append(.{ .start = rscp, .end = range_end }),
+                    else => return error.UnexpectedRangeCategory,
+                }
+
+                range_start = null;
+                continue;
+            }
+
             var fields = mem.split(line, ";");
             var i: usize = 0;
             var code_point: u21 = undefined;
             while (fields.next()) |field| : (i += 1) {
-                // Major categories.
-                if (i == 2 and field.len != 0) {
-                    switch (field[0]) {
-                        'C' => try z.category_map_add(.Control, code_point),
-                        'L' => try z.category_map_add(.Letter, code_point),
-                        'M' => try z.category_map_add(.Mark, code_point),
-                        'N' => try z.category_map_add(.Number, code_point),
-                        'P' => try z.category_map_add(.Punct, code_point),
-                        'S' => try z.category_map_add(.Symbol, code_point),
-                        else => if (mem.eql(u8, field, "Zs")) try z.category_map_add(.Space, code_point),
-                    }
-                }
                 if (i == 0) {
                     // Parse code point.
                     code_point = try fmt.parseInt(u21, field, 16);
-                } else if (i == 2 and mem.eql(u8, field, "Ll")) {
-                    // Lowercase category.
-                    try z.category_map_add(.Lower, code_point);
-                } else if (i == 2 and mem.eql(u8, field, "Lu")) {
-                    // Uppercase category.
-                    try z.category_map_add(.Upper, code_point);
-                } else if (i == 2 and mem.eql(u8, field, "Lt")) {
-                    // Titlecase category.
-                    try z.category_map_add(.Title, code_point);
+                } else if (i == 1 and mem.endsWith(u8, field, "First>")) {
+                    range_start = code_point;
+                } else if (i == 2 and field.len != 0) {
+                    // Major categories.
+                    var map_kind: MapKind = undefined;
+                    switch (field[0]) {
+                        'C' => map_kind = .Control,
+                        'L' => {
+                            try z.category_map_add(.Letter, code_point);
+                            if (mem.eql(u8, field, "Ll")) {
+                                map_kind = .Lower;
+                            } else if (mem.eql(u8, field, "Lt")) {
+                                map_kind = .Title;
+                            } else if (mem.eql(u8, field, "Lu")) {
+                                map_kind = .Upper;
+                            }
+                        },
+                        'M' => map_kind = .Mark,
+                        'N' => map_kind = .Number,
+                        'P' => map_kind = .Punct,
+                        'S' => map_kind = .Symbol,
+                        else => {
+                            if (mem.eql(u8, field, "Zs")) {
+                                map_kind = .Space;
+                            } else {
+                                continue;
+                            }
+                        },
+                    }
+                    try z.category_map_add(map_kind, code_point);
                 } else if (i == 5 and field.len != 0) {
                     // Decomposition.
                     try z.decomp_map_add(field, code_point);
@@ -211,6 +253,9 @@ pub const Ziglyph = struct {
     const Self = @This();
 
     pub fn deinit(self: *Self) void {
+        self.control_ranges.deinit();
+        self.letter_ranges.deinit();
+
         self.u8_control_map.deinit();
         self.u16_control_map.deinit();
         self.u21_control_map.deinit();
@@ -295,6 +340,10 @@ pub const Ziglyph = struct {
     }
 
     pub fn isControl(self: Self, cp: u21) bool {
+        for (self.control_ranges.items) |r| {
+            if (cp >= r.start and cp <= r.end) return true;
+        }
+
         if (cp < 256) {
             return self.u8_control_map.get(@intCast(u8, cp)) != null;
         } else if (cp < 65536) {
@@ -309,6 +358,10 @@ pub const Ziglyph = struct {
     }
 
     pub fn isLetter(self: Self, cp: u21) bool {
+        for (self.letter_ranges.items) |r| {
+            if (cp >= r.start and cp <= r.end) return true;
+        }
+
         if (cp < 256) {
             return self.u8_letter_map.get(@intCast(u8, cp)) != null;
         } else if (cp < 65536) {
@@ -739,6 +792,9 @@ test "isControl" {
 
     expect(z.isControl('\u{0003}'));
     expect(z.isControl('\u{0012}'));
+    expect(z.isControl('\u{DC01}'));
+    expect(z.isControl('\u{DFF0}'));
+    expect(z.isControl('\u{10FFF0}'));
     expect(!z.isControl('A'));
 }
 
@@ -775,6 +831,7 @@ test "isLetter" {
 
     expect(z.isLetter('A'));
     expect(z.isLetter('É'));
+    expect(z.isLetter('\u{2CEB3}'));
     expect(!z.isLetter('\u{0003}'));
 }
 
