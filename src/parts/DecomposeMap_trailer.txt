@@ -1,0 +1,12 @@
+
+    return decompm;
+}
+
+const Self = @This();
+pub fn deinit(self: Self) void {
+    var miter = self.map.iterator();
+    while (miter.next()) |entry| {
+        self.allocator.free(entry.value);
+    }
+    self.map.deinit();
+}

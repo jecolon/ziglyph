@@ -1,0 +1,11 @@
+
+    return instance;
+}}
+
+const Self = @This();
+pub fn deinit(self: *Self) void {{
+    self.allocator.free(self.array);
+}}
+
+pub fn isControl(self: Self, cp: u21) bool {{
+    const ranges = [_]Range{{
