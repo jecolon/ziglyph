@@ -8,4 +8,9 @@ pub fn deinit(self: *Self) void {{
 }}
 
 pub fn isLetter(self: Self, cp: u21) bool {{
+    const Range = struct {{
+        start: u21,
+        end: u21,
+    }};
+
     const ranges = [_]Range{{

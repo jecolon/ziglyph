@@ -4,7 +4,6 @@
 //! Unicode control code points data.
 
 const std = @import("std");
-const Range = @import("../range.zig").Range;
 
 allocator: *std.mem.Allocator,
 array: []bool,

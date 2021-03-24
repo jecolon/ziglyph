@@ -2,6 +2,7 @@
 // Placeholders:
 //    1. Top-level comment
 //    2. Struct name
+//    3. Struct name
 //! {s}
 
 const std = @import("std");

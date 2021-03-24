@@ -1,3 +1,4 @@
+// Placeholder: Code point type.
 
     return instance;
 }}
@@ -5,4 +6,8 @@
 const Self = @This();
 pub fn deinit(self: Self) void {{
     self.map.deinit();
+}}
+
+pub fn to{s}(self: Self, cp: u21) u21 {{
+    return if (self.map.get(cp)) |mapping| mapping else cp;
 }}

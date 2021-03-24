@@ -1,12 +1,59 @@
 
     return decompm;
-}
+}}
 
 const Self = @This();
-pub fn deinit(self: Self) void {
-    var miter = self.map.iterator();
-    while (miter.next()) |entry| {
+pub fn deinit(self: Self) void {{
+    var iter = self.map.iterator();
+    while (iter.next()) |entry| {{
         self.allocator.free(entry.value);
-    }
+    }}
     self.map.deinit();
-}
+}}
+
+pub fn decomposeCodePoint(self: Self, cp: u21) ?[]const u21 {{
+    return self.map.get(cp);
+}}
+
+/// Caller must free returned memory.
+pub fn decomposeString(self: *Self, str: []const u8) ![]const u8 {{
+    var code_points = try self.allocator.alloc(u21, str.len);
+    defer self.allocator.free(code_points);
+
+    var index: usize = 0;
+    var utf8 = (try unicode.Utf8View.init(str)).iterator();
+    while (utf8.nextCodepoint()) |code_point| : (index += 1) {{
+        code_points[index] = code_point;
+    }}
+    const len_old_points = index;
+
+    var new_points = try self.allocator.alloc(u21, (len_old_points + 1) * 18); // Max composition code points = 18
+    defer self.allocator.free(new_points);
+    index = 0;
+    var index_new_points: usize = 0;
+    while (index < len_old_points) : (index += 1) {{
+        const cp = code_points[index];
+        if (self.map.get(cp)) |seq| {{
+            for (seq) |scp| {{
+                new_points[index_new_points] = scp;
+                index_new_points += 1;
+            }}
+        }} else {{
+            new_points[index_new_points] = cp;
+            index_new_points += 1;
+        }}
+    }}
+    const len_new_points = index_new_points;
+
+    var result = try self.allocator.alloc(u8, @divFloor(len_new_points * 21, 8) + 1);
+    index = 0;
+    var index_result: usize = 0;
+    while (index < len_new_points) : (index += 1) {{
+        const bytes_written = try unicode.utf8Encode(new_points[index], result[index_result..]);
+        index_result += bytes_written;
+    }}
+    const len_result = index_result;
+
+    result = self.allocator.shrink(result, len_result);
+    return result;
+}}
