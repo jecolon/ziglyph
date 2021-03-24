@@ -308,23 +308,67 @@ const UcdGenerator = struct {
             const trailer_tpl = @embedFile("parts/ArrayTpl_trailer.txt");
             _ = try writer.print(trailer_tpl, .{list.name});
 
-            //if (mem.eql(u8, list.name, "control")) {
-            //    _ = try writer.write("\nconst Range = @import(\"range.zig\").Range;\n");
-            //    _ = try writer.write("\npub const ranges = [_]Range{\n");
-            //    for (self.control_ranges.items) |range| {
-            //        _ = try writer.print("    .{{ .start = 0x{X}, .end = 0x{X} }},\n", .{ range.start, range.end });
-            //    }
-            //    _ = try writer.write("};\n");
-            //}
+            try buf_writer.flush();
+        }
 
-            //if (mem.eql(u8, list.name, "letter")) {
-            //    _ = try writer.write("\nconst Range = @import(\"range.zig\").Range;\n");
-            //    _ = try writer.write("\npub const ranges = [_]Range{\n");
-            //    for (self.letter_ranges.items) |range| {
-            //        _ = try writer.print("    .{{ .start = 0x{X}, .end = 0x{X} }},\n", .{ range.start, range.end });
-            //    }
-            //    _ = try writer.write("};\n");
-            //}
+        // Control and letter code points have ranges too.
+        const WithRangeList = struct {
+            name: []const u8,
+            file_name: []const u8,
+            items: []u21,
+            ranges: []Range,
+        };
+
+        const wr_lists = [_]WithRangeList{
+            .{
+                .name = "Control",
+                .file_name = "data/Control.zig",
+                .items = self.control.items,
+                .ranges = self.control_ranges.items,
+            },
+            .{
+                .name = "Letter",
+                .file_name = "data/Letter.zig",
+                .items = self.letter.items,
+                .ranges = self.letter_ranges.items,
+            },
+        };
+
+        for (wr_lists) |list| {
+            // Prepare output file.
+            var file = try std.fs.cwd().createFile(list.file_name, .{});
+            defer file.close();
+            var buf_writer = io.bufferedWriter(file.writer());
+            const writer = buf_writer.writer();
+
+            // Write data.
+            const last = mem.max(u21, list.items);
+            if (mem.eql(u8, list.name, "Control")) {
+                _ = try writer.print(@embedFile("parts/ControlTpl_header.txt"), .{last + 1});
+            } else {
+                _ = try writer.print(@embedFile("parts/LetterTpl_header.txt"), .{last + 1});
+            }
+
+            var index: u21 = 0;
+            while (index <= last) : (index += 1) {
+                _ = try writer.print("    instance.array[{d}] = {b};\n", .{ index, contains(list.items, index) });
+            }
+
+            if (mem.eql(u8, list.name, "Control")) {
+                _ = try writer.print(@embedFile("parts/ControlTpl_tweener.txt"), .{});
+            } else {
+                _ = try writer.print(@embedFile("parts/LetterTpl_tweener.txt"), .{});
+            }
+
+            for (list.ranges) |range| {
+                _ = try writer.print("        .{{ .start = 0x{X}, .end = 0x{X} }},\n", .{ range.start, range.end });
+            }
+
+            if (mem.eql(u8, list.name, "Control")) {
+                _ = try writer.print(@embedFile("parts/ControlTpl_trailer.txt"), .{});
+            } else {
+                _ = try writer.print(@embedFile("parts/LetterTpl_trailer.txt"), .{});
+            }
 
             try buf_writer.flush();
         }

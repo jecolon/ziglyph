@@ -3,15 +3,15 @@
 //    1. Array length
 //! Unicode letter code points data.
 
-const std = @omport("std");
+const std = @import("std");
 const Range = @import("../range.zig").Range;
 
 allocator: *std.mem.Allocator,
-array: []u21,
+array: []bool,
 
 pub fn init(allocator: *std.mem.Allocator) !Letter {{
-    var instance = {s}{{
+    var instance = Letter{{
         .allocator = allocator,
-        .array = try allocator.alloc(u21, {d}),
+        .array = try allocator.alloc(bool, {d}),
     }};
 

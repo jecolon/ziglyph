@@ -3,15 +3,15 @@
 //    1. Array length
 //! Unicode control code points data.
 
-const std = @omport("std");
+const std = @import("std");
 const Range = @import("../range.zig").Range;
 
 allocator: *std.mem.Allocator,
-array: []u21,
+array: []bool,
 
 pub fn init(allocator: *std.mem.Allocator) !Control {{
-    var instance = {s}{{
+    var instance = Control{{
         .allocator = allocator,
-        .array = try allocator.alloc(u21, {d}),
+        .array = try allocator.alloc(bool, {d}),
     }};
 
