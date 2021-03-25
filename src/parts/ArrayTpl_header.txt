@@ -7,13 +7,18 @@
 //! {s}
 
 const std = @import("std");
+const {s} = @This();
 
 allocator: *std.mem.Allocator,
 array: []bool,
 
-pub fn init(allocator: *std.mem.Allocator) !{s} {{
-    var instance = {s}{{
+pub fn init(allocator: *std.mem.Allocator) !{1s} {{
+    var instance = {1s}{{
         .allocator = allocator,
         .array = try allocator.alloc(bool, {d}),
     }};
+
+    for (instance.array) |_, i| {{
+        instance.array[i] = false;
+    }}
 

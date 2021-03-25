@@ -4,5 +4,5 @@
         if (cp >= range.start and cp <= range.end) return true;
     }}
 
-    return self.array[cp];
+    return if (cp >= self.array.len) false else self.array[cp];
 }}

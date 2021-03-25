@@ -4,6 +4,7 @@
 //! Unicode letter code points data.
 
 const std = @import("std");
+const Letter = @This();
 
 allocator: *std.mem.Allocator,
 array: []bool,
@@ -13,4 +14,8 @@ pub fn init(allocator: *std.mem.Allocator) !Letter {{
         .allocator = allocator,
         .array = try allocator.alloc(bool, {d}),
     }};
+
+    for (instance.array) |_, i| {{
+        instance.array[i] = false;
+    }}
 

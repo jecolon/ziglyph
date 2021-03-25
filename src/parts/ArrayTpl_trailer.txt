@@ -9,5 +9,5 @@ pub fn deinit(self: *Self) void {{
 }}
 
 pub fn is{s}(self: Self, cp: u21) bool {{
-    return self.array[cp];
+    return if (cp >= self.array.len) false else self.array[cp];
 }}

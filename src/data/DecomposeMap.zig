@@ -3,11 +3,12 @@
 
 const std = @import("std");
 const unicode = std.unicode;
+const DecomposeMap = @This();
 
 allocator: *std.mem.Allocator,
 map: std.AutoHashMap(u21, []const u21),
 
-pub fn init(allocator: *std.mem.allocator) !DecomposeMap {
+pub fn init(allocator: *std.mem.Allocator) !DecomposeMap {
     var instance = DecomposeMap{
         .allocator = allocator,
         .map = std.AutoHashMap(u21, []const u21).init(allocator),
@@ -20028,15 +20029,11 @@ pub fn init(allocator: *std.mem.allocator) !DecomposeMap {
         0x631,
     });
 
-    return decompm;
+    return instance;
 }
 
 const Self = @This();
-pub fn deinit(self: Self) void {
-    var iter = self.map.iterator();
-    while (iter.next()) |entry| {
-        self.allocator.free(entry.value);
-    }
+pub fn deinit(self: *Self) void {
     self.map.deinit();
 }
 

@@ -4,6 +4,7 @@
 //! Unicode control code points data.
 
 const std = @import("std");
+const Control = @This();
 
 allocator: *std.mem.Allocator,
 array: []bool,
@@ -13,4 +14,8 @@ pub fn init(allocator: *std.mem.Allocator) !Control {{
         .allocator = allocator,
         .array = try allocator.alloc(bool, {d}),
     }};
+
+    for (instance.array) |_, i| {{
+        instance.array[i] = false;
+    }}
 

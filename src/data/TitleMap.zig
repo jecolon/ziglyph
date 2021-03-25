@@ -6,10 +6,11 @@
 //! Unicode letter mappings to titlecase.
 
 const std = @import("std");
+const TitleMap = @This();
 
 map: std.AutoHashMap(u21, u21),
 
-pub fn init(allocator: *std.mem.allocator) !TitleMap {
+pub fn init(allocator: *std.mem.Allocator) !TitleMap {
     var instance = TitleMap{
         .map = std.AutoHashMap(u21, u21).init(allocator),
     };
@@ -1434,7 +1435,7 @@ pub fn init(allocator: *std.mem.allocator) !TitleMap {
 }
 
 const Self = @This();
-pub fn deinit(self: Self) void {
+pub fn deinit(self: *Self) void {
     self.map.deinit();
 }
 

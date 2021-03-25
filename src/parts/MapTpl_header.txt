@@ -6,11 +6,12 @@
 //! {s}
 
 const std = @import("std");
+const {1s} = @This();
 
 map: std.AutoHashMap(u21, u21),
 
-pub fn init(allocator: *std.mem.allocator) !{s} {{
-    var instance = {s}{{
+pub fn init(allocator: *std.mem.Allocator) !{1s} {{
+    var instance = {1s}{{
         .map = std.AutoHashMap(u21, u21).init(allocator),
     }};
 

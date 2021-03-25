@@ -6,10 +6,11 @@
 //! Unicode letter mappings to uppercase.
 
 const std = @import("std");
+const UpperMap = @This();
 
 map: std.AutoHashMap(u21, u21),
 
-pub fn init(allocator: *std.mem.allocator) !UpperMap {
+pub fn init(allocator: *std.mem.Allocator) !UpperMap {
     var instance = UpperMap{
         .map = std.AutoHashMap(u21, u21).init(allocator),
     };
@@ -1430,7 +1431,7 @@ pub fn init(allocator: *std.mem.allocator) !UpperMap {
 }
 
 const Self = @This();
-pub fn deinit(self: Self) void {
+pub fn deinit(self: *Self) void {
     self.map.deinit();
 }
 

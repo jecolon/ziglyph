@@ -298,11 +298,13 @@ const UcdGenerator = struct {
             const comment = try mem.concat(self.allocator, u8, &[3][]const u8{ "Unicode ", list.name, " code points data." });
             defer self.allocator.free(comment);
             const last = mem.max(u21, list.items);
-            _ = try writer.print(header_tpl, .{ comment, list.name, list.name, last + 1 });
+            _ = try writer.print(header_tpl, .{ comment, list.name, last + 1 });
 
             var index: u21 = 0;
             while (index <= last) : (index += 1) {
-                _ = try writer.print("    instance.array[{d}] = {b};\n", .{ index, contains(list.items, index) });
+                if (contains(list.items, index)) {
+                    _ = try writer.print("    instance.array[{d}] = {b};\n", .{ index, true });
+                }
             }
 
             const trailer_tpl = @embedFile("parts/ArrayTpl_trailer.txt");
@@ -359,7 +361,9 @@ const UcdGenerator = struct {
 
             var index: u21 = 0;
             while (index <= last) : (index += 1) {
-                _ = try writer.print("    instance.array[{d}] = {b};\n", .{ index, contains(list.items, index) });
+                if (contains(list.items, index)) {
+                    _ = try writer.print("    instance.array[{d}] = {b};\n", .{ index, true });
+                }
             }
 
             if (mem.eql(u8, list.name, "Control")) {
@@ -422,7 +426,7 @@ const UcdGenerator = struct {
             var buf_writer = io.bufferedWriter(file.writer());
             const writer = buf_writer.writer();
 
-            _ = try writer.print(map_header_tpl, .{ cm.comment, cm.name, cm.name });
+            _ = try writer.print(map_header_tpl, .{ cm.comment, cm.name });
 
             var iter = cm.map.iterator();
             while (iter.next()) |entry| {

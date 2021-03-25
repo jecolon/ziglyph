@@ -3,11 +3,12 @@
 
 const std = @import("std");
 const unicode = std.unicode;
+const DecomposeMap = @This();
 
 allocator: *std.mem.Allocator,
 map: std.AutoHashMap(u21, []const u21),
 
-pub fn init(allocator: *std.mem.allocator) !DecomposeMap {{
+pub fn init(allocator: *std.mem.Allocator) !DecomposeMap {{
     var instance = DecomposeMap{{
         .allocator = allocator,
         .map = std.AutoHashMap(u21, []const u21).init(allocator),

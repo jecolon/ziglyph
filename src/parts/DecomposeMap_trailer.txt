@@ -1,13 +1,9 @@
 
-    return decompm;
+    return instance;
 }}
 
 const Self = @This();
-pub fn deinit(self: Self) void {{
-    var iter = self.map.iterator();
-    while (iter.next()) |entry| {{
-        self.allocator.free(entry.value);
-    }}
+pub fn deinit(self: *Self) void {{
     self.map.deinit();
 }}
 
