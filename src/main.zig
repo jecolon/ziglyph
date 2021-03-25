@@ -20,49 +20,49 @@ const UpperMap = @import("data/UpperMap.zig");
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
 
 test "basics" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
     const mixed = [_]u21{ '5', 'o', '9', '!', ' ', '℃', 'ᾭ', 'G' };
     for (mixed) |r| {
         std.debug.print("\nFor {u}:\n", .{r});
-        if (z.isControl(r)) {
+        if (try z.isControl(r)) {
             std.debug.print("\tis control\n", .{});
         }
-        if (z.isNumber(r)) {
+        if (try z.isNumber(r)) {
             std.debug.print("\tis number\n", .{});
         }
-        if (z.isGraphic(r)) {
+        if (try z.isGraphic(r)) {
             std.debug.print("\tis graphic\n", .{});
         }
-        if (z.isLetter(r)) {
+        if (try z.isLetter(r)) {
             std.debug.print("\tis letter\n", .{});
         }
-        if (z.isLower(r)) {
+        if (try z.isLower(r)) {
             std.debug.print("\tis lower case\n", .{});
         }
-        if (z.isMark(r)) {
+        if (try z.isMark(r)) {
             std.debug.print("\tis mark\n", .{});
         }
-        if (z.isPrint(r)) {
+        if (try z.isPrint(r)) {
             std.debug.print("\tis printable\n", .{});
         }
-        if (!z.isPrint(r)) {
+        if (!try z.isPrint(r)) {
             std.debug.print("\tis not printable\n", .{});
         }
-        if (z.isPunct(r)) {
+        if (try z.isPunct(r)) {
             std.debug.print("\tis punct\n", .{});
         }
-        if (z.isSpace(r)) {
+        if (try z.isSpace(r)) {
             std.debug.print("\tis space\n", .{});
         }
-        if (z.isSymbol(r)) {
+        if (try z.isSymbol(r)) {
             std.debug.print("\tis symbol\n", .{});
         }
-        if (z.isTitle(r)) {
+        if (try z.isTitle(r)) {
             std.debug.print("\tis title case\n", .{});
         }
-        if (z.isUpper(r)) {
+        if (try z.isUpper(r)) {
             std.debug.print("\tis upper case\n", .{});
         }
     }
@@ -155,30 +155,30 @@ test "isControl" {
 }
 
 test "isGraphic" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(z.isGraphic('A'));
-    expect(z.isGraphic('\u{20E4}'));
-    expect(z.isGraphic('1'));
-    expect(z.isGraphic('?'));
-    expect(z.isGraphic(' '));
-    expect(z.isGraphic('='));
-    expect(!z.isGraphic('\u{0003}'));
+    expect(try z.isGraphic('A'));
+    expect(try z.isGraphic('\u{20E4}'));
+    expect(try z.isGraphic('1'));
+    expect(try z.isGraphic('?'));
+    expect(try z.isGraphic(' '));
+    expect(try z.isGraphic('='));
+    expect(!try z.isGraphic('\u{0003}'));
 }
 
 test "isPrint" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(z.isPrint('A'));
-    expect(z.isPrint('\u{20E4}'));
-    expect(z.isPrint('1'));
-    expect(z.isPrint('?'));
-    expect(z.isPrint('='));
-    expect(!z.isPrint(' '));
-    expect(!z.isPrint('\t'));
-    expect(!z.isPrint('\u{0003}'));
+    expect(try z.isPrint('A'));
+    expect(try z.isPrint('\u{20E4}'));
+    expect(try z.isPrint('1'));
+    expect(try z.isPrint('?'));
+    expect(try z.isPrint('='));
+    expect(!try z.isPrint(' '));
+    expect(!try z.isPrint('\t'));
+    expect(!try z.isPrint('\u{0003}'));
 }
 
 test "isLetter" {
@@ -219,12 +219,12 @@ test "isPunct" {
 }
 
 test "isSpace" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(z.isSpace(' '));
-    expect(z.isWhiteSpace('\t'));
-    expect(!z.isSpace('\u{0003}'));
+    expect(try z.isSpace(' '));
+    expect(try z.isWhiteSpace('\t'));
+    expect(!try z.isSpace('\u{0003}'));
 }
 
 test "isSymbol" {
@@ -238,12 +238,12 @@ test "isSymbol" {
 }
 
 test "isAlphaNum" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(z.isAlphaNum('1'));
-    expect(z.isAlphaNum('A'));
-    expect(!z.isAlphaNum('='));
+    expect(try z.isAlphaNum('1'));
+    expect(try z.isAlphaNum('A'));
+    expect(!try z.isAlphaNum('='));
 }
 
 test "decomposeCodePoint" {
