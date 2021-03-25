@@ -3,21 +3,73 @@ const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
-const Control = @import("data/Control.zig");
-const DecomposeMap = @import("data/DecomposeMap.zig");
-const Letter = @import("data/Letter.zig");
-const Lower = @import("data/Lower.zig");
-const LowerMap = @import("data/LowerMap.zig");
-const Mark = @import("data/Mark.zig");
-const Number = @import("data/Number.zig");
-const Punct = @import("data/Punct.zig");
-const Space = @import("data/Space.zig");
-const Symbol = @import("data/Symbol.zig");
-const Title = @import("data/Title.zig");
-const TitleMap = @import("data/TitleMap.zig");
-const Upper = @import("data/Upper.zig");
-const UpperMap = @import("data/UpperMap.zig");
+const Control = @import("ziglyph.zig").Control;
+const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
+const Letter = @import("ziglyph.zig").Letter;
+const Lower = @import("ziglyph.zig").Lower;
+const LowerMap = @import("ziglyph.zig").LowerMap;
+const Mark = @import("ziglyph.zig").Mark;
+const Number = @import("ziglyph.zig").Number;
+const Punct = @import("ziglyph.zig").Punct;
+const Space = @import("ziglyph.zig").Space;
+const Symbol = @import("ziglyph.zig").Symbol;
+const Title = @import("ziglyph.zig").Title;
+const TitleMap = @import("ziglyph.zig").TitleMap;
+const Upper = @import("ziglyph.zig").Upper;
+const UpperMap = @import("ziglyph.zig").UpperMap;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
+
+pub fn main() !void {
+    var z = Ziglyph.init(std.testing.allocator);
+    defer z.deinit();
+
+    const mixed = [_]u21{ '5', 'o', '9', '!', ' ', '℃', 'ᾭ', 'G' };
+    for (mixed) |r| {
+        std.debug.print("\nFor {u}:\n", .{r});
+        if (try z.isControl(r)) { // added 1K to binary
+            std.debug.print("\tis control\n", .{});
+        }
+        if (try z.isNumber(r)) { // added 3K to binary
+            std.debug.print("\tis number\n", .{});
+        }
+        if (try z.isGraphic(r)) { // added 1K to binary
+            std.debug.print("\tis graphic\n", .{});
+        }
+        if (try z.isAlphaNum(r)) {
+            std.debug.print("\tis alphanumeric\n", .{});
+        }
+        if (try z.isLetter(r)) { // added 62K to binary !!
+            std.debug.print("\tis letter\n", .{});
+        }
+        if (try z.isLower(r)) { // added 6K to binary
+            std.debug.print("\tis lower case\n", .{});
+        }
+        if (try z.isMark(r)) { // added 5K to binary
+            std.debug.print("\tis mark\n", .{});
+        }
+        if (try z.isPrint(r)) { // added 1K to binary
+            std.debug.print("\tis printable\n", .{});
+        }
+        if (!try z.isPrint(r)) {
+            std.debug.print("\tis not printable\n", .{});
+        }
+        if (try z.isPunct(r)) { // added 3K to binary
+            std.debug.print("\tis punct\n", .{});
+        }
+        if (try z.isSpace(r)) {
+            std.debug.print("\tis space\n", .{});
+        }
+        if (try z.isSymbol(r)) { // added 5K to binary
+            std.debug.print("\tis symbol\n", .{});
+        }
+        if (try z.isTitle(r)) {
+            std.debug.print("\tis title case\n", .{});
+        }
+        if (try z.isUpper(r)) { // added 5K to binary
+            std.debug.print("\tis upper case\n", .{});
+        }
+    }
+}
 
 test "basics" {
     var z = Ziglyph.init(std.testing.allocator);
