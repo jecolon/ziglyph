@@ -86,7 +86,11 @@ pub const Ziglyph = struct {
 
     pub fn isWhiteSpace(self: Self, cp: u21) bool {
         const ascii = @import("std").ascii;
-        return ascii.isSpace(cp) or self.space.isSpace(cp);
+        if (cp < 256) {
+            return ascii.isSpace(@intCast(u8, cp));
+        } else {
+            return self.space.isSpace(cp);
+        }
     }
 
     pub fn isControl(self: Self, cp: u21) bool {

@@ -219,10 +219,11 @@ test "isPunct" {
 }
 
 test "isSpace" {
-    var z = try Space.init(std.testing.allocator);
+    var z = try Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
     expect(z.isSpace(' '));
+    expect(z.isWhiteSpace('\t'));
     expect(!z.isSpace('\u{0003}'));
 }
 
