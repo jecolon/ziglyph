@@ -1,0 +1,8 @@
+
+    // Placeholder: Struct name.
+    return instance;
+}}
+
+pub fn is{s}(self: {0s}, cp: u21) bool {{
+    return if (cp >= self.array.len) false else self.array[cp];
+}}

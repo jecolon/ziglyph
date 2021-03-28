@@ -18,227 +18,181 @@ pub const TitleMap = @import("data/TitleMap.zig");
 pub const UpperMap = @import("data/UpperMap.zig");
 
 /// Ziglyph consolidates all the major Unicode utility functions in one place. Because these functions
-/// each allocate space for their respective code point data, this struct performs lazy initialization
-/// to only allocate when needed. This in turn requires that the functions return error unions instead
-/// of the simple values that the counterpart functions in the various sub-structs of this library return.
+/// each consume memory for their respective code point data, this struct performs lazy initialization
+/// to only consume memory when needed.
 pub const Ziglyph = struct {
     allocator: *mem.Allocator,
-    control: ?Control,
-    decomp_map: ?DecomposeMap,
-    letter: ?Letter,
-    lower: ?Lower,
-    lower_map: ?LowerMap,
-    mark: ?Mark,
-    number: ?Number,
-    punct: ?Punct,
-    space: ?Space,
-    symbol: ?Symbol,
-    title: ?Title,
-    title_map: ?TitleMap,
-    upper: ?Upper,
-    upper_map: ?UpperMap,
-
-    pub fn init(allocator: *mem.Allocator) Ziglyph {
-        return Ziglyph{
-            .allocator = allocator,
-            .control = null,
-            .decomp_map = null,
-            .letter = null,
-            .lower = null,
-            .lower_map = null,
-            .mark = null,
-            .number = null,
-            .punct = null,
-            .space = null,
-            .symbol = null,
-            .title = null,
-            .title_map = null,
-            .upper = null,
-            .upper_map = null,
-        };
-    }
+    control: ?Control = null,
+    decomp_map: ?DecomposeMap = null,
+    letter: ?Letter = null,
+    lower: ?Lower = null,
+    lower_map: ?LowerMap = null,
+    mark: ?Mark = null,
+    number: ?Number = null,
+    punct: ?Punct = null,
+    space: ?Space = null,
+    symbol: ?Symbol = null,
+    title: ?Title = null,
+    title_map: ?TitleMap = null,
+    upper: ?Upper = null,
+    upper_map: ?UpperMap = null,
 
     const Self = @This();
+
+    pub fn init(allocator: *mem.Allocator) Ziglyph {
+        return .{ .allocator = allocator };
+    }
+
     pub fn deinit(self: *Self) void {
-        if (self.control) |*control| {
-            control.deinit();
-        }
         if (self.decomp_map) |*decomp_map| {
             decomp_map.deinit();
-        }
-        if (self.letter) |*letter| {
-            letter.deinit();
-        }
-        if (self.lower) |*lower| {
-            lower.deinit();
         }
         if (self.lower_map) |*lower_map| {
             lower_map.deinit();
         }
-        if (self.mark) |*mark| {
-            mark.deinit();
-        }
-        if (self.number) |*number| {
-            number.deinit();
-        }
-        if (self.punct) |*punct| {
-            punct.deinit();
-        }
-        if (self.space) |*space| {
-            space.deinit();
-        }
-        if (self.symbol) |*symbol| {
-            symbol.deinit();
-        }
-        if (self.title) |*title| {
-            title.deinit();
-        }
         if (self.title_map) |*title_map| {
             title_map.deinit();
-        }
-        if (self.upper) |*upper| {
-            upper.deinit();
         }
         if (self.upper_map) |*upper_map| {
             upper_map.deinit();
         }
     }
 
-    pub fn isAlphaNum(self: *Self, cp: u21) !bool {
+    pub fn isAlphaNum(self: *Self, cp: u21) bool {
         // Lazy init.
         if (self.letter == null) {
-            self.letter = try Letter.init(self.allocator);
+            self.letter = Letter.new();
         }
         if (self.number == null) {
-            self.number = try Number.init(self.allocator);
+            self.number = Number.new();
         }
 
         return self.letter.?.isLetter(cp) or self.number.?.isNumber(cp);
     }
 
-    pub fn isGraphic(self: *Self, cp: u21) !bool {
+    pub fn isGraphic(self: *Self, cp: u21) bool {
         // Lazy init.
         if (self.space == null) {
-            self.space = try Space.init(self.allocator);
+            self.space = Space.new();
         }
 
-        return (try self.isPrint(cp)) or self.space.?.isSpace(cp);
+        return self.isPrint(cp) or self.space.?.isSpace(cp);
     }
 
-    pub fn isPrint(self: *Self, cp: u21) !bool {
+    pub fn isPrint(self: *Self, cp: u21) bool {
         // Lazy init.
         if (self.mark == null) {
-            self.mark = try Mark.init(self.allocator);
+            self.mark = Mark.new();
         }
         if (self.punct == null) {
-            self.punct = try Punct.init(self.allocator);
+            self.punct = Punct.new();
         }
         if (self.symbol == null) {
-            self.symbol = try Symbol.init(self.allocator);
+            self.symbol = Symbol.new();
         }
 
-        return (try self.isAlphaNum(cp)) or self.mark.?.isMark(cp) or self.punct.?.isPunct(cp) or self.symbol.?.isSymbol(cp);
+        return self.isAlphaNum(cp) or self.mark.?.isMark(cp) or self.punct.?.isPunct(cp) or self.symbol.?.isSymbol(cp);
     }
 
-    pub fn isWhiteSpace(self: *Self, cp: u21) !bool {
+    pub fn isWhiteSpace(self: *Self, cp: u21) bool {
         const ascii = @import("std").ascii;
         if (cp < 256) {
             return ascii.isSpace(@intCast(u8, cp));
         } else {
             // Lazy init.
             if (self.space == null) {
-                self.space = try Space.init(self.allocator);
+                self.space = Space.new();
             }
 
             return self.space.?.isSpace(cp);
         }
     }
 
-    pub fn isControl(self: *Self, cp: u21) !bool {
+    pub fn isControl(self: *Self, cp: u21) bool {
         // Lazy init.
         if (self.control == null) {
-            self.control = try Control.init(self.allocator);
+            self.control = Control.new();
         }
 
         return self.control.?.isControl(cp);
     }
 
-    pub fn isLetter(self: *Self, cp: u21) !bool {
+    pub fn isLetter(self: *Self, cp: u21) bool {
         // Lazy init.
         if (self.letter == null) {
-            self.letter = try Letter.init(self.allocator);
+            self.letter = Letter.new();
         }
 
         return self.letter.?.isLetter(cp);
     }
 
-    pub fn isLower(self: *Self, cp: u21) !bool {
+    pub fn isLower(self: *Self, cp: u21) bool {
         // Lazy init.
         if (self.lower == null) {
-            self.lower = try Lower.init(self.allocator);
+            self.lower = Lower.new();
         }
 
         return self.lower.?.isLower(cp);
     }
 
-    pub fn isMark(self: *Self, cp: u21) !bool {
+    pub fn isMark(self: *Self, cp: u21) bool {
         // Lazy init.
         if (self.mark == null) {
-            self.mark = try Mark.init(self.allocator);
+            self.mark = Mark.new();
         }
 
         return self.mark.?.isMark(cp);
     }
 
-    pub fn isNumber(self: *Self, cp: u21) !bool {
+    pub fn isNumber(self: *Self, cp: u21) bool {
         // Lazy init.
         if (self.number == null) {
-            self.number = try Number.init(self.allocator);
+            self.number = Number.new();
         }
 
         return self.number.?.isNumber(cp);
     }
 
-    pub fn isPunct(self: *Self, cp: u21) !bool {
+    pub fn isPunct(self: *Self, cp: u21) bool {
         // Lazy init.
         if (self.punct == null) {
-            self.punct = try Punct.init(self.allocator);
+            self.punct = Punct.new();
         }
 
         return self.punct.?.isPunct(cp);
     }
 
-    pub fn isSpace(self: *Self, cp: u21) !bool {
+    pub fn isSpace(self: *Self, cp: u21) bool {
         // Lazy init.
         if (self.space == null) {
-            self.space = try Space.init(self.allocator);
+            self.space = Space.new();
         }
 
         return self.space.?.isSpace(cp);
     }
 
-    pub fn isSymbol(self: *Self, cp: u21) !bool {
+    pub fn isSymbol(self: *Self, cp: u21) bool {
         // Lazy init.
         if (self.symbol == null) {
-            self.symbol = try Symbol.init(self.allocator);
+            self.symbol = Symbol.new();
         }
 
         return self.symbol.?.isSymbol(cp);
     }
 
-    pub fn isTitle(self: *Self, cp: u21) !bool {
+    pub fn isTitle(self: *Self, cp: u21) bool {
         // Lazy init.
         if (self.title == null) {
-            self.title = try Title.init(self.allocator);
+            self.title = Title.new();
         }
 
         return self.title.?.isTitle(cp);
     }
 
-    pub fn isUpper(self: *Self, cp: u21) !bool {
+    pub fn isUpper(self: *Self, cp: u21) bool {
         // Lazy init.
         if (self.upper == null) {
-            self.upper = try Upper.init(self.allocator);
+            self.upper = Upper.new();
         }
 
         return self.upper.?.isUpper(cp);

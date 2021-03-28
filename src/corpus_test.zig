@@ -1,18 +1,12 @@
 const std = @import("std");
 const unicode = std.unicode;
 
-const Space = @import("ziglyph.zig").Space;
-const Number = @import("ziglyph.zig").Number;
 const Letter = @import("ziglyph.zig").Letter;
 
 const corpus = @embedFile("data/lang_mix.txt");
 
 pub fn main() !void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    var allocator = &arena.allocator;
-    var ziglyph = try Letter.init(allocator);
-    defer ziglyph.deinit();
+    var ziglyph = Letter.new();
 
     const s = try unicode.Utf8View.init(corpus);
     var iter = s.iterator();
