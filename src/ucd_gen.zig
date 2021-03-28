@@ -313,8 +313,8 @@ const UcdGenerator = struct {
             },
         };
 
-        const header_tpl = @embedFile("parts/header_tpl.txt");
-        const trailer_tpl = @embedFile("parts/trailer_tpl.txt");
+        const header_tpl = @embedFile("parts/array_header_tpl.txt");
+        const trailer_tpl = @embedFile("parts/array_trailer_tpl.txt");
 
         for (lists) |list| {
             // Prepare output file.
@@ -379,8 +379,8 @@ const UcdGenerator = struct {
             },
         };
 
-        const map_header_tpl = @embedFile("parts/MapTpl_header.txt");
-        const map_trailer_tpl = @embedFile("parts/MapTpl_trailer.txt");
+        const map_header_tpl = @embedFile("parts/map_header_tpl.txt");
+        const map_trailer_tpl = @embedFile("parts/map_trailer_tpl.txt");
 
         for (case_maps) |cm| {
             var file = try std.fs.cwd().createFile(cm.filename, .{});
@@ -400,8 +400,8 @@ const UcdGenerator = struct {
         }
 
         // Decomposition map.
-        const decomp_header_tpl = @embedFile("parts/DecomposeMap_header.txt");
-        const decomp_trailer_tpl = @embedFile("parts/DecomposeMap_trailer.txt");
+        const decomp_header_tpl = @embedFile("parts/decomp_map_header_tpl.txt");
+        const decomp_trailer_tpl = @embedFile("parts/decomp_map_trailer_tpl.txt");
 
         var decompf = try std.fs.cwd().createFile("data/DecomposeMap.zig", .{});
         defer decompf.close();
