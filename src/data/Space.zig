@@ -2,6 +2,8 @@
 // Placeholders:
 //    1. Struct name
 //    2. Array length
+//    3. Highest code point
+//    4. Lowest code point
 //! Unicode Space category code points data.
 
 const std = @import("std");
@@ -10,6 +12,8 @@ const Range = @import("../Range.zig");
 const Space = @This();
 
 array: [12289]bool = [_]bool{false} ** 12289,
+lo: u21 = 32,
+hi: u21 = 12288,
 
 pub fn new() Space {
     var instance: Space = Space{};
@@ -17,25 +21,20 @@ pub fn new() Space {
     instance.array[32] = true;
     instance.array[160] = true;
     instance.array[5760] = true;
-    instance.array[8192] = true;
-    instance.array[8193] = true;
-    instance.array[8194] = true;
-    instance.array[8195] = true;
-    instance.array[8196] = true;
-    instance.array[8197] = true;
-    instance.array[8198] = true;
-    instance.array[8199] = true;
-    instance.array[8200] = true;
-    instance.array[8201] = true;
-    instance.array[8202] = true;
     instance.array[8239] = true;
     instance.array[8287] = true;
     instance.array[12288] = true;
+
+    var index: u21 = 0;
+    index = 8192;
+    while (index <= 8202) : (index += 1) {
+        instance.array[index] = true;
+    }
 
     // Placeholder: Struct name.
     return instance;
 }
 
 pub fn isSpace(self: Space, cp: u21) bool {
-    return if (cp >= self.array.len) false else self.array[cp];
+    return if (cp >= self.array.len or cp < self.lo or cp > self.hi) false else self.array[cp];
 }

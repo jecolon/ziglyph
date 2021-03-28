@@ -32,8 +32,8 @@ const List = struct {
 const Consolidated = struct {
     code_points: []u21,
     ranges: []Range,
-    ranges_low: u21,
-    ranges_high: u21,
+    lo: u21,
+    hi: u21,
 };
 
 const UcdGenerator = struct {
@@ -258,37 +258,6 @@ const UcdGenerator = struct {
 
     fn write_files(self: *Self) !void {
         // Write out.
-
-        //for (lists) |list| {
-        //    // Prepare output file.
-        //    const file_name = try mem.concat(self.allocator, u8, &[3][]const u8{ "data/", list.name, ".zig" });
-        //    defer self.allocator.free(file_name);
-        //    var file = try std.fs.cwd().createFile(file_name, .{});
-        //    defer file.close();
-        //    var buf_writer = io.bufferedWriter(file.writer());
-        //    const writer = buf_writer.writer();
-
-        //    // Write data.
-        //    const header_tpl = @embedFile("parts/ArrayTpl_header.txt");
-        //    const comment = try mem.concat(self.allocator, u8, &[3][]const u8{ "Unicode ", list.name, " code points data." });
-        //    defer self.allocator.free(comment);
-        //    const last = mem.max(u21, list.items);
-        //    _ = try writer.print(header_tpl, .{ comment, list.name, last + 1 });
-
-        //    var index: u21 = 0;
-        //    while (index <= last) : (index += 1) {
-        //        if (contains(list.items, index)) {
-        //            _ = try writer.print("    instance.array[{d}] = {b};\n", .{ index, true });
-        //        }
-        //    }
-
-        //    const trailer_tpl = @embedFile("parts/ArrayTpl_trailer.txt");
-        //    _ = try writer.print(trailer_tpl, .{list.name});
-
-        //    try buf_writer.flush();
-        //}
-
-        // Control and letter code points have ranges too.
         const lists = [_]List{
             .{
                 .name = "Control",
@@ -355,28 +324,23 @@ const UcdGenerator = struct {
             const writer = buf_writer.writer();
 
             // Write data.
-            var max: u21 = mem.max(u21, list.items);
-            if (list.ranges) |ranges| {
-                for (ranges) |range| {
-                    if (range.end > max) max = range.end;
-                }
-            }
-            _ = try writer.print(header_tpl, .{ list.name, max + 1 });
+            const consolidated = try self.consolidate(list);
+            _ = try writer.print(header_tpl, .{ list.name, consolidated.hi + 1, consolidated.lo, consolidated.hi });
 
             var index: u21 = 0;
-            while (index <= max) : (index += 1) {
-                if (contains(list.items, index)) {
+            while (index <= consolidated.hi) : (index += 1) {
+                if (contains(consolidated.code_points, index)) {
                     _ = try writer.print("    instance.array[{d}] = true;\n", .{index});
                 }
             }
 
-            if (list.ranges) |ranges| {
-                for (ranges) |range| {
-                    index = range.start;
-                    while (index <= range.end) : (index += 1) {
-                        _ = try writer.print("    instance.array[{d}] = true;\n", .{index});
-                    }
-                }
+            _ = try writer.write("\n    var index: u21 = 0;\n");
+
+            for (consolidated.ranges) |range| {
+                _ = try writer.print("    index = {d};\n", .{range.start});
+                _ = try writer.print("    while (index <= {d}) : (index += 1) {{\n", .{range.end});
+                _ = try writer.write("        instance.array[index] = true;\n");
+                _ = try writer.write("    }\n");
             }
 
             _ = try writer.print(trailer_tpl, .{list.name});
@@ -484,14 +448,15 @@ const UcdGenerator = struct {
     }
 
     fn consolidate(self: Self, list: List) !Consolidated {
-        const max: u21 = mem.max(u21, list.items);
-        var array = try self.allocator.alloc(bool, max + 1);
+        var hi: u21 = mem.max(u21, list.items);
+        var lo: u21 = mem.min(u21, list.items);
+        var array = try self.allocator.alloc(bool, hi + 1);
         defer self.allocator.free(array);
         var indices = std.ArrayList(u21).init(self.allocator);
         defer indices.deinit();
 
         var index: u21 = 0;
-        var last: u21 = 0;
+        var latest: u21 = 0;
         var true_run = false;
         while (index < array.len) : (index += 1) {
             if (contains(list.items, index)) {
@@ -500,10 +465,10 @@ const UcdGenerator = struct {
                     true_run = true;
                 }
                 array[index] = true;
-                last = index;
+                latest = index;
             } else {
                 if (true_run) {
-                    try indices.append(last);
+                    try indices.append(latest);
                     true_run = false;
                 }
                 array[index] = false;
@@ -514,8 +479,6 @@ const UcdGenerator = struct {
         errdefer cp_list.deinit();
         var range_list = std.ArrayList(Range).init(self.allocator);
         errdefer range_list.deinit();
-        var ranges_low: u21 = 0x10FFFF;
-        var ranges_high: u21 = 0;
 
         index = 0;
         while (index < indices.items.len) {
@@ -533,8 +496,8 @@ const UcdGenerator = struct {
                 try cp_list.append(start);
             } else {
                 // Range
-                if (start < ranges_low) ranges_low = start;
-                if (end > ranges_high) ranges_high = end;
+                if (start < lo) lo = start;
+                if (end > hi) hi = end;
                 try range_list.append(.{ .start = start, .end = end });
             }
 
@@ -544,8 +507,8 @@ const UcdGenerator = struct {
         // Add ranges from UCD.
         if (list.ranges) |ranges| {
             for (ranges) |range| {
-                if (range.start < ranges_low) ranges_low = range.start;
-                if (range.end > ranges_high) ranges_high = range.end;
+                if (range.start < lo) lo = range.start;
+                if (range.end > hi) hi = range.end;
                 try range_list.append(range);
             }
         }
@@ -553,8 +516,8 @@ const UcdGenerator = struct {
         return Consolidated{
             .code_points = cp_list.toOwnedSlice(),
             .ranges = range_list.toOwnedSlice(),
-            .ranges_low = ranges_low,
-            .ranges_high = ranges_high,
+            .lo = lo,
+            .hi = hi,
         };
     }
 };

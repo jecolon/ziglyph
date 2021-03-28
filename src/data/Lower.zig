@@ -2,6 +2,8 @@
 // Placeholders:
 //    1. Struct name
 //    2. Array length
+//    3. Highest code point
+//    4. Lowest code point
 //! Unicode Lower category code points data.
 
 const std = @import("std");
@@ -10,69 +12,13 @@ const Range = @import("../Range.zig");
 const Lower = @This();
 
 array: [125252]bool = [_]bool{false} ** 125252,
+lo: u21 = 97,
+hi: u21 = 125251,
 
 pub fn new() Lower {
     var instance: Lower = Lower{};
 
-    instance.array[97] = true;
-    instance.array[98] = true;
-    instance.array[99] = true;
-    instance.array[100] = true;
-    instance.array[101] = true;
-    instance.array[102] = true;
-    instance.array[103] = true;
-    instance.array[104] = true;
-    instance.array[105] = true;
-    instance.array[106] = true;
-    instance.array[107] = true;
-    instance.array[108] = true;
-    instance.array[109] = true;
-    instance.array[110] = true;
-    instance.array[111] = true;
-    instance.array[112] = true;
-    instance.array[113] = true;
-    instance.array[114] = true;
-    instance.array[115] = true;
-    instance.array[116] = true;
-    instance.array[117] = true;
-    instance.array[118] = true;
-    instance.array[119] = true;
-    instance.array[120] = true;
-    instance.array[121] = true;
-    instance.array[122] = true;
     instance.array[181] = true;
-    instance.array[223] = true;
-    instance.array[224] = true;
-    instance.array[225] = true;
-    instance.array[226] = true;
-    instance.array[227] = true;
-    instance.array[228] = true;
-    instance.array[229] = true;
-    instance.array[230] = true;
-    instance.array[231] = true;
-    instance.array[232] = true;
-    instance.array[233] = true;
-    instance.array[234] = true;
-    instance.array[235] = true;
-    instance.array[236] = true;
-    instance.array[237] = true;
-    instance.array[238] = true;
-    instance.array[239] = true;
-    instance.array[240] = true;
-    instance.array[241] = true;
-    instance.array[242] = true;
-    instance.array[243] = true;
-    instance.array[244] = true;
-    instance.array[245] = true;
-    instance.array[246] = true;
-    instance.array[248] = true;
-    instance.array[249] = true;
-    instance.array[250] = true;
-    instance.array[251] = true;
-    instance.array[252] = true;
-    instance.array[253] = true;
-    instance.array[254] = true;
-    instance.array[255] = true;
     instance.array[257] = true;
     instance.array[259] = true;
     instance.array[261] = true;
@@ -100,8 +46,6 @@ pub fn new() Lower {
     instance.array[305] = true;
     instance.array[307] = true;
     instance.array[309] = true;
-    instance.array[311] = true;
-    instance.array[312] = true;
     instance.array[314] = true;
     instance.array[316] = true;
     instance.array[318] = true;
@@ -109,8 +53,6 @@ pub fn new() Lower {
     instance.array[322] = true;
     instance.array[324] = true;
     instance.array[326] = true;
-    instance.array[328] = true;
-    instance.array[329] = true;
     instance.array[331] = true;
     instance.array[333] = true;
     instance.array[335] = true;
@@ -136,35 +78,20 @@ pub fn new() Lower {
     instance.array[375] = true;
     instance.array[378] = true;
     instance.array[380] = true;
-    instance.array[382] = true;
-    instance.array[383] = true;
-    instance.array[384] = true;
     instance.array[387] = true;
     instance.array[389] = true;
     instance.array[392] = true;
-    instance.array[396] = true;
-    instance.array[397] = true;
     instance.array[402] = true;
     instance.array[405] = true;
-    instance.array[409] = true;
-    instance.array[410] = true;
-    instance.array[411] = true;
     instance.array[414] = true;
     instance.array[417] = true;
     instance.array[419] = true;
     instance.array[421] = true;
     instance.array[424] = true;
-    instance.array[426] = true;
-    instance.array[427] = true;
     instance.array[429] = true;
     instance.array[432] = true;
     instance.array[436] = true;
     instance.array[438] = true;
-    instance.array[441] = true;
-    instance.array[442] = true;
-    instance.array[445] = true;
-    instance.array[446] = true;
-    instance.array[447] = true;
     instance.array[454] = true;
     instance.array[457] = true;
     instance.array[460] = true;
@@ -175,8 +102,6 @@ pub fn new() Lower {
     instance.array[470] = true;
     instance.array[472] = true;
     instance.array[474] = true;
-    instance.array[476] = true;
-    instance.array[477] = true;
     instance.array[479] = true;
     instance.array[481] = true;
     instance.array[483] = true;
@@ -185,8 +110,6 @@ pub fn new() Lower {
     instance.array[489] = true;
     instance.array[491] = true;
     instance.array[493] = true;
-    instance.array[495] = true;
-    instance.array[496] = true;
     instance.array[499] = true;
     instance.array[501] = true;
     instance.array[505] = true;
@@ -218,164 +141,16 @@ pub fn new() Lower {
     instance.array[557] = true;
     instance.array[559] = true;
     instance.array[561] = true;
-    instance.array[563] = true;
-    instance.array[564] = true;
-    instance.array[565] = true;
-    instance.array[566] = true;
-    instance.array[567] = true;
-    instance.array[568] = true;
-    instance.array[569] = true;
     instance.array[572] = true;
-    instance.array[575] = true;
-    instance.array[576] = true;
     instance.array[578] = true;
     instance.array[583] = true;
     instance.array[585] = true;
     instance.array[587] = true;
     instance.array[589] = true;
-    instance.array[591] = true;
-    instance.array[592] = true;
-    instance.array[593] = true;
-    instance.array[594] = true;
-    instance.array[595] = true;
-    instance.array[596] = true;
-    instance.array[597] = true;
-    instance.array[598] = true;
-    instance.array[599] = true;
-    instance.array[600] = true;
-    instance.array[601] = true;
-    instance.array[602] = true;
-    instance.array[603] = true;
-    instance.array[604] = true;
-    instance.array[605] = true;
-    instance.array[606] = true;
-    instance.array[607] = true;
-    instance.array[608] = true;
-    instance.array[609] = true;
-    instance.array[610] = true;
-    instance.array[611] = true;
-    instance.array[612] = true;
-    instance.array[613] = true;
-    instance.array[614] = true;
-    instance.array[615] = true;
-    instance.array[616] = true;
-    instance.array[617] = true;
-    instance.array[618] = true;
-    instance.array[619] = true;
-    instance.array[620] = true;
-    instance.array[621] = true;
-    instance.array[622] = true;
-    instance.array[623] = true;
-    instance.array[624] = true;
-    instance.array[625] = true;
-    instance.array[626] = true;
-    instance.array[627] = true;
-    instance.array[628] = true;
-    instance.array[629] = true;
-    instance.array[630] = true;
-    instance.array[631] = true;
-    instance.array[632] = true;
-    instance.array[633] = true;
-    instance.array[634] = true;
-    instance.array[635] = true;
-    instance.array[636] = true;
-    instance.array[637] = true;
-    instance.array[638] = true;
-    instance.array[639] = true;
-    instance.array[640] = true;
-    instance.array[641] = true;
-    instance.array[642] = true;
-    instance.array[643] = true;
-    instance.array[644] = true;
-    instance.array[645] = true;
-    instance.array[646] = true;
-    instance.array[647] = true;
-    instance.array[648] = true;
-    instance.array[649] = true;
-    instance.array[650] = true;
-    instance.array[651] = true;
-    instance.array[652] = true;
-    instance.array[653] = true;
-    instance.array[654] = true;
-    instance.array[655] = true;
-    instance.array[656] = true;
-    instance.array[657] = true;
-    instance.array[658] = true;
-    instance.array[659] = true;
-    instance.array[661] = true;
-    instance.array[662] = true;
-    instance.array[663] = true;
-    instance.array[664] = true;
-    instance.array[665] = true;
-    instance.array[666] = true;
-    instance.array[667] = true;
-    instance.array[668] = true;
-    instance.array[669] = true;
-    instance.array[670] = true;
-    instance.array[671] = true;
-    instance.array[672] = true;
-    instance.array[673] = true;
-    instance.array[674] = true;
-    instance.array[675] = true;
-    instance.array[676] = true;
-    instance.array[677] = true;
-    instance.array[678] = true;
-    instance.array[679] = true;
-    instance.array[680] = true;
-    instance.array[681] = true;
-    instance.array[682] = true;
-    instance.array[683] = true;
-    instance.array[684] = true;
-    instance.array[685] = true;
-    instance.array[686] = true;
-    instance.array[687] = true;
     instance.array[881] = true;
     instance.array[883] = true;
     instance.array[887] = true;
-    instance.array[891] = true;
-    instance.array[892] = true;
-    instance.array[893] = true;
     instance.array[912] = true;
-    instance.array[940] = true;
-    instance.array[941] = true;
-    instance.array[942] = true;
-    instance.array[943] = true;
-    instance.array[944] = true;
-    instance.array[945] = true;
-    instance.array[946] = true;
-    instance.array[947] = true;
-    instance.array[948] = true;
-    instance.array[949] = true;
-    instance.array[950] = true;
-    instance.array[951] = true;
-    instance.array[952] = true;
-    instance.array[953] = true;
-    instance.array[954] = true;
-    instance.array[955] = true;
-    instance.array[956] = true;
-    instance.array[957] = true;
-    instance.array[958] = true;
-    instance.array[959] = true;
-    instance.array[960] = true;
-    instance.array[961] = true;
-    instance.array[962] = true;
-    instance.array[963] = true;
-    instance.array[964] = true;
-    instance.array[965] = true;
-    instance.array[966] = true;
-    instance.array[967] = true;
-    instance.array[968] = true;
-    instance.array[969] = true;
-    instance.array[970] = true;
-    instance.array[971] = true;
-    instance.array[972] = true;
-    instance.array[973] = true;
-    instance.array[974] = true;
-    instance.array[976] = true;
-    instance.array[977] = true;
-    instance.array[981] = true;
-    instance.array[982] = true;
-    instance.array[983] = true;
     instance.array[985] = true;
     instance.array[987] = true;
     instance.array[989] = true;
@@ -387,63 +162,8 @@ pub fn new() Lower {
     instance.array[1001] = true;
     instance.array[1003] = true;
     instance.array[1005] = true;
-    instance.array[1007] = true;
-    instance.array[1008] = true;
-    instance.array[1009] = true;
-    instance.array[1010] = true;
-    instance.array[1011] = true;
     instance.array[1013] = true;
     instance.array[1016] = true;
-    instance.array[1019] = true;
-    instance.array[1020] = true;
-    instance.array[1072] = true;
-    instance.array[1073] = true;
-    instance.array[1074] = true;
-    instance.array[1075] = true;
-    instance.array[1076] = true;
-    instance.array[1077] = true;
-    instance.array[1078] = true;
-    instance.array[1079] = true;
-    instance.array[1080] = true;
-    instance.array[1081] = true;
-    instance.array[1082] = true;
-    instance.array[1083] = true;
-    instance.array[1084] = true;
-    instance.array[1085] = true;
-    instance.array[1086] = true;
-    instance.array[1087] = true;
-    instance.array[1088] = true;
-    instance.array[1089] = true;
-    instance.array[1090] = true;
-    instance.array[1091] = true;
-    instance.array[1092] = true;
-    instance.array[1093] = true;
-    instance.array[1094] = true;
-    instance.array[1095] = true;
-    instance.array[1096] = true;
-    instance.array[1097] = true;
-    instance.array[1098] = true;
-    instance.array[1099] = true;
-    instance.array[1100] = true;
-    instance.array[1101] = true;
-    instance.array[1102] = true;
-    instance.array[1103] = true;
-    instance.array[1104] = true;
-    instance.array[1105] = true;
-    instance.array[1106] = true;
-    instance.array[1107] = true;
-    instance.array[1108] = true;
-    instance.array[1109] = true;
-    instance.array[1110] = true;
-    instance.array[1111] = true;
-    instance.array[1112] = true;
-    instance.array[1113] = true;
-    instance.array[1114] = true;
-    instance.array[1115] = true;
-    instance.array[1116] = true;
-    instance.array[1117] = true;
-    instance.array[1118] = true;
-    instance.array[1119] = true;
     instance.array[1121] = true;
     instance.array[1123] = true;
     instance.array[1125] = true;
@@ -494,8 +214,6 @@ pub fn new() Lower {
     instance.array[1224] = true;
     instance.array[1226] = true;
     instance.array[1228] = true;
-    instance.array[1230] = true;
-    instance.array[1231] = true;
     instance.array[1233] = true;
     instance.array[1235] = true;
     instance.array[1237] = true;
@@ -544,199 +262,6 @@ pub fn new() Lower {
     instance.array[1323] = true;
     instance.array[1325] = true;
     instance.array[1327] = true;
-    instance.array[1376] = true;
-    instance.array[1377] = true;
-    instance.array[1378] = true;
-    instance.array[1379] = true;
-    instance.array[1380] = true;
-    instance.array[1381] = true;
-    instance.array[1382] = true;
-    instance.array[1383] = true;
-    instance.array[1384] = true;
-    instance.array[1385] = true;
-    instance.array[1386] = true;
-    instance.array[1387] = true;
-    instance.array[1388] = true;
-    instance.array[1389] = true;
-    instance.array[1390] = true;
-    instance.array[1391] = true;
-    instance.array[1392] = true;
-    instance.array[1393] = true;
-    instance.array[1394] = true;
-    instance.array[1395] = true;
-    instance.array[1396] = true;
-    instance.array[1397] = true;
-    instance.array[1398] = true;
-    instance.array[1399] = true;
-    instance.array[1400] = true;
-    instance.array[1401] = true;
-    instance.array[1402] = true;
-    instance.array[1403] = true;
-    instance.array[1404] = true;
-    instance.array[1405] = true;
-    instance.array[1406] = true;
-    instance.array[1407] = true;
-    instance.array[1408] = true;
-    instance.array[1409] = true;
-    instance.array[1410] = true;
-    instance.array[1411] = true;
-    instance.array[1412] = true;
-    instance.array[1413] = true;
-    instance.array[1414] = true;
-    instance.array[1415] = true;
-    instance.array[1416] = true;
-    instance.array[4304] = true;
-    instance.array[4305] = true;
-    instance.array[4306] = true;
-    instance.array[4307] = true;
-    instance.array[4308] = true;
-    instance.array[4309] = true;
-    instance.array[4310] = true;
-    instance.array[4311] = true;
-    instance.array[4312] = true;
-    instance.array[4313] = true;
-    instance.array[4314] = true;
-    instance.array[4315] = true;
-    instance.array[4316] = true;
-    instance.array[4317] = true;
-    instance.array[4318] = true;
-    instance.array[4319] = true;
-    instance.array[4320] = true;
-    instance.array[4321] = true;
-    instance.array[4322] = true;
-    instance.array[4323] = true;
-    instance.array[4324] = true;
-    instance.array[4325] = true;
-    instance.array[4326] = true;
-    instance.array[4327] = true;
-    instance.array[4328] = true;
-    instance.array[4329] = true;
-    instance.array[4330] = true;
-    instance.array[4331] = true;
-    instance.array[4332] = true;
-    instance.array[4333] = true;
-    instance.array[4334] = true;
-    instance.array[4335] = true;
-    instance.array[4336] = true;
-    instance.array[4337] = true;
-    instance.array[4338] = true;
-    instance.array[4339] = true;
-    instance.array[4340] = true;
-    instance.array[4341] = true;
-    instance.array[4342] = true;
-    instance.array[4343] = true;
-    instance.array[4344] = true;
-    instance.array[4345] = true;
-    instance.array[4346] = true;
-    instance.array[4349] = true;
-    instance.array[4350] = true;
-    instance.array[4351] = true;
-    instance.array[5112] = true;
-    instance.array[5113] = true;
-    instance.array[5114] = true;
-    instance.array[5115] = true;
-    instance.array[5116] = true;
-    instance.array[5117] = true;
-    instance.array[7296] = true;
-    instance.array[7297] = true;
-    instance.array[7298] = true;
-    instance.array[7299] = true;
-    instance.array[7300] = true;
-    instance.array[7301] = true;
-    instance.array[7302] = true;
-    instance.array[7303] = true;
-    instance.array[7304] = true;
-    instance.array[7424] = true;
-    instance.array[7425] = true;
-    instance.array[7426] = true;
-    instance.array[7427] = true;
-    instance.array[7428] = true;
-    instance.array[7429] = true;
-    instance.array[7430] = true;
-    instance.array[7431] = true;
-    instance.array[7432] = true;
-    instance.array[7433] = true;
-    instance.array[7434] = true;
-    instance.array[7435] = true;
-    instance.array[7436] = true;
-    instance.array[7437] = true;
-    instance.array[7438] = true;
-    instance.array[7439] = true;
-    instance.array[7440] = true;
-    instance.array[7441] = true;
-    instance.array[7442] = true;
-    instance.array[7443] = true;
-    instance.array[7444] = true;
-    instance.array[7445] = true;
-    instance.array[7446] = true;
-    instance.array[7447] = true;
-    instance.array[7448] = true;
-    instance.array[7449] = true;
-    instance.array[7450] = true;
-    instance.array[7451] = true;
-    instance.array[7452] = true;
-    instance.array[7453] = true;
-    instance.array[7454] = true;
-    instance.array[7455] = true;
-    instance.array[7456] = true;
-    instance.array[7457] = true;
-    instance.array[7458] = true;
-    instance.array[7459] = true;
-    instance.array[7460] = true;
-    instance.array[7461] = true;
-    instance.array[7462] = true;
-    instance.array[7463] = true;
-    instance.array[7464] = true;
-    instance.array[7465] = true;
-    instance.array[7466] = true;
-    instance.array[7467] = true;
-    instance.array[7531] = true;
-    instance.array[7532] = true;
-    instance.array[7533] = true;
-    instance.array[7534] = true;
-    instance.array[7535] = true;
-    instance.array[7536] = true;
-    instance.array[7537] = true;
-    instance.array[7538] = true;
-    instance.array[7539] = true;
-    instance.array[7540] = true;
-    instance.array[7541] = true;
-    instance.array[7542] = true;
-    instance.array[7543] = true;
-    instance.array[7545] = true;
-    instance.array[7546] = true;
-    instance.array[7547] = true;
-    instance.array[7548] = true;
-    instance.array[7549] = true;
-    instance.array[7550] = true;
-    instance.array[7551] = true;
-    instance.array[7552] = true;
-    instance.array[7553] = true;
-    instance.array[7554] = true;
-    instance.array[7555] = true;
-    instance.array[7556] = true;
-    instance.array[7557] = true;
-    instance.array[7558] = true;
-    instance.array[7559] = true;
-    instance.array[7560] = true;
-    instance.array[7561] = true;
-    instance.array[7562] = true;
-    instance.array[7563] = true;
-    instance.array[7564] = true;
-    instance.array[7565] = true;
-    instance.array[7566] = true;
-    instance.array[7567] = true;
-    instance.array[7568] = true;
-    instance.array[7569] = true;
-    instance.array[7570] = true;
-    instance.array[7571] = true;
-    instance.array[7572] = true;
-    instance.array[7573] = true;
-    instance.array[7574] = true;
-    instance.array[7575] = true;
-    instance.array[7576] = true;
-    instance.array[7577] = true;
-    instance.array[7578] = true;
     instance.array[7681] = true;
     instance.array[7683] = true;
     instance.array[7685] = true;
@@ -811,15 +336,6 @@ pub fn new() Lower {
     instance.array[7823] = true;
     instance.array[7825] = true;
     instance.array[7827] = true;
-    instance.array[7829] = true;
-    instance.array[7830] = true;
-    instance.array[7831] = true;
-    instance.array[7832] = true;
-    instance.array[7833] = true;
-    instance.array[7834] = true;
-    instance.array[7835] = true;
-    instance.array[7836] = true;
-    instance.array[7837] = true;
     instance.array[7839] = true;
     instance.array[7841] = true;
     instance.array[7843] = true;
@@ -868,206 +384,19 @@ pub fn new() Lower {
     instance.array[7929] = true;
     instance.array[7931] = true;
     instance.array[7933] = true;
-    instance.array[7935] = true;
-    instance.array[7936] = true;
-    instance.array[7937] = true;
-    instance.array[7938] = true;
-    instance.array[7939] = true;
-    instance.array[7940] = true;
-    instance.array[7941] = true;
-    instance.array[7942] = true;
-    instance.array[7943] = true;
-    instance.array[7952] = true;
-    instance.array[7953] = true;
-    instance.array[7954] = true;
-    instance.array[7955] = true;
-    instance.array[7956] = true;
-    instance.array[7957] = true;
-    instance.array[7968] = true;
-    instance.array[7969] = true;
-    instance.array[7970] = true;
-    instance.array[7971] = true;
-    instance.array[7972] = true;
-    instance.array[7973] = true;
-    instance.array[7974] = true;
-    instance.array[7975] = true;
-    instance.array[7984] = true;
-    instance.array[7985] = true;
-    instance.array[7986] = true;
-    instance.array[7987] = true;
-    instance.array[7988] = true;
-    instance.array[7989] = true;
-    instance.array[7990] = true;
-    instance.array[7991] = true;
-    instance.array[8000] = true;
-    instance.array[8001] = true;
-    instance.array[8002] = true;
-    instance.array[8003] = true;
-    instance.array[8004] = true;
-    instance.array[8005] = true;
-    instance.array[8016] = true;
-    instance.array[8017] = true;
-    instance.array[8018] = true;
-    instance.array[8019] = true;
-    instance.array[8020] = true;
-    instance.array[8021] = true;
-    instance.array[8022] = true;
-    instance.array[8023] = true;
-    instance.array[8032] = true;
-    instance.array[8033] = true;
-    instance.array[8034] = true;
-    instance.array[8035] = true;
-    instance.array[8036] = true;
-    instance.array[8037] = true;
-    instance.array[8038] = true;
-    instance.array[8039] = true;
-    instance.array[8048] = true;
-    instance.array[8049] = true;
-    instance.array[8050] = true;
-    instance.array[8051] = true;
-    instance.array[8052] = true;
-    instance.array[8053] = true;
-    instance.array[8054] = true;
-    instance.array[8055] = true;
-    instance.array[8056] = true;
-    instance.array[8057] = true;
-    instance.array[8058] = true;
-    instance.array[8059] = true;
-    instance.array[8060] = true;
-    instance.array[8061] = true;
-    instance.array[8064] = true;
-    instance.array[8065] = true;
-    instance.array[8066] = true;
-    instance.array[8067] = true;
-    instance.array[8068] = true;
-    instance.array[8069] = true;
-    instance.array[8070] = true;
-    instance.array[8071] = true;
-    instance.array[8080] = true;
-    instance.array[8081] = true;
-    instance.array[8082] = true;
-    instance.array[8083] = true;
-    instance.array[8084] = true;
-    instance.array[8085] = true;
-    instance.array[8086] = true;
-    instance.array[8087] = true;
-    instance.array[8096] = true;
-    instance.array[8097] = true;
-    instance.array[8098] = true;
-    instance.array[8099] = true;
-    instance.array[8100] = true;
-    instance.array[8101] = true;
-    instance.array[8102] = true;
-    instance.array[8103] = true;
-    instance.array[8112] = true;
-    instance.array[8113] = true;
-    instance.array[8114] = true;
-    instance.array[8115] = true;
-    instance.array[8116] = true;
-    instance.array[8118] = true;
-    instance.array[8119] = true;
     instance.array[8126] = true;
-    instance.array[8130] = true;
-    instance.array[8131] = true;
-    instance.array[8132] = true;
-    instance.array[8134] = true;
-    instance.array[8135] = true;
-    instance.array[8144] = true;
-    instance.array[8145] = true;
-    instance.array[8146] = true;
-    instance.array[8147] = true;
-    instance.array[8150] = true;
-    instance.array[8151] = true;
-    instance.array[8160] = true;
-    instance.array[8161] = true;
-    instance.array[8162] = true;
-    instance.array[8163] = true;
-    instance.array[8164] = true;
-    instance.array[8165] = true;
-    instance.array[8166] = true;
-    instance.array[8167] = true;
-    instance.array[8178] = true;
-    instance.array[8179] = true;
-    instance.array[8180] = true;
-    instance.array[8182] = true;
-    instance.array[8183] = true;
     instance.array[8458] = true;
-    instance.array[8462] = true;
-    instance.array[8463] = true;
     instance.array[8467] = true;
     instance.array[8495] = true;
     instance.array[8500] = true;
     instance.array[8505] = true;
-    instance.array[8508] = true;
-    instance.array[8509] = true;
-    instance.array[8518] = true;
-    instance.array[8519] = true;
-    instance.array[8520] = true;
-    instance.array[8521] = true;
     instance.array[8526] = true;
     instance.array[8580] = true;
-    instance.array[11312] = true;
-    instance.array[11313] = true;
-    instance.array[11314] = true;
-    instance.array[11315] = true;
-    instance.array[11316] = true;
-    instance.array[11317] = true;
-    instance.array[11318] = true;
-    instance.array[11319] = true;
-    instance.array[11320] = true;
-    instance.array[11321] = true;
-    instance.array[11322] = true;
-    instance.array[11323] = true;
-    instance.array[11324] = true;
-    instance.array[11325] = true;
-    instance.array[11326] = true;
-    instance.array[11327] = true;
-    instance.array[11328] = true;
-    instance.array[11329] = true;
-    instance.array[11330] = true;
-    instance.array[11331] = true;
-    instance.array[11332] = true;
-    instance.array[11333] = true;
-    instance.array[11334] = true;
-    instance.array[11335] = true;
-    instance.array[11336] = true;
-    instance.array[11337] = true;
-    instance.array[11338] = true;
-    instance.array[11339] = true;
-    instance.array[11340] = true;
-    instance.array[11341] = true;
-    instance.array[11342] = true;
-    instance.array[11343] = true;
-    instance.array[11344] = true;
-    instance.array[11345] = true;
-    instance.array[11346] = true;
-    instance.array[11347] = true;
-    instance.array[11348] = true;
-    instance.array[11349] = true;
-    instance.array[11350] = true;
-    instance.array[11351] = true;
-    instance.array[11352] = true;
-    instance.array[11353] = true;
-    instance.array[11354] = true;
-    instance.array[11355] = true;
-    instance.array[11356] = true;
-    instance.array[11357] = true;
-    instance.array[11358] = true;
     instance.array[11361] = true;
-    instance.array[11365] = true;
-    instance.array[11366] = true;
     instance.array[11368] = true;
     instance.array[11370] = true;
     instance.array[11372] = true;
     instance.array[11377] = true;
-    instance.array[11379] = true;
-    instance.array[11380] = true;
-    instance.array[11382] = true;
-    instance.array[11383] = true;
-    instance.array[11384] = true;
-    instance.array[11385] = true;
-    instance.array[11386] = true;
-    instance.array[11387] = true;
     instance.array[11393] = true;
     instance.array[11395] = true;
     instance.array[11397] = true;
@@ -1117,49 +446,9 @@ pub fn new() Lower {
     instance.array[11485] = true;
     instance.array[11487] = true;
     instance.array[11489] = true;
-    instance.array[11491] = true;
-    instance.array[11492] = true;
     instance.array[11500] = true;
     instance.array[11502] = true;
     instance.array[11507] = true;
-    instance.array[11520] = true;
-    instance.array[11521] = true;
-    instance.array[11522] = true;
-    instance.array[11523] = true;
-    instance.array[11524] = true;
-    instance.array[11525] = true;
-    instance.array[11526] = true;
-    instance.array[11527] = true;
-    instance.array[11528] = true;
-    instance.array[11529] = true;
-    instance.array[11530] = true;
-    instance.array[11531] = true;
-    instance.array[11532] = true;
-    instance.array[11533] = true;
-    instance.array[11534] = true;
-    instance.array[11535] = true;
-    instance.array[11536] = true;
-    instance.array[11537] = true;
-    instance.array[11538] = true;
-    instance.array[11539] = true;
-    instance.array[11540] = true;
-    instance.array[11541] = true;
-    instance.array[11542] = true;
-    instance.array[11543] = true;
-    instance.array[11544] = true;
-    instance.array[11545] = true;
-    instance.array[11546] = true;
-    instance.array[11547] = true;
-    instance.array[11548] = true;
-    instance.array[11549] = true;
-    instance.array[11550] = true;
-    instance.array[11551] = true;
-    instance.array[11552] = true;
-    instance.array[11553] = true;
-    instance.array[11554] = true;
-    instance.array[11555] = true;
-    instance.array[11556] = true;
-    instance.array[11557] = true;
     instance.array[11559] = true;
     instance.array[11565] = true;
     instance.array[42561] = true;
@@ -1205,9 +494,6 @@ pub fn new() Lower {
     instance.array[42793] = true;
     instance.array[42795] = true;
     instance.array[42797] = true;
-    instance.array[42799] = true;
-    instance.array[42800] = true;
-    instance.array[42801] = true;
     instance.array[42803] = true;
     instance.array[42805] = true;
     instance.array[42807] = true;
@@ -1239,14 +525,6 @@ pub fn new() Lower {
     instance.array[42859] = true;
     instance.array[42861] = true;
     instance.array[42863] = true;
-    instance.array[42865] = true;
-    instance.array[42866] = true;
-    instance.array[42867] = true;
-    instance.array[42868] = true;
-    instance.array[42869] = true;
-    instance.array[42870] = true;
-    instance.array[42871] = true;
-    instance.array[42872] = true;
     instance.array[42874] = true;
     instance.array[42876] = true;
     instance.array[42879] = true;
@@ -1257,9 +535,6 @@ pub fn new() Lower {
     instance.array[42892] = true;
     instance.array[42894] = true;
     instance.array[42897] = true;
-    instance.array[42899] = true;
-    instance.array[42900] = true;
-    instance.array[42901] = true;
     instance.array[42903] = true;
     instance.array[42905] = true;
     instance.array[42907] = true;
@@ -1282,898 +557,428 @@ pub fn new() Lower {
     instance.array[42954] = true;
     instance.array[42998] = true;
     instance.array[43002] = true;
-    instance.array[43824] = true;
-    instance.array[43825] = true;
-    instance.array[43826] = true;
-    instance.array[43827] = true;
-    instance.array[43828] = true;
-    instance.array[43829] = true;
-    instance.array[43830] = true;
-    instance.array[43831] = true;
-    instance.array[43832] = true;
-    instance.array[43833] = true;
-    instance.array[43834] = true;
-    instance.array[43835] = true;
-    instance.array[43836] = true;
-    instance.array[43837] = true;
-    instance.array[43838] = true;
-    instance.array[43839] = true;
-    instance.array[43840] = true;
-    instance.array[43841] = true;
-    instance.array[43842] = true;
-    instance.array[43843] = true;
-    instance.array[43844] = true;
-    instance.array[43845] = true;
-    instance.array[43846] = true;
-    instance.array[43847] = true;
-    instance.array[43848] = true;
-    instance.array[43849] = true;
-    instance.array[43850] = true;
-    instance.array[43851] = true;
-    instance.array[43852] = true;
-    instance.array[43853] = true;
-    instance.array[43854] = true;
-    instance.array[43855] = true;
-    instance.array[43856] = true;
-    instance.array[43857] = true;
-    instance.array[43858] = true;
-    instance.array[43859] = true;
-    instance.array[43860] = true;
-    instance.array[43861] = true;
-    instance.array[43862] = true;
-    instance.array[43863] = true;
-    instance.array[43864] = true;
-    instance.array[43865] = true;
-    instance.array[43866] = true;
-    instance.array[43872] = true;
-    instance.array[43873] = true;
-    instance.array[43874] = true;
-    instance.array[43875] = true;
-    instance.array[43876] = true;
-    instance.array[43877] = true;
-    instance.array[43878] = true;
-    instance.array[43879] = true;
-    instance.array[43880] = true;
-    instance.array[43888] = true;
-    instance.array[43889] = true;
-    instance.array[43890] = true;
-    instance.array[43891] = true;
-    instance.array[43892] = true;
-    instance.array[43893] = true;
-    instance.array[43894] = true;
-    instance.array[43895] = true;
-    instance.array[43896] = true;
-    instance.array[43897] = true;
-    instance.array[43898] = true;
-    instance.array[43899] = true;
-    instance.array[43900] = true;
-    instance.array[43901] = true;
-    instance.array[43902] = true;
-    instance.array[43903] = true;
-    instance.array[43904] = true;
-    instance.array[43905] = true;
-    instance.array[43906] = true;
-    instance.array[43907] = true;
-    instance.array[43908] = true;
-    instance.array[43909] = true;
-    instance.array[43910] = true;
-    instance.array[43911] = true;
-    instance.array[43912] = true;
-    instance.array[43913] = true;
-    instance.array[43914] = true;
-    instance.array[43915] = true;
-    instance.array[43916] = true;
-    instance.array[43917] = true;
-    instance.array[43918] = true;
-    instance.array[43919] = true;
-    instance.array[43920] = true;
-    instance.array[43921] = true;
-    instance.array[43922] = true;
-    instance.array[43923] = true;
-    instance.array[43924] = true;
-    instance.array[43925] = true;
-    instance.array[43926] = true;
-    instance.array[43927] = true;
-    instance.array[43928] = true;
-    instance.array[43929] = true;
-    instance.array[43930] = true;
-    instance.array[43931] = true;
-    instance.array[43932] = true;
-    instance.array[43933] = true;
-    instance.array[43934] = true;
-    instance.array[43935] = true;
-    instance.array[43936] = true;
-    instance.array[43937] = true;
-    instance.array[43938] = true;
-    instance.array[43939] = true;
-    instance.array[43940] = true;
-    instance.array[43941] = true;
-    instance.array[43942] = true;
-    instance.array[43943] = true;
-    instance.array[43944] = true;
-    instance.array[43945] = true;
-    instance.array[43946] = true;
-    instance.array[43947] = true;
-    instance.array[43948] = true;
-    instance.array[43949] = true;
-    instance.array[43950] = true;
-    instance.array[43951] = true;
-    instance.array[43952] = true;
-    instance.array[43953] = true;
-    instance.array[43954] = true;
-    instance.array[43955] = true;
-    instance.array[43956] = true;
-    instance.array[43957] = true;
-    instance.array[43958] = true;
-    instance.array[43959] = true;
-    instance.array[43960] = true;
-    instance.array[43961] = true;
-    instance.array[43962] = true;
-    instance.array[43963] = true;
-    instance.array[43964] = true;
-    instance.array[43965] = true;
-    instance.array[43966] = true;
-    instance.array[43967] = true;
-    instance.array[64256] = true;
-    instance.array[64257] = true;
-    instance.array[64258] = true;
-    instance.array[64259] = true;
-    instance.array[64260] = true;
-    instance.array[64261] = true;
-    instance.array[64262] = true;
-    instance.array[64275] = true;
-    instance.array[64276] = true;
-    instance.array[64277] = true;
-    instance.array[64278] = true;
-    instance.array[64279] = true;
-    instance.array[65345] = true;
-    instance.array[65346] = true;
-    instance.array[65347] = true;
-    instance.array[65348] = true;
-    instance.array[65349] = true;
-    instance.array[65350] = true;
-    instance.array[65351] = true;
-    instance.array[65352] = true;
-    instance.array[65353] = true;
-    instance.array[65354] = true;
-    instance.array[65355] = true;
-    instance.array[65356] = true;
-    instance.array[65357] = true;
-    instance.array[65358] = true;
-    instance.array[65359] = true;
-    instance.array[65360] = true;
-    instance.array[65361] = true;
-    instance.array[65362] = true;
-    instance.array[65363] = true;
-    instance.array[65364] = true;
-    instance.array[65365] = true;
-    instance.array[65366] = true;
-    instance.array[65367] = true;
-    instance.array[65368] = true;
-    instance.array[65369] = true;
-    instance.array[65370] = true;
-    instance.array[66600] = true;
-    instance.array[66601] = true;
-    instance.array[66602] = true;
-    instance.array[66603] = true;
-    instance.array[66604] = true;
-    instance.array[66605] = true;
-    instance.array[66606] = true;
-    instance.array[66607] = true;
-    instance.array[66608] = true;
-    instance.array[66609] = true;
-    instance.array[66610] = true;
-    instance.array[66611] = true;
-    instance.array[66612] = true;
-    instance.array[66613] = true;
-    instance.array[66614] = true;
-    instance.array[66615] = true;
-    instance.array[66616] = true;
-    instance.array[66617] = true;
-    instance.array[66618] = true;
-    instance.array[66619] = true;
-    instance.array[66620] = true;
-    instance.array[66621] = true;
-    instance.array[66622] = true;
-    instance.array[66623] = true;
-    instance.array[66624] = true;
-    instance.array[66625] = true;
-    instance.array[66626] = true;
-    instance.array[66627] = true;
-    instance.array[66628] = true;
-    instance.array[66629] = true;
-    instance.array[66630] = true;
-    instance.array[66631] = true;
-    instance.array[66632] = true;
-    instance.array[66633] = true;
-    instance.array[66634] = true;
-    instance.array[66635] = true;
-    instance.array[66636] = true;
-    instance.array[66637] = true;
-    instance.array[66638] = true;
-    instance.array[66639] = true;
-    instance.array[66776] = true;
-    instance.array[66777] = true;
-    instance.array[66778] = true;
-    instance.array[66779] = true;
-    instance.array[66780] = true;
-    instance.array[66781] = true;
-    instance.array[66782] = true;
-    instance.array[66783] = true;
-    instance.array[66784] = true;
-    instance.array[66785] = true;
-    instance.array[66786] = true;
-    instance.array[66787] = true;
-    instance.array[66788] = true;
-    instance.array[66789] = true;
-    instance.array[66790] = true;
-    instance.array[66791] = true;
-    instance.array[66792] = true;
-    instance.array[66793] = true;
-    instance.array[66794] = true;
-    instance.array[66795] = true;
-    instance.array[66796] = true;
-    instance.array[66797] = true;
-    instance.array[66798] = true;
-    instance.array[66799] = true;
-    instance.array[66800] = true;
-    instance.array[66801] = true;
-    instance.array[66802] = true;
-    instance.array[66803] = true;
-    instance.array[66804] = true;
-    instance.array[66805] = true;
-    instance.array[66806] = true;
-    instance.array[66807] = true;
-    instance.array[66808] = true;
-    instance.array[66809] = true;
-    instance.array[66810] = true;
-    instance.array[66811] = true;
-    instance.array[68800] = true;
-    instance.array[68801] = true;
-    instance.array[68802] = true;
-    instance.array[68803] = true;
-    instance.array[68804] = true;
-    instance.array[68805] = true;
-    instance.array[68806] = true;
-    instance.array[68807] = true;
-    instance.array[68808] = true;
-    instance.array[68809] = true;
-    instance.array[68810] = true;
-    instance.array[68811] = true;
-    instance.array[68812] = true;
-    instance.array[68813] = true;
-    instance.array[68814] = true;
-    instance.array[68815] = true;
-    instance.array[68816] = true;
-    instance.array[68817] = true;
-    instance.array[68818] = true;
-    instance.array[68819] = true;
-    instance.array[68820] = true;
-    instance.array[68821] = true;
-    instance.array[68822] = true;
-    instance.array[68823] = true;
-    instance.array[68824] = true;
-    instance.array[68825] = true;
-    instance.array[68826] = true;
-    instance.array[68827] = true;
-    instance.array[68828] = true;
-    instance.array[68829] = true;
-    instance.array[68830] = true;
-    instance.array[68831] = true;
-    instance.array[68832] = true;
-    instance.array[68833] = true;
-    instance.array[68834] = true;
-    instance.array[68835] = true;
-    instance.array[68836] = true;
-    instance.array[68837] = true;
-    instance.array[68838] = true;
-    instance.array[68839] = true;
-    instance.array[68840] = true;
-    instance.array[68841] = true;
-    instance.array[68842] = true;
-    instance.array[68843] = true;
-    instance.array[68844] = true;
-    instance.array[68845] = true;
-    instance.array[68846] = true;
-    instance.array[68847] = true;
-    instance.array[68848] = true;
-    instance.array[68849] = true;
-    instance.array[68850] = true;
-    instance.array[71872] = true;
-    instance.array[71873] = true;
-    instance.array[71874] = true;
-    instance.array[71875] = true;
-    instance.array[71876] = true;
-    instance.array[71877] = true;
-    instance.array[71878] = true;
-    instance.array[71879] = true;
-    instance.array[71880] = true;
-    instance.array[71881] = true;
-    instance.array[71882] = true;
-    instance.array[71883] = true;
-    instance.array[71884] = true;
-    instance.array[71885] = true;
-    instance.array[71886] = true;
-    instance.array[71887] = true;
-    instance.array[71888] = true;
-    instance.array[71889] = true;
-    instance.array[71890] = true;
-    instance.array[71891] = true;
-    instance.array[71892] = true;
-    instance.array[71893] = true;
-    instance.array[71894] = true;
-    instance.array[71895] = true;
-    instance.array[71896] = true;
-    instance.array[71897] = true;
-    instance.array[71898] = true;
-    instance.array[71899] = true;
-    instance.array[71900] = true;
-    instance.array[71901] = true;
-    instance.array[71902] = true;
-    instance.array[71903] = true;
-    instance.array[93792] = true;
-    instance.array[93793] = true;
-    instance.array[93794] = true;
-    instance.array[93795] = true;
-    instance.array[93796] = true;
-    instance.array[93797] = true;
-    instance.array[93798] = true;
-    instance.array[93799] = true;
-    instance.array[93800] = true;
-    instance.array[93801] = true;
-    instance.array[93802] = true;
-    instance.array[93803] = true;
-    instance.array[93804] = true;
-    instance.array[93805] = true;
-    instance.array[93806] = true;
-    instance.array[93807] = true;
-    instance.array[93808] = true;
-    instance.array[93809] = true;
-    instance.array[93810] = true;
-    instance.array[93811] = true;
-    instance.array[93812] = true;
-    instance.array[93813] = true;
-    instance.array[93814] = true;
-    instance.array[93815] = true;
-    instance.array[93816] = true;
-    instance.array[93817] = true;
-    instance.array[93818] = true;
-    instance.array[93819] = true;
-    instance.array[93820] = true;
-    instance.array[93821] = true;
-    instance.array[93822] = true;
-    instance.array[93823] = true;
-    instance.array[119834] = true;
-    instance.array[119835] = true;
-    instance.array[119836] = true;
-    instance.array[119837] = true;
-    instance.array[119838] = true;
-    instance.array[119839] = true;
-    instance.array[119840] = true;
-    instance.array[119841] = true;
-    instance.array[119842] = true;
-    instance.array[119843] = true;
-    instance.array[119844] = true;
-    instance.array[119845] = true;
-    instance.array[119846] = true;
-    instance.array[119847] = true;
-    instance.array[119848] = true;
-    instance.array[119849] = true;
-    instance.array[119850] = true;
-    instance.array[119851] = true;
-    instance.array[119852] = true;
-    instance.array[119853] = true;
-    instance.array[119854] = true;
-    instance.array[119855] = true;
-    instance.array[119856] = true;
-    instance.array[119857] = true;
-    instance.array[119858] = true;
-    instance.array[119859] = true;
-    instance.array[119886] = true;
-    instance.array[119887] = true;
-    instance.array[119888] = true;
-    instance.array[119889] = true;
-    instance.array[119890] = true;
-    instance.array[119891] = true;
-    instance.array[119892] = true;
-    instance.array[119894] = true;
-    instance.array[119895] = true;
-    instance.array[119896] = true;
-    instance.array[119897] = true;
-    instance.array[119898] = true;
-    instance.array[119899] = true;
-    instance.array[119900] = true;
-    instance.array[119901] = true;
-    instance.array[119902] = true;
-    instance.array[119903] = true;
-    instance.array[119904] = true;
-    instance.array[119905] = true;
-    instance.array[119906] = true;
-    instance.array[119907] = true;
-    instance.array[119908] = true;
-    instance.array[119909] = true;
-    instance.array[119910] = true;
-    instance.array[119911] = true;
-    instance.array[119938] = true;
-    instance.array[119939] = true;
-    instance.array[119940] = true;
-    instance.array[119941] = true;
-    instance.array[119942] = true;
-    instance.array[119943] = true;
-    instance.array[119944] = true;
-    instance.array[119945] = true;
-    instance.array[119946] = true;
-    instance.array[119947] = true;
-    instance.array[119948] = true;
-    instance.array[119949] = true;
-    instance.array[119950] = true;
-    instance.array[119951] = true;
-    instance.array[119952] = true;
-    instance.array[119953] = true;
-    instance.array[119954] = true;
-    instance.array[119955] = true;
-    instance.array[119956] = true;
-    instance.array[119957] = true;
-    instance.array[119958] = true;
-    instance.array[119959] = true;
-    instance.array[119960] = true;
-    instance.array[119961] = true;
-    instance.array[119962] = true;
-    instance.array[119963] = true;
-    instance.array[119990] = true;
-    instance.array[119991] = true;
-    instance.array[119992] = true;
-    instance.array[119993] = true;
     instance.array[119995] = true;
-    instance.array[119997] = true;
-    instance.array[119998] = true;
-    instance.array[119999] = true;
-    instance.array[120000] = true;
-    instance.array[120001] = true;
-    instance.array[120002] = true;
-    instance.array[120003] = true;
-    instance.array[120005] = true;
-    instance.array[120006] = true;
-    instance.array[120007] = true;
-    instance.array[120008] = true;
-    instance.array[120009] = true;
-    instance.array[120010] = true;
-    instance.array[120011] = true;
-    instance.array[120012] = true;
-    instance.array[120013] = true;
-    instance.array[120014] = true;
-    instance.array[120015] = true;
-    instance.array[120042] = true;
-    instance.array[120043] = true;
-    instance.array[120044] = true;
-    instance.array[120045] = true;
-    instance.array[120046] = true;
-    instance.array[120047] = true;
-    instance.array[120048] = true;
-    instance.array[120049] = true;
-    instance.array[120050] = true;
-    instance.array[120051] = true;
-    instance.array[120052] = true;
-    instance.array[120053] = true;
-    instance.array[120054] = true;
-    instance.array[120055] = true;
-    instance.array[120056] = true;
-    instance.array[120057] = true;
-    instance.array[120058] = true;
-    instance.array[120059] = true;
-    instance.array[120060] = true;
-    instance.array[120061] = true;
-    instance.array[120062] = true;
-    instance.array[120063] = true;
-    instance.array[120064] = true;
-    instance.array[120065] = true;
-    instance.array[120066] = true;
-    instance.array[120067] = true;
-    instance.array[120094] = true;
-    instance.array[120095] = true;
-    instance.array[120096] = true;
-    instance.array[120097] = true;
-    instance.array[120098] = true;
-    instance.array[120099] = true;
-    instance.array[120100] = true;
-    instance.array[120101] = true;
-    instance.array[120102] = true;
-    instance.array[120103] = true;
-    instance.array[120104] = true;
-    instance.array[120105] = true;
-    instance.array[120106] = true;
-    instance.array[120107] = true;
-    instance.array[120108] = true;
-    instance.array[120109] = true;
-    instance.array[120110] = true;
-    instance.array[120111] = true;
-    instance.array[120112] = true;
-    instance.array[120113] = true;
-    instance.array[120114] = true;
-    instance.array[120115] = true;
-    instance.array[120116] = true;
-    instance.array[120117] = true;
-    instance.array[120118] = true;
-    instance.array[120119] = true;
-    instance.array[120146] = true;
-    instance.array[120147] = true;
-    instance.array[120148] = true;
-    instance.array[120149] = true;
-    instance.array[120150] = true;
-    instance.array[120151] = true;
-    instance.array[120152] = true;
-    instance.array[120153] = true;
-    instance.array[120154] = true;
-    instance.array[120155] = true;
-    instance.array[120156] = true;
-    instance.array[120157] = true;
-    instance.array[120158] = true;
-    instance.array[120159] = true;
-    instance.array[120160] = true;
-    instance.array[120161] = true;
-    instance.array[120162] = true;
-    instance.array[120163] = true;
-    instance.array[120164] = true;
-    instance.array[120165] = true;
-    instance.array[120166] = true;
-    instance.array[120167] = true;
-    instance.array[120168] = true;
-    instance.array[120169] = true;
-    instance.array[120170] = true;
-    instance.array[120171] = true;
-    instance.array[120198] = true;
-    instance.array[120199] = true;
-    instance.array[120200] = true;
-    instance.array[120201] = true;
-    instance.array[120202] = true;
-    instance.array[120203] = true;
-    instance.array[120204] = true;
-    instance.array[120205] = true;
-    instance.array[120206] = true;
-    instance.array[120207] = true;
-    instance.array[120208] = true;
-    instance.array[120209] = true;
-    instance.array[120210] = true;
-    instance.array[120211] = true;
-    instance.array[120212] = true;
-    instance.array[120213] = true;
-    instance.array[120214] = true;
-    instance.array[120215] = true;
-    instance.array[120216] = true;
-    instance.array[120217] = true;
-    instance.array[120218] = true;
-    instance.array[120219] = true;
-    instance.array[120220] = true;
-    instance.array[120221] = true;
-    instance.array[120222] = true;
-    instance.array[120223] = true;
-    instance.array[120250] = true;
-    instance.array[120251] = true;
-    instance.array[120252] = true;
-    instance.array[120253] = true;
-    instance.array[120254] = true;
-    instance.array[120255] = true;
-    instance.array[120256] = true;
-    instance.array[120257] = true;
-    instance.array[120258] = true;
-    instance.array[120259] = true;
-    instance.array[120260] = true;
-    instance.array[120261] = true;
-    instance.array[120262] = true;
-    instance.array[120263] = true;
-    instance.array[120264] = true;
-    instance.array[120265] = true;
-    instance.array[120266] = true;
-    instance.array[120267] = true;
-    instance.array[120268] = true;
-    instance.array[120269] = true;
-    instance.array[120270] = true;
-    instance.array[120271] = true;
-    instance.array[120272] = true;
-    instance.array[120273] = true;
-    instance.array[120274] = true;
-    instance.array[120275] = true;
-    instance.array[120302] = true;
-    instance.array[120303] = true;
-    instance.array[120304] = true;
-    instance.array[120305] = true;
-    instance.array[120306] = true;
-    instance.array[120307] = true;
-    instance.array[120308] = true;
-    instance.array[120309] = true;
-    instance.array[120310] = true;
-    instance.array[120311] = true;
-    instance.array[120312] = true;
-    instance.array[120313] = true;
-    instance.array[120314] = true;
-    instance.array[120315] = true;
-    instance.array[120316] = true;
-    instance.array[120317] = true;
-    instance.array[120318] = true;
-    instance.array[120319] = true;
-    instance.array[120320] = true;
-    instance.array[120321] = true;
-    instance.array[120322] = true;
-    instance.array[120323] = true;
-    instance.array[120324] = true;
-    instance.array[120325] = true;
-    instance.array[120326] = true;
-    instance.array[120327] = true;
-    instance.array[120354] = true;
-    instance.array[120355] = true;
-    instance.array[120356] = true;
-    instance.array[120357] = true;
-    instance.array[120358] = true;
-    instance.array[120359] = true;
-    instance.array[120360] = true;
-    instance.array[120361] = true;
-    instance.array[120362] = true;
-    instance.array[120363] = true;
-    instance.array[120364] = true;
-    instance.array[120365] = true;
-    instance.array[120366] = true;
-    instance.array[120367] = true;
-    instance.array[120368] = true;
-    instance.array[120369] = true;
-    instance.array[120370] = true;
-    instance.array[120371] = true;
-    instance.array[120372] = true;
-    instance.array[120373] = true;
-    instance.array[120374] = true;
-    instance.array[120375] = true;
-    instance.array[120376] = true;
-    instance.array[120377] = true;
-    instance.array[120378] = true;
-    instance.array[120379] = true;
-    instance.array[120406] = true;
-    instance.array[120407] = true;
-    instance.array[120408] = true;
-    instance.array[120409] = true;
-    instance.array[120410] = true;
-    instance.array[120411] = true;
-    instance.array[120412] = true;
-    instance.array[120413] = true;
-    instance.array[120414] = true;
-    instance.array[120415] = true;
-    instance.array[120416] = true;
-    instance.array[120417] = true;
-    instance.array[120418] = true;
-    instance.array[120419] = true;
-    instance.array[120420] = true;
-    instance.array[120421] = true;
-    instance.array[120422] = true;
-    instance.array[120423] = true;
-    instance.array[120424] = true;
-    instance.array[120425] = true;
-    instance.array[120426] = true;
-    instance.array[120427] = true;
-    instance.array[120428] = true;
-    instance.array[120429] = true;
-    instance.array[120430] = true;
-    instance.array[120431] = true;
-    instance.array[120458] = true;
-    instance.array[120459] = true;
-    instance.array[120460] = true;
-    instance.array[120461] = true;
-    instance.array[120462] = true;
-    instance.array[120463] = true;
-    instance.array[120464] = true;
-    instance.array[120465] = true;
-    instance.array[120466] = true;
-    instance.array[120467] = true;
-    instance.array[120468] = true;
-    instance.array[120469] = true;
-    instance.array[120470] = true;
-    instance.array[120471] = true;
-    instance.array[120472] = true;
-    instance.array[120473] = true;
-    instance.array[120474] = true;
-    instance.array[120475] = true;
-    instance.array[120476] = true;
-    instance.array[120477] = true;
-    instance.array[120478] = true;
-    instance.array[120479] = true;
-    instance.array[120480] = true;
-    instance.array[120481] = true;
-    instance.array[120482] = true;
-    instance.array[120483] = true;
-    instance.array[120484] = true;
-    instance.array[120485] = true;
-    instance.array[120514] = true;
-    instance.array[120515] = true;
-    instance.array[120516] = true;
-    instance.array[120517] = true;
-    instance.array[120518] = true;
-    instance.array[120519] = true;
-    instance.array[120520] = true;
-    instance.array[120521] = true;
-    instance.array[120522] = true;
-    instance.array[120523] = true;
-    instance.array[120524] = true;
-    instance.array[120525] = true;
-    instance.array[120526] = true;
-    instance.array[120527] = true;
-    instance.array[120528] = true;
-    instance.array[120529] = true;
-    instance.array[120530] = true;
-    instance.array[120531] = true;
-    instance.array[120532] = true;
-    instance.array[120533] = true;
-    instance.array[120534] = true;
-    instance.array[120535] = true;
-    instance.array[120536] = true;
-    instance.array[120537] = true;
-    instance.array[120538] = true;
-    instance.array[120540] = true;
-    instance.array[120541] = true;
-    instance.array[120542] = true;
-    instance.array[120543] = true;
-    instance.array[120544] = true;
-    instance.array[120545] = true;
-    instance.array[120572] = true;
-    instance.array[120573] = true;
-    instance.array[120574] = true;
-    instance.array[120575] = true;
-    instance.array[120576] = true;
-    instance.array[120577] = true;
-    instance.array[120578] = true;
-    instance.array[120579] = true;
-    instance.array[120580] = true;
-    instance.array[120581] = true;
-    instance.array[120582] = true;
-    instance.array[120583] = true;
-    instance.array[120584] = true;
-    instance.array[120585] = true;
-    instance.array[120586] = true;
-    instance.array[120587] = true;
-    instance.array[120588] = true;
-    instance.array[120589] = true;
-    instance.array[120590] = true;
-    instance.array[120591] = true;
-    instance.array[120592] = true;
-    instance.array[120593] = true;
-    instance.array[120594] = true;
-    instance.array[120595] = true;
-    instance.array[120596] = true;
-    instance.array[120598] = true;
-    instance.array[120599] = true;
-    instance.array[120600] = true;
-    instance.array[120601] = true;
-    instance.array[120602] = true;
-    instance.array[120603] = true;
-    instance.array[120630] = true;
-    instance.array[120631] = true;
-    instance.array[120632] = true;
-    instance.array[120633] = true;
-    instance.array[120634] = true;
-    instance.array[120635] = true;
-    instance.array[120636] = true;
-    instance.array[120637] = true;
-    instance.array[120638] = true;
-    instance.array[120639] = true;
-    instance.array[120640] = true;
-    instance.array[120641] = true;
-    instance.array[120642] = true;
-    instance.array[120643] = true;
-    instance.array[120644] = true;
-    instance.array[120645] = true;
-    instance.array[120646] = true;
-    instance.array[120647] = true;
-    instance.array[120648] = true;
-    instance.array[120649] = true;
-    instance.array[120650] = true;
-    instance.array[120651] = true;
-    instance.array[120652] = true;
-    instance.array[120653] = true;
-    instance.array[120654] = true;
-    instance.array[120656] = true;
-    instance.array[120657] = true;
-    instance.array[120658] = true;
-    instance.array[120659] = true;
-    instance.array[120660] = true;
-    instance.array[120661] = true;
-    instance.array[120688] = true;
-    instance.array[120689] = true;
-    instance.array[120690] = true;
-    instance.array[120691] = true;
-    instance.array[120692] = true;
-    instance.array[120693] = true;
-    instance.array[120694] = true;
-    instance.array[120695] = true;
-    instance.array[120696] = true;
-    instance.array[120697] = true;
-    instance.array[120698] = true;
-    instance.array[120699] = true;
-    instance.array[120700] = true;
-    instance.array[120701] = true;
-    instance.array[120702] = true;
-    instance.array[120703] = true;
-    instance.array[120704] = true;
-    instance.array[120705] = true;
-    instance.array[120706] = true;
-    instance.array[120707] = true;
-    instance.array[120708] = true;
-    instance.array[120709] = true;
-    instance.array[120710] = true;
-    instance.array[120711] = true;
-    instance.array[120712] = true;
-    instance.array[120714] = true;
-    instance.array[120715] = true;
-    instance.array[120716] = true;
-    instance.array[120717] = true;
-    instance.array[120718] = true;
-    instance.array[120719] = true;
-    instance.array[120746] = true;
-    instance.array[120747] = true;
-    instance.array[120748] = true;
-    instance.array[120749] = true;
-    instance.array[120750] = true;
-    instance.array[120751] = true;
-    instance.array[120752] = true;
-    instance.array[120753] = true;
-    instance.array[120754] = true;
-    instance.array[120755] = true;
-    instance.array[120756] = true;
-    instance.array[120757] = true;
-    instance.array[120758] = true;
-    instance.array[120759] = true;
-    instance.array[120760] = true;
-    instance.array[120761] = true;
-    instance.array[120762] = true;
-    instance.array[120763] = true;
-    instance.array[120764] = true;
-    instance.array[120765] = true;
-    instance.array[120766] = true;
-    instance.array[120767] = true;
-    instance.array[120768] = true;
-    instance.array[120769] = true;
-    instance.array[120770] = true;
-    instance.array[120772] = true;
-    instance.array[120773] = true;
-    instance.array[120774] = true;
-    instance.array[120775] = true;
-    instance.array[120776] = true;
-    instance.array[120777] = true;
     instance.array[120779] = true;
     instance.array[125218] = true;
-    instance.array[125219] = true;
-    instance.array[125220] = true;
-    instance.array[125221] = true;
-    instance.array[125222] = true;
-    instance.array[125223] = true;
-    instance.array[125224] = true;
-    instance.array[125225] = true;
-    instance.array[125226] = true;
-    instance.array[125227] = true;
-    instance.array[125228] = true;
-    instance.array[125229] = true;
-    instance.array[125230] = true;
-    instance.array[125231] = true;
-    instance.array[125232] = true;
-    instance.array[125233] = true;
-    instance.array[125234] = true;
-    instance.array[125235] = true;
-    instance.array[125236] = true;
-    instance.array[125237] = true;
-    instance.array[125238] = true;
-    instance.array[125239] = true;
-    instance.array[125240] = true;
-    instance.array[125241] = true;
-    instance.array[125242] = true;
-    instance.array[125243] = true;
-    instance.array[125244] = true;
-    instance.array[125245] = true;
-    instance.array[125246] = true;
-    instance.array[125247] = true;
-    instance.array[125248] = true;
-    instance.array[125249] = true;
-    instance.array[125250] = true;
-    instance.array[125251] = true;
+
+    var index: u21 = 0;
+    index = 97;
+    while (index <= 122) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 223;
+    while (index <= 246) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 248;
+    while (index <= 255) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 311;
+    while (index <= 312) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 328;
+    while (index <= 329) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 382;
+    while (index <= 384) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 396;
+    while (index <= 397) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 409;
+    while (index <= 411) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 426;
+    while (index <= 427) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 441;
+    while (index <= 442) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 445;
+    while (index <= 447) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 476;
+    while (index <= 477) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 495;
+    while (index <= 496) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 563;
+    while (index <= 569) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 575;
+    while (index <= 576) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 591;
+    while (index <= 659) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 661;
+    while (index <= 687) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 891;
+    while (index <= 893) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 940;
+    while (index <= 974) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 976;
+    while (index <= 977) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 981;
+    while (index <= 983) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 1007;
+    while (index <= 1011) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 1019;
+    while (index <= 1020) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 1072;
+    while (index <= 1119) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 1230;
+    while (index <= 1231) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 1376;
+    while (index <= 1416) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 4304;
+    while (index <= 4346) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 4349;
+    while (index <= 4351) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 5112;
+    while (index <= 5117) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 7296;
+    while (index <= 7304) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 7424;
+    while (index <= 7467) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 7531;
+    while (index <= 7543) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 7545;
+    while (index <= 7578) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 7829;
+    while (index <= 7837) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 7935;
+    while (index <= 7943) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 7952;
+    while (index <= 7957) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 7968;
+    while (index <= 7975) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 7984;
+    while (index <= 7991) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8000;
+    while (index <= 8005) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8016;
+    while (index <= 8023) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8032;
+    while (index <= 8039) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8048;
+    while (index <= 8061) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8064;
+    while (index <= 8071) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8080;
+    while (index <= 8087) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8096;
+    while (index <= 8103) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8112;
+    while (index <= 8116) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8118;
+    while (index <= 8119) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8130;
+    while (index <= 8132) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8134;
+    while (index <= 8135) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8144;
+    while (index <= 8147) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8150;
+    while (index <= 8151) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8160;
+    while (index <= 8167) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8178;
+    while (index <= 8180) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8182;
+    while (index <= 8183) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8462;
+    while (index <= 8463) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8508;
+    while (index <= 8509) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8518;
+    while (index <= 8521) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 11312;
+    while (index <= 11358) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 11365;
+    while (index <= 11366) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 11379;
+    while (index <= 11380) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 11382;
+    while (index <= 11387) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 11491;
+    while (index <= 11492) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 11520;
+    while (index <= 11557) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 42799;
+    while (index <= 42801) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 42865;
+    while (index <= 42872) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 42899;
+    while (index <= 42901) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 43824;
+    while (index <= 43866) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 43872;
+    while (index <= 43880) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 43888;
+    while (index <= 43967) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 64256;
+    while (index <= 64262) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 64275;
+    while (index <= 64279) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 65345;
+    while (index <= 65370) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 66600;
+    while (index <= 66639) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 66776;
+    while (index <= 66811) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 68800;
+    while (index <= 68850) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 71872;
+    while (index <= 71903) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 93792;
+    while (index <= 93823) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 119834;
+    while (index <= 119859) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 119886;
+    while (index <= 119892) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 119894;
+    while (index <= 119911) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 119938;
+    while (index <= 119963) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 119990;
+    while (index <= 119993) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 119997;
+    while (index <= 120003) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120005;
+    while (index <= 120015) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120042;
+    while (index <= 120067) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120094;
+    while (index <= 120119) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120146;
+    while (index <= 120171) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120198;
+    while (index <= 120223) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120250;
+    while (index <= 120275) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120302;
+    while (index <= 120327) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120354;
+    while (index <= 120379) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120406;
+    while (index <= 120431) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120458;
+    while (index <= 120485) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120514;
+    while (index <= 120538) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120540;
+    while (index <= 120545) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120572;
+    while (index <= 120596) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120598;
+    while (index <= 120603) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120630;
+    while (index <= 120654) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120656;
+    while (index <= 120661) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120688;
+    while (index <= 120712) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120714;
+    while (index <= 120719) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120746;
+    while (index <= 120770) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 120772;
+    while (index <= 120777) : (index += 1) {
+        instance.array[index] = true;
+    }
 
     // Placeholder: Struct name.
     return instance;
 }
 
 pub fn isLower(self: Lower, cp: u21) bool {
-    return if (cp >= self.array.len) false else self.array[cp];
+    return if (cp >= self.array.len or cp < self.lo or cp > self.hi) false else self.array[cp];
 }
