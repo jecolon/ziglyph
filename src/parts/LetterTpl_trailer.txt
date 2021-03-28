@@ -1,8 +1,0 @@
-    }};
-
-    for (ranges) |range| {{
-        if (cp >= range.start and cp <= range.end) return true;
-    }}
-
-    return if (cp >= self.array.len) false else self.array[cp];
-}}
