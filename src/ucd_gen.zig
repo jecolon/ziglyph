@@ -22,6 +22,18 @@ const Range = struct {
     end: u21,
 };
 
+const List = struct {
+    name: []const u8,
+    filename: []const u8,
+    items: []u21,
+    ranges: ?[]Range = null,
+};
+
+const Consolidated = struct {
+    code_points: []u21,
+    ranges: []Range,
+};
+
 const UcdGenerator = struct {
     allocator: *mem.Allocator,
 
@@ -244,144 +256,120 @@ const UcdGenerator = struct {
 
     fn write_files(self: *Self) !void {
         // Write out.
-        const List = struct {
-            name: []const u8,
-            items: []u21,
-        };
 
-        const lists = [_]List{
-            .{
-                .name = "Lower",
-                .items = self.lower.items,
-            },
-            .{
-                .name = "Mark",
-                .items = self.mark.items,
-            },
-            .{
-                .name = "Number",
-                .items = self.number.items,
-            },
-            .{
-                .name = "Punct",
-                .items = self.punct.items,
-            },
-            .{
-                .name = "Space",
-                .items = self.space.items,
-            },
-            .{
-                .name = "Symbol",
-                .items = self.symbol.items,
-            },
-            .{
-                .name = "Title",
-                .items = self.title.items,
-            },
-            .{
-                .name = "Upper",
-                .items = self.upper.items,
-            },
-        };
+        //for (lists) |list| {
+        //    // Prepare output file.
+        //    const file_name = try mem.concat(self.allocator, u8, &[3][]const u8{ "data/", list.name, ".zig" });
+        //    defer self.allocator.free(file_name);
+        //    var file = try std.fs.cwd().createFile(file_name, .{});
+        //    defer file.close();
+        //    var buf_writer = io.bufferedWriter(file.writer());
+        //    const writer = buf_writer.writer();
 
-        for (lists) |list| {
-            // Prepare output file.
-            const file_name = try mem.concat(self.allocator, u8, &[3][]const u8{ "data/", list.name, ".zig" });
-            defer self.allocator.free(file_name);
-            var file = try std.fs.cwd().createFile(file_name, .{});
-            defer file.close();
-            var buf_writer = io.bufferedWriter(file.writer());
-            const writer = buf_writer.writer();
+        //    // Write data.
+        //    const header_tpl = @embedFile("parts/ArrayTpl_header.txt");
+        //    const comment = try mem.concat(self.allocator, u8, &[3][]const u8{ "Unicode ", list.name, " code points data." });
+        //    defer self.allocator.free(comment);
+        //    const last = mem.max(u21, list.items);
+        //    _ = try writer.print(header_tpl, .{ comment, list.name, last + 1 });
 
-            // Write data.
-            const header_tpl = @embedFile("parts/ArrayTpl_header.txt");
-            const comment = try mem.concat(self.allocator, u8, &[3][]const u8{ "Unicode ", list.name, " code points data." });
-            defer self.allocator.free(comment);
-            const last = mem.max(u21, list.items);
-            _ = try writer.print(header_tpl, .{ comment, list.name, last + 1 });
+        //    var index: u21 = 0;
+        //    while (index <= last) : (index += 1) {
+        //        if (contains(list.items, index)) {
+        //            _ = try writer.print("    instance.array[{d}] = {b};\n", .{ index, true });
+        //        }
+        //    }
 
-            var index: u21 = 0;
-            while (index <= last) : (index += 1) {
-                if (contains(list.items, index)) {
-                    _ = try writer.print("    instance.array[{d}] = {b};\n", .{ index, true });
-                }
-            }
+        //    const trailer_tpl = @embedFile("parts/ArrayTpl_trailer.txt");
+        //    _ = try writer.print(trailer_tpl, .{list.name});
 
-            const trailer_tpl = @embedFile("parts/ArrayTpl_trailer.txt");
-            _ = try writer.print(trailer_tpl, .{list.name});
-
-            try buf_writer.flush();
-        }
+        //    try buf_writer.flush();
+        //}
 
         // Control and letter code points have ranges too.
-
-        const control_header_tpl = @embedFile("parts/ControlTpl_header.txt");
-        const control_tweener_tpl = @embedFile("parts/ControlTpl_tweener.txt");
-        const control_trailer_tpl = @embedFile("parts/ControlTpl_trailer.txt");
-        const letter_header_tpl = @embedFile("parts/LetterTpl_header.txt");
-        const letter_tweener_tpl = @embedFile("parts/LetterTpl_tweener.txt");
-        const letter_trailer_tpl = @embedFile("parts/LetterTpl_trailer.txt");
-
-        const WithRangeList = struct {
-            name: []const u8,
-            file_name: []const u8,
-            items: []u21,
-            ranges: []Range,
-        };
-
-        const wr_lists = [_]WithRangeList{
+        const lists = [_]List{
             .{
                 .name = "Control",
-                .file_name = "data/Control.zig",
+                .filename = "data/Control.zig",
                 .items = self.control.items,
                 .ranges = self.control_ranges.items,
             },
             .{
                 .name = "Letter",
-                .file_name = "data/Letter.zig",
+                .filename = "data/Letter.zig",
                 .items = self.letter.items,
                 .ranges = self.letter_ranges.items,
             },
+            .{
+                .name = "Lower",
+                .filename = "data/Lower.zig",
+                .items = self.lower.items,
+            },
+            .{
+                .name = "Mark",
+                .filename = "data/Mark.zig",
+                .items = self.mark.items,
+            },
+            .{
+                .name = "Number",
+                .filename = "data/Number.zig",
+                .items = self.number.items,
+            },
+            .{
+                .name = "Punct",
+                .filename = "data/Punct.zig",
+                .items = self.punct.items,
+            },
+            .{
+                .name = "Space",
+                .filename = "data/Space.zig",
+                .items = self.space.items,
+            },
+            .{
+                .name = "Symbol",
+                .filename = "data/Symbol.zig",
+                .items = self.symbol.items,
+            },
+            .{
+                .name = "Title",
+                .filename = "data/Title.zig",
+                .items = self.title.items,
+            },
+            .{
+                .name = "Upper",
+                .filename = "data/Upper.zig",
+                .items = self.upper.items,
+            },
         };
 
-        for (wr_lists) |list| {
+        const header_tpl = @embedFile("parts/header_tpl.txt");
+        const trailer_tpl = @embedFile("parts/trailer_tpl.txt");
+
+        for (lists) |list| {
             // Prepare output file.
-            var file = try std.fs.cwd().createFile(list.file_name, .{});
+            var file = try std.fs.cwd().createFile(list.filename, .{});
             defer file.close();
             var buf_writer = io.bufferedWriter(file.writer());
             const writer = buf_writer.writer();
 
             // Write data.
-            const last = mem.max(u21, list.items);
-            if (mem.eql(u8, list.name, "Control")) {
-                _ = try writer.print(control_header_tpl, .{last + 1});
-            } else {
-                _ = try writer.print(letter_header_tpl, .{last + 1});
-            }
+            const consolidated = try self.consolidate(list);
+            const array_size = mem.max(u21, consolidated.code_points) + 1;
+            const ranges_size = consolidated.ranges.len;
+            _ = try writer.print(header_tpl, .{ list.name, array_size, ranges_size });
 
             var index: u21 = 0;
-            while (index <= last) : (index += 1) {
-                if (contains(list.items, index)) {
-                    _ = try writer.print("    instance.array[{d}] = {b};\n", .{ index, true });
+            while (index < array_size) : (index += 1) {
+                if (contains(consolidated.code_points, index)) {
+                    _ = try writer.print("    instance.array[{d}] = true;\n", .{index});
                 }
             }
 
-            if (mem.eql(u8, list.name, "Control")) {
-                _ = try writer.print(control_tweener_tpl, .{});
-            } else {
-                _ = try writer.print(letter_tweener_tpl, .{});
+            for (consolidated.ranges) |range, i| {
+                _ = try writer.print("    instance.ranges[{d}] = Range.new(0x{X}, 0x{X});\n", .{ i, range.start, range.end });
             }
 
-            for (list.ranges) |range| {
-                _ = try writer.print("        .{{ .start = 0x{X}, .end = 0x{X} }},\n", .{ range.start, range.end });
-            }
-
-            if (mem.eql(u8, list.name, "Control")) {
-                _ = try writer.print(control_trailer_tpl, .{});
-            } else {
-                _ = try writer.print(letter_trailer_tpl, .{});
-            }
-
+            _ = try writer.print(trailer_tpl, .{list.name});
             try buf_writer.flush();
         }
 
@@ -483,6 +471,73 @@ const UcdGenerator = struct {
             .Title => try self.to_title_map.put(code_point, ccp),
             .Upper => try self.to_upper_map.put(code_point, ccp),
         }
+    }
+
+    fn consolidate(self: Self, list: List) !Consolidated {
+        const max: u21 = mem.max(u21, list.items);
+        var array = try self.allocator.alloc(bool, max + 1);
+        defer self.allocator.free(array);
+        var indices = std.ArrayList(u21).init(self.allocator);
+        defer indices.deinit();
+
+        var index: u21 = 0;
+        var last: u21 = 0;
+        var true_run = false;
+        while (index < array.len) : (index += 1) {
+            if (contains(list.items, index)) {
+                if (!true_run) {
+                    try indices.append(index);
+                    true_run = true;
+                }
+                array[index] = true;
+                last = index;
+            } else {
+                if (true_run) {
+                    try indices.append(last);
+                    true_run = false;
+                }
+                array[index] = false;
+            }
+        }
+
+        var cp_list = std.ArrayList(u21).init(self.allocator);
+        errdefer cp_list.deinit();
+        var range_list = std.ArrayList(Range).init(self.allocator);
+        errdefer range_list.deinit();
+
+        index = 0;
+        while (index < indices.items.len) {
+            var start = indices.items[index];
+            index += 1;
+            if (index >= indices.items.len) {
+                // End of list, add last one.
+                try cp_list.append(start);
+                break;
+            }
+
+            var end = indices.items[index];
+            if (end - start == 0) {
+                // Single code point.
+                try cp_list.append(start);
+            } else {
+                // Range
+                try range_list.append(.{ .start = start, .end = end });
+            }
+
+            index += 1;
+        }
+
+        // Add ranges from UCD.
+        if (list.ranges) |ranges| {
+            for (ranges) |range| {
+                try range_list.append(range);
+            }
+        }
+
+        return Consolidated{
+            .code_points = cp_list.toOwnedSlice(),
+            .ranges = range_list.toOwnedSlice(),
+        };
     }
 };
 
