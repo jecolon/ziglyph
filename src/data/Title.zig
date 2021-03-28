@@ -2,7 +2,6 @@
 // Placeholders:
 //    1. Struct name
 //    2. Array length
-//    3. Ranges length
 //! Unicode Title category code points data.
 
 const std = @import("std");
@@ -11,7 +10,6 @@ const Range = @import("../Range.zig");
 const Title = @This();
 
 array: [8189]bool = [_]bool{false} ** 8189,
-ranges: [3]Range = undefined, // Should this be optional?
 
 pub fn new() Title {
     var instance: Title = Title{};
@@ -20,23 +18,38 @@ pub fn new() Title {
     instance.array[456] = true;
     instance.array[459] = true;
     instance.array[498] = true;
+    instance.array[8072] = true;
+    instance.array[8073] = true;
+    instance.array[8074] = true;
+    instance.array[8075] = true;
+    instance.array[8076] = true;
+    instance.array[8077] = true;
+    instance.array[8078] = true;
+    instance.array[8079] = true;
+    instance.array[8088] = true;
+    instance.array[8089] = true;
+    instance.array[8090] = true;
+    instance.array[8091] = true;
+    instance.array[8092] = true;
+    instance.array[8093] = true;
+    instance.array[8094] = true;
+    instance.array[8095] = true;
+    instance.array[8104] = true;
+    instance.array[8105] = true;
+    instance.array[8106] = true;
+    instance.array[8107] = true;
+    instance.array[8108] = true;
+    instance.array[8109] = true;
+    instance.array[8110] = true;
+    instance.array[8111] = true;
     instance.array[8124] = true;
     instance.array[8140] = true;
     instance.array[8188] = true;
-    instance.ranges[0] = Range.new(0x1F88, 0x1F8F);
-    instance.ranges[1] = Range.new(0x1F98, 0x1F9F);
-    instance.ranges[2] = Range.new(0x1FA8, 0x1FAF);
 
     // Placeholder: Struct name.
     return instance;
 }
 
 pub fn isTitle(self: Title, cp: u21) bool {
-    if (cp < self.array.len and self.array[cp]) return true;
-
-    //for (self.ranges) |range| {
-    //    if (cp >= range.start and cp <= range.end) return true;
-    //}
-
-    return false;
+    return if (cp >= self.array.len) false else self.array[cp];
 }

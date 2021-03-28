@@ -2,7 +2,6 @@
 // Placeholders:
 //    1. Struct name
 //    2. Array length
-//    3. Ranges length
 //! Unicode {s} category code points data.
 
 const std = @import("std");
@@ -11,7 +10,6 @@ const Range = @import("../Range.zig");
 const {0s} = @This();
 
 array: [{d}]bool = [_]bool{{false}} ** {1d},
-ranges: [{d}]Range = undefined, // Should this be optional?
 
 pub fn new() {0s} {{
     var instance: {0s} = {0s}{{}};

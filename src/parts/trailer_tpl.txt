@@ -4,11 +4,5 @@
 }}
 
 pub fn is{s}(self: {0s}, cp: u21) bool {{
-    if (cp < self.array.len and self.array[cp]) return true;
-
-    //for (self.ranges) |range| {{
-    //    if (cp >= range.start and cp <= range.end) return true;
-    //}}
-
-    return false;
+    return if (cp >= self.array.len) false else self.array[cp];
 }}

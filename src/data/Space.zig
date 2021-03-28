@@ -2,7 +2,6 @@
 // Placeholders:
 //    1. Struct name
 //    2. Array length
-//    3. Ranges length
 //! Unicode Space category code points data.
 
 const std = @import("std");
@@ -11,7 +10,6 @@ const Range = @import("../Range.zig");
 const Space = @This();
 
 array: [12289]bool = [_]bool{false} ** 12289,
-ranges: [1]Range = undefined, // Should this be optional?
 
 pub fn new() Space {
     var instance: Space = Space{};
@@ -19,21 +17,25 @@ pub fn new() Space {
     instance.array[32] = true;
     instance.array[160] = true;
     instance.array[5760] = true;
+    instance.array[8192] = true;
+    instance.array[8193] = true;
+    instance.array[8194] = true;
+    instance.array[8195] = true;
+    instance.array[8196] = true;
+    instance.array[8197] = true;
+    instance.array[8198] = true;
+    instance.array[8199] = true;
+    instance.array[8200] = true;
+    instance.array[8201] = true;
+    instance.array[8202] = true;
     instance.array[8239] = true;
     instance.array[8287] = true;
     instance.array[12288] = true;
-    instance.ranges[0] = Range.new(0x2000, 0x200A);
 
     // Placeholder: Struct name.
     return instance;
 }
 
 pub fn isSpace(self: Space, cp: u21) bool {
-    if (cp < self.array.len and self.array[cp]) return true;
-
-    //for (self.ranges) |range| {
-    //    if (cp >= range.start and cp <= range.end) return true;
-    //}
-
-    return false;
+    return if (cp >= self.array.len) false else self.array[cp];
 }
