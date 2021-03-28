@@ -2,6 +2,8 @@
 // Placeholders:
 //    1. Struct name
 //    2. Array length
+//    3. Highest code point
+//    4. Lowest code point
 //! Unicode Title category code points data.
 
 const std = @import("std");
@@ -10,6 +12,8 @@ const Range = @import("../Range.zig");
 const Title = @This();
 
 array: [8189]bool = [_]bool{false} ** 8189,
+lo: u21 = 453,
+hi: u21 = 8188,
 
 pub fn new() Title {
     var instance: Title = Title{};
@@ -18,38 +22,28 @@ pub fn new() Title {
     instance.array[456] = true;
     instance.array[459] = true;
     instance.array[498] = true;
-    instance.array[8072] = true;
-    instance.array[8073] = true;
-    instance.array[8074] = true;
-    instance.array[8075] = true;
-    instance.array[8076] = true;
-    instance.array[8077] = true;
-    instance.array[8078] = true;
-    instance.array[8079] = true;
-    instance.array[8088] = true;
-    instance.array[8089] = true;
-    instance.array[8090] = true;
-    instance.array[8091] = true;
-    instance.array[8092] = true;
-    instance.array[8093] = true;
-    instance.array[8094] = true;
-    instance.array[8095] = true;
-    instance.array[8104] = true;
-    instance.array[8105] = true;
-    instance.array[8106] = true;
-    instance.array[8107] = true;
-    instance.array[8108] = true;
-    instance.array[8109] = true;
-    instance.array[8110] = true;
-    instance.array[8111] = true;
     instance.array[8124] = true;
     instance.array[8140] = true;
     instance.array[8188] = true;
+
+    var index: u21 = 0;
+    index = 8072;
+    while (index <= 8079) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8088;
+    while (index <= 8095) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8104;
+    while (index <= 8111) : (index += 1) {
+        instance.array[index] = true;
+    }
 
     // Placeholder: Struct name.
     return instance;
 }
 
 pub fn isTitle(self: Title, cp: u21) bool {
-    return if (cp >= self.array.len) false else self.array[cp];
+    return if (cp >= self.array.len or cp < self.lo or cp > self.hi) false else self.array[cp];
 }

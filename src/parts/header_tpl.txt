@@ -2,6 +2,8 @@
 // Placeholders:
 //    1. Struct name
 //    2. Array length
+//    3. Highest code point
+//    4. Lowest code point
 //! Unicode {s} category code points data.
 
 const std = @import("std");
@@ -10,6 +12,8 @@ const Range = @import("../Range.zig");
 const {0s} = @This();
 
 array: [{d}]bool = [_]bool{{false}} ** {1d},
+lo: u21 = {d},
+hi: u21 = {d},
 
 pub fn new() {0s} {{
     var instance: {0s} = {0s}{{}};
