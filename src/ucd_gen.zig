@@ -325,6 +325,8 @@ const UcdGenerator = struct {
 
             // Write data.
             const consolidated = try self.consolidate(list);
+            defer self.allocator.free(consolidated.code_points);
+            defer self.allocator.free(consolidated.ranges);
             _ = try writer.print(header_tpl, .{ list.name, consolidated.hi + 1, consolidated.lo, consolidated.hi });
 
             var index: u21 = 0;
