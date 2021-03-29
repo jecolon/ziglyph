@@ -26,46 +26,46 @@ pub fn main() !void {
     const mixed = [_]u21{ '5', 'o', '9', '!', ' ', '℃', 'ᾭ', 'G' };
     for (mixed) |r| {
         std.debug.print("\nFor {u}:\n", .{r});
-        if (z.isControl(r)) { // added 1K to binary
+        if (z.isControl(r)) { // added 1.1M to binary!!
             std.debug.print("\tis control\n", .{});
         }
-        if (z.isNumber(r)) { // added 3K to binary
+        if (z.isNumber(r)) { // added 100K to binary
             std.debug.print("\tis number\n", .{});
         }
-        if (z.isGraphic(r)) { // added 1K to binary
+        if (z.isGraphic(r)) { // added 0 to binary
             std.debug.print("\tis graphic\n", .{});
         }
-        if (z.isAlphaNum(r)) {
+        if (z.isAlphaNum(r)) { // adds 0 to binary
             std.debug.print("\tis alphanumeric\n", .{});
         }
-        if (z.isLetter(r)) { // added 62K to binary !!
+        if (z.isLetter(r)) { // added 200K to binary !!
             std.debug.print("\tis letter\n", .{});
         }
-        if (z.isLower(r)) { // added 6K to binary
+        if (z.isLower(r)) { // added 200K to binary
             std.debug.print("\tis lower case\n", .{});
         }
-        if (z.isMark(r)) { // added 5K to binary
+        if (z.isMark(r)) { // added 1.1M to binary !!
             std.debug.print("\tis mark\n", .{});
         }
-        if (z.isPrint(r)) { // added 1K to binary
+        if (z.isPrint(r)) { // added 0 to binary
             std.debug.print("\tis printable\n", .{});
         }
         if (!z.isPrint(r)) {
             std.debug.print("\tis not printable\n", .{});
         }
-        if (z.isPunct(r)) { // added 3K to binary
+        if (z.isPunct(r)) { // added 137K to binary
             std.debug.print("\tis punct\n", .{});
         }
-        if (z.isSpace(r)) {
+        if (z.isSpace(r)) { // Adds 12K to binary
             std.debug.print("\tis space\n", .{});
         }
-        if (z.isSymbol(r)) { // added 5K to binary
+        if (z.isSymbol(r)) { // added 131K to binary
             std.debug.print("\tis symbol\n", .{});
         }
-        if (z.isTitle(r)) {
+        if (z.isTitle(r)) { // Base binary at 18K
             std.debug.print("\tis title case\n", .{});
         }
-        if (z.isUpper(r)) { // added 5K to binary
+        if (z.isUpper(r)) { // added 100K to binary
             std.debug.print("\tis upper case\n", .{});
         }
     }
