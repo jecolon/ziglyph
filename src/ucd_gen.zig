@@ -394,11 +394,20 @@ const UcdGenerator = struct {
             var buf_writer = io.bufferedWriter(file.writer());
             const writer = buf_writer.writer();
 
-            _ = try writer.print(map_header_tpl, .{ cm.comment, cm.name });
-
+            var lo: u21 = 0x10FFFF;
+            var hi: u21 = 0;
             var iter = cm.map.iterator();
             while (iter.next()) |entry| {
-                _ = try writer.print("    try instance.map.put(0x{X}, 0x{X});\n", .{ entry.key, entry.value });
+                if (entry.key < lo) lo = entry.key;
+                if (entry.key > hi) hi = entry.key;
+            }
+
+            const array_length = hi - lo + 1;
+            _ = try writer.print(map_header_tpl, .{ cm.comment, cm.name, array_length, lo, hi });
+
+            iter = cm.map.iterator();
+            while (iter.next()) |entry| {
+                _ = try writer.print("    instance.array[{d}] = 0x{X};\n", .{ entry.key - lo, entry.value });
             }
 
             _ = try writer.print(map_trailer_tpl, .{cm.method});

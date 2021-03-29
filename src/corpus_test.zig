@@ -35,12 +35,9 @@ pub fn main() !void {
 
     //var allocator = std.testing.allocator;
     var allocator = std.heap.page_allocator;
-    var lower_map = try LowerMap.init(allocator);
-    defer lower_map.deinit();
-    var title_map = try TitleMap.init(allocator);
-    defer title_map.deinit();
-    var upper_map = try UpperMap.init(allocator);
-    defer upper_map.deinit();
+    var lower_map = LowerMap.new();
+    var title_map = TitleMap.new();
+    var upper_map = UpperMap.new();
 
     var c_count: usize = 0;
     var l_count: usize = 0;

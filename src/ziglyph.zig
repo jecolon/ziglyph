@@ -61,15 +61,6 @@ pub const Ziglyph = struct {
         if (self.decomp_map) |*decomp_map| {
             decomp_map.deinit();
         }
-        if (self.lower_map) |*lower_map| {
-            lower_map.deinit();
-        }
-        if (self.title_map) |*title_map| {
-            title_map.deinit();
-        }
-        if (self.upper_map) |*upper_map| {
-            upper_map.deinit();
-        }
     }
 
     /// isAlphaNum covers all the Unicode letter and number space, not just ASCII.
@@ -235,7 +226,7 @@ pub const Ziglyph = struct {
     pub fn toLower(self: *Self, cp: u21) !u21 {
         // Lazy init.
         if (self.lower_map == null) {
-            self.lower_map = try LowerMap.init(self.allocator);
+            self.lower_map = LowerMap.new();
         }
 
         return self.lower_map.?.toLower(cp);
@@ -247,7 +238,7 @@ pub const Ziglyph = struct {
     pub fn toTitle(self: *Self, cp: u21) !u21 {
         // Lazy init.
         if (self.title_map == null) {
-            self.title_map = try TitleMap.init(self.allocator);
+            self.title_map = TitleMap.new();
         }
 
         return self.title_map.?.toTitle(cp);
@@ -259,7 +250,7 @@ pub const Ziglyph = struct {
     pub fn toUpper(self: *Self, cp: u21) !u21 {
         // Lazy init.
         if (self.upper_map == null) {
-            self.upper_map = try UpperMap.init(self.allocator);
+            self.upper_map = UpperMap.new();
         }
 
         return self.upper_map.?.toUpper(cp);

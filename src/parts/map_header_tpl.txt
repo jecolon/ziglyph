@@ -2,16 +2,18 @@
 // Placeholders:
 //    1. Top-level comment
 //    2. Struct name
-//    3. Struct name
-//! {s}
+//    3. Array length
+//    4. Highest code point
+//    5. Lowest code point
+//! {0s}
 
 const std = @import("std");
 const {1s} = @This();
 
-map: std.AutoHashMap(u21, u21),
+array: [{2d}]u21 = [_]u21{{0}} ** {2d},
+lo: u21 = {3d},
+hi: u21 = {4d},
 
-pub fn init(allocator: *std.mem.Allocator) !{1s} {{
-    var instance = {1s}{{
-        .map = std.AutoHashMap(u21, u21).init(allocator),
-    }};
+pub fn new() {1s} {{
+    var instance = {1s}{{}};
 

@@ -90,9 +90,7 @@ test "Component structs" {
     // Simple structs don't require init / deinit.
     const letter = Letter.new();
     const upper = Upper.new();
-    // Case mappings require init and defer deinit.
-    var upper_map = try UpperMap.init(std.testing.allocator);
-    defer upper_map.deinit();
+    var upper_map = UpperMap.new();
 
     const z = 'z';
     expect(letter.isLetter(z));
@@ -164,8 +162,7 @@ test "isLower" {
 }
 
 test "toLower" {
-    var z = try LowerMap.init(std.testing.allocator);
-    defer z.deinit();
+    var z = LowerMap.new();
 
     expectEqual(z.toLower('a'), 'a');
     expectEqual(z.toLower('A'), 'a');
@@ -190,8 +187,7 @@ test "isUpper" {
 }
 
 test "toUpper" {
-    var z = try UpperMap.init(std.testing.allocator);
-    defer z.deinit();
+    var z = UpperMap.new();
 
     expectEqual(z.toUpper('a'), 'A');
     expectEqual(z.toUpper('A'), 'A');
@@ -214,8 +210,7 @@ test "isTitle" {
 }
 
 test "toTitle" {
-    var z = try TitleMap.init(std.testing.allocator);
-    defer z.deinit();
+    var z = TitleMap.new();
 
     expectEqual(z.toTitle('a'), 'A');
     expectEqual(z.toTitle('A'), 'A');
