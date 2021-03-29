@@ -20037,11 +20037,16 @@ pub fn deinit(self: *Self) void {
     self.map.deinit();
 }
 
+/// decomposeCodePoint will convert a code point into its component code points if applicable.
+/// Returns null if the code point cannot be decomposed. This method may return an error because 
+/// of lazy initialization allocation.
 pub fn decomposeCodePoint(self: Self, cp: u21) ?[]const u21 {
     return self.map.get(cp);
 }
 
-/// Caller must free returned memory.
+/// decomposeString converts a string into a string where complex code points are decomposed into
+/// their component code points. This method may return an error because of lazy initialization 
+/// allocation. Caller must free returned memory.
 pub fn decomposeString(self: *Self, str: []const u8) ![]const u8 {
     var code_points = try self.allocator.alloc(u21, str.len);
     defer self.allocator.free(code_points);
