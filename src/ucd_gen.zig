@@ -449,6 +449,7 @@ const UcdGenerator = struct {
         }
     }
 
+    // Caller must free .code_points and .ranges fields.
     fn consolidate(self: Self, list: List) !Consolidated {
         var hi: u21 = mem.max(u21, list.items);
         var lo: u21 = mem.min(u21, list.items);
