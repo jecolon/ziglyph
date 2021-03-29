@@ -238,7 +238,7 @@ pub const Ziglyph = struct {
             self.lower_map = try LowerMap.init(self.allocator);
         }
 
-        return self.lower_map.toLower(cp);
+        return self.lower_map.?.toLower(cp);
     }
 
     /// toTitle returns the titlecase code point for the given code point. It returns the same 
@@ -250,7 +250,7 @@ pub const Ziglyph = struct {
             self.title_map = try TitleMap.init(self.allocator);
         }
 
-        return self.title_map.toTitle(cp);
+        return self.title_map.?.toTitle(cp);
     }
 
     /// toUpper returns the uppercase code point for the given code point. It returns the same 
@@ -262,7 +262,7 @@ pub const Ziglyph = struct {
             self.upper_map = try UpperMap.init(self.allocator);
         }
 
-        return self.upper_map.toUpper(cp);
+        return self.upper_map.?.toUpper(cp);
     }
 
     /// decomposeCodePoint will convert a code point into its component code points if applicable.
