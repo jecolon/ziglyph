@@ -476,9 +476,9 @@ const UcdGenerator = struct {
         }
 
         var cp_list = std.ArrayList(u21).init(self.allocator);
-        errdefer cp_list.deinit();
+        defer cp_list.deinit();
         var range_list = std.ArrayList(Range).init(self.allocator);
-        errdefer range_list.deinit();
+        defer range_list.deinit();
 
         index = 0;
         while (index < indices.items.len) {
