@@ -71,6 +71,38 @@ pub fn main() !void {
     }
 }
 
+test "Ziglyph struct" {
+    // init and defer deinit.
+    var ziglyph = Ziglyph.init(std.testing.allocator);
+    defer ziglyph.deinit();
+
+    const z = 'z';
+    expect(ziglyph.isLetter(z));
+    expect(ziglyph.isAlphaNum(z));
+    expect(ziglyph.isPrint(z));
+    expect(!ziglyph.isUpper(z));
+    const uz = try ziglyph.toUpper(z);
+    expect(ziglyph.isUpper(uz));
+    expectEqual(uz, 'Z');
+}
+
+test "Component structs" {
+    // Simple structs don't require init / deinit.
+    const letter = Letter.new();
+    const upper = Upper.new();
+    // Case mappings require init and defer deinit.
+    var upper_map = try UpperMap.init(std.testing.allocator);
+    defer upper_map.deinit();
+
+    const z = 'z';
+    expect(letter.isLetter(z));
+    expect(!upper.isUpper(z));
+    // No lazy init, no 'try' here.
+    const uz = upper_map.toUpper(z);
+    expect(upper.isUpper(uz));
+    expectEqual(uz, 'Z');
+}
+
 test "basics" {
     var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
