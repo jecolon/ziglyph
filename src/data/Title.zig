@@ -11,32 +11,32 @@ const Range = @import("../Range.zig");
 
 const Title = @This();
 
-array: [8189]bool = [_]bool{false} ** 8189,
+array: [7736]bool = [_]bool{false} ** 7736,
 lo: u21 = 453,
 hi: u21 = 8188,
 
 pub fn new() Title {
     var instance: Title = Title{};
 
-    instance.array[453] = true;
-    instance.array[456] = true;
-    instance.array[459] = true;
-    instance.array[498] = true;
-    instance.array[8124] = true;
-    instance.array[8140] = true;
-    instance.array[8188] = true;
+    instance.array[0] = true;
+    instance.array[3] = true;
+    instance.array[6] = true;
+    instance.array[45] = true;
+    instance.array[7671] = true;
+    instance.array[7687] = true;
+    instance.array[7735] = true;
 
     var index: u21 = 0;
-    index = 8072;
-    while (index <= 8079) : (index += 1) {
+    index = 7619;
+    while (index <= 7626) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 8088;
-    while (index <= 8095) : (index += 1) {
+    index = 7635;
+    while (index <= 7642) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 8104;
-    while (index <= 8111) : (index += 1) {
+    index = 7651;
+    while (index <= 7658) : (index += 1) {
         instance.array[index] = true;
     }
 
@@ -45,5 +45,7 @@ pub fn new() Title {
 }
 
 pub fn isTitle(self: Title, cp: u21) bool {
-    return if (cp >= self.array.len or cp < self.lo or cp > self.hi) false else self.array[cp];
+    if (cp < self.lo or cp > self.hi) return false;
+    const index = cp - self.lo;
+    return if (index >= self.array.len) false else self.array[index];
 }

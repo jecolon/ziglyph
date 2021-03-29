@@ -114,5 +114,7 @@ pub fn new() Control {
 }
 
 pub fn isControl(self: Control, cp: u21) bool {
-    return if (cp >= self.array.len or cp < self.lo or cp > self.hi) false else self.array[cp];
+    if (cp < self.lo or cp > self.hi) return false;
+    const index = cp - self.lo;
+    return if (index >= self.array.len) false else self.array[index];
 }

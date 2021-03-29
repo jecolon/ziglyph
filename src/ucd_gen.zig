@@ -327,20 +327,24 @@ const UcdGenerator = struct {
             const consolidated = try self.consolidate(list);
             defer self.allocator.free(consolidated.code_points);
             defer self.allocator.free(consolidated.ranges);
-            _ = try writer.print(header_tpl, .{ list.name, consolidated.hi + 1, consolidated.lo, consolidated.hi });
+            const array_length = consolidated.hi - consolidated.lo + 1;
+            _ = try writer.print(header_tpl, .{ list.name, array_length, consolidated.lo, consolidated.hi });
 
-            var index: u21 = 0;
-            while (index <= consolidated.hi) : (index += 1) {
-                if (contains(consolidated.code_points, index)) {
-                    _ = try writer.print("    instance.array[{d}] = true;\n", .{index});
-                }
+            for (consolidated.code_points) |cp| {
+                _ = try writer.print("    instance.array[{d}] = true;\n", .{cp - consolidated.lo});
             }
+            //var index: u21 = 0;
+            //while (index <= consolidated.hi) : (index += 1) {
+            //    if (contains(consolidated.code_points, index)) {
+            //        _ = try writer.print("    instance.array[{d}] = true;\n", .{index});
+            //    }
+            //}
 
             _ = try writer.write("\n    var index: u21 = 0;\n");
 
             for (consolidated.ranges) |range| {
-                _ = try writer.print("    index = {d};\n", .{range.start});
-                _ = try writer.print("    while (index <= {d}) : (index += 1) {{\n", .{range.end});
+                _ = try writer.print("    index = {d};\n", .{range.start - consolidated.lo});
+                _ = try writer.print("    while (index <= {d}) : (index += 1) {{\n", .{range.end - consolidated.lo});
                 _ = try writer.write("        instance.array[index] = true;\n");
                 _ = try writer.write("    }\n");
             }

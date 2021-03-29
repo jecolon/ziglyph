@@ -11,23 +11,23 @@ const Range = @import("../Range.zig");
 
 const Space = @This();
 
-array: [12289]bool = [_]bool{false} ** 12289,
+array: [12257]bool = [_]bool{false} ** 12257,
 lo: u21 = 32,
 hi: u21 = 12288,
 
 pub fn new() Space {
     var instance: Space = Space{};
 
-    instance.array[32] = true;
-    instance.array[160] = true;
-    instance.array[5760] = true;
-    instance.array[8239] = true;
-    instance.array[8287] = true;
-    instance.array[12288] = true;
+    instance.array[0] = true;
+    instance.array[128] = true;
+    instance.array[5728] = true;
+    instance.array[8207] = true;
+    instance.array[8255] = true;
+    instance.array[12256] = true;
 
     var index: u21 = 0;
-    index = 8192;
-    while (index <= 8202) : (index += 1) {
+    index = 8160;
+    while (index <= 8170) : (index += 1) {
         instance.array[index] = true;
     }
 
@@ -36,5 +36,7 @@ pub fn new() Space {
 }
 
 pub fn isSpace(self: Space, cp: u21) bool {
-    return if (cp >= self.array.len or cp < self.lo or cp > self.hi) false else self.array[cp];
+    if (cp < self.lo or cp > self.hi) return false;
+    const index = cp - self.lo;
+    return if (index >= self.array.len) false else self.array[index];
 }
