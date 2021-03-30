@@ -20,20 +20,14 @@ const expectEqual = std.testing.expectEqual;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
 
 test "Ziglyph struct" {
-    // init and defer deinit.
-    var ziglyph = Ziglyph.init(std.testing.allocator);
-    defer ziglyph.deinit();
+    var ziglyph = Ziglyph{};
 
     const z = 'z';
     expect(ziglyph.isLetter(z));
     expect(ziglyph.isAlphaNum(z));
     expect(ziglyph.isPrint(z));
     expect(!ziglyph.isUpper(z));
-    // The Ziglyph struct uses lazy init, so 
-    // using a case mapping may init a HashMap
-    // which may produce an error. That's why you
-    // need 'try' here.
-    const uz = try ziglyph.toUpper(z);
+    const uz = ziglyph.toUpper(z);
     expect(ziglyph.isUpper(uz));
     expectEqual(uz, 'Z');
 }
@@ -50,20 +44,46 @@ const Upper = @import("ziglyph.zig").Upper;
 const UpperMap = @import("ziglyph.zig").UpperMap;
 
 test "Component structs" {
-    // Simple structs don't require init / deinit.
     const letter = Letter.new();
     const upper = Upper.new();
-    // Case mappings require init and defer deinit.
-    var upper_map = try UpperMap.init(std.testing.allocator);
-    defer upper_map.deinit();
+    var upper_map = UpperMap.new();
 
     const z = 'z';
     expect(letter.isLetter(z));
     expect(!upper.isUpper(z));
-    // No lazy init, no 'try' here.
     const uz = upper_map.toUpper(z);
     expect(upper.isUpper(uz));
     expectEqual(uz, 'Z');
+}
+```
+
+## Code Point Decomposition
+In addition to the basic functions to detect and convert code points, the `DecomposeMap` struct provides
+code point and `[]const u8` decomposition methods.
+
+```zig
+const std = @import("std");
+const expectEqualSlices = std.testing.expectEqualSlices;
+
+// Import struct.
+const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
+
+test "decomposeCodePoint" {
+    var z = try DecomposeMap.init(std.testing.allocator);
+    defer z.deinit();
+
+    expectEqualSlices(u21, z.decomposeCodePoint('\u{00E9}').?, &[_]u21{ '\u{0065}', '\u{0301}' });
+}
+
+test "decomposeString" {
+    var z = try DecomposeMap.init(std.testing.allocator);
+    defer z.deinit();
+
+    const input = "H\u{00E9}llo";
+    const want = "H\u{0065}\u{0301}llo";
+    const got = try z.decomposeString(input);
+    defer std.testing.allocator.free(got);
+    expectEqualSlices(u8, want, got);
 }
 ```
 
