@@ -2,33 +2,47 @@
 Unicode processing with Zig.
 
 ## Background
-This library started as a direct translation of the Go unicode base package 
-from the Go standard library. Still wohk to be done, to make it more idiomatic Zig, but 
-practiacally all basic feature tests are now passing. See [src/main.zig](src/main.zig) for 
-sample usage in the tests.
+This library has been built from scratch in Zig. Although initially inspired by the Go `unicode`
+package, Ziglyph is now completely independent and unique in and of itself.
+
+## Unicode Data
+The Unicode data is the latest available on the Unicode website, and can be refreshed via the 
+`ucd_gen` utility in the src directory (must be run in the src directory to generate files in the 
+proper locations.) The `ucd_gen` utility will look for a cached copy of the data in a file named
+`UnicodeData.txt` in the src/data directory. If it finds it, it will parse that file; otherwise it 
+will download the latest version from the Unicode website. `ucd_gen` is also built with Zig. You can
+find it in `ucd_gen.zig` in the src directory too.
 
 ## Usage
 There are two modes of usage: via the consolidated Ziglyph struct or using the individual component
-structs for more fine grained control over memory use and binary size.
+structs for more fine grained control over memory usage and binary size. The Ziglyph struct provides
+the convenience of having all the methods in one place, with lazy initialization of the underlying
+structs to only use the resources necessary. However this comes at the cost of more error handling,
+given that when calling a method such as `isUpper`, Ziglyph may need to lazily initialize the `Upper`
+struct, which may fail. The same method directly on the `Upper` struct doesn't allocate and thus cannot
+fail.
 
 ### Using the Ziglyph Struct
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
+
 // Import the struct.
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
 
 test "Ziglyph struct" {
-    var ziglyph = Ziglyph{};
+    var ziglyph = try Ziglyph.init(std.testing.allocator);
+    defer ziglyph.deinit();
 
     const z = 'z';
-    expect(ziglyph.isLetter(z));
-    expect(ziglyph.isAlphaNum(z));
-    expect(ziglyph.isPrint(z));
-    expect(!ziglyph.isUpper(z));
-    const uz = ziglyph.toUpper(z);
-    expect(ziglyph.isUpper(uz));
+    // Lazy init requires 'try'
+    expect(try ziglyph.isLetter(z));
+    expect(try ziglyph.isAlphaNum(z));
+    expect(try ziglyph.isPrint(z));
+    expect(!try ziglyph.isUpper(z));
+    const uz = try ziglyph.toUpper(z);
+    expect(try ziglyph.isUpper(uz));
     expectEqual(uz, 'Z');
 }
 ```
@@ -38,17 +52,22 @@ test "Ziglyph struct" {
 const std = @import("std");
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
-// Import the structs.
+
+// Import the components.
 const Letter = @import("ziglyph.zig").Letter;
 const Upper = @import("ziglyph.zig").Upper;
 const UpperMap = @import("ziglyph.zig").UpperMap;
 
 test "Component structs" {
-    const letter = Letter.new();
-    const upper = Upper.new();
-    var upper_map = UpperMap.new();
+    var letter = try Letter.init(std.testing.allocator);
+    defer letter.deinit();
+    var upper = try Upper.init(std.testing.allocator);
+    defer upper.deinit();
+    var upper_map = try UpperMap.init(std.testing.allocator);
+    defer upper_map.deinit();
 
     const z = 'z';
+    // No lazy init, no 'try' here.
     expect(letter.isLetter(z));
     expect(!upper.isUpper(z));
     const uz = upper_map.toUpper(z);
@@ -58,7 +77,7 @@ test "Component structs" {
 ```
 
 ## Code Point Decomposition
-In addition to the basic functions to detect and convert code points, the `DecomposeMap` struct provides
+In addition to the basic functions to detect and convert code point case, the `DecomposeMap` struct provides
 code point and `[]const u8` decomposition methods.
 
 ```zig
@@ -69,25 +88,34 @@ const expectEqualSlices = std.testing.expectEqualSlices;
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
 
 test "decomposeCodePoint" {
-    var z = try DecomposeMap.init(std.testing.allocator);
-    defer z.deinit();
+    var decomp_map = try DecomposeMap.init(std.testing.allocator);
+    defer decomp_map.deinit();
 
-    expectEqualSlices(u21, z.decomposeCodePoint('\u{00E9}').?, &[_]u21{ '\u{0065}', '\u{0301}' });
+    expectEqualSlices(u21, decomp_map.decomposeCodePoint('\u{00E9}').?, &[_]u21{ '\u{0065}', '\u{0301}' });
 }
 
 test "decomposeString" {
-    var z = try DecomposeMap.init(std.testing.allocator);
-    defer z.deinit();
+    var decomp_map = try DecomposeMap.init(std.testing.allocator);
+    defer decomp_map.deinit();
 
     const input = "H\u{00E9}llo";
     const want = "H\u{0065}\u{0301}llo";
-    const got = try z.decomposeString(input);
+    // decomposeString allocates memory for the returned slice, so it can fail.
+    const got = try decomp_map.decomposeString(input);
+    // We must free the returned slice when done.
     defer std.testing.allocator.free(got);
     expectEqualSlices(u8, want, got);
 }
 ```
 
+## Speed Test?
+You can build [src/corpus__test.zig](src/corpus_test.zig), in `ReleaseFast` mode and use the `time`
+utility (Linux or Mac) to gauge the execution speed of Ziglyph. This program reads 
+[src/data/lang_mix.txt](src/data/lang_mix.txt), which is about 3.9MiB of text in Chinese, English, 
+French, and Spanish from the full texts of "Alice in Wonderland", "Don Quijote", "The Three Musketeers",
+and a Chinese book I don't have the title of. All from the [Project Gutenberg](https://www.gutenberg.org/)
+website, so all Public Domain. On my Linux, Ryzen 5 2600X, 16GiB RAM machine, it takes roughly 45ms.
+
 ## Source Doc Comments
-You can get descriptions for all the public methods in the [src/ziglyph.zig](src/ziglyph.zig) file
-doc comments. This structure exposes the same methods as all the components in one place, plus a few
-more.
+You can get descriptions for all the public methods in the [src/ziglyph.zig](src/ziglyph.zig)  and
+[src/components/DecomposeMap.zig](src/components/DecomposeMap.zig) files' doc comments.
