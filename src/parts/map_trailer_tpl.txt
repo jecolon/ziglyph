@@ -1,12 +1,14 @@
-    // Placeholder: Method suffix
 
+    // Placeholder: 0. Method suffix, 1. Struct name
     return instance;
 }}
 
-const Self = @This();
+pub fn deinit(self: *{1s}) void {{
+    self.allocator.free(self.array);
+}}
 
-/// to{s} maps the code point to the desired case or returns the same code point if no mapping exists.
-pub fn to{0s}(self: Self, cp: u21) u21 {{
+/// to{0s} maps the code point to the desired case or returns the same code point if no mapping exists.
+pub fn to{0s}(self: {1s}, cp: u21) u21 {{
     if (cp < self.lo or cp > self.hi) return cp;
     const index = cp - self.lo;
     if (index >= self.array.len) return cp;

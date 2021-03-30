@@ -24,9 +24,7 @@ const Range = struct {
 
 const List = struct {
     name: []const u8,
-    alloc_name: []const u8,
     filename: []const u8,
-    alloc_filename: []const u8,
     items: []u21,
     ranges: ?[]Range = null,
 };
@@ -263,82 +261,60 @@ const UcdGenerator = struct {
         const lists = [_]List{
             .{
                 .name = "Control",
-                .alloc_name = "ControlAlloc",
                 .filename = "components/Control.zig",
-                .alloc_filename = "components/ControlAlloc.zig",
                 .items = self.control.items,
                 .ranges = self.control_ranges.items,
             },
             .{
                 .name = "Letter",
-                .alloc_name = "LetterAlloc",
                 .filename = "components/Letter.zig",
-                .alloc_filename = "components/LetterAlloc.zig",
                 .items = self.letter.items,
                 .ranges = self.letter_ranges.items,
             },
             .{
                 .name = "Lower",
-                .alloc_name = "LowerAlloc",
                 .filename = "components/Lower.zig",
-                .alloc_filename = "components/LowerAlloc.zig",
                 .items = self.lower.items,
             },
             .{
                 .name = "Mark",
-                .alloc_name = "MarkAlloc",
                 .filename = "components/Mark.zig",
-                .alloc_filename = "components/MarkAlloc.zig",
                 .items = self.mark.items,
             },
             .{
                 .name = "Number",
-                .alloc_name = "NumberAlloc",
                 .filename = "components/Number.zig",
-                .alloc_filename = "components/NumberAlloc.zig",
                 .items = self.number.items,
             },
             .{
                 .name = "Punct",
-                .alloc_name = "PunctAlloc",
                 .filename = "components/Punct.zig",
-                .alloc_filename = "components/PunctAlloc.zig",
                 .items = self.punct.items,
             },
             .{
                 .name = "Space",
-                .alloc_name = "SpaceAlloc",
                 .filename = "components/Space.zig",
-                .alloc_filename = "components/SpaceAlloc.zig",
                 .items = self.space.items,
             },
             .{
                 .name = "Symbol",
-                .alloc_name = "SymbolAlloc",
                 .filename = "components/Symbol.zig",
-                .alloc_filename = "components/SymbolAlloc.zig",
                 .items = self.symbol.items,
             },
             .{
                 .name = "Title",
-                .alloc_name = "TitleAlloc",
                 .filename = "components/Title.zig",
-                .alloc_filename = "components/TitleAlloc.zig",
                 .items = self.title.items,
             },
             .{
                 .name = "Upper",
-                .alloc_name = "UpperAlloc",
                 .filename = "components/Upper.zig",
-                .alloc_filename = "components/UpperAlloc.zig",
                 .items = self.upper.items,
             },
         };
 
         const header_tpl = @embedFile("parts/array_header_tpl.txt");
         const trailer_tpl = @embedFile("parts/array_trailer_tpl.txt");
-        const alloc_header_tpl = @embedFile("parts/array_alloc_header_tpl.txt");
-        const alloc_trailer_tpl = @embedFile("parts/array_alloc_trailer_tpl.txt");
 
         for (lists) |list| {
             // Prepare output files.
@@ -346,10 +322,6 @@ const UcdGenerator = struct {
             defer file.close();
             var buf_writer = io.bufferedWriter(file.writer());
             const writer = buf_writer.writer();
-            var alloc_file = try std.fs.cwd().createFile(list.alloc_filename, .{});
-            defer alloc_file.close();
-            var alloc_buf_writer = io.bufferedWriter(alloc_file.writer());
-            const alloc_writer = alloc_buf_writer.writer();
 
             // Write data.
             const consolidated = try self.consolidate(list);
@@ -357,39 +329,28 @@ const UcdGenerator = struct {
             defer self.allocator.free(consolidated.ranges);
             const array_length = consolidated.hi - consolidated.lo + 1;
             _ = try writer.print(header_tpl, .{ list.name, array_length, consolidated.lo, consolidated.hi });
-            _ = try alloc_writer.print(alloc_header_tpl, .{ list.name, list.alloc_name, array_length, consolidated.lo, consolidated.hi });
 
             for (consolidated.code_points) |cp| {
                 _ = try writer.print("    instance.array[{d}] = true;\n", .{cp - consolidated.lo});
-                _ = try alloc_writer.print("    instance.array[{d}] = true;\n", .{cp - consolidated.lo});
             }
 
             _ = try writer.write("\n    var index: u21 = 0;\n");
-            _ = try alloc_writer.write("\n    var index: u21 = 0;\n");
 
             for (consolidated.ranges) |range| {
                 _ = try writer.print("    index = {d};\n", .{range.start - consolidated.lo});
                 _ = try writer.print("    while (index <= {d}) : (index += 1) {{\n", .{range.end - consolidated.lo});
                 _ = try writer.write("        instance.array[index] = true;\n");
                 _ = try writer.write("    }\n");
-                _ = try alloc_writer.print("    index = {d};\n", .{range.start - consolidated.lo});
-                _ = try alloc_writer.print("    while (index <= {d}) : (index += 1) {{\n", .{range.end - consolidated.lo});
-                _ = try alloc_writer.write("        instance.array[index] = true;\n");
-                _ = try alloc_writer.write("    }\n");
             }
 
             _ = try writer.print(trailer_tpl, .{list.name});
-            _ = try alloc_writer.print(alloc_trailer_tpl, .{ list.name, list.alloc_name });
             try buf_writer.flush();
-            try alloc_buf_writer.flush();
         }
 
         const CaseMap = struct {
             name: []const u8,
-            alloc_name: []const u8,
             comment: []const u8,
             filename: []const u8,
-            alloc_filename: []const u8,
             map: AutoHashMap(u21, u21),
             method: []const u8,
         };
@@ -397,28 +358,22 @@ const UcdGenerator = struct {
         const case_maps = [_]CaseMap{
             .{
                 .name = "LowerMap",
-                .alloc_name = "LowerMapAlloc",
                 .comment = "Unicode letter mappings to lowercase.",
                 .filename = "components/LowerMap.zig",
-                .alloc_filename = "components/LowerMapAlloc.zig",
                 .map = self.to_lower_map,
                 .method = "Lower",
             },
             .{
                 .name = "TitleMap",
-                .alloc_name = "TitleMapAlloc",
                 .comment = "Unicode letter mappings to titlecase.",
                 .filename = "components/TitleMap.zig",
-                .alloc_filename = "components/TitleMapAlloc.zig",
                 .map = self.to_title_map,
                 .method = "Title",
             },
             .{
                 .name = "UpperMap",
-                .alloc_name = "UpperMapAlloc",
                 .comment = "Unicode letter mappings to uppercase.",
                 .filename = "components/UpperMap.zig",
-                .alloc_filename = "components/UpperMapAlloc.zig",
                 .map = self.to_upper_map,
                 .method = "Upper",
             },
@@ -426,18 +381,12 @@ const UcdGenerator = struct {
 
         const map_header_tpl = @embedFile("parts/map_header_tpl.txt");
         const map_trailer_tpl = @embedFile("parts/map_trailer_tpl.txt");
-        const alloc_map_header_tpl = @embedFile("parts/map_alloc_header_tpl.txt");
-        const alloc_map_trailer_tpl = @embedFile("parts/map_alloc_trailer_tpl.txt");
 
         for (case_maps) |cm| {
             var file = try std.fs.cwd().createFile(cm.filename, .{});
             defer file.close();
             var buf_writer = io.bufferedWriter(file.writer());
             const writer = buf_writer.writer();
-            var alloc_file = try std.fs.cwd().createFile(cm.alloc_filename, .{});
-            defer alloc_file.close();
-            var alloc_buf_writer = io.bufferedWriter(alloc_file.writer());
-            const alloc_writer = alloc_buf_writer.writer();
 
             var lo: u21 = 0x10FFFF;
             var hi: u21 = 0;
@@ -449,18 +398,14 @@ const UcdGenerator = struct {
 
             const array_length = hi - lo + 1;
             _ = try writer.print(map_header_tpl, .{ cm.comment, cm.name, array_length, lo, hi });
-            _ = try alloc_writer.print(alloc_map_header_tpl, .{ cm.comment, cm.alloc_name, array_length, lo, hi });
 
             iter = cm.map.iterator();
             while (iter.next()) |entry| {
                 _ = try writer.print("    instance.array[{d}] = 0x{X};\n", .{ entry.key - lo, entry.value });
-                _ = try alloc_writer.print("    instance.array[{d}] = 0x{X};\n", .{ entry.key - lo, entry.value });
             }
 
-            _ = try writer.print(map_trailer_tpl, .{cm.method});
-            _ = try alloc_writer.print(alloc_map_trailer_tpl, .{ cm.method, cm.alloc_name });
+            _ = try writer.print(map_trailer_tpl, .{ cm.method, cm.name });
             try buf_writer.flush();
-            try alloc_buf_writer.flush();
         }
 
         // Decomposition map.

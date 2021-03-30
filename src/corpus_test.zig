@@ -22,22 +22,35 @@ pub fn main() !void {
     defer file.close();
     var buf_reader = std.io.bufferedReader(file.reader()).reader();
 
-    var control = Control.new();
-    var letter = Letter.new();
-    var lower = Lower.new();
-    var mark = Mark.new();
-    var number = Number.new();
-    var punct = Punct.new();
-    var space = Space.new();
-    var symbol = Symbol.new();
-    var title = Title.new();
-    var upper = Upper.new();
-
     //var allocator = std.testing.allocator;
     var allocator = std.heap.page_allocator;
-    var lower_map = LowerMap.new();
-    var title_map = TitleMap.new();
-    var upper_map = UpperMap.new();
+    var control = try Control.init(allocator);
+    defer control.deinit();
+    var letter = try Letter.init(allocator);
+    defer letter.deinit();
+    var lower = try Lower.init(allocator);
+    defer lower.deinit();
+    var mark = try Mark.init(allocator);
+    defer mark.deinit();
+    var number = try Number.init(allocator);
+    defer number.deinit();
+    var punct = try Punct.init(allocator);
+    defer punct.deinit();
+    var space = try Space.init(allocator);
+    defer space.deinit();
+    var symbol = try Symbol.init(allocator);
+    defer symbol.deinit();
+    var title = try Title.init(allocator);
+    defer title.deinit();
+    var upper = try Upper.init(allocator);
+    defer upper.deinit();
+
+    var lower_map = try LowerMap.init(allocator);
+    defer lower_map.deinit();
+    var title_map = try TitleMap.init(allocator);
+    defer title_map.deinit();
+    var upper_map = try UpperMap.init(allocator);
+    defer upper_map.deinit();
 
     var c_count: usize = 0;
     var l_count: usize = 0;
