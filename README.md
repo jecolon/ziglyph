@@ -31,7 +31,7 @@ test "Ziglyph struct" {
     // Lazy init requires 'try'
     expect(try ziglyph.isLetter(z));
     expect(try ziglyph.isAlphaNum(z));
-    expect(!try ziglyph.isPrint(z));
+    expect(try ziglyph.isPrint(z));
     expect(!try ziglyph.isUpper(z));
     const uz = try ziglyph.toUpper(z);
     expect(try ziglyph.isUpper(uz));
