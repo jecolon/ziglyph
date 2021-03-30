@@ -261,54 +261,54 @@ const UcdGenerator = struct {
         const lists = [_]List{
             .{
                 .name = "Control",
-                .filename = "data/Control.zig",
+                .filename = "components/Control.zig",
                 .items = self.control.items,
                 .ranges = self.control_ranges.items,
             },
             .{
                 .name = "Letter",
-                .filename = "data/Letter.zig",
+                .filename = "components/Letter.zig",
                 .items = self.letter.items,
                 .ranges = self.letter_ranges.items,
             },
             .{
                 .name = "Lower",
-                .filename = "data/Lower.zig",
+                .filename = "components/Lower.zig",
                 .items = self.lower.items,
             },
             .{
                 .name = "Mark",
-                .filename = "data/Mark.zig",
+                .filename = "components/Mark.zig",
                 .items = self.mark.items,
             },
             .{
                 .name = "Number",
-                .filename = "data/Number.zig",
+                .filename = "components/Number.zig",
                 .items = self.number.items,
             },
             .{
                 .name = "Punct",
-                .filename = "data/Punct.zig",
+                .filename = "components/Punct.zig",
                 .items = self.punct.items,
             },
             .{
                 .name = "Space",
-                .filename = "data/Space.zig",
+                .filename = "components/Space.zig",
                 .items = self.space.items,
             },
             .{
                 .name = "Symbol",
-                .filename = "data/Symbol.zig",
+                .filename = "components/Symbol.zig",
                 .items = self.symbol.items,
             },
             .{
                 .name = "Title",
-                .filename = "data/Title.zig",
+                .filename = "components/Title.zig",
                 .items = self.title.items,
             },
             .{
                 .name = "Upper",
-                .filename = "data/Upper.zig",
+                .filename = "components/Upper.zig",
                 .items = self.upper.items,
             },
         };
@@ -317,7 +317,7 @@ const UcdGenerator = struct {
         const trailer_tpl = @embedFile("parts/array_trailer_tpl.txt");
 
         for (lists) |list| {
-            // Prepare output file.
+            // Prepare output files.
             var file = try std.fs.cwd().createFile(list.filename, .{});
             defer file.close();
             var buf_writer = io.bufferedWriter(file.writer());
@@ -327,20 +327,18 @@ const UcdGenerator = struct {
             const consolidated = try self.consolidate(list);
             defer self.allocator.free(consolidated.code_points);
             defer self.allocator.free(consolidated.ranges);
-            _ = try writer.print(header_tpl, .{ list.name, consolidated.hi + 1, consolidated.lo, consolidated.hi });
+            const array_length = consolidated.hi - consolidated.lo + 1;
+            _ = try writer.print(header_tpl, .{ list.name, array_length, consolidated.lo, consolidated.hi });
 
-            var index: u21 = 0;
-            while (index <= consolidated.hi) : (index += 1) {
-                if (contains(consolidated.code_points, index)) {
-                    _ = try writer.print("    instance.array[{d}] = true;\n", .{index});
-                }
+            for (consolidated.code_points) |cp| {
+                _ = try writer.print("    instance.array[{d}] = true;\n", .{cp - consolidated.lo});
             }
 
             _ = try writer.write("\n    var index: u21 = 0;\n");
 
             for (consolidated.ranges) |range| {
-                _ = try writer.print("    index = {d};\n", .{range.start});
-                _ = try writer.print("    while (index <= {d}) : (index += 1) {{\n", .{range.end});
+                _ = try writer.print("    index = {d};\n", .{range.start - consolidated.lo});
+                _ = try writer.print("    while (index <= {d}) : (index += 1) {{\n", .{range.end - consolidated.lo});
                 _ = try writer.write("        instance.array[index] = true;\n");
                 _ = try writer.write("    }\n");
             }
@@ -361,21 +359,21 @@ const UcdGenerator = struct {
             .{
                 .name = "LowerMap",
                 .comment = "Unicode letter mappings to lowercase.",
-                .filename = "data/LowerMap.zig",
+                .filename = "components/LowerMap.zig",
                 .map = self.to_lower_map,
                 .method = "Lower",
             },
             .{
                 .name = "TitleMap",
                 .comment = "Unicode letter mappings to titlecase.",
-                .filename = "data/TitleMap.zig",
+                .filename = "components/TitleMap.zig",
                 .map = self.to_title_map,
                 .method = "Title",
             },
             .{
                 .name = "UpperMap",
                 .comment = "Unicode letter mappings to uppercase.",
-                .filename = "data/UpperMap.zig",
+                .filename = "components/UpperMap.zig",
                 .map = self.to_upper_map,
                 .method = "Upper",
             },
@@ -390,14 +388,23 @@ const UcdGenerator = struct {
             var buf_writer = io.bufferedWriter(file.writer());
             const writer = buf_writer.writer();
 
-            _ = try writer.print(map_header_tpl, .{ cm.comment, cm.name });
-
+            var lo: u21 = 0x10FFFF;
+            var hi: u21 = 0;
             var iter = cm.map.iterator();
             while (iter.next()) |entry| {
-                _ = try writer.print("    try instance.map.put(0x{X}, 0x{X});\n", .{ entry.key, entry.value });
+                if (entry.key < lo) lo = entry.key;
+                if (entry.key > hi) hi = entry.key;
             }
 
-            _ = try writer.print(map_trailer_tpl, .{cm.method});
+            const array_length = hi - lo + 1;
+            _ = try writer.print(map_header_tpl, .{ cm.comment, cm.name, array_length, lo, hi });
+
+            iter = cm.map.iterator();
+            while (iter.next()) |entry| {
+                _ = try writer.print("    instance.array[{d}] = 0x{X};\n", .{ entry.key - lo, entry.value });
+            }
+
+            _ = try writer.print(map_trailer_tpl, .{ cm.method, cm.name });
             try buf_writer.flush();
         }
 
@@ -405,7 +412,7 @@ const UcdGenerator = struct {
         const decomp_header_tpl = @embedFile("parts/decomp_map_header_tpl.txt");
         const decomp_trailer_tpl = @embedFile("parts/decomp_map_trailer_tpl.txt");
 
-        var decompf = try std.fs.cwd().createFile("data/DecomposeMap.zig", .{});
+        var decompf = try std.fs.cwd().createFile("components/DecomposeMap.zig", .{});
         defer decompf.close();
         var decompf_buf = io.bufferedWriter(decompf.writer());
         const decompf_writer = decompf_buf.writer();

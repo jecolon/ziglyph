@@ -1,13 +1,17 @@
-// Placeholder: Code point type.
 
+    // Placeholder: 0. Method suffix, 1. Struct name
     return instance;
 }}
 
-const Self = @This();
-pub fn deinit(self: *Self) void {{
-    self.map.deinit();
+pub fn deinit(self: *{1s}) void {{
+    self.allocator.free(self.array);
 }}
 
-pub fn to{s}(self: Self, cp: u21) u21 {{
-    return if (self.map.get(cp)) |mapping| mapping else cp;
+/// to{0s} maps the code point to the desired case or returns the same code point if no mapping exists.
+pub fn to{0s}(self: {1s}, cp: u21) u21 {{
+    if (cp < self.lo or cp > self.hi) return cp;
+    const index = cp - self.lo;
+    if (index >= self.array.len) return cp;
+    const ucp = self.array[index];
+    return if (ucp != 0) ucp else cp;
 }}

@@ -20,52 +20,52 @@ const UpperMap = @import("ziglyph.zig").UpperMap;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
 
 pub fn main() !void {
-    var z = Ziglyph.init(std.testing.allocator);
+    var z = try Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
     const mixed = [_]u21{ '5', 'o', '9', '!', ' ', '℃', 'ᾭ', 'G' };
     for (mixed) |r| {
         std.debug.print("\nFor {u}:\n", .{r});
-        if (z.isControl(r)) { // added 1.1M to binary!!
+        if (try z.isControl(r)) { // added 1.1M to binary!!
             std.debug.print("\tis control\n", .{});
         }
-        if (z.isNumber(r)) { // added 100K to binary
+        if (try z.isNumber(r)) { // added 100K to binary
             std.debug.print("\tis number\n", .{});
         }
-        if (z.isGraphic(r)) { // added 0 to binary
+        if (try z.isGraphic(r)) { // added 0 to binary
             std.debug.print("\tis graphic\n", .{});
         }
-        if (z.isAlphaNum(r)) { // adds 0 to binary
+        if (try z.isAlphaNum(r)) { // adds 0 to binary
             std.debug.print("\tis alphanumeric\n", .{});
         }
-        if (z.isLetter(r)) { // added 200K to binary !!
+        if (try z.isLetter(r)) { // added 200K to binary !!
             std.debug.print("\tis letter\n", .{});
         }
-        if (z.isLower(r)) { // added 200K to binary
+        if (try z.isLower(r)) { // added 200K to binary
             std.debug.print("\tis lower case\n", .{});
         }
-        if (z.isMark(r)) { // added 1.1M to binary !!
+        if (try z.isMark(r)) { // added 1.1M to binary !!
             std.debug.print("\tis mark\n", .{});
         }
-        if (z.isPrint(r)) { // added 0 to binary
+        if (try z.isPrint(r)) { // added 0 to binary
             std.debug.print("\tis printable\n", .{});
         }
-        if (!z.isPrint(r)) {
+        if (!try z.isPrint(r)) {
             std.debug.print("\tis not printable\n", .{});
         }
-        if (z.isPunct(r)) { // added 137K to binary
+        if (try z.isPunct(r)) { // added 137K to binary
             std.debug.print("\tis punct\n", .{});
         }
-        if (z.isSpace(r)) { // Adds 12K to binary
+        if (try z.isSpace(r)) { // Adds 12K to binary
             std.debug.print("\tis space\n", .{});
         }
-        if (z.isSymbol(r)) { // added 131K to binary
+        if (try z.isSymbol(r)) { // added 131K to binary
             std.debug.print("\tis symbol\n", .{});
         }
-        if (z.isTitle(r)) { // Base binary at 18K
+        if (try z.isTitle(r)) { // Base binary at 18K
             std.debug.print("\tis title case\n", .{});
         }
-        if (z.isUpper(r)) { // added 100K to binary
+        if (try z.isUpper(r)) { // added 100K to binary
             std.debug.print("\tis upper case\n", .{});
         }
     }
@@ -73,87 +73,89 @@ pub fn main() !void {
 
 test "Ziglyph struct" {
     // init and defer deinit.
-    var ziglyph = Ziglyph.init(std.testing.allocator);
+    var ziglyph = try Ziglyph.init(std.testing.allocator);
     defer ziglyph.deinit();
 
     const z = 'z';
-    expect(ziglyph.isLetter(z));
-    expect(ziglyph.isAlphaNum(z));
-    expect(ziglyph.isPrint(z));
-    expect(!ziglyph.isUpper(z));
+    expect(try ziglyph.isLetter(z));
+    expect(try ziglyph.isAlphaNum(z));
+    expect(try ziglyph.isPrint(z));
+    expect(!try ziglyph.isUpper(z));
     const uz = try ziglyph.toUpper(z);
-    expect(ziglyph.isUpper(uz));
+    expect(try ziglyph.isUpper(uz));
     expectEqual(uz, 'Z');
 }
 
 test "Component structs" {
     // Simple structs don't require init / deinit.
-    const letter = Letter.new();
-    const upper = Upper.new();
-    // Case mappings require init and defer deinit.
+    var letter = try Letter.init(std.testing.allocator);
+    defer letter.deinit();
+    var upper = try Upper.init(std.testing.allocator);
+    defer upper.deinit();
     var upper_map = try UpperMap.init(std.testing.allocator);
     defer upper_map.deinit();
 
     const z = 'z';
+    // No lazy init, no 'try' here.
     expect(letter.isLetter(z));
     expect(!upper.isUpper(z));
-    // No lazy init, no 'try' here.
     const uz = upper_map.toUpper(z);
     expect(upper.isUpper(uz));
     expectEqual(uz, 'Z');
 }
 
 test "basics" {
-    var z = Ziglyph.init(std.testing.allocator);
+    var z = try Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
     const mixed = [_]u21{ '5', 'o', '9', '!', ' ', '℃', 'ᾭ', 'G' };
     for (mixed) |r| {
         std.debug.print("\nFor {u}:\n", .{r});
-        if (z.isControl(r)) {
+        if (try z.isControl(r)) {
             std.debug.print("\tis control\n", .{});
         }
-        if (z.isNumber(r)) {
+        if (try z.isNumber(r)) {
             std.debug.print("\tis number\n", .{});
         }
-        if (z.isGraphic(r)) {
+        if (try z.isGraphic(r)) {
             std.debug.print("\tis graphic\n", .{});
         }
-        if (z.isLetter(r)) {
+        if (try z.isLetter(r)) {
             std.debug.print("\tis letter\n", .{});
         }
-        if (z.isLower(r)) {
+        if (try z.isLower(r)) {
             std.debug.print("\tis lower case\n", .{});
         }
-        if (z.isMark(r)) {
+        if (try z.isMark(r)) {
             std.debug.print("\tis mark\n", .{});
         }
-        if (z.isPrint(r)) {
+        if (try z.isPrint(r)) {
             std.debug.print("\tis printable\n", .{});
         }
-        if (!z.isPrint(r)) {
+        if (!try z.isPrint(r)) {
             std.debug.print("\tis not printable\n", .{});
         }
-        if (z.isPunct(r)) {
+        if (try z.isPunct(r)) {
             std.debug.print("\tis punct\n", .{});
         }
-        if (z.isSpace(r)) {
+        if (try z.isSpace(r)) {
             std.debug.print("\tis space\n", .{});
         }
-        if (z.isSymbol(r)) {
+        if (try z.isSymbol(r)) {
             std.debug.print("\tis symbol\n", .{});
         }
-        if (z.isTitle(r)) {
+        if (try z.isTitle(r)) {
             std.debug.print("\tis title case\n", .{});
         }
-        if (z.isUpper(r)) {
+        if (try z.isUpper(r)) {
             std.debug.print("\tis upper case\n", .{});
         }
     }
 }
 
 test "isLower" {
-    var z = Lower.new();
+    var z = try Lower.init(std.testing.allocator);
+    defer z.deinit();
 
     expect(z.isLower('a'));
     expect(z.isLower('é'));
@@ -179,7 +181,8 @@ test "toLower" {
 }
 
 test "isUpper" {
-    var z = Upper.new();
+    var z = try Upper.init(std.testing.allocator);
+    defer z.deinit();
 
     expect(!z.isUpper('a'));
     expect(!z.isUpper('é'));
@@ -203,7 +206,8 @@ test "toUpper" {
 }
 
 test "isTitle" {
-    var z = Title.new();
+    var z = try Title.init(std.testing.allocator);
+    defer z.deinit();
 
     expect(!z.isTitle('a'));
     expect(!z.isTitle('é'));
@@ -224,7 +228,8 @@ test "toTitle" {
 }
 
 test "isControl" {
-    var z = Control.new();
+    var z = try Control.init(std.testing.allocator);
+    defer z.deinit();
 
     expect(z.isControl('\u{0003}'));
     expect(z.isControl('\u{0012}'));
@@ -235,34 +240,35 @@ test "isControl" {
 }
 
 test "isGraphic" {
-    var z = Ziglyph.init(std.testing.allocator);
+    var z = try Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(z.isGraphic('A'));
-    expect(z.isGraphic('\u{20E4}'));
-    expect(z.isGraphic('1'));
-    expect(z.isGraphic('?'));
-    expect(z.isGraphic(' '));
-    expect(z.isGraphic('='));
-    expect(!z.isGraphic('\u{0003}'));
+    expect(try z.isGraphic('A'));
+    expect(try z.isGraphic('\u{20E4}'));
+    expect(try z.isGraphic('1'));
+    expect(try z.isGraphic('?'));
+    expect(try z.isGraphic(' '));
+    expect(try z.isGraphic('='));
+    expect(!try z.isGraphic('\u{0003}'));
 }
 
 test "isPrint" {
-    var z = Ziglyph.init(std.testing.allocator);
+    var z = try Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(z.isPrint('A'));
-    expect(z.isPrint('\u{20E4}'));
-    expect(z.isPrint('1'));
-    expect(z.isPrint('?'));
-    expect(z.isPrint('='));
-    expect(!z.isPrint(' '));
-    expect(!z.isPrint('\t'));
-    expect(!z.isPrint('\u{0003}'));
+    expect(try z.isPrint('A'));
+    expect(try z.isPrint('\u{20E4}'));
+    expect(try z.isPrint('1'));
+    expect(try z.isPrint('?'));
+    expect(try z.isPrint('='));
+    expect(!try z.isPrint(' '));
+    expect(!try z.isPrint('\t'));
+    expect(!try z.isPrint('\u{0003}'));
 }
 
 test "isLetter" {
-    var z = Letter.new();
+    var z = try Letter.init(std.testing.allocator);
+    defer z.deinit();
 
     expect(z.isLetter('A'));
     expect(z.isLetter('É'));
@@ -271,14 +277,16 @@ test "isLetter" {
 }
 
 test "isMark" {
-    var z = Mark.new();
+    var z = try Mark.init(std.testing.allocator);
+    defer z.deinit();
 
     expect(z.isMark('\u{20E4}'));
     expect(!z.isMark('='));
 }
 
 test "isNumber" {
-    var z = Number.new();
+    var z = try Number.init(std.testing.allocator);
+    defer z.deinit();
 
     expect(z.isNumber('1'));
     expect(z.isNumber('0'));
@@ -287,7 +295,8 @@ test "isNumber" {
 }
 
 test "isPunct" {
-    var z = Punct.new();
+    var z = try Punct.init(std.testing.allocator);
+    defer z.deinit();
 
     expect(z.isPunct('!'));
     expect(z.isPunct('?'));
@@ -295,16 +304,17 @@ test "isPunct" {
 }
 
 test "isSpace" {
-    var z = Ziglyph.init(std.testing.allocator);
+    var z = try Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(z.isSpace(' '));
-    expect(z.isWhiteSpace('\t'));
-    expect(!z.isSpace('\u{0003}'));
+    expect(try z.isSpace(' '));
+    expect(try z.isWhiteSpace('\t'));
+    expect(!try z.isSpace('\u{0003}'));
 }
 
 test "isSymbol" {
-    var z = Symbol.new();
+    var z = try Symbol.init(std.testing.allocator);
+    defer z.deinit();
 
     expect(z.isSymbol('>'));
     expect(z.isSymbol('='));
@@ -313,12 +323,12 @@ test "isSymbol" {
 }
 
 test "isAlphaNum" {
-    var z = Ziglyph.init(std.testing.allocator);
+    var z = try Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(z.isAlphaNum('1'));
-    expect(z.isAlphaNum('A'));
-    expect(!z.isAlphaNum('='));
+    expect(try z.isAlphaNum('1'));
+    expect(try z.isAlphaNum('A'));
+    expect(!try z.isAlphaNum('='));
 }
 
 test "decomposeCodePoint" {
