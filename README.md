@@ -5,14 +5,6 @@ Unicode processing with Zig.
 This library has been built from scratch in Zig. Although initially inspired by the Go `unicode`
 package, Ziglyph is now completely independent and unique in and of itself.
 
-## Unicode Data
-The Unicode data is the latest available on the Unicode website, and can be refreshed via the 
-`ucd_gen` utility in the src directory (must be run in the src directory to generate files in the 
-proper locations.) The `ucd_gen` utility will look for a cached copy of the data in a file named
-`UnicodeData.txt` in the src/data directory. If it finds it, it will parse that file; otherwise it 
-will download the latest version from the Unicode website. `ucd_gen` is also built with Zig. You can
-find it in `ucd_gen.zig` in the src directory too.
-
 ## Usage
 There are two modes of usage: via the consolidated Ziglyph struct or using the individual component
 structs for more fine grained control over memory usage and binary size. The Ziglyph struct provides
@@ -39,7 +31,7 @@ test "Ziglyph struct" {
     // Lazy init requires 'try'
     expect(try ziglyph.isLetter(z));
     expect(try ziglyph.isAlphaNum(z));
-    expect(try ziglyph.isPrint(z));
+    expect(!try ziglyph.isPrint(z));
     expect(!try ziglyph.isUpper(z));
     const uz = try ziglyph.toUpper(z);
     expect(try ziglyph.isUpper(uz));
@@ -107,6 +99,14 @@ test "decomposeString" {
     expectEqualSlices(u8, want, got);
 }
 ```
+
+## Unicode Data
+The Unicode data is the latest available on the Unicode website, and can be refreshed via the 
+`ucd_gen` utility in the src directory (must be run in the src directory to generate files in the 
+proper locations.) The `ucd_gen` utility will look for a cached copy of the data in a file named
+`UnicodeData.txt` in the src/data directory. If it finds it, it will parse that file; otherwise it 
+will download the latest version from the Unicode website. `ucd_gen` is also built with Zig. You can
+find it in `ucd_gen.zig` in the src directory too.
 
 ## Speed Test?
 You can build [src/corpus__test.zig](src/corpus_test.zig), in `ReleaseFast` mode and use the `time`
