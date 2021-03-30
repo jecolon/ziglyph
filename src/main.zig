@@ -20,8 +20,7 @@ const UpperMap = @import("ziglyph.zig").UpperMap;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
 
 pub fn main() !void {
-    var z = Ziglyph.init(std.testing.allocator);
-    defer z.deinit();
+    var z = Ziglyph{};
 
     const mixed = [_]u21{ '5', 'o', '9', '!', ' ', '℃', 'ᾭ', 'G' };
     for (mixed) |r| {
@@ -73,15 +72,14 @@ pub fn main() !void {
 
 test "Ziglyph struct" {
     // init and defer deinit.
-    var ziglyph = Ziglyph.init(std.testing.allocator);
-    defer ziglyph.deinit();
+    var ziglyph = Ziglyph{};
 
     const z = 'z';
     expect(ziglyph.isLetter(z));
     expect(ziglyph.isAlphaNum(z));
     expect(ziglyph.isPrint(z));
     expect(!ziglyph.isUpper(z));
-    const uz = try ziglyph.toUpper(z);
+    const uz = ziglyph.toUpper(z);
     expect(ziglyph.isUpper(uz));
     expectEqual(uz, 'Z');
 }
@@ -102,8 +100,7 @@ test "Component structs" {
 }
 
 test "basics" {
-    var z = Ziglyph.init(std.testing.allocator);
-    defer z.deinit();
+    var z = Ziglyph{};
 
     const mixed = [_]u21{ '5', 'o', '9', '!', ' ', '℃', 'ᾭ', 'G' };
     for (mixed) |r| {
@@ -230,8 +227,7 @@ test "isControl" {
 }
 
 test "isGraphic" {
-    var z = Ziglyph.init(std.testing.allocator);
-    defer z.deinit();
+    var z = Ziglyph{};
 
     expect(z.isGraphic('A'));
     expect(z.isGraphic('\u{20E4}'));
@@ -243,8 +239,7 @@ test "isGraphic" {
 }
 
 test "isPrint" {
-    var z = Ziglyph.init(std.testing.allocator);
-    defer z.deinit();
+    var z = Ziglyph{};
 
     expect(z.isPrint('A'));
     expect(z.isPrint('\u{20E4}'));
@@ -290,8 +285,7 @@ test "isPunct" {
 }
 
 test "isSpace" {
-    var z = Ziglyph.init(std.testing.allocator);
-    defer z.deinit();
+    var z = Ziglyph{};
 
     expect(z.isSpace(' '));
     expect(z.isWhiteSpace('\t'));
@@ -308,8 +302,7 @@ test "isSymbol" {
 }
 
 test "isAlphaNum" {
-    var z = Ziglyph.init(std.testing.allocator);
-    defer z.deinit();
+    var z = Ziglyph{};
 
     expect(z.isAlphaNum('1'));
     expect(z.isAlphaNum('A'));

@@ -261,54 +261,54 @@ const UcdGenerator = struct {
         const lists = [_]List{
             .{
                 .name = "Control",
-                .filename = "data/Control.zig",
+                .filename = "components/Control.zig",
                 .items = self.control.items,
                 .ranges = self.control_ranges.items,
             },
             .{
                 .name = "Letter",
-                .filename = "data/Letter.zig",
+                .filename = "components/Letter.zig",
                 .items = self.letter.items,
                 .ranges = self.letter_ranges.items,
             },
             .{
                 .name = "Lower",
-                .filename = "data/Lower.zig",
+                .filename = "components/Lower.zig",
                 .items = self.lower.items,
             },
             .{
                 .name = "Mark",
-                .filename = "data/Mark.zig",
+                .filename = "components/Mark.zig",
                 .items = self.mark.items,
             },
             .{
                 .name = "Number",
-                .filename = "data/Number.zig",
+                .filename = "components/Number.zig",
                 .items = self.number.items,
             },
             .{
                 .name = "Punct",
-                .filename = "data/Punct.zig",
+                .filename = "components/Punct.zig",
                 .items = self.punct.items,
             },
             .{
                 .name = "Space",
-                .filename = "data/Space.zig",
+                .filename = "components/Space.zig",
                 .items = self.space.items,
             },
             .{
                 .name = "Symbol",
-                .filename = "data/Symbol.zig",
+                .filename = "components/Symbol.zig",
                 .items = self.symbol.items,
             },
             .{
                 .name = "Title",
-                .filename = "data/Title.zig",
+                .filename = "components/Title.zig",
                 .items = self.title.items,
             },
             .{
                 .name = "Upper",
-                .filename = "data/Upper.zig",
+                .filename = "components/Upper.zig",
                 .items = self.upper.items,
             },
         };
@@ -365,21 +365,21 @@ const UcdGenerator = struct {
             .{
                 .name = "LowerMap",
                 .comment = "Unicode letter mappings to lowercase.",
-                .filename = "data/LowerMap.zig",
+                .filename = "components/LowerMap.zig",
                 .map = self.to_lower_map,
                 .method = "Lower",
             },
             .{
                 .name = "TitleMap",
                 .comment = "Unicode letter mappings to titlecase.",
-                .filename = "data/TitleMap.zig",
+                .filename = "components/TitleMap.zig",
                 .map = self.to_title_map,
                 .method = "Title",
             },
             .{
                 .name = "UpperMap",
                 .comment = "Unicode letter mappings to uppercase.",
-                .filename = "data/UpperMap.zig",
+                .filename = "components/UpperMap.zig",
                 .map = self.to_upper_map,
                 .method = "Upper",
             },
@@ -418,7 +418,7 @@ const UcdGenerator = struct {
         const decomp_header_tpl = @embedFile("parts/decomp_map_header_tpl.txt");
         const decomp_trailer_tpl = @embedFile("parts/decomp_map_trailer_tpl.txt");
 
-        var decompf = try std.fs.cwd().createFile("data/DecomposeMap.zig", .{});
+        var decompf = try std.fs.cwd().createFile("components/DecomposeMap.zig", .{});
         defer decompf.close();
         var decompf_buf = io.bufferedWriter(decompf.writer());
         const decompf_writer = decompf_buf.writer();

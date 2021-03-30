@@ -2,42 +2,40 @@ const std = @import("std");
 const mem = std.mem;
 
 /// Control code points like form feed.
-pub const Control = @import("data/Control.zig");
+pub const Control = @import("components/Control.zig");
 /// Code point decomposition.
-pub const DecomposeMap = @import("data/DecomposeMap.zig");
+pub const DecomposeMap = @import("components/DecomposeMap.zig");
 /// Unicode letters.
-pub const Letter = @import("data/Letter.zig");
+pub const Letter = @import("components/Letter.zig");
 /// Lowercase letters.
-pub const Lower = @import("data/Lower.zig");
+pub const Lower = @import("components/Lower.zig");
 /// Marks from different alphabets.
-pub const Mark = @import("data/Mark.zig");
+pub const Mark = @import("components/Mark.zig");
 /// Unicode numbers.
-pub const Number = @import("data/Number.zig");
+pub const Number = @import("components/Number.zig");
 /// Punctuation code points.
-pub const Punct = @import("data/Punct.zig");
+pub const Punct = @import("components/Punct.zig");
 /// Unicode space code points.
-pub const Space = @import("data/Space.zig");
+pub const Space = @import("components/Space.zig");
 /// All sorts of symbols.
-pub const Symbol = @import("data/Symbol.zig");
+pub const Symbol = @import("components/Symbol.zig");
 /// Titlecase letters.
-pub const Title = @import("data/Title.zig");
+pub const Title = @import("components/Title.zig");
 /// Uppercase letters.
-pub const Upper = @import("data/Upper.zig");
+pub const Upper = @import("components/Upper.zig");
 
 /// Mapping to lowercase.
-pub const LowerMap = @import("data/LowerMap.zig");
+pub const LowerMap = @import("components/LowerMap.zig");
 /// Mapping to titlecase.
-pub const TitleMap = @import("data/TitleMap.zig");
+pub const TitleMap = @import("components/TitleMap.zig");
 /// Mapping to uppercase.
-pub const UpperMap = @import("data/UpperMap.zig");
+pub const UpperMap = @import("components/UpperMap.zig");
 
 /// Ziglyph consolidates all the major Unicode utility functions in one place. Because these functions
 /// each consume memory for their respective code point data, this struct performs lazy initialization
 /// to only consume memory when needed.
 pub const Ziglyph = struct {
-    allocator: *mem.Allocator,
     control: ?Control = null,
-    decomp_map: ?DecomposeMap = null,
     letter: ?Letter = null,
     lower: ?Lower = null,
     lower_map: ?LowerMap = null,
@@ -52,16 +50,6 @@ pub const Ziglyph = struct {
     upper_map: ?UpperMap = null,
 
     const Self = @This();
-
-    pub fn init(allocator: *mem.Allocator) Ziglyph {
-        return .{ .allocator = allocator };
-    }
-
-    pub fn deinit(self: *Self) void {
-        if (self.decomp_map) |*decomp_map| {
-            decomp_map.deinit();
-        }
-    }
 
     /// isAlphaNum covers all the Unicode letter and number space, not just ASCII.
     pub fn isAlphaNum(self: *Self, cp: u21) bool {
@@ -221,9 +209,8 @@ pub const Ziglyph = struct {
     }
 
     /// toLower returns the lowercase code point for the given code point. It returns the same 
-    /// code point given if no mapping exists. This method may return an error because of lazy 
-    /// initialization allocation.
-    pub fn toLower(self: *Self, cp: u21) !u21 {
+    /// code point given if no mapping exists.
+    pub fn toLower(self: *Self, cp: u21) u21 {
         // Lazy init.
         if (self.lower_map == null) {
             self.lower_map = LowerMap.new();
@@ -233,9 +220,8 @@ pub const Ziglyph = struct {
     }
 
     /// toTitle returns the titlecase code point for the given code point. It returns the same 
-    /// code point given if no mapping exists. This method may return an error because of lazy 
-    /// initialization allocation.
-    pub fn toTitle(self: *Self, cp: u21) !u21 {
+    /// code point given if no mapping exists.
+    pub fn toTitle(self: *Self, cp: u21) u21 {
         // Lazy init.
         if (self.title_map == null) {
             self.title_map = TitleMap.new();
@@ -245,38 +231,13 @@ pub const Ziglyph = struct {
     }
 
     /// toUpper returns the uppercase code point for the given code point. It returns the same 
-    /// code point given if no mapping exists. This method may return an error because of lazy 
-    /// initialization allocation.
-    pub fn toUpper(self: *Self, cp: u21) !u21 {
+    /// code point given if no mapping exists.
+    pub fn toUpper(self: *Self, cp: u21) u21 {
         // Lazy init.
         if (self.upper_map == null) {
             self.upper_map = UpperMap.new();
         }
 
         return self.upper_map.?.toUpper(cp);
-    }
-
-    /// decomposeCodePoint will convert a code point into its component code points if applicable.
-    /// Returns null if the code point cannot be decomposed. This method may return an error because 
-    /// of lazy initialization allocation.
-    pub fn decomposeCodePoint(self: *Self, cp: u21) !?[]const u21 {
-        // Lazy init.
-        if (self.decomp_map == null) {
-            self.decomp_map = try DecompMap.init(self.allocator);
-        }
-
-        return self.decomp_map.?.decomposeCodePoint(cp);
-    }
-
-    /// decomposeString converts a string into a string where complex code points are decomposed into
-    /// their component code points. This method may return an error because of lazy initialization 
-    /// allocation. Caller must free returned memory.
-    pub fn decomposeString(self: *Self, str: []const u8) ![]const u8 {
-        // Lazy init.
-        if (self.decomp_map == null) {
-            self.decomp_map = try DecompMap.init(self.allocator);
-        }
-
-        return self.decomp_map.?.decomposeString(str);
     }
 };
