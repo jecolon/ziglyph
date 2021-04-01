@@ -190,6 +190,10 @@ const UcdGenerator = struct {
                     // Parse code point.
                     code_point = try fmt.parseInt(u21, field, 16);
                 } else if (i == 1 and mem.endsWith(u8, field, "First>")) {
+                    // Ranges to avoid.
+                    if (mem.endsWith(u8, field, "Surrogate, First>")) continue;
+                    if (mem.endsWith(u8, field, "Private Use, First>")) continue;
+                    if (mem.startsWith(u8, field, "Private Use")) continue;
                     range_start = code_point;
                 } else if (i == 2 and field.len != 0) {
                     // Major categories.

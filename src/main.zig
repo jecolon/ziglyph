@@ -254,9 +254,6 @@ test "isControl" {
     expect(z.isControl('\t'));
     expect(z.isControl('\u{0003}'));
     expect(z.isControl('\u{0012}'));
-    expect(z.isControl('\u{DC01}'));
-    expect(z.isControl('\u{DFF0}'));
-    expect(z.isControl('\u{10FFF0}'));
     expect(!z.isControl('A'));
 }
 
