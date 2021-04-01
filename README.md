@@ -12,7 +12,8 @@ the convenience of having all the methods in one place, with lazy initialization
 structs to only use the resources necessary. However this comes at the cost of more error handling,
 given that when calling a method such as `isUpper`, Ziglyph may need to lazily initialize the `Upper`
 struct, which may fail. The same method directly on the `Upper` struct doesn't allocate and thus cannot
-fail.
+fail. On the other hand, the Ziglyph struct has some added optimizations when handling ASCII text, using
+the Zig `std.ascii` functions under the hood and avoiding allocation altogether.
 
 ### Using the Ziglyph Struct
 ```zig
