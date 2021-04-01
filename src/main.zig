@@ -77,13 +77,30 @@ test "Ziglyph struct" {
     defer ziglyph.deinit();
 
     const z = 'z';
-    expect(try ziglyph.isLetter(z));
     expect(try ziglyph.isAlphaNum(z));
+    expect(!try ziglyph.isControl(z));
+    // isDigit cannot fail.
+    expect(!ziglyph.isDigit(z));
+    expect(try ziglyph.isGraphic(z));
+    expect(try ziglyph.isLetter(z));
+    expect(try ziglyph.isLower(z));
+    expect(!try ziglyph.isMark(z));
+    expect(!try ziglyph.isNumber(z));
     expect(try ziglyph.isPrint(z));
+    expect(!try ziglyph.isPunct(z));
+    expect(!try ziglyph.isSpace(z));
+    expect(!try ziglyph.isSymbol(z));
+    expect(!try ziglyph.isTitle(z));
     expect(!try ziglyph.isUpper(z));
     const uz = try ziglyph.toUpper(z);
     expect(try ziglyph.isUpper(uz));
     expectEqual(uz, 'Z');
+    const lz = try ziglyph.toLower(uz);
+    expect(try ziglyph.isLower(lz));
+    expectEqual(lz, 'z');
+    const tz = try ziglyph.toTitle(lz);
+    expect(try ziglyph.isUpper(tz));
+    expectEqual(tz, 'Z');
 }
 
 test "Component structs" {
@@ -166,6 +183,7 @@ test "isLower" {
 }
 
 test "toLower" {
+    //var z = try LowerMap.init(std.testing.allocator);
     var z = try LowerMap.init(std.testing.allocator);
     defer z.deinit();
 
@@ -231,12 +249,27 @@ test "isControl" {
     var z = try Control.init(std.testing.allocator);
     defer z.deinit();
 
+    expect(z.isControl('\n'));
+    expect(z.isControl('\r'));
+    expect(z.isControl('\t'));
     expect(z.isControl('\u{0003}'));
     expect(z.isControl('\u{0012}'));
     expect(z.isControl('\u{DC01}'));
     expect(z.isControl('\u{DFF0}'));
     expect(z.isControl('\u{10FFF0}'));
     expect(!z.isControl('A'));
+}
+
+test "isDigit" {
+    var z = try Ziglyph.init(std.testing.allocator);
+    defer z.deinit();
+
+    var cp: u21 = '0';
+    while (cp <= '9') : (cp += 1) {
+        expect(z.isDigit(cp));
+    }
+    expect(!z.isDigit('\u{0003}'));
+    expect(!z.isDigit('A'));
 }
 
 test "isGraphic" {
@@ -261,7 +294,7 @@ test "isPrint" {
     expect(try z.isPrint('1'));
     expect(try z.isPrint('?'));
     expect(try z.isPrint('='));
-    expect(!try z.isPrint(' '));
+    expect(try z.isPrint(' '));
     expect(!try z.isPrint('\t'));
     expect(!try z.isPrint('\u{0003}'));
 }
@@ -270,7 +303,14 @@ test "isLetter" {
     var z = try Letter.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(z.isLetter('A'));
+    var cp: u21 = 'a';
+    while (cp <= 'z') : (cp += 1) {
+        expect(z.isLetter(cp));
+    }
+    cp = 'A';
+    while (cp <= 'Z') : (cp += 1) {
+        expect(z.isLetter(cp));
+    }
     expect(z.isLetter('É'));
     expect(z.isLetter('\u{2CEB3}'));
     expect(!z.isLetter('\u{0003}'));
@@ -288,8 +328,10 @@ test "isNumber" {
     var z = try Number.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(z.isNumber('1'));
-    expect(z.isNumber('0'));
+    var cp: u21 = '0';
+    while (cp <= '9') : (cp += 1) {
+        expect(z.isNumber(cp));
+    }
     expect(!z.isNumber('\u{0003}'));
     expect(!z.isNumber('A'));
 }
@@ -300,6 +342,29 @@ test "isPunct" {
 
     expect(z.isPunct('!'));
     expect(z.isPunct('?'));
+    expect(z.isPunct(','));
+    expect(z.isPunct('.'));
+    expect(z.isPunct(':'));
+    expect(z.isPunct(';'));
+    expect(z.isPunct('\''));
+    expect(z.isPunct('"'));
+    expect(z.isPunct('¿'));
+    expect(z.isPunct('¡'));
+    expect(z.isPunct('-'));
+    expect(z.isPunct('('));
+    expect(z.isPunct(')'));
+    expect(z.isPunct('{'));
+    expect(z.isPunct('}'));
+    expect(z.isPunct('–'));
+    // Punct? in Unicode.
+    expect(z.isPunct('@'));
+    expect(z.isPunct('#'));
+    expect(z.isPunct('%'));
+    expect(z.isPunct('&'));
+    expect(z.isPunct('*'));
+    expect(z.isPunct('_'));
+    expect(z.isPunct('/'));
+    expect(z.isPunct('\\'));
     expect(!z.isPunct('\u{0003}'));
 }
 
@@ -308,7 +373,7 @@ test "isSpace" {
     defer z.deinit();
 
     expect(try z.isSpace(' '));
-    expect(try z.isWhiteSpace('\t'));
+    expect(try z.isSpace('\t'));
     expect(!try z.isSpace('\u{0003}'));
 }
 
@@ -316,8 +381,13 @@ test "isSymbol" {
     var z = try Symbol.init(std.testing.allocator);
     defer z.deinit();
 
+    expect(z.isSymbol('<'));
     expect(z.isSymbol('>'));
     expect(z.isSymbol('='));
+    expect(z.isSymbol('$'));
+    expect(z.isSymbol('^'));
+    expect(z.isSymbol('+'));
+    expect(z.isSymbol('|'));
     expect(!z.isSymbol('A'));
     expect(!z.isSymbol('?'));
 }
@@ -326,8 +396,18 @@ test "isAlphaNum" {
     var z = try Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(try z.isAlphaNum('1'));
-    expect(try z.isAlphaNum('A'));
+    var cp: u21 = '0';
+    while (cp <= '9') : (cp += 1) {
+        expect(try z.isAlphaNum(cp));
+    }
+    cp = 'a';
+    while (cp <= 'z') : (cp += 1) {
+        expect(try z.isAlphaNum(cp));
+    }
+    cp = 'A';
+    while (cp <= 'Z') : (cp += 1) {
+        expect(try z.isAlphaNum(cp));
+    }
     expect(!try z.isAlphaNum('='));
 }
 

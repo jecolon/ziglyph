@@ -4,6 +4,7 @@
 //! used functionality, see the Ziglyph struct below.
 
 const std = @import("std");
+const ascii = std.ascii;
 const mem = std.mem;
 
 /// Control code points like form feed.
@@ -73,6 +74,9 @@ pub const Ziglyph = struct {
         if (self.lower) |*lower| {
             lower.deinit();
         }
+        if (self.lower_map) |*lower_map| {
+            lower_map.deinit();
+        }
         if (self.mark) |*mark| {
             mark.deinit();
         }
@@ -104,6 +108,10 @@ pub const Ziglyph = struct {
 
     /// isAlphaNum covers all the Unicode letter and number space, not just ASCII.
     pub fn isAlphaNum(self: *Self, cp: u21) !bool {
+        if (cp < 128) {
+            return ascii.isAlNum(@intCast(u8, cp));
+        }
+
         // Lazy init.
         if (self.letter == null) {
             self.letter = try Letter.init(self.allocator);
@@ -115,8 +123,20 @@ pub const Ziglyph = struct {
         return self.letter.?.isLetter(cp) or self.number.?.isNumber(cp);
     }
 
+    // isDigit detects the 10 ASCII digits 0-9.
+    pub fn isDigit(self: Self, cp: u21) bool {
+        return ascii.isDigit(@intCast(u8, cp));
+    }
+
     /// isGraphic detects any code point that can be represented graphically, including spaces.
     pub fn isGraphic(self: *Self, cp: u21) !bool {
+        // ASCII optimization.
+        if (cp == ' ') return true;
+
+        if (cp < 128) {
+            return ascii.isGraph(@intCast(u8, cp));
+        }
+
         // Lazy init.
         if (self.space == null) {
             self.space = try Space.init(self.allocator);
@@ -127,6 +147,13 @@ pub const Ziglyph = struct {
 
     /// isPrint detects any code point that can be printed, but not spaces.
     pub fn isPrint(self: *Self, cp: u21) !bool {
+        // ASCII optimization.
+        if (cp == ' ') return true;
+
+        if (cp < 128) {
+            return ascii.isPrint(@intCast(u8, cp));
+        }
+
         // Lazy init.
         if (self.mark == null) {
             self.mark = try Mark.init(self.allocator);
@@ -143,6 +170,11 @@ pub const Ziglyph = struct {
 
     /// isControl detects control code points such as form feeds.
     pub fn isControl(self: *Self, cp: u21) !bool {
+        // ASCII optimization.
+        if (cp < 128) {
+            return ascii.isCntrl(@intCast(u8, cp));
+        }
+
         // Lazy init.
         if (self.control == null) {
             self.control = try Control.init(self.allocator);
@@ -153,6 +185,11 @@ pub const Ziglyph = struct {
 
     /// isLetter covers all letters in Unicode, not just ASCII.
     pub fn isLetter(self: *Self, cp: u21) !bool {
+        // ASCII optimization.
+        if (cp < 128) {
+            return ascii.isAlpha(@intCast(u8, cp));
+        }
+
         // Lazy init.
         if (self.letter == null) {
             self.letter = try Letter.init(self.allocator);
@@ -163,6 +200,11 @@ pub const Ziglyph = struct {
 
     /// isLower detects code points that are lowercase.
     pub fn isLower(self: *Self, cp: u21) !bool {
+        // ASCII optimization.
+        if (cp < 128) {
+            return ascii.isLower(@intCast(u8, cp));
+        }
+
         // Lazy init.
         if (self.lower == null) {
             self.lower = try Lower.init(self.allocator);
@@ -183,6 +225,11 @@ pub const Ziglyph = struct {
 
     /// isNumber covers all Unicode numbers, not just ASII.
     pub fn isNumber(self: *Self, cp: u21) !bool {
+        // ASCII optimization.
+        if (cp < 128) {
+            return ascii.isDigit(@intCast(u8, cp));
+        }
+
         // Lazy init.
         if (self.number == null) {
             self.number = try Number.init(self.allocator);
@@ -193,6 +240,11 @@ pub const Ziglyph = struct {
 
     /// isPunct detects punctuation characters. Note some punctuation maybe considered symbols by Unicode.
     pub fn isPunct(self: *Self, cp: u21) !bool {
+        // ASCII optimization.
+        if (cp < 128) {
+            return ascii.isPunct(@intCast(u8, cp));
+        }
+
         // Lazy init.
         if (self.punct == null) {
             self.punct = try Punct.init(self.allocator);
@@ -204,6 +256,11 @@ pub const Ziglyph = struct {
     /// isSpace adheres to the strict meaning of space as per Unicode, excluding some control characters
     /// such as tab \t.
     pub fn isSpace(self: *Self, cp: u21) !bool {
+        // ASCII optimization.
+        if (cp < 128) {
+            return ascii.isSpace(@intCast(u8, cp));
+        }
+
         // Lazy init.
         if (self.space == null) {
             self.space = try Space.init(self.allocator);
@@ -235,6 +292,11 @@ pub const Ziglyph = struct {
 
     /// isTitle detects code points in uppercase.
     pub fn isUpper(self: *Self, cp: u21) !bool {
+        // ASCII optimization.
+        if (cp < 128) {
+            return ascii.isUpper(@intCast(u8, cp));
+        }
+
         // Lazy init.
         if (self.upper == null) {
             self.upper = try Upper.init(self.allocator);
@@ -243,25 +305,14 @@ pub const Ziglyph = struct {
         return self.upper.?.isUpper(cp);
     }
 
-    /// isWhiteSpace detects space code points including some (like tab: \t) not considered as such 
-    /// by Unicode (as is the cse with the isSpace method).
-    pub fn isWhiteSpace(self: *Self, cp: u21) !bool {
-        const ascii = @import("std").ascii;
-        if (cp < 256) {
-            return ascii.isSpace(@intCast(u8, cp));
-        } else {
-            // Lazy init.
-            if (self.space == null) {
-                self.space = try Space.init(self.allocator);
-            }
-
-            return self.space.?.isSpace(cp);
-        }
-    }
-
     /// toLower returns the lowercase code point for the given code point. It returns the same 
     /// code point given if no mapping exists.
     pub fn toLower(self: *Self, cp: u21) !u21 {
+        // ASCII optimization.
+        if (cp < 128) {
+            return ascii.toLower(@intCast(u8, cp));
+        }
+
         // Lazy init.
         if (self.lower_map == null) {
             self.lower_map = try LowerMap.init(self.allocator);
