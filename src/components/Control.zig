@@ -34,15 +34,15 @@ pub fn init(allocator: *mem.Allocator) !Control {
     instance.array[2274] = true;
     instance.array[6158] = true;
     instance.array[55296] = true;
-    instance.array[56192] = true;
-    instance.array[56320] = true;
-    instance.array[57344] = true;
+    instance.array[63743] = true;
     instance.array[65279] = true;
     instance.array[69821] = true;
     instance.array[69837] = true;
     instance.array[917505] = true;
     instance.array[983040] = true;
+    instance.array[1048573] = true;
     instance.array[1048576] = true;
+    instance.array[1114109] = true;
 
     var index: u21 = 0;
     index = 0;
@@ -73,6 +73,18 @@ pub fn init(allocator: *mem.Allocator) !Control {
     while (index <= 8303) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 56191;
+    while (index <= 56192) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 56319;
+    while (index <= 56320) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 57343;
+    while (index <= 57344) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 65529;
     while (index <= 65531) : (index += 1) {
         instance.array[index] = true;
@@ -91,30 +103,6 @@ pub fn init(allocator: *mem.Allocator) !Control {
     }
     index = 917536;
     while (index <= 917631) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 55296;
-    while (index <= 56191) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 56192;
-    while (index <= 56319) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 56320;
-    while (index <= 57343) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 57344;
-    while (index <= 63743) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 983040;
-    while (index <= 1048573) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 1048576;
-    while (index <= 1114109) : (index += 1) {
         instance.array[index] = true;
     }
 
