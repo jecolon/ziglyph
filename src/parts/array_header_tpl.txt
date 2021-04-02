@@ -9,6 +9,7 @@
 const std = @import("std");
 const mem = std.mem;
 const Range = @import("../Range.zig");
+const ascii = @import("../ascii.zig"); // Pending std.ascii fix.
 
 const {0s} = @This();
 

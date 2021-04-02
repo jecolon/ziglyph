@@ -282,6 +282,25 @@ test "isGraphic" {
     expect(!try z.isGraphic('\u{0003}'));
 }
 
+test "isHex" {
+    var z = try Ziglyph.init(std.testing.allocator);
+    defer z.deinit();
+
+    var cp: u21 = '0';
+    while (cp <= '9') : (cp += 1) {
+        expect(z.isHex(cp));
+    }
+    cp = 'A';
+    while (cp <= 'F') : (cp += 1) {
+        expect(z.isHex(cp));
+    }
+    cp = 'a';
+    while (cp <= 'f') : (cp += 1) {
+        expect(z.isHex(cp));
+    }
+    expect(!z.isHex('\u{0003}'));
+    expect(!z.isHex('Z'));
+}
 test "isPrint" {
     var z = try Ziglyph.init(std.testing.allocator);
     defer z.deinit();

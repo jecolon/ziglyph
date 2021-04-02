@@ -9,6 +9,7 @@
 
 const std = @import("std");
 const mem = std.mem;
+const ascii = @import("../ascii.zig"); // Pending std.ascii fix.
 const {1s} = @This();
 
 allocator: *mem.Allocator,

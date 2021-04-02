@@ -9,6 +9,7 @@
 const std = @import("std");
 const mem = std.mem;
 const Range = @import("../Range.zig");
+const ascii = @import("../ascii.zig"); // Pending std.ascii fix.
 
 const Lower = @This();
 
@@ -984,7 +985,7 @@ pub fn init(allocator: *mem.Allocator) !Lower {
         instance.array[index] = true;
     }
 
-    // Placeholder: 0. Struct name.
+    // Placeholder: 0. Struct name, 1. ASCII optimization.
     return instance;
 }
 
@@ -992,7 +993,17 @@ pub fn deinit(self: *Lower) void {
     self.allocator.free(self.array);
 }
 
+// ASCII optimization.
+fn ascii_opt(self: Lower, cp: u21) ?bool {
+    if (cp < 128) {
+        return ascii.isLower(@intCast(u8, cp));
+    } else {
+        return null;
+    }
+}
+
 pub fn isLower(self: Lower, cp: u21) bool {
+    if (self.ascii_opt(cp)) |acp| return acp;
     if (cp < self.lo or cp > self.hi) return false;
     const index = cp - self.lo;
     return if (index >= self.array.len) false else self.array[index];

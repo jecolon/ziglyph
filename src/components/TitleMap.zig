@@ -9,6 +9,7 @@
 
 const std = @import("std");
 const mem = std.mem;
+const ascii = @import("../ascii.zig"); // Pending std.ascii fix.
 const TitleMap = @This();
 
 allocator: *mem.Allocator,
@@ -1449,8 +1450,18 @@ pub fn deinit(self: *TitleMap) void {
     self.allocator.free(self.array);
 }
 
+// ASCII optimization.
+fn ascii_opt(self: TitleMap, cp: u21) ?u21 {
+    if (cp < 128) {
+        return null;
+    } else {
+        return null;
+    }
+}
+
 /// toTitle maps the code point to the desired case or returns the same code point if no mapping exists.
 pub fn toTitle(self: TitleMap, cp: u21) u21 {
+    if (self.ascii_opt(cp)) |acp| return acp;
     if (cp < self.lo or cp > self.hi) return cp;
     const index = cp - self.lo;
     if (index >= self.array.len) return cp;
