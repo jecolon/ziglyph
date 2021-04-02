@@ -25,8 +25,18 @@ const Range = struct {
 const List = struct {
     name: []const u8,
     filename: []const u8,
+    ascii_opt: []const u8,
     items: []u21,
     ranges: ?[]Range = null,
+};
+
+const CaseMap = struct {
+    name: []const u8,
+    comment: []const u8,
+    filename: []const u8,
+    map: AutoHashMap(u21, u21),
+    method: []const u8,
+    ascii_opt: []const u8,
 };
 
 const Consolidated = struct {
@@ -266,6 +276,7 @@ const UcdGenerator = struct {
             .{
                 .name = "Control",
                 .filename = "components/Control.zig",
+                .ascii_opt = "return ascii.isCntrl(@intCast(u8, cp));",
                 .items = self.control.items,
                 .ranges = self.control_ranges.items,
             },
@@ -273,46 +284,55 @@ const UcdGenerator = struct {
                 .name = "Letter",
                 .filename = "components/Letter.zig",
                 .items = self.letter.items,
+                .ascii_opt = "return ascii.isAlpha(@intCast(u8, cp));",
                 .ranges = self.letter_ranges.items,
             },
             .{
                 .name = "Lower",
                 .filename = "components/Lower.zig",
+                .ascii_opt = "return ascii.isLower(@intCast(u8, cp));",
                 .items = self.lower.items,
             },
             .{
                 .name = "Mark",
                 .filename = "components/Mark.zig",
+                .ascii_opt = "return null;",
                 .items = self.mark.items,
             },
             .{
                 .name = "Number",
                 .filename = "components/Number.zig",
+                .ascii_opt = "return ascii.isDigit(@intCast(u8, cp));",
                 .items = self.number.items,
             },
             .{
                 .name = "Punct",
                 .filename = "components/Punct.zig",
+                .ascii_opt = "return ascii.isPunct(@intCast(u8, cp));",
                 .items = self.punct.items,
             },
             .{
                 .name = "Space",
                 .filename = "components/Space.zig",
+                .ascii_opt = "return ascii.isSpace(@intCast(u8, cp));",
                 .items = self.space.items,
             },
             .{
                 .name = "Symbol",
                 .filename = "components/Symbol.zig",
+                .ascii_opt = "return ascii.isSymbol(@intCast(u8, cp));",
                 .items = self.symbol.items,
             },
             .{
                 .name = "Title",
                 .filename = "components/Title.zig",
+                .ascii_opt = "return null;",
                 .items = self.title.items,
             },
             .{
                 .name = "Upper",
                 .filename = "components/Upper.zig",
+                .ascii_opt = "return ascii.isUpper(@intCast(u8, cp));",
                 .items = self.upper.items,
             },
         };
@@ -347,17 +367,9 @@ const UcdGenerator = struct {
                 _ = try writer.write("    }\n");
             }
 
-            _ = try writer.print(trailer_tpl, .{list.name});
+            _ = try writer.print(trailer_tpl, .{ list.name, list.ascii_opt });
             try buf_writer.flush();
         }
-
-        const CaseMap = struct {
-            name: []const u8,
-            comment: []const u8,
-            filename: []const u8,
-            map: AutoHashMap(u21, u21),
-            method: []const u8,
-        };
 
         const case_maps = [_]CaseMap{
             .{
@@ -366,6 +378,7 @@ const UcdGenerator = struct {
                 .filename = "components/LowerMap.zig",
                 .map = self.to_lower_map,
                 .method = "Lower",
+                .ascii_opt = "return ascii.toLower(@intCast(u8, cp));\n",
             },
             .{
                 .name = "TitleMap",
@@ -373,6 +386,7 @@ const UcdGenerator = struct {
                 .filename = "components/TitleMap.zig",
                 .map = self.to_title_map,
                 .method = "Title",
+                .ascii_opt = "return null;",
             },
             .{
                 .name = "UpperMap",
@@ -380,6 +394,7 @@ const UcdGenerator = struct {
                 .filename = "components/UpperMap.zig",
                 .map = self.to_upper_map,
                 .method = "Upper",
+                .ascii_opt = "return ascii.toUpper(@intCast(u8, cp));\n",
             },
         };
 
@@ -408,7 +423,7 @@ const UcdGenerator = struct {
                 _ = try writer.print("    instance.array[{d}] = 0x{X};\n", .{ entry.key - lo, entry.value });
             }
 
-            _ = try writer.print(map_trailer_tpl, .{ cm.method, cm.name });
+            _ = try writer.print(map_trailer_tpl, .{ cm.method, cm.name, cm.ascii_opt });
             try buf_writer.flush();
         }
 

@@ -9,6 +9,7 @@
 
 const std = @import("std");
 const mem = std.mem;
+const ascii = @import("../ascii.zig"); // Pending std.ascii fix.
 const UpperMap = @This();
 
 allocator: *mem.Allocator,
@@ -1445,8 +1446,19 @@ pub fn deinit(self: *UpperMap) void {
     self.allocator.free(self.array);
 }
 
+// ASCII optimization.
+fn ascii_opt(self: UpperMap, cp: u21) ?u21 {
+    if (cp < 128) {
+        return ascii.toUpper(@intCast(u8, cp));
+
+    } else {
+        return null;
+    }
+}
+
 /// toUpper maps the code point to the desired case or returns the same code point if no mapping exists.
 pub fn toUpper(self: UpperMap, cp: u21) u21 {
+    if (self.ascii_opt(cp)) |acp| return acp;
     if (cp < self.lo or cp > self.hi) return cp;
     const index = cp - self.lo;
     if (index >= self.array.len) return cp;

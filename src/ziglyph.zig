@@ -4,7 +4,7 @@
 //! used functionality, see the Ziglyph struct below.
 
 const std = @import("std");
-const ascii = std.ascii;
+const ascii = @import("ascii.zig"); // Pending std.ascii fix.
 const mem = std.mem;
 
 /// Control code points like form feed.
@@ -145,6 +145,11 @@ pub const Ziglyph = struct {
         return (try self.isPrint(cp)) or self.space.?.isSpace(cp);
     }
 
+    // isHex detects the 16 ASCII characters 0-9 A-F, and a-f.
+    pub fn isHex(self: Self, cp: u21) bool {
+        return ascii.isXDigit(@intCast(u8, cp));
+    }
+
     /// isPrint detects any code point that can be printed, but not spaces.
     pub fn isPrint(self: *Self, cp: u21) !bool {
         // ASCII optimization.
@@ -272,6 +277,11 @@ pub const Ziglyph = struct {
     // isSymbol detects symbols which curiosly may include some code points commonly thought of as
     // punctuation.
     pub fn isSymbol(self: *Self, cp: u21) !bool {
+        // ASCII optimization.
+        if (cp < 128) {
+            return ascii.isSymbol(@intCast(u8, cp));
+        }
+
         // Lazy init.
         if (self.symbol == null) {
             self.symbol = try Symbol.init(self.allocator);
