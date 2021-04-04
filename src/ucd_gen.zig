@@ -182,10 +182,12 @@ const UcdGenerator = struct {
                 if (!mem.endsWith(u8, fields[1], "Last>")) return error.UnclosedRange;
 
                 const range_end = try fmt.parseInt(u21, fields[0], 16);
-                switch (fields[2][0]) {
-                    'C' => try self.control_ranges.append(.{ .start = rscp, .end = range_end }),
-                    'L' => try self.letter_ranges.append(.{ .start = rscp, .end = range_end }),
-                    else => return error.UnexpectedRangeCategory,
+                if (mem.eql(u8, fields[2], "Cc")) {
+                    try self.control_ranges.append(.{ .start = rscp, .end = range_end });
+                } else if (fields[2][0] == 'L') {
+                    try self.letter_ranges.append(.{ .start = rscp, .end = range_end });
+                } else {
+                    return error.UnexpectedRangeCategory;
                 }
 
                 range_start = null;
@@ -207,10 +209,10 @@ const UcdGenerator = struct {
                     range_start = code_point;
                 } else if (i == 2 and field.len != 0) {
                     // Major categories.
+                    if (mem.eql(u8, field, "Cc") and !contains(self.control.items, code_point)) {
+                        try self.control.append(code_point);
+                    }
                     switch (field[0]) {
-                        'C' => if (!contains(self.control.items, code_point)) {
-                            try self.control.append(code_point);
-                        },
                         'L' => {
                             if (!contains(self.letter.items, code_point)) {
                                 try self.letter.append(code_point);
