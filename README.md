@@ -103,11 +103,12 @@ test "decomposeString" {
 
 ## Unicode Data
 The Unicode data is the latest available on the Unicode website, and can be refreshed via the 
-`ucd_gen` utility in the src directory (must be run in the src directory to generate files in the 
-proper locations.) The `ucd_gen` utility will look for a cached copy of the data in a file named
-`UnicodeData.txt` in the src/data directory. If it finds it, it will parse that file; otherwise it 
-will download the latest version from the Unicode website. `ucd_gen` is also built with Zig. You can
-find it in `ucd_gen.zig` in the src directory too.
+`ucd_gen.sh` script in the root directory (must be run in the root directory to generate files in the 
+proper locations.) The `ucd_gen.sh` script will look for a cached copy of the data, If it finds it, 
+it, the `src/ucd_gen` program will parse those files; otherwise it will download the latest version 
+from the Unicode website. `src/ucd_gen` is also built with Zig. You can find it in `ucd_gen.zig` in 
+the src directory too. To refresh the data, you only have to run `ucd_gen.sh` in the root directory,
+which will in turn run `src/ucd_gen` automatically for you.
 
 ## Speed Test?
 You can build [src/corpus__test.zig](src/corpus_test.zig), in `ReleaseFast` mode and use the `time`
