@@ -9,7 +9,8 @@ const mem = std.mem;
 
 const host = "www.unicode.org";
 const remote_path = "/Public/UCD/latest/ucd/UnicodeData.txt";
-const cache_filepath = "data/UnicodeData.txt";
+const ucd_filepath = "data/ucd/UnicodeData.txt";
+const core_props_filepath = "data/ucd/DerivedCoreProperties.txt";
 
 const CaseKind = enum {
     Lower,
@@ -119,59 +120,20 @@ const UcdGenerator = struct {
         self.decomp_map.deinit();
     }
 
-    pub fn gen(self: *Self) !void {
-        var cache_file = std.fs.cwd().openFile(cache_filepath, .{});
-        if (cache_file) |f| {
-            // Cache hit.
-            defer f.close();
-            var buf_reader = io.bufferedReader(f.reader());
-            const in_stream = buf_reader.reader();
-            var buf_writer = io.bufferedWriter(f.writer());
-            const cache_stream = buf_writer.writer();
-            try self.gen2(in_stream, cache_stream, false);
-        } else |_| {
-            // Cache file.
-            var new_cache_file = try std.fs.cwd().createFile(cache_filepath, .{});
-            defer new_cache_file.close();
-            var buf_writer = io.bufferedWriter(new_cache_file.writer());
-            const cache_stream = buf_writer.writer();
-
-            // TCP / HTTP connection.
-            var conn = try std.net.tcpConnectToHost(self.allocator, host, 80);
-            defer conn.close();
-            var buf_reader = io.bufferedReader(conn.reader());
-            const in_stream = buf_reader.reader();
-            var buffer: [256]u8 = undefined;
-            const http_request = "GET {s} HTTP/1.1\r\nHost: {s}\r\nConnection: close\r\n\r\n";
-            var msg = try std.fmt.bufPrint(&buffer, http_request, .{ remote_path, host });
-            _ = try conn.write(msg);
-
-            try self.gen2(in_stream, cache_stream, true);
-            try buf_writer.flush();
-        }
-    }
-
-    fn gen2(self: *Self, in_stream: anytype, cache_stream: anytype, is_net: bool) !void {
-        try self.process_stream(in_stream, cache_stream, is_net);
+    fn gen(self: *Self) !void {
+        try self.process_stream();
         try self.write_files();
     }
 
-    fn process_stream(self: *Self, in_stream: anytype, cache_stream: anytype, is_net: bool) !void {
+    fn process_stream(self: *Self) !void {
+        var ucd_file = try std.fs.cwd().openFile(ucd_filepath, .{});
+        defer ucd_file.close();
+        var buf_reader = io.bufferedReader(ucd_file.reader());
+        const in_stream = buf_reader.reader();
+
         var buf: [1024]u8 = undefined;
-        var at_body = if (is_net) false else true;
         var range_start: ?u21 = null;
         while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
-            if (!at_body) {
-                if (line.len == 1 and line[0] == '\r') {
-                    at_body = true;
-                }
-                continue;
-            }
-
-            if (is_net) {
-                _ = try cache_stream.print("{s}\n", .{line});
-            }
-
             if (range_start) |rscp| {
                 var iter = mem.split(line, ";");
                 var fields: [3][]const u8 = undefined;
