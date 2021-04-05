@@ -7,6 +7,8 @@ const std = @import("std");
 const ascii = @import("ascii.zig"); // Pending std.ascii fix.
 const mem = std.mem;
 
+/// Code point case folding.
+pub const CaseFoldMap = @import("components/CaseFoldMap.zig");
 /// Control code points like form feed.
 pub const Control = @import("components/Control.zig");
 /// Code point decomposition.

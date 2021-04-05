@@ -3,6 +3,7 @@ const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
+const CaseFoldMap = @import("ziglyph.zig").CaseFoldMap;
 const Control = @import("ziglyph.zig").Control;
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
 const Letter = @import("ziglyph.zig").Letter;
@@ -180,6 +181,38 @@ test "isLower" {
     expect(!z.isLower('A'));
     expect(!z.isLower('É'));
     expect(!z.isLower('İ'));
+}
+
+test "toCaseFold" {
+    //var z = try LowerMap.init(std.testing.allocator);
+    var z = try CaseFoldMap.init(std.testing.allocator);
+    defer z.deinit();
+
+    var result = z.toCaseFold('A');
+    switch (result) {
+        .simple => |cp| expectEqual(cp, 'a'),
+        .full => @panic("Got .full, wanted .simple for A"),
+    }
+    result = z.toCaseFold('a');
+    switch (result) {
+        .simple => |cp| expectEqual(cp, 'a'),
+        .full => @panic("Got .full, wanted .simple for a"),
+    }
+    result = z.toCaseFold('1');
+    switch (result) {
+        .simple => |cp| expectEqual(cp, '1'),
+        .full => @panic("Got .full, wanted .simple for 1"),
+    }
+    result = z.toCaseFold('\u{00DF}');
+    switch (result) {
+        .simple => @panic("Got .simple, wanted .full for 0x00DF"),
+        .full => |s| expectEqualSlices(u21, s, &[_]u21{ 0x0073, 0x0073 }),
+    }
+    result = z.toCaseFold('\u{0390}');
+    switch (result) {
+        .simple => @panic("Got .simple, wanted .full for 0x0390"),
+        .full => |s| expectEqualSlices(u21, s, &[_]u21{ 0x03B9, 0x0308, 0x0301 }),
+    }
 }
 
 test "toLower" {
