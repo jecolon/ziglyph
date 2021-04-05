@@ -1,0 +1,26 @@
+
+    return instance;
+}}
+
+const Self = @This();
+pub fn deinit(self: *Self) void {{
+    self.lower_map.deinit();
+    self.map.deinit();
+}}
+
+pub const CaseFold = union(enum) {{
+    simple: u21,
+    full: []const u21,
+}};
+
+/// toCaseFold will convert a code point into its case folded equivalent. Note that this can result
+/// in a mapping to more than one code point, known as the full case fold. In the case of a simple
+/// case fold, the returned CaseFold has the lowercase version if available or the same code point 
+/// otherwise.
+pub fn toCaseFold(self: Self, cp: u21) CaseFold {{
+    if (self.map.get(cp)) |seq| {{
+        return .{{ .full = seq }};
+    }} else {{
+        return .{{ .simple = self.lower_map.toLower(cp) }};
+    }}
+}}

@@ -11,6 +11,7 @@ const host = "www.unicode.org";
 const remote_path = "/Public/UCD/latest/ucd/UnicodeData.txt";
 const ucd_filepath = "data/ucd/UnicodeData.txt";
 const core_props_filepath = "data/ucd/DerivedCoreProperties.txt";
+const fold_filepath = "data/ucd/CaseFolding.txt";
 
 const CaseKind = enum {
     Lower,
@@ -65,10 +66,11 @@ const UcdGenerator = struct {
     upper: ArrayList(u21),
     upper_ranges: ArrayList(Range),
 
+    decomp_map: AutoHashMap(u21, []const u21),
+    fold_map: AutoHashMap(u21, []const u21),
     to_lower_map: AutoHashMap(u21, u21),
     to_upper_map: AutoHashMap(u21, u21),
     to_title_map: AutoHashMap(u21, u21),
-    decomp_map: AutoHashMap(u21, []const u21),
 
     pub fn init(allocator: *mem.Allocator) !UcdGenerator {
         return UcdGenerator{
@@ -89,10 +91,11 @@ const UcdGenerator = struct {
             .upper = ArrayList(u21).init(allocator),
             .upper_ranges = ArrayList(Range).init(allocator),
 
+            .decomp_map = AutoHashMap(u21, []const u21).init(allocator),
+            .fold_map = AutoHashMap(u21, []const u21).init(allocator),
             .to_lower_map = AutoHashMap(u21, u21).init(allocator),
             .to_upper_map = AutoHashMap(u21, u21).init(allocator),
             .to_title_map = AutoHashMap(u21, u21).init(allocator),
-            .decomp_map = AutoHashMap(u21, []const u21).init(allocator),
         };
     }
 
@@ -121,6 +124,12 @@ const UcdGenerator = struct {
             self.allocator.free(entry.value);
         }
         self.decomp_map.deinit();
+
+        var fold_iter = self.fold_map.iterator();
+        while (fold_iter.next()) |entry| {
+            self.allocator.free(entry.value);
+        }
+        self.fold_map.deinit();
     }
 
     fn gen(self: *Self) !void {
@@ -130,6 +139,26 @@ const UcdGenerator = struct {
 
     fn process_stream(self: *Self) !void {
         var buf: [1024]u8 = undefined;
+
+        // CaseFolding.txt
+        var fold_file = try std.fs.cwd().openFile(fold_filepath, .{});
+        defer fold_file.close();
+        var fold_buf = io.bufferedReader(fold_file.reader());
+        const fold_stream = fold_buf.reader();
+        var code_point: u21 = undefined;
+        while (try fold_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+            if (line.len == 0 or mem.startsWith(u8, line, "#")) continue;
+            var fields = mem.split(line, ";");
+            var index: usize = 0;
+            while (fields.next()) |field| : (index += 1) {
+                if (index == 0) {
+                    code_point = try fmt.parseInt(u21, field, 16);
+                } else if (index == 1 and mem.endsWith(u8, field, " F")) {
+                    try self.foldMapAdd(code_point, fields.next().?);
+                    break;
+                }
+            }
+        }
 
         // DerivedCoreProperties.txt
         var core_props_file = try std.fs.cwd().openFile(core_props_filepath, .{});
@@ -154,7 +183,7 @@ const UcdGenerator = struct {
                         it = .{ .range = .{ .start = start, .end = end } };
                     } else {
                         const clean = mem.trimRight(u8, field, " ");
-                        const code_point = try fmt.parseInt(u21, clean, 16);
+                        code_point = try fmt.parseInt(u21, clean, 16);
                         it = .{ .cp = code_point };
                     }
                 } else if (i == 1 and field.len != 0) {
@@ -220,7 +249,6 @@ const UcdGenerator = struct {
 
             var fields = mem.split(line, ";");
             var i: usize = 0;
-            var code_point: u21 = undefined;
             while (fields.next()) |field| : (i += 1) {
                 if (i == 0) {
                     // Parse code point.
@@ -279,16 +307,16 @@ const UcdGenerator = struct {
                     }
                 } else if (i == 5 and field.len != 0) {
                     // Decomposition.
-                    try self.decomp_map_add(field, code_point);
+                    try self.decompMapAdd(code_point, field);
                 } else if (i == 12 and field.len != 0) {
                     // Map to uppercase.
-                    try self.case_map_add(.Upper, field, code_point);
+                    try self.caseMapAdd(.Upper, code_point, field);
                 } else if (i == 13 and field.len != 0) {
                     // Map to lowercase.
-                    try self.case_map_add(.Lower, field, code_point);
+                    try self.caseMapAdd(.Lower, code_point, field);
                 } else if (i == 14 and field.len != 0) {
                     // Map to titlecase.
-                    try self.case_map_add(.Title, field, code_point);
+                    try self.caseMapAdd(.Title, code_point, field);
                 } else {
                     continue;
                 }
@@ -477,9 +505,32 @@ const UcdGenerator = struct {
 
         _ = try decompf_writer.print(decomp_trailer_tpl, .{});
         try decompf_buf.flush();
+
+        // Case folding map.
+        const fold_header_tpl = @embedFile("parts/fold_map_header_tpl.txt");
+        const fold_trailer_tpl = @embedFile("parts/fold_map_trailer_tpl.txt");
+
+        var fold_file = try std.fs.cwd().createFile("components/CaseFoldMap.zig", .{});
+        defer fold_file.close();
+        var fold_buf = io.bufferedWriter(fold_file.writer());
+        const fold_writer = fold_buf.writer();
+
+        _ = try fold_writer.print(fold_header_tpl, .{});
+
+        var fold_iter = self.fold_map.iterator();
+        while (fold_iter.next()) |entry| {
+            _ = try fold_writer.print("    try instance.map.put(0x{X}, &[{d}]u21{{\n", .{ entry.key, entry.value.len });
+            for (entry.value) |cp| {
+                _ = try fold_writer.print("        0x{X},\n", .{cp});
+            }
+            _ = try fold_writer.write("    });\n");
+        }
+
+        _ = try fold_writer.print(fold_trailer_tpl, .{});
+        try fold_buf.flush();
     }
 
-    fn decomp_map_add(self: *Self, field: []const u8, code_point: u21) !void {
+    fn decompMapAdd(self: *Self, code_point: u21, field: []const u8) !void {
         var seq = mem.split(field, " ");
         var cp_list = try self.allocator.alloc(u21, 18); // Max decomp code points = 18
         errdefer self.allocator.free(cp_list);
@@ -494,7 +545,7 @@ const UcdGenerator = struct {
         try self.decomp_map.put(code_point, cp_list);
     }
 
-    fn case_map_add(self: *Self, case_map: CaseKind, field: []const u8, code_point: u21) !void {
+    fn caseMapAdd(self: *Self, case_map: CaseKind, code_point: u21, field: []const u8) !void {
         const ccp: u21 = try fmt.parseInt(u21, field, 16);
         switch (case_map) {
             .Lower => try self.to_lower_map.put(code_point, ccp),
@@ -576,6 +627,22 @@ const UcdGenerator = struct {
             .lo = lo,
             .hi = hi,
         };
+    }
+
+    fn foldMapAdd(self: *Self, code_point: u21, field: []const u8) !void {
+        var clean = mem.trim(u8, field, " ");
+        var seq = mem.split(clean, " ");
+        var cp_list = try self.allocator.alloc(u21, 4);
+        errdefer self.allocator.free(cp_list);
+        var i: usize = 0;
+        while (seq.next()) |scp| {
+            if (scp.len == 0) continue;
+            const ncp: u21 = try fmt.parseInt(u21, scp, 16);
+            cp_list[i] = ncp;
+            i += 1;
+        }
+        cp_list = self.allocator.shrink(cp_list, i);
+        try self.fold_map.put(code_point, cp_list);
     }
 };
 
