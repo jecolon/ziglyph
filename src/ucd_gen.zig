@@ -51,10 +51,11 @@ const UcdGenerator = struct {
     allocator: *mem.Allocator,
 
     control_ranges: ArrayList(Range),
-    letter_ranges: ArrayList(Range),
     control: ArrayList(u21),
     letter: ArrayList(u21),
+    letter_ranges: ArrayList(Range),
     lower: ArrayList(u21),
+    lower_ranges: ArrayList(Range),
     mark: ArrayList(u21),
     number: ArrayList(u21),
     punct: ArrayList(u21),
@@ -62,6 +63,7 @@ const UcdGenerator = struct {
     symbol: ArrayList(u21),
     title: ArrayList(u21),
     upper: ArrayList(u21),
+    upper_ranges: ArrayList(Range),
 
     to_lower_map: AutoHashMap(u21, u21),
     to_upper_map: AutoHashMap(u21, u21),
@@ -72,12 +74,12 @@ const UcdGenerator = struct {
         return UcdGenerator{
             .allocator = allocator,
 
-            .control_ranges = ArrayList(Range).init(allocator),
-            .letter_ranges = ArrayList(Range).init(allocator),
-
             .control = ArrayList(u21).init(allocator),
+            .control_ranges = ArrayList(Range).init(allocator),
             .letter = ArrayList(u21).init(allocator),
+            .letter_ranges = ArrayList(Range).init(allocator),
             .lower = ArrayList(u21).init(allocator),
+            .lower_ranges = ArrayList(Range).init(allocator),
             .mark = ArrayList(u21).init(allocator),
             .number = ArrayList(u21).init(allocator),
             .punct = ArrayList(u21).init(allocator),
@@ -85,6 +87,7 @@ const UcdGenerator = struct {
             .symbol = ArrayList(u21).init(allocator),
             .title = ArrayList(u21).init(allocator),
             .upper = ArrayList(u21).init(allocator),
+            .upper_ranges = ArrayList(Range).init(allocator),
 
             .to_lower_map = AutoHashMap(u21, u21).init(allocator),
             .to_upper_map = AutoHashMap(u21, u21).init(allocator),
@@ -126,14 +129,73 @@ const UcdGenerator = struct {
     }
 
     fn process_stream(self: *Self) !void {
+        var buf: [1024]u8 = undefined;
+
+        // DerivedCoreProperties.txt
+        var core_props_file = try std.fs.cwd().openFile(core_props_filepath, .{});
+        defer core_props_file.close();
+        var core_props_buf = io.bufferedReader(core_props_file.reader());
+        const core_props_stream = core_props_buf.reader();
+        while (try core_props_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+            var fields = mem.split(line, ";");
+            var i: usize = 0;
+            const item = union(enum) {
+                cp: u21,
+                range: Range,
+            };
+            var it: item = undefined;
+            while (fields.next()) |field| : (i += 1) {
+                if (field.len == 0 or field[0] == '#') continue;
+                if (i == 0) {
+                    if (mem.indexOf(u8, field, "..")) |dots| {
+                        const start = try fmt.parseInt(u21, field[0..dots], 16);
+                        const clean = mem.trimRight(u8, field[dots + 2 ..], " ");
+                        const end = try fmt.parseInt(u21, clean, 16);
+                        it = .{ .range = .{ .start = start, .end = end } };
+                    } else {
+                        const clean = mem.trimRight(u8, field, " ");
+                        const code_point = try fmt.parseInt(u21, clean, 16);
+                        it = .{ .cp = code_point };
+                    }
+                } else if (i == 1 and field.len != 0) {
+                    var lower: ?bool = null;
+                    if (mem.startsWith(u8, field, " Lowercase")) {
+                        lower = true;
+                    } else if (mem.startsWith(u8, field, " Uppercase")) {
+                        lower = false;
+                    }
+
+                    if (lower) |l| {
+                        switch (it) {
+                            .cp => |cp| {
+                                if (l) {
+                                    try self.lower.append(cp);
+                                } else {
+                                    try self.upper.append(cp);
+                                }
+                            },
+                            .range => |range| {
+                                if (l) {
+                                    try self.lower_ranges.append(range);
+                                } else {
+                                    try self.upper_ranges.append(range);
+                                }
+                            },
+                        }
+                    }
+                } else {
+                    continue;
+                }
+            }
+        }
+
+        // UnicodeData.txt
         var ucd_file = try std.fs.cwd().openFile(ucd_filepath, .{});
         defer ucd_file.close();
         var buf_reader = io.bufferedReader(ucd_file.reader());
-        const in_stream = buf_reader.reader();
-
-        var buf: [1024]u8 = undefined;
+        const ucd_stream = buf_reader.reader();
         var range_start: ?u21 = null;
-        while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+        while (try ucd_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
             if (range_start) |rscp| {
                 var iter = mem.split(line, ";");
                 var fields: [3][]const u8 = undefined;
@@ -256,6 +318,7 @@ const UcdGenerator = struct {
                 .filename = "components/Lower.zig",
                 .ascii_opt = "return ascii.isLower(@intCast(u8, cp));",
                 .items = self.lower.items,
+                .ranges = self.lower_ranges.items,
             },
             .{
                 .name = "Mark",
@@ -298,6 +361,7 @@ const UcdGenerator = struct {
                 .filename = "components/Upper.zig",
                 .ascii_opt = "return ascii.isUpper(@intCast(u8, cp));",
                 .items = self.upper.items,
+                .ranges = self.upper_ranges.items,
             },
         };
 
