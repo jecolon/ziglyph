@@ -405,4 +405,46 @@ pub const Ziglyph = struct {
 
         return self.upper_map.?.toUpper(cp);
     }
+
+    // Self-contained methods.
+
+    /// isCr checks for carriage return.
+    pub fn isCr(self: Self, cp: u21) bool {
+        return cp == 0x000D;
+    }
+
+    /// isEmojiMod checks for emoji modifierss.
+    pub fn isEmojiMod(self: Self, cp: u21) bool {
+        return cp >= 0x1F3FB and cp <= 0x1F3FF;
+    }
+
+    /// isLf checks for line feed.
+    pub fn isLf(self: Self, cp: u21) bool {
+        return cp == 0x000A;
+    }
+
+    /// isRi checks for regional indicators.
+    pub fn isRi(self: Self, cp: u21) bool {
+        return cp >= 0x1F1E6 and cp <= 0x1F1FF;
+    }
+
+    /// isZl checks for line separator.
+    pub fn isZl(self: Self, cp: u21) bool {
+        return cp == 0x2028;
+    }
+
+    /// isZp checks for paragraph separator.
+    pub fn isZp(self: Self, cp: u21) bool {
+        return cp == 0x2029;
+    }
+
+    /// isZwj checks for zero width joiner.
+    pub fn isZwj(self: Self, cp: u21) bool {
+        return cp == 0x200D;
+    }
+
+    /// isZwnj checks for zero width non-joiner.
+    pub fn isZwnj(self: Self, cp: u21) bool {
+        return cp == 0x200C;
+    }
 };
