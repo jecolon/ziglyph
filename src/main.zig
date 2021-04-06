@@ -4,6 +4,7 @@ const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
 const CaseFoldMap = @import("ziglyph.zig").CaseFoldMap;
+const Cased = @import("ziglyph.zig").Cased;
 const Control = @import("ziglyph.zig").Control;
 const Decimal = @import("ziglyph.zig").Decimal;
 const Digit = @import("ziglyph.zig").Digit;
@@ -174,6 +175,16 @@ test "basics" {
             std.debug.print("\tis upper case\n", .{});
         }
     }
+}
+
+test "isCased" {
+    //var z = try LowerMap.init(std.testing.allocator);
+    var z = try Cased.init(std.testing.allocator);
+    defer z.deinit();
+
+    expect(z.isCased('a'));
+    expect(z.isCased('A'));
+    expect(!z.isCased('1'));
 }
 
 test "isLower" {

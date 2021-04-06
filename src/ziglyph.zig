@@ -9,6 +9,8 @@ const mem = std.mem;
 
 /// Alphabetic code points.
 pub const Alpha = @import("components/Alpha.zig");
+/// Cased code points are either lower, upper, or title cased, but not all three.
+pub const Cased = @import("components/Cased.zig");
 /// Code point case folding.
 pub const CaseFoldMap = @import("components/CaseFoldMap.zig");
 /// Control code points like form feed.
