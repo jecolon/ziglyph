@@ -34,6 +34,8 @@ const UcdGenerator = struct {
 
     alpha: ArrayList(u21),
     alpha_ranges: ArrayList(Range),
+    cased: ArrayList(u21),
+    cased_ranges: ArrayList(Range),
     control: ArrayList(u21),
     control_ranges: ArrayList(Range),
     decimal: ArrayList(u21),
@@ -65,6 +67,8 @@ const UcdGenerator = struct {
 
             .alpha = ArrayList(u21).init(allocator),
             .alpha_ranges = ArrayList(Range).init(allocator),
+            .cased = ArrayList(u21).init(allocator),
+            .cased_ranges = ArrayList(Range).init(allocator),
             .control = ArrayList(u21).init(allocator),
             .control_ranges = ArrayList(Range).init(allocator),
             .decimal = ArrayList(u21).init(allocator),
@@ -97,6 +101,8 @@ const UcdGenerator = struct {
     pub fn deinit(self: *Self) void {
         self.alpha.deinit();
         self.alpha_ranges.deinit();
+        self.cased.deinit();
+        self.cased_ranges.deinit();
         self.control.deinit();
         self.control_ranges.deinit();
         self.decimal.deinit();
@@ -295,6 +301,7 @@ const UcdGenerator = struct {
             };
             const Property = enum {
                 Alphabetic,
+                Cased,
                 Lowercase,
                 Uppercase,
             };
@@ -316,6 +323,8 @@ const UcdGenerator = struct {
                 } else if (i == 1 and field.len != 0) {
                     if (mem.startsWith(u8, field, " Alphabetic")) {
                         prop = .Alphabetic;
+                    } else if (mem.startsWith(u8, field, " Cased")) {
+                        prop = .Cased;
                     } else if (mem.startsWith(u8, field, " Lowercase")) {
                         prop = .Lowercase;
                     } else if (mem.startsWith(u8, field, " Uppercase")) {
@@ -327,6 +336,7 @@ const UcdGenerator = struct {
                             .cp => |cp| {
                                 switch (p) {
                                     .Alphabetic => try self.alpha.append(cp),
+                                    .Cased => try self.cased.append(cp),
                                     .Lowercase => try self.lower.append(cp),
                                     .Uppercase => try self.upper.append(cp),
                                 }
@@ -334,6 +344,7 @@ const UcdGenerator = struct {
                             .range => |range| {
                                 switch (p) {
                                     .Alphabetic => try self.alpha_ranges.append(range),
+                                    .Cased => try self.cased_ranges.append(range),
                                     .Lowercase => try self.lower_ranges.append(range),
                                     .Uppercase => try self.upper_ranges.append(range),
                                 }
@@ -420,6 +431,13 @@ const UcdGenerator = struct {
                 .ascii_opt = "return ascii.isAlpha(@intCast(u8, cp));",
                 .items = self.alpha.items,
                 .ranges = self.alpha_ranges.items,
+            },
+            .{
+                .name = "Cased",
+                .filename = "components/Cased.zig",
+                .ascii_opt = "return null;",
+                .items = self.cased.items,
+                .ranges = self.cased_ranges.items,
             },
             .{
                 .name = "Control",
