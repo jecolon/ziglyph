@@ -153,7 +153,7 @@ const UcdGenerator = struct {
             while (fields.next()) |field| : (index += 1) {
                 if (index == 0) {
                     code_point = try fmt.parseInt(u21, field, 16);
-                } else if (index == 1 and mem.endsWith(u8, field, " F")) {
+                } else if (index == 1 and (mem.endsWith(u8, field, " F") or mem.endsWith(u8, field, " C"))) {
                     try self.foldMapAdd(code_point, fields.next().?);
                     break;
                 }

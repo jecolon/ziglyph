@@ -23,6 +23,8 @@ const Ziglyph = @import("ziglyph.zig").Ziglyph;
 pub fn main() !void {
     var z = try Ziglyph.init(std.testing.allocator);
     defer z.deinit();
+    var fold_map = try CaseFoldMap.init(std.testing.allocator);
+    defer fold_map.deinit();
 
     const mixed = [_]u21{ '5', 'o', '9', '!', ' ', '℃', 'ᾭ', 'G' };
     for (mixed) |r| {
@@ -68,6 +70,7 @@ pub fn main() !void {
         }
         if (try z.isUpper(r)) { // added 100K to binary
             std.debug.print("\tis upper case\n", .{});
+            std.debug.print("\tcase folded: {}\n", .{fold_map.toCaseFold(r)});
         }
     }
 }
