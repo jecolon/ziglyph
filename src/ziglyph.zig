@@ -21,6 +21,8 @@ pub const Decimal = @import("components/Decimal.zig");
 pub const Digit = @import("components/Digit.zig");
 /// Code point decomposition.
 pub const DecomposeMap = @import("components/DecomposeMap.zig");
+/// Format control characters.
+pub const Format = @import("components/Format.zig");
 /// Unicode letters.
 pub const Letter = @import("components/Letter.zig");
 /// Lowercase letters.
@@ -39,6 +41,8 @@ pub const Symbol = @import("components/Symbol.zig");
 pub const Title = @import("components/Title.zig");
 /// Uppercase letters.
 pub const Upper = @import("components/Upper.zig");
+/// Unassigned code points.
+pub const Unassigned = @import("components/Unassigned.zig");
 
 /// Mapping to lowercase.
 pub const LowerMap = @import("components/LowerMap.zig");
@@ -413,6 +417,31 @@ pub const Ziglyph = struct {
         return cp == 0x000D;
     }
 
+    /// isDefIgnorable checks for Default_Ignorable_Code_Point.
+    pub fn isDefIgnorable(self: Self, cp: u21) bool {
+        const list = [_]u21{ 0x00AD, 0x034F, 0x061C, 0x180E, 0x2065, 0x3164, 0xFEFF, 0xFFA0, 0xE0000, 0xE0001 };
+        for (list) |dicp| {
+            if (cp == dicp) return true;
+        }
+
+        return (cp >= 0x115F and cp <= 0x1160) or
+            (cp >= 0x17B4 and cp <= 0x17B5) or
+            (cp >= 0x180B and cp <= 0x180D) or
+            (cp >= 0x200B and cp <= 0x200F) or
+            (cp >= 0x202A and cp <= 0x202E) or
+            (cp >= 0x2060 and cp <= 0x2064) or
+            (cp >= 0x2066 and cp <= 0x206F) or
+            (cp >= 0xFE00 and cp <= 0xFE0F) or
+            (cp >= 0xFFF0 and cp <= 0xFFF8) or
+            (cp >= 0x1BCA0 and cp <= 0x1BCA3) or
+            (cp >= 0x1D173 and cp <= 0x1D17A) or
+            (cp >= 0xE0002 and cp <= 0xE001F) or
+            (cp >= 0xE0020 and cp <= 0xE007F) or
+            (cp >= 0xE0080 and cp <= 0xE00FF) or
+            (cp >= 0xE0100 and cp <= 0xE01EF) or
+            (cp >= 0xE01F0 and cp <= 0xE0FFF);
+    }
+
     /// isEmojiMod checks for emoji modifierss.
     pub fn isEmojiMod(self: Self, cp: u21) bool {
         return cp >= 0x1F3FB and cp <= 0x1F3FF;
@@ -421,6 +450,16 @@ pub const Ziglyph = struct {
     /// isLf checks for line feed.
     pub fn isLf(self: Self, cp: u21) bool {
         return cp == 0x000A;
+    }
+
+    /// isPrepend checks for Prepended_Concatenation_Mark
+    pub fn isPrepend(self: Self, cp: u21) bool {
+        const list = [_]u21{ 0x06DD, 0x070F, 0x08E2, 0x110BD, 0x110CD };
+        for (list) |ppcp| {
+            if (cp == ppcp) return true;
+        }
+
+        return cp >= 0x0600 and cp <= 0x0605;
     }
 
     /// isRi checks for regional indicators.

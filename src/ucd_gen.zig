@@ -42,6 +42,7 @@ const UcdGenerator = struct {
     decimal_ranges: ArrayList(Range),
     digit: ArrayList(u21),
     digit_ranges: ArrayList(Range),
+    format: ArrayList(u21),
     letter: ArrayList(u21),
     letter_ranges: ArrayList(Range),
     lower: ArrayList(u21),
@@ -52,6 +53,8 @@ const UcdGenerator = struct {
     space: ArrayList(u21),
     symbol: ArrayList(u21),
     title: ArrayList(u21),
+    unassigned: ArrayList(u21),
+    unassigned_ranges: ArrayList(Range),
     upper: ArrayList(u21),
     upper_ranges: ArrayList(Range),
 
@@ -75,6 +78,7 @@ const UcdGenerator = struct {
             .decimal_ranges = ArrayList(Range).init(allocator),
             .digit = ArrayList(u21).init(allocator),
             .digit_ranges = ArrayList(Range).init(allocator),
+            .format = ArrayList(u21).init(allocator),
             .letter = ArrayList(u21).init(allocator),
             .letter_ranges = ArrayList(Range).init(allocator),
             .lower = ArrayList(u21).init(allocator),
@@ -85,6 +89,8 @@ const UcdGenerator = struct {
             .space = ArrayList(u21).init(allocator),
             .symbol = ArrayList(u21).init(allocator),
             .title = ArrayList(u21).init(allocator),
+            .unassigned = ArrayList(u21).init(allocator),
+            .unassigned_ranges = ArrayList(Range).init(allocator),
             .upper = ArrayList(u21).init(allocator),
             .upper_ranges = ArrayList(Range).init(allocator),
 
@@ -109,6 +115,7 @@ const UcdGenerator = struct {
         self.decimal_ranges.deinit();
         self.digit.deinit();
         self.digit_ranges.deinit();
+        self.format.deinit();
         self.letter.deinit();
         self.letter_ranges.deinit();
         self.lower.deinit();
@@ -118,6 +125,8 @@ const UcdGenerator = struct {
         self.space.deinit();
         self.symbol.deinit();
         self.title.deinit();
+        self.unassigned.deinit();
+        self.unassigned_ranges.deinit();
         self.upper.deinit();
         self.to_lower_map.deinit();
         self.to_title_map.deinit();
@@ -145,6 +154,7 @@ const UcdGenerator = struct {
         try self.process_case_folding();
         try self.process_core_props();
         try self.process_numeric();
+        try self.process_gc();
         try self.process_ucd();
     }
 
@@ -198,6 +208,9 @@ const UcdGenerator = struct {
                     // Major categories.
                     if (mem.eql(u8, field, "Cc") and !contains(self.control.items, code_point)) {
                         try self.control.append(code_point);
+                    }
+                    if (mem.eql(u8, field, "Cf") and !contains(self.format.items, code_point)) {
+                        try self.format.append(code_point);
                     }
                     switch (field[0]) {
                         'L' => {
@@ -422,6 +435,67 @@ const UcdGenerator = struct {
             }
         }
     }
+
+    // DerivedGeneralCategory.txt
+    fn process_gc(self: *Self) !void {
+        const gc_filepath = "data/ucd/extracted/DerivedGeneralCategory.txt";
+        var buf: [1024]u8 = undefined;
+        var gc_file = try std.fs.cwd().openFile(gc_filepath, .{});
+        defer gc_file.close();
+        var gc_buf = io.bufferedReader(gc_file.reader());
+        const gc_stream = gc_buf.reader();
+        while (try gc_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+            if (line.len == 0 or line[0] == '#') continue;
+            var fields = mem.split(line, ";");
+            var i: usize = 0;
+            const Item = union(enum) {
+                cp: u21,
+                range: Range,
+            };
+            const Property = enum {
+                Unassigned,
+            };
+            var it: Item = undefined;
+            var prop: ?Property = null;
+            while (fields.next()) |field| : (i += 1) {
+                if (field.len == 0 or field[0] == '#') continue;
+                if (i == 0) {
+                    if (mem.indexOf(u8, field, "..")) |dots| {
+                        const start = try fmt.parseInt(u21, field[0..dots], 16);
+                        const clean = mem.trimRight(u8, field[dots + 2 ..], " ");
+                        const end = try fmt.parseInt(u21, clean, 16);
+                        it = .{ .range = .{ .start = start, .end = end } };
+                    } else {
+                        const clean = mem.trimRight(u8, field, " ");
+                        const code_point = try fmt.parseInt(u21, clean, 16);
+                        it = .{ .cp = code_point };
+                    }
+                } else if (i == 1 and field.len != 0) {
+                    if (mem.startsWith(u8, field, " Cn")) {
+                        prop = .Unassigned;
+                    }
+
+                    if (prop) |p| {
+                        switch (it) {
+                            .cp => |cp| {
+                                switch (p) {
+                                    .Unassigned => try self.unassigned.append(cp),
+                                }
+                            },
+                            .range => |range| {
+                                switch (p) {
+                                    .Unassigned => try self.unassigned_ranges.append(range),
+                                }
+                            },
+                        }
+                    }
+                } else {
+                    continue;
+                }
+            }
+        }
+    }
+
     fn write_files(self: *Self) !void {
         // Write out.
         const lists = [_]List{
@@ -459,6 +533,12 @@ const UcdGenerator = struct {
                 .ascii_opt = "return ascii.isDigit(@intCast(u8, cp));",
                 .items = self.digit.items,
                 .ranges = self.digit_ranges.items,
+            },
+            .{
+                .name = "Format",
+                .filename = "components/Format.zig",
+                .ascii_opt = "return null;",
+                .items = self.format.items,
             },
             .{
                 .name = "Letter",
@@ -509,6 +589,13 @@ const UcdGenerator = struct {
                 .filename = "components/Title.zig",
                 .ascii_opt = "return null;",
                 .items = self.title.items,
+            },
+            .{
+                .name = "Unassigned",
+                .filename = "components/Unassigned.zig",
+                .ascii_opt = "return null;",
+                .items = self.unassigned.items,
+                .ranges = self.unassigned_ranges.items,
             },
             .{
                 .name = "Upper",

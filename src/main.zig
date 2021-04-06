@@ -9,6 +9,7 @@ const Control = @import("ziglyph.zig").Control;
 const Decimal = @import("ziglyph.zig").Decimal;
 const Digit = @import("ziglyph.zig").Digit;
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
+const Format = @import("ziglyph.zig").Format;
 const Letter = @import("ziglyph.zig").Letter;
 const Lower = @import("ziglyph.zig").Lower;
 const LowerMap = @import("ziglyph.zig").LowerMap;
@@ -20,6 +21,7 @@ const Symbol = @import("ziglyph.zig").Symbol;
 const Title = @import("ziglyph.zig").Title;
 const TitleMap = @import("ziglyph.zig").TitleMap;
 const Upper = @import("ziglyph.zig").Upper;
+const Unassigned = @import("ziglyph.zig").Unassigned;
 const UpperMap = @import("ziglyph.zig").UpperMap;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
 
@@ -343,6 +345,14 @@ test "isGraphic" {
     expect(!try z.isGraphic('\u{0003}'));
 }
 
+test "isFormat" {
+    var z = try Format.init(std.testing.allocator);
+    defer z.deinit();
+
+    expect(z.isFormat('\u{200C}'));
+    expect(z.isFormat('\u{200D}'));
+}
+
 test "isHex" {
     var z = try Ziglyph.init(std.testing.allocator);
     defer z.deinit();
@@ -486,6 +496,14 @@ test "isAlphaNum" {
         expect(try z.isAlphaNum(cp));
     }
     expect(!try z.isAlphaNum('='));
+}
+
+test "isUnassigned" {
+    var z = try Unassigned.init(std.testing.allocator);
+    defer z.deinit();
+
+    expect(z.isUnassigned('\u{0590}'));
+    expect(z.isUnassigned('\u{0530}'));
 }
 
 test "decomposeCodePoint" {
