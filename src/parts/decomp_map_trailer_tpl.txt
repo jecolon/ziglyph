@@ -7,54 +7,52 @@ pub fn deinit(self: *Self) void {{
     self.map.deinit();
 }}
 
+pub const Decomposed = union(enum) {{
+    same: u21,
+    seq: []const u21,
+}};
+
 /// decomposeCodePoint will convert a code point into its component code points if applicable.
-/// Returns null if the code point cannot be decomposed. This method may return an error because 
-/// of lazy initialization allocation.
-pub fn decomposeCodePoint(self: Self, cp: u21) ?[]const u21 {{
-    return self.map.get(cp);
+/// Returns null if the code point cannot be decomposed.
+pub fn decomposeCodePoint(self: Self, cp: u21) Decomposed {{
+    if (self.map.get(cp)) |seq| {{
+        return .{{ .seq = seq }};
+    }} else {{
+        return .{{ .same = cp }};
+    }}
 }}
 
 /// decomposeString converts a string into a string where complex code points are decomposed into
-/// their component code points. This method may return an error because of lazy initialization 
-/// allocation. Caller must free returned memory.
+/// their component code points. This method may return an error because of allocation. Caller must 
+/// free returned memory.
 pub fn decomposeString(self: *Self, str: []const u8) ![]const u8 {{
-    var code_points = try self.allocator.alloc(u21, str.len);
-    defer self.allocator.free(code_points);
-
-    var index: usize = 0;
-    var utf8 = (try unicode.Utf8View.init(str)).iterator();
-    while (utf8.nextCodepoint()) |code_point| : (index += 1) {{
-        code_points[index] = code_point;
-    }}
-    const len_old_points = index;
-
-    var new_points = try self.allocator.alloc(u21, (len_old_points + 1) * 18); // Max composition code points = 18
-    defer self.allocator.free(new_points);
-    index = 0;
-    var index_new_points: usize = 0;
-    while (index < len_old_points) : (index += 1) {{
-        const cp = code_points[index];
-        if (self.map.get(cp)) |seq| {{
-            for (seq) |scp| {{
-                new_points[index_new_points] = scp;
-                index_new_points += 1;
-            }}
-        }} else {{
-            new_points[index_new_points] = cp;
-            index_new_points += 1;
+    var buf = std.ArrayList(u8).init(self.allocator);
+    defer buf.deinit();
+    var cp_iter = (try unicode.Utf8View.init(str)).iterator();
+    while (cp_iter.nextCodepoint()) |cp| {{
+        switch (self.decomposeCodePoint(cp)) {{
+            .same => |dcp| {{
+                const s = try self.toUtf8Bytes(dcp);
+                defer self.allocator.free(s);
+                try buf.appendSlice(s);
+            }},
+            .seq => |seq|  {{
+                for (seq) |dcp| {{
+                    const s = try self.toUtf8Bytes(dcp);
+                    defer self.allocator.free(s);
+                    try buf.appendSlice(s);
+                }}
+            }},
         }}
     }}
-    const len_new_points = index_new_points;
+    return buf.toOwnedSlice();
+}}
 
-    var result = try self.allocator.alloc(u8, @divFloor(len_new_points * 21, 8) + 1);
-    index = 0;
-    var index_result: usize = 0;
-    while (index < len_new_points) : (index += 1) {{
-        const bytes_written = try unicode.utf8Encode(new_points[index], result[index_result..]);
-        index_result += bytes_written;
-    }}
-    const len_result = index_result;
-
-    result = self.allocator.shrink(result, len_result);
-    return result;
+fn toUtf8Bytes(self: *Self, cp: u21) ![]const u8 {{
+    var buf = std.ArrayList(u8).init(self.allocator);
+    defer buf.deinit();
+    var buf2: [4]u8 = undefined;
+    var len = try unicode.utf8Encode(cp, &buf2);
+    try buf.appendSlice(buf2[0..len]);
+    return buf.toOwnedSlice();
 }}

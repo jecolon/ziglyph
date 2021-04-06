@@ -464,7 +464,16 @@ test "decomposeCodePoint" {
     var z = try DecomposeMap.init(std.testing.allocator);
     defer z.deinit();
 
-    expectEqualSlices(u21, z.decomposeCodePoint('\u{00E9}').?, &[_]u21{ '\u{0065}', '\u{0301}' });
+    var result = z.decomposeCodePoint('\u{00E9}');
+    switch (result) {
+        .same => @panic("Expected .seq, got .same for \\u{00E9}"),
+        .seq => |seq| expectEqualSlices(u21, seq, &[_]u21{ '\u{0065}', '\u{0301}' }),
+    }
+    result = z.decomposeCodePoint('A');
+    switch (result) {
+        .same => |cp| expectEqual(cp, 'A'),
+        .seq => @panic("Expected .seq, got .same for \\u{00E9}"),
+    }
 }
 
 test "decomposeString" {
