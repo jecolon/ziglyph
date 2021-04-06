@@ -7,10 +7,16 @@ const std = @import("std");
 const ascii = @import("ascii.zig"); // Pending std.ascii fix.
 const mem = std.mem;
 
+/// Alphabetic code points.
+pub const Alpha = @import("components/Alpha.zig");
 /// Code point case folding.
 pub const CaseFoldMap = @import("components/CaseFoldMap.zig");
 /// Control code points like form feed.
 pub const Control = @import("components/Control.zig");
+/// Decimal code points.
+pub const Decimal = @import("components/Decimal.zig");
+/// Digit code points.
+pub const Digit = @import("components/Digit.zig");
 /// Code point decomposition.
 pub const DecomposeMap = @import("components/DecomposeMap.zig");
 /// Unicode letters.
@@ -44,7 +50,10 @@ pub const UpperMap = @import("components/UpperMap.zig");
 /// to only consume memory when needed.
 pub const Ziglyph = struct {
     allocator: *mem.Allocator,
+    alpha: ?Alpha = null,
     control: ?Control = null,
+    decimal: ?Decimal = null,
+    digit: ?Digit = null,
     letter: ?Letter = null,
     lower: ?Lower = null,
     lower_map: ?LowerMap = null,
@@ -67,6 +76,15 @@ pub const Ziglyph = struct {
     const Self = @This();
 
     pub fn deinit(self: *Self) void {
+        if (self.alpha) |*alpha| {
+            alpha.deinit();
+        }
+        if (self.decimal) |*decimal| {
+            decimal.deinit();
+        }
+        if (self.digit) |*digit| {
+            digit.deinit();
+        }
         if (self.control) |*control| {
             control.deinit();
         }
@@ -108,26 +126,57 @@ pub const Ziglyph = struct {
         }
     }
 
-    /// isAlphaNum covers all the Unicode letter and number space, not just ASCII.
+    /// isAlpha detects if a code point is alphabetic.
+    pub fn isAlpha(self: *Self, cp: u21) !bool {
+        if (cp < 128) {
+            return ascii.isAlpha(@intCast(u8, cp));
+        }
+
+        // Lazy init.
+        if (self.alpha == null) {
+            self.alpha = try Alpha.init(self.allocator);
+        }
+
+        return self.alpha.?.isAlpha(cp);
+    }
+
+    /// isAlphaNum covers all the Unicode alphabetic and number space, not just ASCII.
     pub fn isAlphaNum(self: *Self, cp: u21) !bool {
         if (cp < 128) {
             return ascii.isAlNum(@intCast(u8, cp));
         }
 
         // Lazy init.
-        if (self.letter == null) {
-            self.letter = try Letter.init(self.allocator);
-        }
         if (self.number == null) {
             self.number = try Number.init(self.allocator);
         }
 
-        return self.letter.?.isLetter(cp) or self.number.?.isNumber(cp);
+        return (try self.isAlpha(cp)) or self.number.?.isNumber(cp);
     }
 
-    // isDigit detects the 10 ASCII digits 0-9.
-    pub fn isDigit(self: Self, cp: u21) bool {
-        return ascii.isDigit(@intCast(u8, cp));
+    // isDecimal detects all Unicode digits.
+    pub fn isDecimal(self: *Self, cp: u21) !bool {
+        // Lazy init.
+        if (self.decimal == null) {
+            self.decimal = try Decimal.init(self.allocator);
+        }
+
+        return self.decimal.?.isDecimal(cp);
+    }
+
+    // isDigit detects all Unicode digits.
+    pub fn isDigit(self: *Self, cp: u21) !bool {
+        // ASCII optimization.
+        if (cp < 128) {
+            return ascii.isDigit(@intCast(u8, cp));
+        }
+
+        // Lazy init.
+        if (self.digit == null) {
+            self.digit = try Digit.init(self.allocator);
+        }
+
+        return self.digit.?.isDigit(cp);
     }
 
     /// isGraphic detects any code point that can be represented graphically, including spaces.

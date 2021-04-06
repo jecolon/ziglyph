@@ -3,275 +3,2121 @@
 
 const std = @import("std");
 const unicode = std.unicode;
-const LowerMap = @import("LowerMap.zig");
 const CaseFoldMap = @This();
 
 allocator: *std.mem.Allocator,
-lower_map: LowerMap,
 map: std.AutoHashMap(u21, []const u21),
 
 pub fn init(allocator: *std.mem.Allocator) !CaseFoldMap {
     var instance = CaseFoldMap{
         .allocator = allocator,
-        .lower_map = try LowerMap.init(allocator),
         .map = std.AutoHashMap(u21, []const u21).init(allocator),
     };
 
+    try instance.map.put(0x2CC8, &[1]u21{
+        0x2CC9,
+    });
     try instance.map.put(0x1FBC, &[2]u21{
         0x3B1,
         0x3B9,
+    });
+    try instance.map.put(0x1E8C, &[1]u21{
+        0x1E8D,
+    });
+    try instance.map.put(0x2C62, &[1]u21{
+        0x26B,
+    });
+    try instance.map.put(0xA654, &[1]u21{
+        0xA655,
+    });
+    try instance.map.put(0x4D, &[1]u21{
+        0x6D,
+    });
+    try instance.map.put(0x10C89, &[1]u21{
+        0x10CC9,
     });
     try instance.map.put(0x1FA8, &[2]u21{
         0x1F60,
         0x3B9,
     });
-    try instance.map.put(0x1E97, &[2]u21{
-        0x74,
-        0x308,
+    try instance.map.put(0x1EAC, &[1]u21{
+        0x1EAD,
     });
-    try instance.map.put(0x1F82, &[2]u21{
-        0x1F02,
+    try instance.map.put(0xDB, &[1]u21{
+        0xFB,
+    });
+    try instance.map.put(0x46, &[1]u21{
+        0x66,
+    });
+    try instance.map.put(0x4BE, &[1]u21{
+        0x4BF,
+    });
+    try instance.map.put(0x216A, &[1]u21{
+        0x217A,
+    });
+    try instance.map.put(0x10407, &[1]u21{
+        0x1042F,
+    });
+    try instance.map.put(0x1ED2, &[1]u21{
+        0x1ED3,
+    });
+    try instance.map.put(0x14C, &[1]u21{
+        0x14D,
+    });
+    try instance.map.put(0x4E4, &[1]u21{
+        0x4E5,
+    });
+    try instance.map.put(0x49C, &[1]u21{
+        0x49D,
+    });
+    try instance.map.put(0x532, &[1]u21{
+        0x562,
+    });
+    try instance.map.put(0x2C14, &[1]u21{
+        0x2C44,
+    });
+    try instance.map.put(0x4EE, &[1]u21{
+        0x4EF,
+    });
+    try instance.map.put(0x1FA5, &[2]u21{
+        0x1F65,
         0x3B9,
     });
-    try instance.map.put(0x1F8E, &[2]u21{
+    try instance.map.put(0xD6, &[1]u21{
+        0xF6,
+    });
+    try instance.map.put(0x10410, &[1]u21{
+        0x10438,
+    });
+    try instance.map.put(0x1F09, &[1]u21{
+        0x1F01,
+    });
+    try instance.map.put(0xA73A, &[1]u21{
+        0xA73B,
+    });
+    try instance.map.put(0x104C7, &[1]u21{
+        0x104EF,
+    });
+    try instance.map.put(0x1C99, &[1]u21{
+        0x10D9,
+    });
+    try instance.map.put(0xA798, &[1]u21{
+        0xA799,
+    });
+    try instance.map.put(0x1E8A, &[1]u21{
+        0x1E8B,
+    });
+    try instance.map.put(0x1E12, &[1]u21{
+        0x1E13,
+    });
+    try instance.map.put(0x512, &[1]u21{
+        0x513,
+    });
+    try instance.map.put(0x2CA0, &[1]u21{
+        0x2CA1,
+    });
+    try instance.map.put(0x3AA, &[1]u21{
+        0x3CA,
+    });
+    try instance.map.put(0x24BD, &[1]u21{
+        0x24D7,
+    });
+    try instance.map.put(0xA796, &[1]u21{
+        0xA797,
+    });
+    try instance.map.put(0x1E91E, &[1]u21{
+        0x1E940,
+    });
+    try instance.map.put(0x104BF, &[1]u21{
+        0x104E7,
+    });
+    try instance.map.put(0x197, &[1]u21{
+        0x268,
+    });
+    try instance.map.put(0x51C, &[1]u21{
+        0x51D,
+    });
+    try instance.map.put(0x10A0, &[1]u21{
+        0x2D00,
+    });
+    try instance.map.put(0x1C87, &[1]u21{
+        0x463,
+    });
+    try instance.map.put(0xABAB, &[1]u21{
+        0x13DB,
+    });
+    try instance.map.put(0x1ED6, &[1]u21{
+        0x1ED7,
+    });
+    try instance.map.put(0x1F0E, &[1]u21{
         0x1F06,
+    });
+    try instance.map.put(0xAB92, &[1]u21{
+        0x13C2,
+    });
+    try instance.map.put(0x104D3, &[1]u21{
+        0x104FB,
+    });
+    try instance.map.put(0xCB, &[1]u21{
+        0xEB,
+    });
+    try instance.map.put(0x42F, &[1]u21{
+        0x44F,
+    });
+    try instance.map.put(0x10A5, &[1]u21{
+        0x2D05,
+    });
+    try instance.map.put(0xA78D, &[1]u21{
+        0x265,
+    });
+    try instance.map.put(0x10C2, &[1]u21{
+        0x2D22,
+    });
+    try instance.map.put(0xA77E, &[1]u21{
+        0xA77F,
+    });
+    try instance.map.put(0xFB14, &[2]u21{
+        0x574,
+        0x565,
+    });
+    try instance.map.put(0x41F, &[1]u21{
+        0x43F,
+    });
+    try instance.map.put(0x216, &[1]u21{
+        0x217,
+    });
+    try instance.map.put(0x1C9A, &[1]u21{
+        0x10DA,
+    });
+    try instance.map.put(0x1E14, &[1]u21{
+        0x1E15,
+    });
+    try instance.map.put(0xA74A, &[1]u21{
+        0xA74B,
+    });
+    try instance.map.put(0x10404, &[1]u21{
+        0x1042C,
+    });
+    try instance.map.put(0x16E53, &[1]u21{
+        0x16E73,
+    });
+    try instance.map.put(0x4DA, &[1]u21{
+        0x4DB,
+    });
+    try instance.map.put(0x16E5F, &[1]u21{
+        0x16E7F,
+    });
+    try instance.map.put(0x40A, &[1]u21{
+        0x45A,
+    });
+    try instance.map.put(0xABA3, &[1]u21{
+        0x13D3,
+    });
+    try instance.map.put(0x10BC, &[1]u21{
+        0x2D1C,
+    });
+    try instance.map.put(0x245, &[1]u21{
+        0x28C,
+    });
+    try instance.map.put(0xABB8, &[1]u21{
+        0x13E8,
+    });
+    try instance.map.put(0x210, &[1]u21{
+        0x211,
+    });
+    try instance.map.put(0x24C7, &[1]u21{
+        0x24E1,
+    });
+    try instance.map.put(0xA642, &[1]u21{
+        0xA643,
+    });
+    try instance.map.put(0xFF39, &[1]u21{
+        0xFF59,
+    });
+    try instance.map.put(0xA684, &[1]u21{
+        0xA685,
+    });
+    try instance.map.put(0x1EF0, &[1]u21{
+        0x1EF1,
+    });
+    try instance.map.put(0xC3, &[1]u21{
+        0xE3,
+    });
+    try instance.map.put(0x106, &[1]u21{
+        0x107,
+    });
+    try instance.map.put(0x427, &[1]u21{
+        0x447,
+    });
+    try instance.map.put(0x38E, &[1]u21{
+        0x3CD,
+    });
+    try instance.map.put(0x24BF, &[1]u21{
+        0x24D9,
+    });
+    try instance.map.put(0xA72A, &[1]u21{
+        0xA72B,
+    });
+    try instance.map.put(0x22C, &[1]u21{
+        0x22D,
+    });
+    try instance.map.put(0x118A0, &[1]u21{
+        0x118C0,
+    });
+    try instance.map.put(0x51, &[1]u21{
+        0x71,
+    });
+    try instance.map.put(0x41D, &[1]u21{
+        0x43D,
+    });
+    try instance.map.put(0xA780, &[1]u21{
+        0xA781,
+    });
+    try instance.map.put(0x10BB, &[1]u21{
+        0x2D1B,
+    });
+    try instance.map.put(0x2C1F, &[1]u21{
+        0x2C4F,
+    });
+    try instance.map.put(0x162, &[1]u21{
+        0x163,
+    });
+    try instance.map.put(0x174, &[1]u21{
+        0x175,
+    });
+    try instance.map.put(0x1EDE, &[1]u21{
+        0x1EDF,
+    });
+    try instance.map.put(0x193, &[1]u21{
+        0x260,
+    });
+    try instance.map.put(0x230, &[1]u21{
+        0x231,
+    });
+    try instance.map.put(0x1EE2, &[1]u21{
+        0x1EE3,
+    });
+    try instance.map.put(0x16E51, &[1]u21{
+        0x16E71,
+    });
+    try instance.map.put(0x1E52, &[1]u21{
+        0x1E53,
+    });
+    try instance.map.put(0x1E916, &[1]u21{
+        0x1E938,
+    });
+    try instance.map.put(0x39D, &[1]u21{
+        0x3BD,
+    });
+    try instance.map.put(0x3A3, &[1]u21{
+        0x3C3,
+    });
+    try instance.map.put(0x1E0A, &[1]u21{
+        0x1E0B,
+    });
+    try instance.map.put(0x496, &[1]u21{
+        0x497,
+    });
+    try instance.map.put(0x1FBB, &[1]u21{
+        0x1F71,
+    });
+    try instance.map.put(0x49, &[1]u21{
+        0x69,
+    });
+    try instance.map.put(0x10C97, &[1]u21{
+        0x10CD7,
+    });
+    try instance.map.put(0xFB02, &[2]u21{
+        0x66,
+        0x6C,
+    });
+    try instance.map.put(0x16E46, &[1]u21{
+        0x16E66,
+    });
+    try instance.map.put(0x1EE0, &[1]u21{
+        0x1EE1,
+    });
+    try instance.map.put(0x16E55, &[1]u21{
+        0x16E75,
+    });
+    try instance.map.put(0x1FF2, &[2]u21{
+        0x1F7C,
         0x3B9,
+    });
+    try instance.map.put(0x16E5E, &[1]u21{
+        0x16E7E,
+    });
+    try instance.map.put(0x1CAB, &[1]u21{
+        0x10EB,
+    });
+    try instance.map.put(0x1FB4, &[2]u21{
+        0x3AC,
+        0x3B9,
+    });
+    try instance.map.put(0x10406, &[1]u21{
+        0x1042E,
+    });
+    try instance.map.put(0x4B8, &[1]u21{
+        0x4B9,
+    });
+    try instance.map.put(0x4FC, &[1]u21{
+        0x4FD,
+    });
+    try instance.map.put(0x10B9, &[1]u21{
+        0x2D19,
+    });
+    try instance.map.put(0xA68E, &[1]u21{
+        0xA68F,
+    });
+    try instance.map.put(0xAB94, &[1]u21{
+        0x13C4,
+    });
+    try instance.map.put(0x423, &[1]u21{
+        0x443,
+    });
+    try instance.map.put(0xABA0, &[1]u21{
+        0x13D0,
+    });
+    try instance.map.put(0x2166, &[1]u21{
+        0x2176,
+    });
+    try instance.map.put(0x10A9, &[1]u21{
+        0x2D09,
+    });
+    try instance.map.put(0xA69A, &[1]u21{
+        0xA69B,
+    });
+    try instance.map.put(0x498, &[1]u21{
+        0x499,
+    });
+    try instance.map.put(0x480, &[1]u21{
+        0x481,
+    });
+    try instance.map.put(0x104D1, &[1]u21{
+        0x104F9,
+    });
+    try instance.map.put(0x1E910, &[1]u21{
+        0x1E932,
+    });
+    try instance.map.put(0x2C0E, &[1]u21{
+        0x2C3E,
+    });
+    try instance.map.put(0x2C06, &[1]u21{
+        0x2C36,
+    });
+    try instance.map.put(0x45, &[1]u21{
+        0x65,
+    });
+    try instance.map.put(0x1F18, &[1]u21{
+        0x1F10,
+    });
+    try instance.map.put(0x24B7, &[1]u21{
+        0x24D1,
+    });
+    try instance.map.put(0xFF2F, &[1]u21{
+        0xFF4F,
+    });
+    try instance.map.put(0x1F2F, &[1]u21{
+        0x1F27,
+    });
+    try instance.map.put(0x1A0, &[1]u21{
+        0x1A1,
+    });
+    try instance.map.put(0x1F3D, &[1]u21{
+        0x1F35,
+    });
+    try instance.map.put(0x116, &[1]u21{
+        0x117,
+    });
+    try instance.map.put(0xA790, &[1]u21{
+        0xA791,
+    });
+    try instance.map.put(0x1E62, &[1]u21{
+        0x1E63,
+    });
+    try instance.map.put(0x10BE, &[1]u21{
+        0x2D1E,
+    });
+    try instance.map.put(0x556, &[1]u21{
+        0x586,
+    });
+    try instance.map.put(0x2CED, &[1]u21{
+        0x2CEE,
+    });
+    try instance.map.put(0x464, &[1]u21{
+        0x465,
+    });
+    try instance.map.put(0xA7AB, &[1]u21{
+        0x25C,
+    });
+    try instance.map.put(0x51A, &[1]u21{
+        0x51B,
+    });
+    try instance.map.put(0x1C82, &[1]u21{
+        0x43E,
+    });
+    try instance.map.put(0x1F29, &[1]u21{
+        0x1F21,
+    });
+    try instance.map.put(0x10C4, &[1]u21{
+        0x2D24,
+    });
+    try instance.map.put(0xA65A, &[1]u21{
+        0xA65B,
+    });
+    try instance.map.put(0x132, &[1]u21{
+        0x133,
+    });
+    try instance.map.put(0x10411, &[1]u21{
+        0x10439,
+    });
+    try instance.map.put(0x2161, &[1]u21{
+        0x2171,
+    });
+    try instance.map.put(0x2C03, &[1]u21{
+        0x2C33,
+    });
+    try instance.map.put(0x50A, &[1]u21{
+        0x50B,
+    });
+    try instance.map.put(0x147, &[1]u21{
+        0x148,
+    });
+    try instance.map.put(0x54C, &[1]u21{
+        0x57C,
+    });
+    try instance.map.put(0x2C0A, &[1]u21{
+        0x2C3A,
+    });
+    try instance.map.put(0x1E6A, &[1]u21{
+        0x1E6B,
+    });
+    try instance.map.put(0x1FE8, &[1]u21{
+        0x1FE0,
+    });
+    try instance.map.put(0x20A, &[1]u21{
+        0x20B,
+    });
+    try instance.map.put(0x4AC, &[1]u21{
+        0x4AD,
+    });
+    try instance.map.put(0x1F8D, &[2]u21{
+        0x1F05,
+        0x3B9,
+    });
+    try instance.map.put(0xD2, &[1]u21{
+        0xF2,
+    });
+    try instance.map.put(0x182, &[1]u21{
+        0x183,
+    });
+    try instance.map.put(0x18E, &[1]u21{
+        0x1DD,
+    });
+    try instance.map.put(0x1CB9, &[1]u21{
+        0x10F9,
+    });
+    try instance.map.put(0xA736, &[1]u21{
+        0xA737,
+    });
+    try instance.map.put(0xA75C, &[1]u21{
+        0xA75D,
+    });
+    try instance.map.put(0x1E92, &[1]u21{
+        0x1E93,
+    });
+    try instance.map.put(0x48A, &[1]u21{
+        0x48B,
+    });
+    try instance.map.put(0x1CB2, &[1]u21{
+        0x10F2,
+    });
+    try instance.map.put(0xFF2B, &[1]u21{
+        0xFF4B,
+    });
+    try instance.map.put(0x409, &[1]u21{
+        0x459,
+    });
+    try instance.map.put(0x478, &[1]u21{
+        0x479,
+    });
+    try instance.map.put(0x42B, &[1]u21{
+        0x44B,
+    });
+    try instance.map.put(0x104C1, &[1]u21{
+        0x104E9,
+    });
+    try instance.map.put(0x4EA, &[1]u21{
+        0x4EB,
+    });
+    try instance.map.put(0x1E76, &[1]u21{
+        0x1E77,
+    });
+    try instance.map.put(0x40E, &[1]u21{
+        0x45E,
+    });
+    try instance.map.put(0x2126, &[1]u21{
+        0x3C9,
+    });
+    try instance.map.put(0xABB4, &[1]u21{
+        0x13E4,
+    });
+    try instance.map.put(0xAB9E, &[1]u21{
+        0x13CE,
+    });
+    try instance.map.put(0x118A2, &[1]u21{
+        0x118C2,
+    });
+    try instance.map.put(0x118A3, &[1]u21{
+        0x118C3,
+    });
+    try instance.map.put(0x1041E, &[1]u21{
+        0x10446,
+    });
+    try instance.map.put(0xABB1, &[1]u21{
+        0x13E1,
+    });
+    try instance.map.put(0x118A8, &[1]u21{
+        0x118C8,
+    });
+    try instance.map.put(0x390, &[3]u21{
+        0x3B9,
+        0x308,
+        0x301,
+    });
+    try instance.map.put(0x526, &[1]u21{
+        0x527,
+    });
+    try instance.map.put(0x190, &[1]u21{
+        0x25B,
+    });
+    try instance.map.put(0x2C88, &[1]u21{
+        0x2C89,
+    });
+    try instance.map.put(0x1041B, &[1]u21{
+        0x10443,
+    });
+    try instance.map.put(0x16E52, &[1]u21{
+        0x16E72,
+    });
+    try instance.map.put(0x474, &[1]u21{
+        0x475,
+    });
+    try instance.map.put(0x4D0, &[1]u21{
+        0x4D1,
+    });
+    try instance.map.put(0xAB7A, &[1]u21{
+        0x13AA,
+    });
+    try instance.map.put(0x104CD, &[1]u21{
+        0x104F5,
+    });
+    try instance.map.put(0x1E903, &[1]u21{
+        0x1E925,
+    });
+    try instance.map.put(0xFF3A, &[1]u21{
+        0xFF5A,
+    });
+    try instance.map.put(0x516, &[1]u21{
+        0x517,
+    });
+    try instance.map.put(0x1E90C, &[1]u21{
+        0x1E92E,
+    });
+    try instance.map.put(0x403, &[1]u21{
+        0x453,
+    });
+    try instance.map.put(0x2C05, &[1]u21{
+        0x2C35,
+    });
+    try instance.map.put(0x1EA, &[1]u21{
+        0x1EB,
+    });
+    try instance.map.put(0x1E90, &[1]u21{
+        0x1E91,
+    });
+    try instance.map.put(0x1EEC, &[1]u21{
+        0x1EED,
+    });
+    try instance.map.put(0xFF2C, &[1]u21{
+        0xFF4C,
+    });
+    try instance.map.put(0xFF2E, &[1]u21{
+        0xFF4E,
+    });
+    try instance.map.put(0xC6, &[1]u21{
+        0xE6,
+    });
+    try instance.map.put(0x1CF, &[1]u21{
+        0x1D0,
     });
     try instance.map.put(0x1FB7, &[3]u21{
         0x3B1,
         0x342,
         0x3B9,
     });
-    try instance.map.put(0x1F9C, &[2]u21{
-        0x1F24,
-        0x3B9,
+    try instance.map.put(0xAB9F, &[1]u21{
+        0x13CF,
     });
-    try instance.map.put(0x3B0, &[3]u21{
-        0x3C5,
-        0x308,
-        0x301,
+    try instance.map.put(0x16E40, &[1]u21{
+        0x16E60,
     });
-    try instance.map.put(0x1F56, &[3]u21{
-        0x3C5,
-        0x313,
-        0x342,
+    try instance.map.put(0x16E5D, &[1]u21{
+        0x16E7D,
     });
-    try instance.map.put(0x587, &[2]u21{
-        0x565,
-        0x582,
+    try instance.map.put(0x104, &[1]u21{
+        0x105,
     });
-    try instance.map.put(0x1F98, &[2]u21{
-        0x1F20,
-        0x3B9,
+    try instance.map.put(0x1E2C, &[1]u21{
+        0x1E2D,
     });
-    try instance.map.put(0x1F52, &[3]u21{
-        0x3C5,
-        0x313,
-        0x300,
+    try instance.map.put(0x10B0, &[1]u21{
+        0x2D10,
     });
-    try instance.map.put(0x1FA5, &[2]u21{
-        0x1F65,
-        0x3B9,
+    try instance.map.put(0x1F2E, &[1]u21{
+        0x1F26,
     });
-    try instance.map.put(0x1FA7, &[2]u21{
-        0x1F67,
-        0x3B9,
+    try instance.map.put(0x10C8B, &[1]u21{
+        0x10CCB,
     });
-    try instance.map.put(0x1F8A, &[2]u21{
-        0x1F02,
-        0x3B9,
+    try instance.map.put(0x2CD0, &[1]u21{
+        0x2CD1,
     });
-    try instance.map.put(0x1F87, &[2]u21{
-        0x1F07,
-        0x3B9,
+    try instance.map.put(0x4B6, &[1]u21{
+        0x4B7,
     });
-    try instance.map.put(0x1F9B, &[2]u21{
-        0x1F23,
-        0x3B9,
+    try instance.map.put(0x10BA, &[1]u21{
+        0x2D1A,
     });
-    try instance.map.put(0x1FAF, &[2]u21{
-        0x1F67,
-        0x3B9,
+    try instance.map.put(0xA73C, &[1]u21{
+        0xA73D,
     });
-    try instance.map.put(0x1F8F, &[2]u21{
-        0x1F07,
-        0x3B9,
+    try instance.map.put(0xAB8C, &[1]u21{
+        0x13BC,
+    });
+    try instance.map.put(0x1FE, &[1]u21{
+        0x1FF,
+    });
+    try instance.map.put(0x1EC2, &[1]u21{
+        0x1EC3,
+    });
+    try instance.map.put(0x422, &[1]u21{
+        0x442,
+    });
+    try instance.map.put(0x216D, &[1]u21{
+        0x217D,
+    });
+    try instance.map.put(0x2CCE, &[1]u21{
+        0x2CCF,
     });
     try instance.map.put(0x1F99, &[2]u21{
         0x1F21,
         0x3B9,
     });
-    try instance.map.put(0x1FA0, &[2]u21{
-        0x1F60,
-        0x3B9,
+    try instance.map.put(0x1A7, &[1]u21{
+        0x1A8,
+    });
+    try instance.map.put(0x1CB1, &[1]u21{
+        0x10F1,
+    });
+    try instance.map.put(0x18B, &[1]u21{
+        0x18C,
+    });
+    try instance.map.put(0x2C2E, &[1]u21{
+        0x2C5E,
+    });
+    try instance.map.put(0xAB70, &[1]u21{
+        0x13A0,
+    });
+    try instance.map.put(0xAB86, &[1]u21{
+        0x13B6,
     });
     try instance.map.put(0x1F96, &[2]u21{
         0x1F26,
         0x3B9,
     });
+    try instance.map.put(0xFF28, &[1]u21{
+        0xFF48,
+    });
     try instance.map.put(0x1F0, &[2]u21{
         0x6A,
         0x30C,
+    });
+    try instance.map.put(0x1E46, &[1]u21{
+        0x1E47,
+    });
+    try instance.map.put(0x10C87, &[1]u21{
+        0x10CC7,
+    });
+    try instance.map.put(0x42, &[1]u21{
+        0x62,
+    });
+    try instance.map.put(0x1E30, &[1]u21{
+        0x1E31,
+    });
+    try instance.map.put(0x1E44, &[1]u21{
+        0x1E45,
+    });
+    try instance.map.put(0x2162, &[1]u21{
+        0x2172,
+    });
+    try instance.map.put(0x4EC, &[1]u21{
+        0x4ED,
+    });
+    try instance.map.put(0x1CBA, &[1]u21{
+        0x10FA,
+    });
+    try instance.map.put(0x2C94, &[1]u21{
+        0x2C95,
+    });
+    try instance.map.put(0xA698, &[1]u21{
+        0xA699,
+    });
+    try instance.map.put(0x10C8C, &[1]u21{
+        0x10CCC,
+    });
+    try instance.map.put(0xCD, &[1]u21{
+        0xED,
+    });
+    try instance.map.put(0x1F6E, &[1]u21{
+        0x1F66,
+    });
+    try instance.map.put(0x1ECE, &[1]u21{
+        0x1ECF,
+    });
+    try instance.map.put(0x216F, &[1]u21{
+        0x217F,
+    });
+    try instance.map.put(0x1E7C, &[1]u21{
+        0x1E7D,
+    });
+    try instance.map.put(0xABBC, &[1]u21{
+        0x13EC,
+    });
+    try instance.map.put(0x10C99, &[1]u21{
+        0x10CD9,
+    });
+    try instance.map.put(0x1EB8, &[1]u21{
+        0x1EB9,
+    });
+    try instance.map.put(0x18A, &[1]u21{
+        0x257,
+    });
+    try instance.map.put(0x2CBC, &[1]u21{
+        0x2CBD,
+    });
+    try instance.map.put(0x3F0, &[1]u21{
+        0x3BA,
+    });
+    try instance.map.put(0x1041D, &[1]u21{
+        0x10445,
+    });
+    try instance.map.put(0x1E5E, &[1]u21{
+        0x1E5F,
+    });
+    try instance.map.put(0x19D, &[1]u21{
+        0x272,
+    });
+    try instance.map.put(0x1C8, &[1]u21{
+        0x1C9,
+    });
+    try instance.map.put(0x10C9F, &[1]u21{
+        0x10CDF,
+    });
+    try instance.map.put(0x1E84, &[1]u21{
+        0x1E85,
+    });
+    try instance.map.put(0x1FB9, &[1]u21{
+        0x1FB1,
+    });
+    try instance.map.put(0x2CCC, &[1]u21{
+        0x2CCD,
+    });
+    try instance.map.put(0x10AA, &[1]u21{
+        0x2D0A,
+    });
+    try instance.map.put(0x24B9, &[1]u21{
+        0x24D3,
+    });
+    try instance.map.put(0x208, &[1]u21{
+        0x209,
+    });
+    try instance.map.put(0x1EEA, &[1]u21{
+        0x1EEB,
+    });
+    try instance.map.put(0x1E3A, &[1]u21{
+        0x1E3B,
+    });
+    try instance.map.put(0x1FEB, &[1]u21{
+        0x1F7B,
+    });
+    try instance.map.put(0x2C70, &[1]u21{
+        0x252,
+    });
+    try instance.map.put(0x1F1D, &[1]u21{
+        0x1F15,
+    });
+    try instance.map.put(0x1EC6, &[1]u21{
+        0x1EC7,
+    });
+    try instance.map.put(0xABA2, &[1]u21{
+        0x13D2,
+    });
+    try instance.map.put(0x52A, &[1]u21{
+        0x52B,
+    });
+    try instance.map.put(0x1F95, &[2]u21{
+        0x1F25,
+        0x3B9,
+    });
+    try instance.map.put(0xABBF, &[1]u21{
+        0x13EF,
+    });
+    try instance.map.put(0x3DE, &[1]u21{
+        0x3DF,
+    });
+    try instance.map.put(0x10C94, &[1]u21{
+        0x10CD4,
+    });
+    try instance.map.put(0x118A1, &[1]u21{
+        0x118C1,
+    });
+    try instance.map.put(0x16E4E, &[1]u21{
+        0x16E6E,
+    });
+    try instance.map.put(0x104BB, &[1]u21{
+        0x104E3,
+    });
+    try instance.map.put(0x1EC0, &[1]u21{
+        0x1EC1,
+    });
+    try instance.map.put(0x1F69, &[1]u21{
+        0x1F61,
+    });
+    try instance.map.put(0x4C9, &[1]u21{
+        0x4CA,
+    });
+    try instance.map.put(0x2C84, &[1]u21{
+        0x2C85,
+    });
+    try instance.map.put(0x184, &[1]u21{
+        0x185,
+    });
+    try instance.map.put(0x11E, &[1]u21{
+        0x11F,
+    });
+    try instance.map.put(0xA682, &[1]u21{
+        0xA683,
+    });
+    try instance.map.put(0x1EFA, &[1]u21{
+        0x1EFB,
+    });
+    try instance.map.put(0x10CA2, &[1]u21{
+        0x10CE2,
+    });
+    try instance.map.put(0xA696, &[1]u21{
+        0xA697,
+    });
+    try instance.map.put(0x397, &[1]u21{
+        0x3B7,
+    });
+    try instance.map.put(0x3A9, &[1]u21{
+        0x3C9,
+    });
+    try instance.map.put(0x13D, &[1]u21{
+        0x13E,
+    });
+    try instance.map.put(0x1FC4, &[2]u21{
+        0x3AE,
+        0x3B9,
+    });
+    try instance.map.put(0x10A4, &[1]u21{
+        0x2D04,
+    });
+    try instance.map.put(0x1EC8, &[1]u21{
+        0x1EC9,
+    });
+    try instance.map.put(0x2C27, &[1]u21{
+        0x2C57,
+    });
+    try instance.map.put(0x1FB2, &[2]u21{
+        0x1F70,
+        0x3B9,
+    });
+    try instance.map.put(0x2C72, &[1]u21{
+        0x2C73,
+    });
+    try instance.map.put(0x10CB2, &[1]u21{
+        0x10CF2,
+    });
+    try instance.map.put(0x1E90D, &[1]u21{
+        0x1E92F,
+    });
+    try instance.map.put(0x1E90E, &[1]u21{
+        0x1E930,
+    });
+    try instance.map.put(0xCA, &[1]u21{
+        0xEA,
+    });
+    try instance.map.put(0x543, &[1]u21{
+        0x573,
+    });
+    try instance.map.put(0x154, &[1]u21{
+        0x155,
+    });
+    try instance.map.put(0x4F4, &[1]u21{
+        0x4F5,
+    });
+    try instance.map.put(0xFF38, &[1]u21{
+        0xFF58,
+    });
+    try instance.map.put(0x118B0, &[1]u21{
+        0x118D0,
+    });
+    try instance.map.put(0x1F68, &[1]u21{
+        0x1F60,
+    });
+    try instance.map.put(0x4D2, &[1]u21{
+        0x4D3,
+    });
+    try instance.map.put(0x1CBE, &[1]u21{
+        0x10FE,
+    });
+    try instance.map.put(0x50E, &[1]u21{
+        0x50F,
+    });
+    try instance.map.put(0x3F5, &[1]u21{
+        0x3B5,
+    });
+    try instance.map.put(0xAB8B, &[1]u21{
+        0x13BB,
+    });
+    try instance.map.put(0x16E4C, &[1]u21{
+        0x16E6C,
+    });
+    try instance.map.put(0x2C24, &[1]u21{
+        0x2C54,
+    });
+    try instance.map.put(0xA7AE, &[1]u21{
+        0x26A,
+    });
+    try instance.map.put(0x104CF, &[1]u21{
+        0x104F7,
+    });
+    try instance.map.put(0x1FE2, &[3]u21{
+        0x3C5,
+        0x308,
+        0x300,
+    });
+    try instance.map.put(0x1FAA, &[2]u21{
+        0x1F62,
+        0x3B9,
+    });
+    try instance.map.put(0xCE, &[1]u21{
+        0xEE,
+    });
+    try instance.map.put(0x1F4B, &[1]u21{
+        0x1F43,
+    });
+    try instance.map.put(0x2C6E, &[1]u21{
+        0x271,
+    });
+    try instance.map.put(0xC9, &[1]u21{
+        0xE9,
+    });
+    try instance.map.put(0x4E6, &[1]u21{
+        0x4E7,
+    });
+    try instance.map.put(0x2C1C, &[1]u21{
+        0x2C4C,
+    });
+    try instance.map.put(0x1F94, &[2]u21{
+        0x1F24,
+        0x3B9,
+    });
+    try instance.map.put(0xA7B6, &[1]u21{
+        0xA7B7,
+    });
+    try instance.map.put(0x2C15, &[1]u21{
+        0x2C45,
+    });
+    try instance.map.put(0xAB78, &[1]u21{
+        0x13A8,
+    });
+    try instance.map.put(0x510, &[1]u21{
+        0x511,
+    });
+    try instance.map.put(0x1FA6, &[2]u21{
+        0x1F66,
+        0x3B9,
+    });
+    try instance.map.put(0x1B1, &[1]u21{
+        0x28A,
+    });
+    try instance.map.put(0x246, &[1]u21{
+        0x247,
+    });
+    try instance.map.put(0xFF21, &[1]u21{
+        0xFF41,
+    });
+    try instance.map.put(0x1EBC, &[1]u21{
+        0x1EBD,
+    });
+    try instance.map.put(0x1D5, &[1]u21{
+        0x1D6,
+    });
+    try instance.map.put(0x1EB6, &[1]u21{
+        0x1EB7,
+    });
+    try instance.map.put(0x1F5F, &[1]u21{
+        0x1F57,
+    });
+    try instance.map.put(0x10C80, &[1]u21{
+        0x10CC0,
+    });
+    try instance.map.put(0x11C, &[1]u21{
+        0x11D,
+    });
+    try instance.map.put(0x4BC, &[1]u21{
+        0x4BD,
+    });
+    try instance.map.put(0xAB98, &[1]u21{
+        0x13C8,
+    });
+    try instance.map.put(0x1FCC, &[2]u21{
+        0x3B7,
+        0x3B9,
+    });
+    try instance.map.put(0x1FC8, &[1]u21{
+        0x1F72,
+    });
+    try instance.map.put(0x2160, &[1]u21{
+        0x2170,
+    });
+    try instance.map.put(0x1FD6, &[2]u21{
+        0x3B9,
+        0x342,
+    });
+    try instance.map.put(0x408, &[1]u21{
+        0x458,
+    });
+    try instance.map.put(0x545, &[1]u21{
+        0x575,
+    });
+    try instance.map.put(0x2C2D, &[1]u21{
+        0x2C5D,
+    });
+    try instance.map.put(0xA646, &[1]u21{
+        0xA647,
+    });
+    try instance.map.put(0xA75A, &[1]u21{
+        0xA75B,
+    });
+    try instance.map.put(0xABAF, &[1]u21{
+        0x13DF,
+    });
+    try instance.map.put(0x2C67, &[1]u21{
+        0x2C68,
+    });
+    try instance.map.put(0x1F1C, &[1]u21{
+        0x1F14,
+    });
+    try instance.map.put(0x376, &[1]u21{
+        0x377,
+    });
+    try instance.map.put(0x24C1, &[1]u21{
+        0x24DB,
+    });
+    try instance.map.put(0xABB3, &[1]u21{
+        0x13E3,
+    });
+    try instance.map.put(0x1FF7, &[3]u21{
+        0x3C9,
+        0x342,
+        0x3B9,
+    });
+    try instance.map.put(0xA690, &[1]u21{
+        0xA691,
+    });
+    try instance.map.put(0x1E34, &[1]u21{
+        0x1E35,
+    });
+    try instance.map.put(0x118, &[1]u21{
+        0x119,
+    });
+    try instance.map.put(0x10414, &[1]u21{
+        0x1043C,
+    });
+    try instance.map.put(0x2CA8, &[1]u21{
+        0x2CA9,
+    });
+    try instance.map.put(0x2CA2, &[1]u21{
+        0x2CA3,
+    });
+    try instance.map.put(0xA768, &[1]u21{
+        0xA769,
+    });
+    try instance.map.put(0x19F, &[1]u21{
+        0x275,
+    });
+    try instance.map.put(0x1EF2, &[1]u21{
+        0x1EF3,
+    });
+    try instance.map.put(0xFF30, &[1]u21{
+        0xFF50,
+    });
+    try instance.map.put(0x16E4F, &[1]u21{
+        0x16E6F,
+    });
+    try instance.map.put(0x2C2B, &[1]u21{
+        0x2C5B,
+    });
+    try instance.map.put(0xA766, &[1]u21{
+        0xA767,
+    });
+    try instance.map.put(0x4F, &[1]u21{
+        0x6F,
+    });
+    try instance.map.put(0x104C2, &[1]u21{
+        0x104EA,
+    });
+    try instance.map.put(0x2C11, &[1]u21{
+        0x2C41,
+    });
+    try instance.map.put(0x1FD3, &[3]u21{
+        0x3B9,
+        0x308,
+        0x301,
+    });
+    try instance.map.put(0x118A4, &[1]u21{
+        0x118C4,
+    });
+    try instance.map.put(0x4A2, &[1]u21{
+        0x4A3,
+    });
+    try instance.map.put(0x1F6B, &[1]u21{
+        0x1F63,
+    });
+    try instance.map.put(0x118A5, &[1]u21{
+        0x118C5,
+    });
+    try instance.map.put(0x118BE, &[1]u21{
+        0x118DE,
+    });
+    try instance.map.put(0x1F0F, &[1]u21{
+        0x1F07,
+    });
+    try instance.map.put(0x118BA, &[1]u21{
+        0x118DA,
+    });
+    try instance.map.put(0x202, &[1]u21{
+        0x203,
+    });
+    try instance.map.put(0x10409, &[1]u21{
+        0x10431,
+    });
+    try instance.map.put(0x20C, &[1]u21{
+        0x20D,
+    });
+    try instance.map.put(0x18F, &[1]u21{
+        0x259,
+    });
+    try instance.map.put(0x1E94, &[1]u21{
+        0x1E95,
+    });
+    try instance.map.put(0x4F0, &[1]u21{
+        0x4F1,
+    });
+    try instance.map.put(0x4E8, &[1]u21{
+        0x4E9,
+    });
+    try instance.map.put(0x2C1A, &[1]u21{
+        0x2C4A,
+    });
+    try instance.map.put(0x410, &[1]u21{
+        0x430,
+    });
+    try instance.map.put(0x2132, &[1]u21{
+        0x214E,
+    });
+    try instance.map.put(0x3AB, &[1]u21{
+        0x3CB,
+    });
+    try instance.map.put(0xA78B, &[1]u21{
+        0xA78C,
+    });
+    try instance.map.put(0xABBA, &[1]u21{
+        0x13EA,
+    });
+    try instance.map.put(0x536, &[1]u21{
+        0x566,
+    });
+    try instance.map.put(0x141, &[1]u21{
+        0x142,
+    });
+    try instance.map.put(0x1F8A, &[2]u21{
+        0x1F02,
+        0x3B9,
+    });
+    try instance.map.put(0x10415, &[1]u21{
+        0x1043D,
+    });
+    try instance.map.put(0x38A, &[1]u21{
+        0x3AF,
+    });
+    try instance.map.put(0xA680, &[1]u21{
+        0xA681,
+    });
+    try instance.map.put(0xFF2A, &[1]u21{
+        0xFF4A,
+    });
+    try instance.map.put(0x404, &[1]u21{
+        0x454,
+    });
+    try instance.map.put(0x104C8, &[1]u21{
+        0x104F0,
+    });
+    try instance.map.put(0x1AE, &[1]u21{
+        0x288,
+    });
+    try instance.map.put(0x4B, &[1]u21{
+        0x6B,
+    });
+    try instance.map.put(0x3C2, &[1]u21{
+        0x3C3,
+    });
+    try instance.map.put(0x1E3E, &[1]u21{
+        0x1E3F,
+    });
+    try instance.map.put(0x1EF8, &[1]u21{
+        0x1EF9,
+    });
+    try instance.map.put(0x1EFE, &[1]u21{
+        0x1EFF,
+    });
+    try instance.map.put(0x104D0, &[1]u21{
+        0x104F8,
+    });
+    try instance.map.put(0x1F38, &[1]u21{
+        0x1F30,
+    });
+    try instance.map.put(0x10CA5, &[1]u21{
+        0x10CE5,
+    });
+    try instance.map.put(0x1F3A, &[1]u21{
+        0x1F32,
+    });
+    try instance.map.put(0x1EE, &[1]u21{
+        0x1EF,
+    });
+    try instance.map.put(0x104B4, &[1]u21{
+        0x104DC,
+    });
+    try instance.map.put(0x118B8, &[1]u21{
+        0x118D8,
+    });
+    try instance.map.put(0xABB9, &[1]u21{
+        0x13E9,
+    });
+    try instance.map.put(0xAB93, &[1]u21{
+        0x13C3,
+    });
+    try instance.map.put(0x1B5, &[1]u21{
+        0x1B6,
+    });
+    try instance.map.put(0x372, &[1]u21{
+        0x373,
+    });
+    try instance.map.put(0xA644, &[1]u21{
+        0xA645,
+    });
+    try instance.map.put(0x39E, &[1]u21{
+        0x3BE,
+    });
+    try instance.map.put(0x52, &[1]u21{
+        0x72,
+    });
+    try instance.map.put(0x4E2, &[1]u21{
+        0x4E3,
+    });
+    try instance.map.put(0x54E, &[1]u21{
+        0x57E,
     });
     try instance.map.put(0x1F97, &[2]u21{
         0x1F27,
         0x3B9,
     });
-    try instance.map.put(0x1FF4, &[2]u21{
-        0x3CE,
-        0x3B9,
-    });
-    try instance.map.put(0xFB14, &[2]u21{
-        0x574,
-        0x565,
+    try instance.map.put(0x10C8A, &[1]u21{
+        0x10CCA,
     });
     try instance.map.put(0x1E9E, &[2]u21{
         0x73,
         0x73,
     });
-    try instance.map.put(0x1F8B, &[2]u21{
-        0x1F03,
-        0x3B9,
+    try instance.map.put(0x16E5A, &[1]u21{
+        0x16E7A,
     });
-    try instance.map.put(0x1F84, &[2]u21{
-        0x1F04,
-        0x3B9,
+    try instance.map.put(0xAB9A, &[1]u21{
+        0x13CA,
     });
-    try instance.map.put(0x1F81, &[2]u21{
-        0x1F01,
-        0x3B9,
+    try instance.map.put(0x2C82, &[1]u21{
+        0x2C83,
     });
-    try instance.map.put(0x1F83, &[2]u21{
-        0x1F03,
-        0x3B9,
+    try instance.map.put(0x1FFA, &[1]u21{
+        0x1F7C,
+    });
+    try instance.map.put(0x1F7, &[1]u21{
+        0x1BF,
+    });
+    try instance.map.put(0x4AE, &[1]u21{
+        0x4AF,
     });
     try instance.map.put(0x1FE3, &[3]u21{
         0x3C5,
         0x308,
         0x301,
     });
-    try instance.map.put(0x1E98, &[2]u21{
-        0x77,
-        0x30A,
+    try instance.map.put(0x2C98, &[1]u21{
+        0x2C99,
     });
-    try instance.map.put(0xFB16, &[2]u21{
-        0x57E,
-        0x576,
+    try instance.map.put(0x2C20, &[1]u21{
+        0x2C50,
     });
-    try instance.map.put(0x130, &[2]u21{
-        0x69,
-        0x307,
+    try instance.map.put(0x2CC2, &[1]u21{
+        0x2CC3,
     });
-    try instance.map.put(0xFB13, &[2]u21{
-        0x574,
-        0x576,
+    try instance.map.put(0x10CAF, &[1]u21{
+        0x10CEF,
     });
-    try instance.map.put(0xFB04, &[3]u21{
-        0x66,
-        0x66,
-        0x6C,
+    try instance.map.put(0x1E18, &[1]u21{
+        0x1E19,
     });
-    try instance.map.put(0x1FAE, &[2]u21{
-        0x1F66,
-        0x3B9,
+    try instance.map.put(0xAB96, &[1]u21{
+        0x13C6,
     });
-    try instance.map.put(0x1FA2, &[2]u21{
-        0x1F62,
-        0x3B9,
+    try instance.map.put(0x212B, &[1]u21{
+        0xE5,
     });
-    try instance.map.put(0xFB03, &[3]u21{
-        0x66,
-        0x66,
-        0x69,
+    try instance.map.put(0x4A4, &[1]u21{
+        0x4A5,
+    });
+    try instance.map.put(0x16E58, &[1]u21{
+        0x16E78,
+    });
+    try instance.map.put(0xA666, &[1]u21{
+        0xA667,
+    });
+    try instance.map.put(0x55, &[1]u21{
+        0x75,
+    });
+    try instance.map.put(0x46C, &[1]u21{
+        0x46D,
+    });
+    try instance.map.put(0xDC, &[1]u21{
+        0xFC,
+    });
+    try instance.map.put(0x1E00, &[1]u21{
+        0x1E01,
+    });
+    try instance.map.put(0x46A, &[1]u21{
+        0x46B,
+    });
+    try instance.map.put(0xAB80, &[1]u21{
+        0x13B0,
+    });
+    try instance.map.put(0x118B1, &[1]u21{
+        0x118D1,
+    });
+    try instance.map.put(0x3A4, &[1]u21{
+        0x3C4,
+    });
+    try instance.map.put(0x2C8A, &[1]u21{
+        0x2C8B,
+    });
+    try instance.map.put(0x118BB, &[1]u21{
+        0x118DB,
+    });
+    try instance.map.put(0xAB8E, &[1]u21{
+        0x13BE,
     });
     try instance.map.put(0x1FE4, &[2]u21{
         0x3C1,
         0x313,
     });
-    try instance.map.put(0x1F95, &[2]u21{
-        0x1F25,
-        0x3B9,
+    try instance.map.put(0x2CC4, &[1]u21{
+        0x2CC5,
     });
-    try instance.map.put(0x1E96, &[2]u21{
-        0x68,
-        0x331,
+    try instance.map.put(0x104C0, &[1]u21{
+        0x104E8,
     });
-    try instance.map.put(0xFB17, &[2]u21{
-        0x574,
-        0x56D,
+    try instance.map.put(0xAB87, &[1]u21{
+        0x13B7,
     });
-    try instance.map.put(0x1F88, &[2]u21{
-        0x1F00,
-        0x3B9,
+    try instance.map.put(0xA7B8, &[1]u21{
+        0xA7B9,
+    });
+    try instance.map.put(0x1E915, &[1]u21{
+        0x1E937,
+    });
+    try instance.map.put(0x47C, &[1]u21{
+        0x47D,
+    });
+    try instance.map.put(0xAB9D, &[1]u21{
+        0x13CD,
+    });
+    try instance.map.put(0x1CA9, &[1]u21{
+        0x10E9,
+    });
+    try instance.map.put(0x414, &[1]u21{
+        0x434,
+    });
+    try instance.map.put(0x17D, &[1]u21{
+        0x17E,
+    });
+    try instance.map.put(0x200, &[1]u21{
+        0x201,
+    });
+    try instance.map.put(0x4E0, &[1]u21{
+        0x4E1,
     });
     try instance.map.put(0x1FE7, &[3]u21{
         0x3C5,
         0x308,
         0x342,
     });
-    try instance.map.put(0xFB05, &[2]u21{
-        0x73,
-        0x74,
+    try instance.map.put(0x118AF, &[1]u21{
+        0x118CF,
+    });
+    try instance.map.put(0x4BA, &[1]u21{
+        0x4BB,
+    });
+    try instance.map.put(0x1C9B, &[1]u21{
+        0x10DB,
+    });
+    try instance.map.put(0x1CA7, &[1]u21{
+        0x10E7,
     });
     try instance.map.put(0x1FA4, &[2]u21{
         0x1F64,
         0x3B9,
     });
-    try instance.map.put(0x1F86, &[2]u21{
-        0x1F06,
-        0x3B9,
-    });
-    try instance.map.put(0x1F9E, &[2]u21{
-        0x1F26,
-        0x3B9,
-    });
-    try instance.map.put(0x1FC4, &[2]u21{
-        0x3AE,
-        0x3B9,
-    });
-    try instance.map.put(0xFB01, &[2]u21{
-        0x66,
-        0x69,
-    });
     try instance.map.put(0xFB15, &[2]u21{
         0x574,
         0x56B,
     });
-    try instance.map.put(0x1FB2, &[2]u21{
-        0x1F70,
+    try instance.map.put(0x1ED0, &[1]u21{
+        0x1ED1,
+    });
+    try instance.map.put(0x24C2, &[1]u21{
+        0x24DC,
+    });
+    try instance.map.put(0x1C5, &[1]u21{
+        0x1C6,
+    });
+    try instance.map.put(0x4FA, &[1]u21{
+        0x4FB,
+    });
+    try instance.map.put(0x1F4D, &[1]u21{
+        0x1F45,
+    });
+    try instance.map.put(0xD9, &[1]u21{
+        0xF9,
+    });
+    try instance.map.put(0x2C25, &[1]u21{
+        0x2C55,
+    });
+    try instance.map.put(0x1EDA, &[1]u21{
+        0x1EDB,
+    });
+    try instance.map.put(0x1E900, &[1]u21{
+        0x1E922,
+    });
+    try instance.map.put(0x2C6B, &[1]u21{
+        0x2C6C,
+    });
+    try instance.map.put(0x4E, &[1]u21{
+        0x6E,
+    });
+    try instance.map.put(0x10A7, &[1]u21{
+        0x2D07,
+    });
+    try instance.map.put(0x53B, &[1]u21{
+        0x56B,
+    });
+    try instance.map.put(0x4C0, &[1]u21{
+        0x4CF,
+    });
+    try instance.map.put(0x54B, &[1]u21{
+        0x57B,
+    });
+    try instance.map.put(0x10AC, &[1]u21{
+        0x2D0C,
+    });
+    try instance.map.put(0x1FFC, &[2]u21{
+        0x3C9,
         0x3B9,
     });
-    try instance.map.put(0xFB02, &[2]u21{
-        0x66,
+    try instance.map.put(0x1E48, &[1]u21{
+        0x1E49,
+    });
+    try instance.map.put(0x1FC9, &[1]u21{
+        0x1F73,
+    });
+    try instance.map.put(0x2C04, &[1]u21{
+        0x2C34,
+    });
+    try instance.map.put(0x3E6, &[1]u21{
+        0x3E7,
+    });
+    try instance.map.put(0x10CA0, &[1]u21{
+        0x10CE0,
+    });
+    try instance.map.put(0x3F9, &[1]u21{
+        0x3F2,
+    });
+    try instance.map.put(0x1E50, &[1]u21{
+        0x1E51,
+    });
+    try instance.map.put(0x395, &[1]u21{
+        0x3B5,
+    });
+    try instance.map.put(0x1C9E, &[1]u21{
+        0x10DE,
+    });
+    try instance.map.put(0xABB5, &[1]u21{
+        0x13E5,
+    });
+    try instance.map.put(0x1EBE, &[1]u21{
+        0x1EBF,
+    });
+    try instance.map.put(0x2C1B, &[1]u21{
+        0x2C4B,
+    });
+    try instance.map.put(0x57, &[1]u21{
+        0x77,
+    });
+    try instance.map.put(0x2C0C, &[1]u21{
+        0x2C3C,
+    });
+    try instance.map.put(0x2C10, &[1]u21{
+        0x2C40,
+    });
+    try instance.map.put(0x2C12, &[1]u21{
+        0x2C42,
+    });
+    try instance.map.put(0xA752, &[1]u21{
+        0xA753,
+    });
+    try instance.map.put(0x104CE, &[1]u21{
+        0x104F6,
+    });
+    try instance.map.put(0x10421, &[1]u21{
+        0x10449,
+    });
+    try instance.map.put(0x1F6C, &[1]u21{
+        0x1F64,
+    });
+    try instance.map.put(0xA764, &[1]u21{
+        0xA765,
+    });
+    try instance.map.put(0xDF, &[2]u21{
+        0x73,
+        0x73,
+    });
+    try instance.map.put(0x1E919, &[1]u21{
+        0x1E93B,
+    });
+    try instance.map.put(0x2CD2, &[1]u21{
+        0x2CD3,
+    });
+    try instance.map.put(0x4C1, &[1]u21{
+        0x4C2,
+    });
+    try instance.map.put(0x1F9F, &[2]u21{
+        0x1F27,
+        0x3B9,
+    });
+    try instance.map.put(0x4A6, &[1]u21{
+        0x4A7,
+    });
+    try instance.map.put(0x1F0A, &[1]u21{
+        0x1F02,
+    });
+    try instance.map.put(0x1F3C, &[1]u21{
+        0x1F34,
+    });
+    try instance.map.put(0x1FB3, &[2]u21{
+        0x3B1,
+        0x3B9,
+    });
+    try instance.map.put(0x1FC2, &[2]u21{
+        0x1F74,
+        0x3B9,
+    });
+    try instance.map.put(0xA7A4, &[1]u21{
+        0xA7A5,
+    });
+    try instance.map.put(0x10C3, &[1]u21{
+        0x2D23,
+    });
+    try instance.map.put(0xAB76, &[1]u21{
+        0x13A6,
+    });
+    try instance.map.put(0x54A, &[1]u21{
+        0x57A,
+    });
+    try instance.map.put(0xA7B3, &[1]u21{
+        0xAB53,
+    });
+    try instance.map.put(0x1F3E, &[1]u21{
+        0x1F36,
+    });
+    try instance.map.put(0x1FF6, &[2]u21{
+        0x3C9,
+        0x342,
+    });
+    try instance.map.put(0x24BE, &[1]u21{
+        0x24D8,
+    });
+    try instance.map.put(0xAB85, &[1]u21{
+        0x13B5,
+    });
+    try instance.map.put(0x1E68, &[1]u21{
+        0x1E69,
+    });
+    try instance.map.put(0x2C01, &[1]u21{
+        0x2C31,
+    });
+    try instance.map.put(0x3D8, &[1]u21{
+        0x3D9,
+    });
+    try instance.map.put(0x4CB, &[1]u21{
+        0x4CC,
+    });
+    try instance.map.put(0x212, &[1]u21{
+        0x213,
+    });
+    try instance.map.put(0x42A, &[1]u21{
+        0x44A,
+    });
+    try instance.map.put(0x540, &[1]u21{
+        0x570,
+    });
+    try instance.map.put(0x42C, &[1]u21{
+        0x44C,
+    });
+    try instance.map.put(0x10B2, &[1]u21{
+        0x2D12,
+    });
+    try instance.map.put(0x2C1D, &[1]u21{
+        0x2C4D,
+    });
+    try instance.map.put(0x2CB6, &[1]u21{
+        0x2CB7,
+    });
+    try instance.map.put(0xA724, &[1]u21{
+        0xA725,
+    });
+    try instance.map.put(0x10C93, &[1]u21{
+        0x10CD3,
+    });
+    try instance.map.put(0x3A6, &[1]u21{
+        0x3C6,
+    });
+    try instance.map.put(0x10CAD, &[1]u21{
+        0x10CED,
+    });
+    try instance.map.put(0x118AA, &[1]u21{
+        0x118CA,
+    });
+    try instance.map.put(0xABAD, &[1]u21{
+        0x13DD,
+    });
+    try instance.map.put(0xABB7, &[1]u21{
+        0x13E7,
+    });
+    try instance.map.put(0x1E901, &[1]u21{
+        0x1E923,
+    });
+    try instance.map.put(0x421, &[1]u21{
+        0x441,
+    });
+    try instance.map.put(0x1E90B, &[1]u21{
+        0x1E92D,
+    });
+    try instance.map.put(0x542, &[1]u21{
+        0x572,
+    });
+    try instance.map.put(0x1E24, &[1]u21{
+        0x1E25,
+    });
+    try instance.map.put(0x4C, &[1]u21{
         0x6C,
     });
-    try instance.map.put(0x1F9D, &[2]u21{
-        0x1F25,
+    try instance.map.put(0x204, &[1]u21{
+        0x205,
+    });
+    try instance.map.put(0xFB06, &[2]u21{
+        0x73,
+        0x74,
+    });
+    try instance.map.put(0x1E40, &[1]u21{
+        0x1E41,
+    });
+    try instance.map.put(0x54F, &[1]u21{
+        0x57F,
+    });
+    try instance.map.put(0x1E921, &[1]u21{
+        0x1E943,
+    });
+    try instance.map.put(0x10A2, &[1]u21{
+        0x2D02,
+    });
+    try instance.map.put(0xABBE, &[1]u21{
+        0x13EE,
+    });
+    try instance.map.put(0x43, &[1]u21{
+        0x63,
+    });
+    try instance.map.put(0x1E909, &[1]u21{
+        0x1E92B,
+    });
+    try instance.map.put(0xAB88, &[1]u21{
+        0x13B8,
+    });
+    try instance.map.put(0x2C22, &[1]u21{
+        0x2C52,
+    });
+    try instance.map.put(0x218, &[1]u21{
+        0x219,
+    });
+    try instance.map.put(0x1F82, &[2]u21{
+        0x1F02,
         0x3B9,
     });
-    try instance.map.put(0x1F91, &[2]u21{
-        0x1F21,
+    try instance.map.put(0xAB95, &[1]u21{
+        0x13C5,
+    });
+    try instance.map.put(0x104B6, &[1]u21{
+        0x104DE,
+    });
+    try instance.map.put(0x39A, &[1]u21{
+        0x3BA,
+    });
+    try instance.map.put(0x23D, &[1]u21{
+        0x19A,
+    });
+    try instance.map.put(0x172, &[1]u21{
+        0x173,
+    });
+    try instance.map.put(0x114, &[1]u21{
+        0x115,
+    });
+    try instance.map.put(0x1C85, &[1]u21{
+        0x442,
+    });
+    try instance.map.put(0x1A9, &[1]u21{
+        0x283,
+    });
+    try instance.map.put(0x388, &[1]u21{
+        0x3AD,
+    });
+    try instance.map.put(0x4DE, &[1]u21{
+        0x4DF,
+    });
+    try instance.map.put(0xABB6, &[1]u21{
+        0x13E6,
+    });
+    try instance.map.put(0x1E904, &[1]u21{
+        0x1E926,
+    });
+    try instance.map.put(0x3D6, &[1]u21{
+        0x3C0,
+    });
+    try instance.map.put(0x531, &[1]u21{
+        0x561,
+    });
+    try instance.map.put(0x4D8, &[1]u21{
+        0x4D9,
+    });
+    try instance.map.put(0x1E42, &[1]u21{
+        0x1E43,
+    });
+    try instance.map.put(0xC5, &[1]u21{
+        0xE5,
+    });
+    try instance.map.put(0x1E04, &[1]u21{
+        0x1E05,
+    });
+    try instance.map.put(0x1FA7, &[2]u21{
+        0x1F67,
         0x3B9,
     });
-    try instance.map.put(0x1FF2, &[2]u21{
-        0x1F7C,
+    try instance.map.put(0xA786, &[1]u21{
+        0xA787,
+    });
+    try instance.map.put(0x134, &[1]u21{
+        0x135,
+    });
+    try instance.map.put(0x345, &[1]u21{
         0x3B9,
     });
-    try instance.map.put(0x149, &[2]u21{
-        0x2BC,
-        0x6E,
+    try instance.map.put(0x4F6, &[1]u21{
+        0x4F7,
+    });
+    try instance.map.put(0x15C, &[1]u21{
+        0x15D,
+    });
+    try instance.map.put(0x549, &[1]u21{
+        0x579,
+    });
+    try instance.map.put(0x1F9B, &[2]u21{
+        0x1F23,
+        0x3B9,
+    });
+    try instance.map.put(0x206, &[1]u21{
+        0x207,
+    });
+    try instance.map.put(0x228, &[1]u21{
+        0x229,
+    });
+    try instance.map.put(0x1FAF, &[2]u21{
+        0x1F67,
+        0x3B9,
+    });
+    try instance.map.put(0x2C60, &[1]u21{
+        0x2C61,
+    });
+    try instance.map.put(0xAB81, &[1]u21{
+        0x13B1,
+    });
+    try instance.map.put(0x10418, &[1]u21{
+        0x10440,
+    });
+    try instance.map.put(0xC0, &[1]u21{
+        0xE0,
+    });
+    try instance.map.put(0x10AD, &[1]u21{
+        0x2D0D,
+    });
+    try instance.map.put(0x2C2C, &[1]u21{
+        0x2C5C,
+    });
+    try instance.map.put(0xA692, &[1]u21{
+        0xA693,
+    });
+    try instance.map.put(0x10C83, &[1]u21{
+        0x10CC3,
+    });
+    try instance.map.put(0x118B3, &[1]u21{
+        0x118D3,
+    });
+    try instance.map.put(0xA77D, &[1]u21{
+        0x1D79,
+    });
+    try instance.map.put(0x2167, &[1]u21{
+        0x2177,
+    });
+    try instance.map.put(0xA76A, &[1]u21{
+        0xA76B,
+    });
+    try instance.map.put(0xAB99, &[1]u21{
+        0x13C9,
+    });
+    try instance.map.put(0x1E906, &[1]u21{
+        0x1E928,
+    });
+    try instance.map.put(0x1EE6, &[1]u21{
+        0x1EE7,
+    });
+    try instance.map.put(0xA7BA, &[1]u21{
+        0xA7BB,
+    });
+    try instance.map.put(0xA7C5, &[1]u21{
+        0x282,
+    });
+    try instance.map.put(0x4A, &[1]u21{
+        0x6A,
+    });
+    try instance.map.put(0x124, &[1]u21{
+        0x125,
+    });
+    try instance.map.put(0x1F8, &[1]u21{
+        0x1F9,
+    });
+    try instance.map.put(0x1CA2, &[1]u21{
+        0x10E2,
+    });
+    try instance.map.put(0x187, &[1]u21{
+        0x188,
+    });
+    try instance.map.put(0x424, &[1]u21{
+        0x444,
+    });
+    try instance.map.put(0xAB73, &[1]u21{
+        0x13A3,
+    });
+    try instance.map.put(0x24C8, &[1]u21{
+        0x24E2,
+    });
+    try instance.map.put(0x1041F, &[1]u21{
+        0x10447,
+    });
+    try instance.map.put(0x547, &[1]u21{
+        0x577,
+    });
+    try instance.map.put(0x2C0B, &[1]u21{
+        0x2C3B,
+    });
+    try instance.map.put(0xABA7, &[1]u21{
+        0x13D7,
+    });
+    try instance.map.put(0x1EEE, &[1]u21{
+        0x1EEF,
+    });
+    try instance.map.put(0xFB13, &[2]u21{
+        0x574,
+        0x576,
+    });
+    try instance.map.put(0x38F, &[1]u21{
+        0x3CE,
+    });
+    try instance.map.put(0xA746, &[1]u21{
+        0xA747,
+    });
+    try instance.map.put(0x139, &[1]u21{
+        0x13A,
+    });
+    try instance.map.put(0x1FA2, &[2]u21{
+        0x1F62,
+        0x3B9,
+    });
+    try instance.map.put(0x1F4, &[1]u21{
+        0x1F5,
+    });
+    try instance.map.put(0x1AC, &[1]u21{
+        0x1AD,
+    });
+    try instance.map.put(0x3A1, &[1]u21{
+        0x3C1,
+    });
+    try instance.map.put(0x198, &[1]u21{
+        0x199,
+    });
+    try instance.map.put(0x3D5, &[1]u21{
+        0x3C6,
+    });
+    try instance.map.put(0x108, &[1]u21{
+        0x109,
+    });
+    try instance.map.put(0x2C13, &[1]u21{
+        0x2C43,
+    });
+    try instance.map.put(0x2C80, &[1]u21{
+        0x2C81,
+    });
+    try instance.map.put(0xA64A, &[1]u21{
+        0xA64B,
+    });
+    try instance.map.put(0x1E74, &[1]u21{
+        0x1E75,
+    });
+    try instance.map.put(0x1FFB, &[1]u21{
+        0x1F7D,
+    });
+    try instance.map.put(0xA760, &[1]u21{
+        0xA761,
+    });
+    try instance.map.put(0x2C86, &[1]u21{
+        0x2C87,
+    });
+    try instance.map.put(0x136, &[1]u21{
+        0x137,
+    });
+    try instance.map.put(0xAB91, &[1]u21{
+        0x13C1,
+    });
+    try instance.map.put(0xFB03, &[3]u21{
+        0x66,
+        0x66,
+        0x69,
+    });
+    try instance.map.put(0x1041A, &[1]u21{
+        0x10442,
+    });
+    try instance.map.put(0x10C84, &[1]u21{
+        0x10CC4,
+    });
+    try instance.map.put(0x1E913, &[1]u21{
+        0x1E935,
+    });
+    try instance.map.put(0xA7B2, &[1]u21{
+        0x29D,
+    });
+    try instance.map.put(0x1CB3, &[1]u21{
+        0x10F3,
+    });
+    try instance.map.put(0x10422, &[1]u21{
+        0x1044A,
+    });
+    try instance.map.put(0x3E2, &[1]u21{
+        0x3E3,
+    });
+    try instance.map.put(0xAB71, &[1]u21{
+        0x13A1,
+    });
+    try instance.map.put(0x19C, &[1]u21{
+        0x26F,
+    });
+    try instance.map.put(0x158, &[1]u21{
+        0x159,
+    });
+    try instance.map.put(0x2164, &[1]u21{
+        0x2174,
+    });
+    try instance.map.put(0xFB05, &[2]u21{
+        0x73,
+        0x74,
+    });
+    try instance.map.put(0x152, &[1]u21{
+        0x153,
+    });
+    try instance.map.put(0x41C, &[1]u21{
+        0x43C,
+    });
+    try instance.map.put(0x104BC, &[1]u21{
+        0x104E4,
+    });
+    try instance.map.put(0x10424, &[1]u21{
+        0x1044C,
+    });
+    try instance.map.put(0xFF33, &[1]u21{
+        0xFF53,
+    });
+    try instance.map.put(0x2CD8, &[1]u21{
+        0x2CD9,
+    });
+    try instance.map.put(0x13FD, &[1]u21{
+        0x13F5,
+    });
+    try instance.map.put(0xA7A2, &[1]u21{
+        0xA7A3,
+    });
+    try instance.map.put(0xA7AC, &[1]u21{
+        0x261,
+    });
+    try instance.map.put(0x39B, &[1]u21{
+        0x3BB,
+    });
+    try instance.map.put(0x1EC4, &[1]u21{
+        0x1EC5,
+    });
+    try instance.map.put(0xA68A, &[1]u21{
+        0xA68B,
     });
     try instance.map.put(0x1E99, &[2]u21{
         0x79,
         0x30A,
-    });
-    try instance.map.put(0x1F92, &[2]u21{
-        0x1F22,
-        0x3B9,
-    });
-    try instance.map.put(0x1FB4, &[2]u21{
-        0x3AC,
-        0x3B9,
     });
     try instance.map.put(0x1FB6, &[2]u21{
         0x3B1,
@@ -285,169 +2131,2478 @@ pub fn init(allocator: *std.mem.Allocator) !CaseFoldMap {
         0x1F01,
         0x3B9,
     });
-    try instance.map.put(0x1FFC, &[2]u21{
-        0x3C9,
-        0x3B9,
+    try instance.map.put(0x16A, &[1]u21{
+        0x16B,
+    });
+    try instance.map.put(0x1DE, &[1]u21{
+        0x1DF,
+    });
+    try instance.map.put(0x502, &[1]u21{
+        0x503,
+    });
+    try instance.map.put(0x248, &[1]u21{
+        0x249,
+    });
+    try instance.map.put(0x1EE8, &[1]u21{
+        0x1EE9,
+    });
+    try instance.map.put(0x12A, &[1]u21{
+        0x12B,
     });
     try instance.map.put(0x1FD7, &[3]u21{
         0x3B9,
         0x308,
         0x342,
     });
+    try instance.map.put(0xA652, &[1]u21{
+        0xA653,
+    });
+    try instance.map.put(0xAB75, &[1]u21{
+        0x13A5,
+    });
+    try instance.map.put(0x10CA7, &[1]u21{
+        0x10CE7,
+    });
+    try instance.map.put(0xDA, &[1]u21{
+        0xFA,
+    });
+    try instance.map.put(0x1FEA, &[1]u21{
+        0x1F7A,
+    });
+    try instance.map.put(0x2C92, &[1]u21{
+        0x2C93,
+    });
+    try instance.map.put(0x16E41, &[1]u21{
+        0x16E61,
+    });
+    try instance.map.put(0x16E49, &[1]u21{
+        0x16E69,
+    });
+    try instance.map.put(0x10A8, &[1]u21{
+        0x2D08,
+    });
+    try instance.map.put(0x518, &[1]u21{
+        0x519,
+    });
+    try instance.map.put(0x3FF, &[1]u21{
+        0x37D,
+    });
+    try instance.map.put(0xA688, &[1]u21{
+        0xA689,
+    });
+    try instance.map.put(0xDD, &[1]u21{
+        0xFD,
+    });
+    try instance.map.put(0x100, &[1]u21{
+        0x101,
+    });
+    try instance.map.put(0x10C8F, &[1]u21{
+        0x10CCF,
+    });
+    try instance.map.put(0xA74E, &[1]u21{
+        0xA74F,
+    });
+    try instance.map.put(0x418, &[1]u21{
+        0x438,
+    });
+    try instance.map.put(0x24E, &[1]u21{
+        0x24F,
+    });
+    try instance.map.put(0xFF36, &[1]u21{
+        0xFF56,
+    });
+    try instance.map.put(0x24A, &[1]u21{
+        0x24B,
+    });
+    try instance.map.put(0x24C, &[1]u21{
+        0x24D,
+    });
+    try instance.map.put(0x1FC, &[1]u21{
+        0x1FD,
+    });
+    try instance.map.put(0x4B0, &[1]u21{
+        0x4B1,
+    });
+    try instance.map.put(0x10A1, &[1]u21{
+        0x2D01,
+    });
+    try instance.map.put(0x10402, &[1]u21{
+        0x1042A,
+    });
+    try instance.map.put(0x1E91D, &[1]u21{
+        0x1E93F,
+    });
+    try instance.map.put(0x24B6, &[1]u21{
+        0x24D0,
+    });
+    try instance.map.put(0x1D9, &[1]u21{
+        0x1DA,
+    });
+    try instance.map.put(0x10A3, &[1]u21{
+        0x2D03,
+    });
+    try instance.map.put(0x156, &[1]u21{
+        0x157,
+    });
+    try instance.map.put(0x1E0C, &[1]u21{
+        0x1E0D,
+    });
+    try instance.map.put(0x10C81, &[1]u21{
+        0x10CC1,
+    });
+    try instance.map.put(0x1E902, &[1]u21{
+        0x1E924,
+    });
+    try instance.map.put(0x1E91B, &[1]u21{
+        0x1E93D,
+    });
+    try instance.map.put(0x10B5, &[1]u21{
+        0x2D15,
+    });
+    try instance.map.put(0x3DA, &[1]u21{
+        0x3DB,
+    });
+    try instance.map.put(0x104B9, &[1]u21{
+        0x104E1,
+    });
+    try instance.map.put(0x1C97, &[1]u21{
+        0x10D7,
+    });
+    try instance.map.put(0x1E36, &[1]u21{
+        0x1E37,
+    });
+    try instance.map.put(0x1E9B, &[1]u21{
+        0x1E61,
+    });
+    try instance.map.put(0x104B7, &[1]u21{
+        0x104DF,
+    });
+    try instance.map.put(0x41E, &[1]u21{
+        0x43E,
+    });
+    try instance.map.put(0x535, &[1]u21{
+        0x565,
+    });
+    try instance.map.put(0x53A, &[1]u21{
+        0x56A,
+    });
+    try instance.map.put(0x1FAC, &[2]u21{
+        0x1F64,
+        0x3B9,
+    });
+    try instance.map.put(0x2C9A, &[1]u21{
+        0x2C9B,
+    });
+    try instance.map.put(0x1E911, &[1]u21{
+        0x1E933,
+    });
+    try instance.map.put(0x1E91A, &[1]u21{
+        0x1E93C,
+    });
+    try instance.map.put(0x1E64, &[1]u21{
+        0x1E65,
+    });
+    try instance.map.put(0x1EB4, &[1]u21{
+        0x1EB5,
+    });
+    try instance.map.put(0xA64C, &[1]u21{
+        0xA64D,
+    });
+    try instance.map.put(0x10426, &[1]u21{
+        0x1044E,
+    });
+    try instance.map.put(0x1E80, &[1]u21{
+        0x1E81,
+    });
+    try instance.map.put(0x4F8, &[1]u21{
+        0x4F9,
+    });
+    try instance.map.put(0x1E4, &[1]u21{
+        0x1E5,
+    });
+    try instance.map.put(0x5A, &[1]u21{
+        0x7A,
+    });
+    try instance.map.put(0x1A6, &[1]u21{
+        0x280,
+    });
+    try instance.map.put(0x2C02, &[1]u21{
+        0x2C32,
+    });
+    try instance.map.put(0xD8, &[1]u21{
+        0xF8,
+    });
+    try instance.map.put(0x120, &[1]u21{
+        0x121,
+    });
+    try instance.map.put(0x1EA0, &[1]u21{
+        0x1EA1,
+    });
+    try instance.map.put(0x1E908, &[1]u21{
+        0x1E92A,
+    });
+    try instance.map.put(0x212A, &[1]u21{
+        0x6B,
+    });
+    try instance.map.put(0x1E91F, &[1]u21{
+        0x1E941,
+    });
+    try instance.map.put(0x10B8, &[1]u21{
+        0x2D18,
+    });
+    try instance.map.put(0xAB7D, &[1]u21{
+        0x13AD,
+    });
+    try instance.map.put(0x24B8, &[1]u21{
+        0x24D2,
+    });
+    try instance.map.put(0x49A, &[1]u21{
+        0x49B,
+    });
+    try instance.map.put(0x11A, &[1]u21{
+        0x11B,
+    });
+    try instance.map.put(0x168, &[1]u21{
+        0x169,
+    });
+    try instance.map.put(0x2C28, &[1]u21{
+        0x2C58,
+    });
+    try instance.map.put(0x179, &[1]u21{
+        0x17A,
+    });
+    try instance.map.put(0xFF37, &[1]u21{
+        0xFF57,
+    });
+    try instance.map.put(0x10B3, &[1]u21{
+        0x2D13,
+    });
+    try instance.map.put(0x2CE0, &[1]u21{
+        0x2CE1,
+    });
+    try instance.map.put(0xA75E, &[1]u21{
+        0xA75F,
+    });
+    try instance.map.put(0x3E8, &[1]u21{
+        0x3E9,
+    });
+    try instance.map.put(0x1E20, &[1]u21{
+        0x1E21,
+    });
+    try instance.map.put(0x241, &[1]u21{
+        0x242,
+    });
+    try instance.map.put(0x1F87, &[2]u21{
+        0x1F07,
+        0x3B9,
+    });
+    try instance.map.put(0x1B7, &[1]u21{
+        0x292,
+    });
+    try instance.map.put(0xD3, &[1]u21{
+        0xF3,
+    });
+    try instance.map.put(0x504, &[1]u21{
+        0x505,
+    });
+    try instance.map.put(0x1F0B, &[1]u21{
+        0x1F03,
+    });
+    try instance.map.put(0x4F2, &[1]u21{
+        0x4F3,
+    });
+    try instance.map.put(0xC2, &[1]u21{
+        0xE2,
+    });
+    try instance.map.put(0x3A8, &[1]u21{
+        0x3C8,
+    });
+    try instance.map.put(0xA640, &[1]u21{
+        0xA641,
+    });
+    try instance.map.put(0x10CAB, &[1]u21{
+        0x10CEB,
+    });
+    try instance.map.put(0xA66A, &[1]u21{
+        0xA66B,
+    });
+    try instance.map.put(0x40F, &[1]u21{
+        0x45F,
+    });
+    try instance.map.put(0xFF32, &[1]u21{
+        0xFF52,
+    });
+    try instance.map.put(0x2183, &[1]u21{
+        0x2184,
+    });
+    try instance.map.put(0x40D, &[1]u21{
+        0x45D,
+    });
+    try instance.map.put(0x1040D, &[1]u21{
+        0x10435,
+    });
+    try instance.map.put(0x1C7, &[1]u21{
+        0x1C9,
+    });
+    try instance.map.put(0xC4, &[1]u21{
+        0xE4,
+    });
+    try instance.map.put(0x1EA2, &[1]u21{
+        0x1EA3,
+    });
+    try instance.map.put(0x176, &[1]u21{
+        0x177,
+    });
+    try instance.map.put(0x1F2, &[1]u21{
+        0x1F3,
+    });
+    try instance.map.put(0x1F84, &[2]u21{
+        0x1F04,
+        0x3B9,
+    });
+    try instance.map.put(0x16E56, &[1]u21{
+        0x16E76,
+    });
+    try instance.map.put(0x1CA3, &[1]u21{
+        0x10E3,
+    });
+    try instance.map.put(0x1F81, &[2]u21{
+        0x1F01,
+        0x3B9,
+    });
+    try instance.map.put(0xFB16, &[2]u21{
+        0x57E,
+        0x576,
+    });
+    try instance.map.put(0x10CA1, &[1]u21{
+        0x10CE1,
+    });
+    try instance.map.put(0x552, &[1]u21{
+        0x582,
+    });
+    try instance.map.put(0x10CAE, &[1]u21{
+        0x10CEE,
+    });
+    try instance.map.put(0x2C96, &[1]u21{
+        0x2C97,
+    });
+    try instance.map.put(0x10C91, &[1]u21{
+        0x10CD1,
+    });
+    try instance.map.put(0x1FA, &[1]u21{
+        0x1FB,
+    });
+    try instance.map.put(0x524, &[1]u21{
+        0x525,
+    });
+    try instance.map.put(0x1EDC, &[1]u21{
+        0x1EDD,
+    });
+    try instance.map.put(0xABB0, &[1]u21{
+        0x13E0,
+    });
+    try instance.map.put(0x10400, &[1]u21{
+        0x10428,
+    });
+    try instance.map.put(0x1040E, &[1]u21{
+        0x10436,
+    });
+    try instance.map.put(0xC8, &[1]u21{
+        0xE8,
+    });
+    try instance.map.put(0x1FF8, &[1]u21{
+        0x1F78,
+    });
+    try instance.map.put(0xA686, &[1]u21{
+        0xA687,
+    });
+    try instance.map.put(0x10419, &[1]u21{
+        0x10441,
+    });
+    try instance.map.put(0xA782, &[1]u21{
+        0xA783,
+    });
+    try instance.map.put(0x3F1, &[1]u21{
+        0x3C1,
+    });
+    try instance.map.put(0x1C84, &[1]u21{
+        0x442,
+    });
+    try instance.map.put(0x104CA, &[1]u21{
+        0x104F2,
+    });
+    try instance.map.put(0xABBB, &[1]u21{
+        0x13EB,
+    });
+    try instance.map.put(0x10C88, &[1]u21{
+        0x10CC8,
+    });
+    try instance.map.put(0x1CBD, &[1]u21{
+        0x10FD,
+    });
+    try instance.map.put(0x40B, &[1]u21{
+        0x45B,
+    });
+    try instance.map.put(0xB5, &[1]u21{
+        0x3BC,
+    });
+    try instance.map.put(0x10405, &[1]u21{
+        0x1042D,
+    });
+    try instance.map.put(0x42E, &[1]u21{
+        0x44E,
+    });
+    try instance.map.put(0x2C2A, &[1]u21{
+        0x2C5A,
+    });
+    try instance.map.put(0x1FBE, &[1]u21{
+        0x3B9,
+    });
+    try instance.map.put(0x10408, &[1]u21{
+        0x10430,
+    });
+    try instance.map.put(0x2CDA, &[1]u21{
+        0x2CDB,
+    });
+    try instance.map.put(0x472, &[1]u21{
+        0x473,
+    });
+    try instance.map.put(0x1F08, &[1]u21{
+        0x1F00,
+    });
+    try instance.map.put(0x393, &[1]u21{
+        0x3B3,
+    });
+    try instance.map.put(0x3FE, &[1]u21{
+        0x37C,
+    });
+    try instance.map.put(0x10E, &[1]u21{
+        0x10F,
+    });
+    try instance.map.put(0x4C3, &[1]u21{
+        0x4C4,
+    });
+    try instance.map.put(0xFB01, &[2]u21{
+        0x66,
+        0x69,
+    });
+    try instance.map.put(0x214, &[1]u21{
+        0x215,
+    });
+    try instance.map.put(0x4A8, &[1]u21{
+        0x4A9,
+    });
+    try instance.map.put(0x4B2, &[1]u21{
+        0x4B3,
+    });
+    try instance.map.put(0x2C0D, &[1]u21{
+        0x2C3D,
+    });
+    try instance.map.put(0xA66C, &[1]u21{
+        0xA66D,
+    });
+    try instance.map.put(0x1E88, &[1]u21{
+        0x1E89,
+    });
+    try instance.map.put(0x10403, &[1]u21{
+        0x1042B,
+    });
+    try instance.map.put(0x10C9E, &[1]u21{
+        0x10CDE,
+    });
+    try instance.map.put(0x2CDE, &[1]u21{
+        0x2CDF,
+    });
+    try instance.map.put(0x1F6A, &[1]u21{
+        0x1F62,
+    });
+    try instance.map.put(0x2165, &[1]u21{
+        0x2175,
+    });
+    try instance.map.put(0xAB84, &[1]u21{
+        0x13B4,
+    });
+    try instance.map.put(0x16E57, &[1]u21{
+        0x16E77,
+    });
+    try instance.map.put(0x533, &[1]u21{
+        0x563,
+    });
+    try instance.map.put(0x520, &[1]u21{
+        0x521,
+    });
+    try instance.map.put(0x10CB0, &[1]u21{
+        0x10CF0,
+    });
+    try instance.map.put(0x170, &[1]u21{
+        0x171,
+    });
+    try instance.map.put(0x118B9, &[1]u21{
+        0x118D9,
+    });
+    try instance.map.put(0x1CB7, &[1]u21{
+        0x10F7,
+    });
+    try instance.map.put(0x150, &[1]u21{
+        0x151,
+    });
+    try instance.map.put(0xA76E, &[1]u21{
+        0xA76F,
+    });
+    try instance.map.put(0xA7AD, &[1]u21{
+        0x26C,
+    });
+    try instance.map.put(0x539, &[1]u21{
+        0x569,
+    });
+    try instance.map.put(0xAB79, &[1]u21{
+        0x13A9,
+    });
+    try instance.map.put(0x544, &[1]u21{
+        0x574,
+    });
+    try instance.map.put(0x476, &[1]u21{
+        0x477,
+    });
+    try instance.map.put(0xFF34, &[1]u21{
+        0xFF54,
+    });
+    try instance.map.put(0xDE, &[1]u21{
+        0xFE,
+    });
+    try instance.map.put(0xA732, &[1]u21{
+        0xA733,
+    });
+    try instance.map.put(0x54D, &[1]u21{
+        0x57D,
+    });
+    try instance.map.put(0x1EAA, &[1]u21{
+        0x1EAB,
+    });
+    try instance.map.put(0xA7F5, &[1]u21{
+        0xA7F6,
+    });
+    try instance.map.put(0xABA4, &[1]u21{
+        0x13D4,
+    });
+    try instance.map.put(0x1ED8, &[1]u21{
+        0x1ED9,
+    });
+    try instance.map.put(0x1B8, &[1]u21{
+        0x1B9,
+    });
+    try instance.map.put(0x528, &[1]u21{
+        0x529,
+    });
+    try instance.map.put(0xAB8F, &[1]u21{
+        0x13BF,
+    });
+    try instance.map.put(0x17F, &[1]u21{
+        0x73,
+    });
+    try instance.map.put(0xFF27, &[1]u21{
+        0xFF47,
+    });
+    try instance.map.put(0x118B7, &[1]u21{
+        0x118D7,
+    });
+    try instance.map.put(0x1C94, &[1]u21{
+        0x10D4,
+    });
+    try instance.map.put(0x1FAB, &[2]u21{
+        0x1F63,
+        0x3B9,
+    });
+    try instance.map.put(0x24CE, &[1]u21{
+        0x24E8,
+    });
+    try instance.map.put(0xA694, &[1]u21{
+        0xA695,
+    });
+    try instance.map.put(0x1CAA, &[1]u21{
+        0x10EA,
+    });
+    try instance.map.put(0xA72E, &[1]u21{
+        0xA72F,
+    });
+    try instance.map.put(0x1C93, &[1]u21{
+        0x10D3,
+    });
+    try instance.map.put(0x10BD, &[1]u21{
+        0x2D1D,
+    });
+    try instance.map.put(0xAB8D, &[1]u21{
+        0x13BD,
+    });
+    try instance.map.put(0x47, &[1]u21{
+        0x67,
+    });
+    try instance.map.put(0x118AC, &[1]u21{
+        0x118CC,
+    });
+    try instance.map.put(0x1EA8, &[1]u21{
+        0x1EA9,
+    });
+    try instance.map.put(0x104CC, &[1]u21{
+        0x104F4,
+    });
+    try instance.map.put(0x500, &[1]u21{
+        0x501,
+    });
+    try instance.map.put(0x1F6F, &[1]u21{
+        0x1F67,
+    });
+    try instance.map.put(0x1F1, &[1]u21{
+        0x1F3,
+    });
+    try instance.map.put(0x1C80, &[1]u21{
+        0x432,
+    });
+    try instance.map.put(0x13FB, &[1]u21{
+        0x13F3,
+    });
+    try instance.map.put(0x216B, &[1]u21{
+        0x217B,
+    });
+    try instance.map.put(0x2C9C, &[1]u21{
+        0x2C9D,
+    });
+    try instance.map.put(0x417, &[1]u21{
+        0x437,
+    });
+    try instance.map.put(0x1E06, &[1]u21{
+        0x1E07,
+    });
+    try instance.map.put(0x42D, &[1]u21{
+        0x44D,
+    });
+    try instance.map.put(0x10C82, &[1]u21{
+        0x10CC2,
+    });
+    try instance.map.put(0x216E, &[1]u21{
+        0x217E,
+    });
+    try instance.map.put(0x1F2A, &[1]u21{
+        0x1F22,
+    });
+    try instance.map.put(0x12C, &[1]u21{
+        0x12D,
+    });
+    try instance.map.put(0x1EF6, &[1]u21{
+        0x1EF7,
+    });
+    try instance.map.put(0x1CA5, &[1]u21{
+        0x10E5,
+    });
+    try instance.map.put(0x2CAA, &[1]u21{
+        0x2CAB,
+    });
+    try instance.map.put(0xFB00, &[2]u21{
+        0x66,
+        0x66,
+    });
+    try instance.map.put(0x546, &[1]u21{
+        0x576,
+    });
+    try instance.map.put(0xD0, &[1]u21{
+        0xF0,
+    });
+    try instance.map.put(0x1C9F, &[1]u21{
+        0x10DF,
+    });
+    try instance.map.put(0x2CAE, &[1]u21{
+        0x2CAF,
+    });
+    try instance.map.put(0x402, &[1]u21{
+        0x452,
+    });
+    try instance.map.put(0x24C0, &[1]u21{
+        0x24DA,
+    });
+    try instance.map.put(0x10CD, &[1]u21{
+        0x2D2D,
+    });
+    try instance.map.put(0x1C81, &[1]u21{
+        0x434,
+    });
+    try instance.map.put(0x389, &[1]u21{
+        0x3AE,
+    });
+    try instance.map.put(0xC1, &[1]u21{
+        0xE1,
+    });
+    try instance.map.put(0x1F9A, &[2]u21{
+        0x1F22,
+        0x3B9,
+    });
+    try instance.map.put(0x14E, &[1]u21{
+        0x14F,
+    });
+    try instance.map.put(0x412, &[1]u21{
+        0x432,
+    });
+    try instance.map.put(0x2CE2, &[1]u21{
+        0x2CE3,
+    });
+    try instance.map.put(0x232, &[1]u21{
+        0x233,
+    });
+    try instance.map.put(0x14A, &[1]u21{
+        0x14B,
+    });
+    try instance.map.put(0x1FC6, &[2]u21{
+        0x3B7,
+        0x342,
+    });
+    try instance.map.put(0x2CB8, &[1]u21{
+        0x2CB9,
+    });
+    try instance.map.put(0xA668, &[1]u21{
+        0xA669,
+    });
+    try instance.map.put(0x4D4, &[1]u21{
+        0x4D5,
+    });
+    try instance.map.put(0x551, &[1]u21{
+        0x581,
+    });
+    try instance.map.put(0x1CA6, &[1]u21{
+        0x10E6,
+    });
+    try instance.map.put(0x1F48, &[1]u21{
+        0x1F40,
+    });
+    try instance.map.put(0x24C9, &[1]u21{
+        0x24E3,
+    });
+    try instance.map.put(0x1E7E, &[1]u21{
+        0x1E7F,
+    });
+    try instance.map.put(0xA744, &[1]u21{
+        0xA745,
+    });
+    try instance.map.put(0xA762, &[1]u21{
+        0xA763,
+    });
+    try instance.map.put(0x1A2, &[1]u21{
+        0x1A3,
+    });
+    try instance.map.put(0x102, &[1]u21{
+        0x103,
+    });
+    try instance.map.put(0x554, &[1]u21{
+        0x584,
+    });
+    try instance.map.put(0x2C00, &[1]u21{
+        0x2C30,
+    });
+    try instance.map.put(0x10413, &[1]u21{
+        0x1043B,
+    });
+    try instance.map.put(0x104B5, &[1]u21{
+        0x104DD,
+    });
+    try instance.map.put(0x118BC, &[1]u21{
+        0x118DC,
+    });
+    try instance.map.put(0x16E50, &[1]u21{
+        0x16E70,
+    });
+    try instance.map.put(0x10C9C, &[1]u21{
+        0x10CDC,
+    });
+    try instance.map.put(0x1E02, &[1]u21{
+        0x1E03,
+    });
+    try instance.map.put(0x1E08, &[1]u21{
+        0x1E09,
+    });
+    try instance.map.put(0x4FE, &[1]u21{
+        0x4FF,
+    });
+    try instance.map.put(0x1F8E, &[2]u21{
+        0x1F06,
+        0x3B9,
+    });
+    try instance.map.put(0x16E5B, &[1]u21{
+        0x16E7B,
+    });
+    try instance.map.put(0x216C, &[1]u21{
+        0x217C,
+    });
+    try instance.map.put(0x1F9C, &[2]u21{
+        0x1F24,
+        0x3B9,
+    });
+    try instance.map.put(0xA779, &[1]u21{
+        0xA77A,
+    });
+    try instance.map.put(0x10420, &[1]u21{
+        0x10448,
+    });
+    try instance.map.put(0x143, &[1]u21{
+        0x144,
+    });
+    try instance.map.put(0x1F98, &[2]u21{
+        0x1F20,
+        0x3B9,
+    });
+    try instance.map.put(0x587, &[2]u21{
+        0x565,
+        0x582,
+    });
+    try instance.map.put(0x104C9, &[1]u21{
+        0x104F1,
+    });
+    try instance.map.put(0x1F52, &[3]u21{
+        0x3C5,
+        0x313,
+        0x300,
+    });
+    try instance.map.put(0x1C91, &[1]u21{
+        0x10D1,
+    });
+    try instance.map.put(0x10CA6, &[1]u21{
+        0x10CE6,
+    });
+    try instance.map.put(0x104BE, &[1]u21{
+        0x104E6,
+    });
+    try instance.map.put(0x416, &[1]u21{
+        0x436,
+    });
+    try instance.map.put(0x38C, &[1]u21{
+        0x3CC,
+    });
+    try instance.map.put(0x1E6C, &[1]u21{
+        0x1E6D,
+    });
+    try instance.map.put(0x2CC0, &[1]u21{
+        0x2CC1,
+    });
+    try instance.map.put(0x104C3, &[1]u21{
+        0x104EB,
+    });
+    try instance.map.put(0x10CAA, &[1]u21{
+        0x10CEA,
+    });
+    try instance.map.put(0x462, &[1]u21{
+        0x463,
+    });
+    try instance.map.put(0x4C5, &[1]u21{
+        0x4C6,
+    });
+    try instance.map.put(0x1E0, &[1]u21{
+        0x1E1,
+    });
+    try instance.map.put(0x222, &[1]u21{
+        0x223,
+    });
+    try instance.map.put(0x460, &[1]u21{
+        0x461,
+    });
+    try instance.map.put(0x10A6, &[1]u21{
+        0x2D06,
+    });
+    try instance.map.put(0x2CC6, &[1]u21{
+        0x2CC7,
+    });
+    try instance.map.put(0xA79E, &[1]u21{
+        0xA79F,
+    });
+    try instance.map.put(0x391, &[1]u21{
+        0x3B1,
+    });
+    try instance.map.put(0x10425, &[1]u21{
+        0x1044D,
+    });
+    try instance.map.put(0xABB2, &[1]u21{
+        0x13E2,
+    });
+    try instance.map.put(0x37F, &[1]u21{
+        0x3F3,
+    });
+    try instance.map.put(0x145, &[1]u21{
+        0x146,
+    });
+    try instance.map.put(0x1FA0, &[2]u21{
+        0x1F60,
+        0x3B9,
+    });
+    try instance.map.put(0xA74C, &[1]u21{
+        0xA74D,
+    });
+    try instance.map.put(0x118A6, &[1]u21{
+        0x118C6,
+    });
+    try instance.map.put(0x1CD, &[1]u21{
+        0x1CE,
+    });
+    try instance.map.put(0xD1, &[1]u21{
+        0xF1,
+    });
+    try instance.map.put(0x56, &[1]u21{
+        0x76,
+    });
+    try instance.map.put(0x1C4, &[1]u21{
+        0x1C6,
+    });
+    try instance.map.put(0x13F9, &[1]u21{
+        0x13F1,
+    });
+    try instance.map.put(0x194, &[1]u21{
+        0x263,
+    });
+    try instance.map.put(0x1C90, &[1]u21{
+        0x10D0,
+    });
+    try instance.map.put(0x53C, &[1]u21{
+        0x56C,
+    });
+    try instance.map.put(0x1C83, &[1]u21{
+        0x441,
+    });
+    try instance.map.put(0x1E54, &[1]u21{
+        0x1E55,
+    });
+    try instance.map.put(0x1E78, &[1]u21{
+        0x1E79,
+    });
+    try instance.map.put(0x1EF4, &[1]u21{
+        0x1EF5,
+    });
+    try instance.map.put(0x47A, &[1]u21{
+        0x47B,
+    });
+    try instance.map.put(0x406, &[1]u21{
+        0x456,
+    });
+    try instance.map.put(0x1FF4, &[2]u21{
+        0x3CE,
+        0x3B9,
+    });
+    try instance.map.put(0xA648, &[1]u21{
+        0xA649,
+    });
+    try instance.map.put(0xA79C, &[1]u21{
+        0xA79D,
+    });
+    try instance.map.put(0x1F8B, &[2]u21{
+        0x1F03,
+        0x3B9,
+    });
+    try instance.map.put(0xABA9, &[1]u21{
+        0x13D9,
+    });
+    try instance.map.put(0xFF29, &[1]u21{
+        0xFF49,
+    });
+    try instance.map.put(0x1EA6, &[1]u21{
+        0x1EA7,
+    });
+    try instance.map.put(0x13FC, &[1]u21{
+        0x13F4,
+    });
+    try instance.map.put(0x118AB, &[1]u21{
+        0x118CB,
+    });
+    try instance.map.put(0x16E48, &[1]u21{
+        0x16E68,
+    });
+    try instance.map.put(0x10401, &[1]u21{
+        0x10429,
+    });
+    try instance.map.put(0x16E59, &[1]u21{
+        0x16E79,
+    });
+    try instance.map.put(0x41B, &[1]u21{
+        0x43B,
+    });
+    try instance.map.put(0x54, &[1]u21{
+        0x74,
+    });
+    try instance.map.put(0x4B4, &[1]u21{
+        0x4B5,
+    });
+    try instance.map.put(0x10B6, &[1]u21{
+        0x2D16,
+    });
+    try instance.map.put(0x1CBF, &[1]u21{
+        0x10FF,
+    });
+    try instance.map.put(0x13FA, &[1]u21{
+        0x13F2,
+    });
+    try instance.map.put(0xA722, &[1]u21{
+        0xA723,
+    });
+    try instance.map.put(0x16E4D, &[1]u21{
+        0x16E6D,
+    });
+    try instance.map.put(0x1040B, &[1]u21{
+        0x10433,
+    });
+    try instance.map.put(0x160, &[1]u21{
+        0x161,
+    });
+    try instance.map.put(0x1FAE, &[2]u21{
+        0x1F66,
+        0x3B9,
+    });
+    try instance.map.put(0x10B1, &[1]u21{
+        0x2D11,
+    });
+    try instance.map.put(0x118B4, &[1]u21{
+        0x118D4,
+    });
+    try instance.map.put(0xFF26, &[1]u21{
+        0xFF46,
+    });
+    try instance.map.put(0x538, &[1]u21{
+        0x568,
+    });
+    try instance.map.put(0x1C98, &[1]u21{
+        0x10D8,
+    });
+    try instance.map.put(0x1E917, &[1]u21{
+        0x1E939,
+    });
+    try instance.map.put(0x1FE9, &[1]u21{
+        0x1FE1,
+    });
+    try instance.map.put(0x53, &[1]u21{
+        0x73,
+    });
+    try instance.map.put(0x1E907, &[1]u21{
+        0x1E929,
+    });
+    try instance.map.put(0x1E28, &[1]u21{
+        0x1E29,
+    });
+    try instance.map.put(0x104B0, &[1]u21{
+        0x104D8,
+    });
+    try instance.map.put(0x2CD6, &[1]u21{
+        0x2CD7,
+    });
+    try instance.map.put(0x1E60, &[1]u21{
+        0x1E61,
+    });
+    try instance.map.put(0xA7A0, &[1]u21{
+        0xA7A1,
+    });
+    try instance.map.put(0xCC, &[1]u21{
+        0xEC,
+    });
+    try instance.map.put(0x10C7, &[1]u21{
+        0x2D27,
+    });
+    try instance.map.put(0x1F88, &[2]u21{
+        0x1F00,
+        0x3B9,
+    });
+    try instance.map.put(0x104BD, &[1]u21{
+        0x104E5,
+    });
+    try instance.map.put(0x2C1E, &[1]u21{
+        0x2C4E,
+    });
+    try instance.map.put(0xFF25, &[1]u21{
+        0xFF45,
+    });
+    try instance.map.put(0x1F9E, &[2]u21{
+        0x1F26,
+        0x3B9,
+    });
+    try instance.map.put(0x10C9B, &[1]u21{
+        0x10CDB,
+    });
+    try instance.map.put(0x1AF, &[1]u21{
+        0x1B0,
+    });
+    try instance.map.put(0x10C90, &[1]u21{
+        0x10CD0,
+    });
+    try instance.map.put(0x1FBA, &[1]u21{
+        0x1F70,
+    });
+    try instance.map.put(0x1FF9, &[1]u21{
+        0x1F79,
+    });
+    try instance.map.put(0x1FCB, &[1]u21{
+        0x1F75,
+    });
+    try instance.map.put(0x244, &[1]u21{
+        0x289,
+    });
+    try instance.map.put(0xABAA, &[1]u21{
+        0x13DA,
+    });
+    try instance.map.put(0x1F92, &[2]u21{
+        0x1F22,
+        0x3B9,
+    });
+    try instance.map.put(0x10C86, &[1]u21{
+        0x10CC6,
+    });
+    try instance.map.put(0x4AA, &[1]u21{
+        0x4AB,
+    });
+    try instance.map.put(0x4DC, &[1]u21{
+        0x4DD,
+    });
+    try instance.map.put(0xA664, &[1]u21{
+        0xA665,
+    });
+    try instance.map.put(0x405, &[1]u21{
+        0x455,
+    });
+    try instance.map.put(0x10417, &[1]u21{
+        0x1043F,
+    });
+    try instance.map.put(0x2C16, &[1]u21{
+        0x2C46,
+    });
+    try instance.map.put(0x399, &[1]u21{
+        0x3B9,
+    });
+    try instance.map.put(0x17B, &[1]u21{
+        0x17C,
+    });
+    try instance.map.put(0x10C1, &[1]u21{
+        0x2D21,
+    });
+    try instance.map.put(0x16E43, &[1]u21{
+        0x16E63,
+    });
+    try instance.map.put(0x413, &[1]u21{
+        0x433,
+    });
+    try instance.map.put(0x2C69, &[1]u21{
+        0x2C6A,
+    });
+    try instance.map.put(0x3CF, &[1]u21{
+        0x3D7,
+    });
     try instance.map.put(0x1FA9, &[2]u21{
         0x1F61,
         0x3B9,
     });
-    try instance.map.put(0x1FE2, &[3]u21{
-        0x3C5,
-        0x308,
-        0x300,
+    try instance.map.put(0x2CDC, &[1]u21{
+        0x2CDD,
     });
-    try instance.map.put(0x1FAA, &[2]u21{
-        0x1F62,
-        0x3B9,
+    try instance.map.put(0xAB90, &[1]u21{
+        0x13C0,
+    });
+    try instance.map.put(0x49E, &[1]u21{
+        0x49F,
+    });
+    try instance.map.put(0x1E3C, &[1]u21{
+        0x1E3D,
+    });
+    try instance.map.put(0x10427, &[1]u21{
+        0x1044F,
+    });
+    try instance.map.put(0x24BA, &[1]u21{
+        0x24D4,
+    });
+    try instance.map.put(0x2C08, &[1]u21{
+        0x2C38,
+    });
+    try instance.map.put(0x2C23, &[1]u21{
+        0x2C53,
+    });
+    try instance.map.put(0x10CA3, &[1]u21{
+        0x10CE3,
+    });
+    try instance.map.put(0x1E920, &[1]u21{
+        0x1E942,
     });
     try instance.map.put(0x1FAD, &[2]u21{
         0x1F65,
         0x3B9,
     });
-    try instance.map.put(0x1F8C, &[2]u21{
-        0x1F04,
-        0x3B9,
+    try instance.map.put(0x118AE, &[1]u21{
+        0x118CE,
+    });
+    try instance.map.put(0x2C90, &[1]u21{
+        0x2C91,
     });
     try instance.map.put(0x1F80, &[2]u21{
         0x1F00,
-        0x3B9,
-    });
-    try instance.map.put(0x1F90, &[2]u21{
-        0x1F20,
         0x3B9,
     });
     try instance.map.put(0x1F93, &[2]u21{
         0x1F23,
         0x3B9,
     });
-    try instance.map.put(0xDF, &[2]u21{
-        0x73,
-        0x73,
+    try instance.map.put(0x2C75, &[1]u21{
+        0x2C76,
     });
-    try instance.map.put(0x1F94, &[2]u21{
-        0x1F24,
-        0x3B9,
+    try instance.map.put(0x1E90F, &[1]u21{
+        0x1E931,
     });
-    try instance.map.put(0x1FAB, &[2]u21{
-        0x1F63,
-        0x3B9,
+    try instance.map.put(0x3FD, &[1]u21{
+        0x37B,
     });
-    try instance.map.put(0x1FD2, &[3]u21{
-        0x3B9,
-        0x308,
-        0x300,
+    try instance.map.put(0x2CA4, &[1]u21{
+        0x2CA5,
     });
-    try instance.map.put(0x1FF3, &[2]u21{
-        0x3C9,
-        0x3B9,
+    try instance.map.put(0x1EBA, &[1]u21{
+        0x1EBB,
     });
-    try instance.map.put(0x1F9F, &[2]u21{
-        0x1F27,
-        0x3B9,
+    try instance.map.put(0x24C5, &[1]u21{
+        0x24DF,
     });
-    try instance.map.put(0x1FA6, &[2]u21{
-        0x1F66,
-        0x3B9,
+    try instance.map.put(0x1F19, &[1]u21{
+        0x1F11,
     });
-    try instance.map.put(0x1FC2, &[2]u21{
-        0x1F74,
-        0x3B9,
+    try instance.map.put(0x407, &[1]u21{
+        0x457,
     });
-    try instance.map.put(0x1FB3, &[2]u21{
-        0x3B1,
-        0x3B9,
+    try instance.map.put(0x10BF, &[1]u21{
+        0x2D1F,
     });
-    try instance.map.put(0x1FF6, &[2]u21{
-        0x3C9,
-        0x342,
+    try instance.map.put(0x23A, &[1]u21{
+        0x2C65,
     });
-    try instance.map.put(0x1FC3, &[2]u21{
-        0x3B7,
-        0x3B9,
+    try instance.map.put(0x1CB4, &[1]u21{
+        0x10F4,
     });
-    try instance.map.put(0x1FCC, &[2]u21{
-        0x3B7,
-        0x3B9,
+    try instance.map.put(0x1EFC, &[1]u21{
+        0x1EFD,
     });
-    try instance.map.put(0x1FD6, &[2]u21{
-        0x3B9,
-        0x342,
+    try instance.map.put(0x118BD, &[1]u21{
+        0x118DD,
     });
-    try instance.map.put(0x1F8D, &[2]u21{
-        0x1F05,
-        0x3B9,
+    try instance.map.put(0x3A0, &[1]u21{
+        0x3C0,
     });
-    try instance.map.put(0x1FE6, &[2]u21{
-        0x3C5,
-        0x342,
+    try instance.map.put(0x243, &[1]u21{
+        0x180,
     });
-    try instance.map.put(0xFB00, &[2]u21{
-        0x66,
-        0x66,
+    try instance.map.put(0x104CB, &[1]u21{
+        0x104F3,
+    });
+    try instance.map.put(0x53E, &[1]u21{
+        0x56E,
+    });
+    try instance.map.put(0x1E38, &[1]u21{
+        0x1E39,
+    });
+    try instance.map.put(0xA658, &[1]u21{
+        0xA659,
+    });
+    try instance.map.put(0x1E56, &[1]u21{
+        0x1E57,
+    });
+    try instance.map.put(0x1ED4, &[1]u21{
+        0x1ED5,
+    });
+    try instance.map.put(0xA64E, &[1]u21{
+        0xA64F,
+    });
+    try instance.map.put(0xCF, &[1]u21{
+        0xEF,
+    });
+    try instance.map.put(0x1E1A, &[1]u21{
+        0x1E1B,
+    });
+    try instance.map.put(0x126, &[1]u21{
+        0x127,
+    });
+    try instance.map.put(0xAB97, &[1]u21{
+        0x13C7,
     });
     try instance.map.put(0x1F85, &[2]u21{
         0x1F05,
         0x3B9,
     });
-    try instance.map.put(0x1FF7, &[3]u21{
-        0x3C9,
-        0x342,
-        0x3B9,
+    try instance.map.put(0xA7C4, &[1]u21{
+        0xA794,
+    });
+    try instance.map.put(0x534, &[1]u21{
+        0x564,
     });
     try instance.map.put(0x1FA1, &[2]u21{
         0x1F61,
         0x3B9,
     });
-    try instance.map.put(0x1F9A, &[2]u21{
-        0x1F22,
-        0x3B9,
+    try instance.map.put(0x15E, &[1]u21{
+        0x15F,
     });
-    try instance.map.put(0xFB06, &[2]u21{
-        0x73,
-        0x74,
+    try instance.map.put(0x13B, &[1]u21{
+        0x13C,
+    });
+    try instance.map.put(0xA7C2, &[1]u21{
+        0xA7C3,
+    });
+    try instance.map.put(0x21A, &[1]u21{
+        0x21B,
     });
     try instance.map.put(0x1E9A, &[2]u21{
         0x61,
         0x2BE,
     });
-    try instance.map.put(0x1FAC, &[2]u21{
-        0x1F64,
-        0x3B9,
+    try instance.map.put(0x46E, &[1]u21{
+        0x46F,
+    });
+    try instance.map.put(0x1D3, &[1]u21{
+        0x1D4,
+    });
+    try instance.map.put(0x3FA, &[1]u21{
+        0x3FB,
     });
     try instance.map.put(0x1FC7, &[3]u21{
         0x3B7,
         0x342,
         0x3B9,
     });
-    try instance.map.put(0x1FC6, &[2]u21{
-        0x3B7,
-        0x342,
+    try instance.map.put(0xA7C6, &[1]u21{
+        0x1D8E,
     });
-    try instance.map.put(0x390, &[3]u21{
-        0x3B9,
-        0x308,
-        0x301,
+    try instance.map.put(0xAB77, &[1]u21{
+        0x13A7,
     });
-    try instance.map.put(0x1FD3, &[3]u21{
-        0x3B9,
-        0x308,
-        0x301,
+    try instance.map.put(0x16E47, &[1]u21{
+        0x16E67,
+    });
+    try instance.map.put(0x1CB8, &[1]u21{
+        0x10F8,
+    });
+    try instance.map.put(0xA728, &[1]u21{
+        0xA729,
+    });
+    try instance.map.put(0x508, &[1]u21{
+        0x509,
+    });
+    try instance.map.put(0x1F28, &[1]u21{
+        0x1F20,
     });
     try instance.map.put(0x1F54, &[3]u21{
         0x3C5,
         0x313,
         0x301,
     });
+    try instance.map.put(0x118B2, &[1]u21{
+        0x118D2,
+    });
+    try instance.map.put(0x3A7, &[1]u21{
+        0x3C7,
+    });
+    try instance.map.put(0x1F6D, &[1]u21{
+        0x1F65,
+    });
+    try instance.map.put(0xA77B, &[1]u21{
+        0xA77C,
+    });
+    try instance.map.put(0x104C4, &[1]u21{
+        0x104EC,
+    });
+    try instance.map.put(0x1E97, &[2]u21{
+        0x74,
+        0x308,
+    });
+    try instance.map.put(0xA72C, &[1]u21{
+        0xA72D,
+    });
+    try instance.map.put(0xAB7C, &[1]u21{
+        0x13AC,
+    });
+    try instance.map.put(0x189, &[1]u21{
+        0x256,
+    });
+    try instance.map.put(0x420, &[1]u21{
+        0x440,
+    });
+    try instance.map.put(0x1E2, &[1]u21{
+        0x1E3,
+    });
+    try instance.map.put(0x2CB0, &[1]u21{
+        0x2CB1,
+    });
+    try instance.map.put(0x468, &[1]u21{
+        0x469,
+    });
+    try instance.map.put(0xA7B0, &[1]u21{
+        0x29E,
+    });
+    try instance.map.put(0xA740, &[1]u21{
+        0xA741,
+    });
+    try instance.map.put(0x53F, &[1]u21{
+        0x56F,
+    });
+    try instance.map.put(0x50C, &[1]u21{
+        0x50D,
+    });
+    try instance.map.put(0x1F56, &[3]u21{
+        0x3C5,
+        0x313,
+        0x342,
+    });
+    try instance.map.put(0x3A5, &[1]u21{
+        0x3C5,
+    });
+    try instance.map.put(0x429, &[1]u21{
+        0x449,
+    });
+    try instance.map.put(0x52C, &[1]u21{
+        0x52D,
+    });
+    try instance.map.put(0x1C9D, &[1]u21{
+        0x10DD,
+    });
+    try instance.map.put(0x1F5B, &[1]u21{
+        0x1F53,
+    });
+    try instance.map.put(0x1FCA, &[1]u21{
+        0x1F74,
+    });
+    try instance.map.put(0x24C3, &[1]u21{
+        0x24DD,
+    });
+    try instance.map.put(0xAB89, &[1]u21{
+        0x13B9,
+    });
+    try instance.map.put(0xFF31, &[1]u21{
+        0xFF51,
+    });
+    try instance.map.put(0x1040C, &[1]u21{
+        0x10434,
+    });
+    try instance.map.put(0x10C8D, &[1]u21{
+        0x10CCD,
+    });
+    try instance.map.put(0x16E4B, &[1]u21{
+        0x16E6B,
+    });
+    try instance.map.put(0x112, &[1]u21{
+        0x113,
+    });
+    try instance.map.put(0x1F1A, &[1]u21{
+        0x1F12,
+    });
+    try instance.map.put(0xA742, &[1]u21{
+        0xA743,
+    });
+    try instance.map.put(0x3D1, &[1]u21{
+        0x3B8,
+    });
+    try instance.map.put(0x1F5D, &[1]u21{
+        0x1F55,
+    });
+    try instance.map.put(0x553, &[1]u21{
+        0x583,
+    });
+    try instance.map.put(0x39C, &[1]u21{
+        0x3BC,
+    });
+    try instance.map.put(0x1E4A, &[1]u21{
+        0x1E4B,
+    });
+    try instance.map.put(0x1CA1, &[1]u21{
+        0x10E1,
+    });
+    try instance.map.put(0xA7A6, &[1]u21{
+        0xA7A7,
+    });
+    try instance.map.put(0x16E44, &[1]u21{
+        0x16E64,
+    });
+    try instance.map.put(0x12E, &[1]u21{
+        0x12F,
+    });
+    try instance.map.put(0xA65C, &[1]u21{
+        0xA65D,
+    });
+    try instance.map.put(0x21C, &[1]u21{
+        0x21D,
+    });
+    try instance.map.put(0x1E7A, &[1]u21{
+        0x1E7B,
+    });
+    try instance.map.put(0x1E912, &[1]u21{
+        0x1E934,
+    });
+    try instance.map.put(0x24BC, &[1]u21{
+        0x24D6,
+    });
+    try instance.map.put(0x2C26, &[1]u21{
+        0x2C56,
+    });
+    try instance.map.put(0x3F4, &[1]u21{
+        0x3B8,
+    });
+    try instance.map.put(0xABBD, &[1]u21{
+        0x13ED,
+    });
+    try instance.map.put(0xA76C, &[1]u21{
+        0xA76D,
+    });
+    try instance.map.put(0x1DB, &[1]u21{
+        0x1DC,
+    });
+    try instance.map.put(0x1ECA, &[1]u21{
+        0x1ECB,
+    });
+    try instance.map.put(0x24CF, &[1]u21{
+        0x24E9,
+    });
+    try instance.map.put(0x2C17, &[1]u21{
+        0x2C47,
+    });
+    try instance.map.put(0x2C64, &[1]u21{
+        0x27D,
+    });
+    try instance.map.put(0x104B2, &[1]u21{
+        0x104DA,
+    });
+    try instance.map.put(0x10B4, &[1]u21{
+        0x2D14,
+    });
+    try instance.map.put(0x130, &[2]u21{
+        0x69,
+        0x307,
+    });
+    try instance.map.put(0x41A, &[1]u21{
+        0x43A,
+    });
+    try instance.map.put(0xABA5, &[1]u21{
+        0x13D5,
+    });
+    try instance.map.put(0x398, &[1]u21{
+        0x3B8,
+    });
+    try instance.map.put(0x514, &[1]u21{
+        0x515,
+    });
+    try instance.map.put(0x2168, &[1]u21{
+        0x2178,
+    });
+    try instance.map.put(0x2C9E, &[1]u21{
+        0x2C9F,
+    });
+    try instance.map.put(0x16E4A, &[1]u21{
+        0x16E6A,
+    });
+    try instance.map.put(0x1E914, &[1]u21{
+        0x1E936,
+    });
+    try instance.map.put(0x426, &[1]u21{
+        0x446,
+    });
+    try instance.map.put(0x1C88, &[1]u21{
+        0xA64B,
+    });
+    try instance.map.put(0xC7, &[1]u21{
+        0xE7,
+    });
+    try instance.map.put(0x492, &[1]u21{
+        0x493,
+    });
+    try instance.map.put(0x2CBE, &[1]u21{
+        0x2CBF,
+    });
+    try instance.map.put(0xA784, &[1]u21{
+        0xA785,
+    });
+    try instance.map.put(0x1E82, &[1]u21{
+        0x1E83,
+    });
+    try instance.map.put(0xFF24, &[1]u21{
+        0xFF44,
+    });
+    try instance.map.put(0x1F0D, &[1]u21{
+        0x1F05,
+    });
+    try instance.map.put(0x425, &[1]u21{
+        0x445,
+    });
+    try instance.map.put(0x104C5, &[1]u21{
+        0x104ED,
+    });
+    try instance.map.put(0x10C0, &[1]u21{
+        0x2D20,
+    });
+    try instance.map.put(0x1E5A, &[1]u21{
+        0x1E5B,
+    });
+    try instance.map.put(0x166, &[1]u21{
+        0x167,
+    });
+    try instance.map.put(0x22A, &[1]u21{
+        0x22B,
+    });
+    try instance.map.put(0x522, &[1]u21{
+        0x523,
+    });
+    try instance.map.put(0x1E96, &[2]u21{
+        0x68,
+        0x331,
+    });
+    try instance.map.put(0x24CA, &[1]u21{
+        0x24E4,
+    });
+    try instance.map.put(0xA7B1, &[1]u21{
+        0x287,
+    });
+    try instance.map.put(0xFB17, &[2]u21{
+        0x574,
+        0x56D,
+    });
+    try instance.map.put(0x1040F, &[1]u21{
+        0x10437,
+    });
+    try instance.map.put(0x1CAC, &[1]u21{
+        0x10EC,
+    });
+    try instance.map.put(0x1FB8, &[1]u21{
+        0x1FB0,
+    });
+    try instance.map.put(0x16E45, &[1]u21{
+        0x16E65,
+    });
+    try instance.map.put(0x2C0F, &[1]u21{
+        0x2C3F,
+    });
+    try instance.map.put(0xFF23, &[1]u21{
+        0xFF43,
+    });
+    try instance.map.put(0xAB9B, &[1]u21{
+        0x13CB,
+    });
+    try instance.map.put(0x178, &[1]u21{
+        0xFF,
+    });
+    try instance.map.put(0x1E0E, &[1]u21{
+        0x1E0F,
+    });
+    try instance.map.put(0x1F86, &[2]u21{
+        0x1F06,
+        0x3B9,
+    });
+    try instance.map.put(0x1F59, &[1]u21{
+        0x1F51,
+    });
+    try instance.map.put(0x16E5C, &[1]u21{
+        0x16E7C,
+    });
+    try instance.map.put(0x415, &[1]u21{
+        0x435,
+    });
+    try instance.map.put(0xA73E, &[1]u21{
+        0xA73F,
+    });
+    try instance.map.put(0xA79A, &[1]u21{
+        0xA79B,
+    });
+    try instance.map.put(0xAB82, &[1]u21{
+        0x13B2,
+    });
+    try instance.map.put(0x10412, &[1]u21{
+        0x1043A,
+    });
+    try instance.map.put(0x1E90A, &[1]u21{
+        0x1E92C,
+    });
+    try instance.map.put(0x1C92, &[1]u21{
+        0x10D2,
+    });
+    try instance.map.put(0x1F49, &[1]u21{
+        0x1F41,
+    });
+    try instance.map.put(0x1F91, &[2]u21{
+        0x1F21,
+        0x3B9,
+    });
+    try instance.map.put(0x1F2D, &[1]u21{
+        0x1F25,
+    });
+    try instance.map.put(0x2CCA, &[1]u21{
+        0x2CCB,
+    });
+    try instance.map.put(0xA660, &[1]u21{
+        0xA661,
+    });
+    try instance.map.put(0x1F3B, &[1]u21{
+        0x1F33,
+    });
+    try instance.map.put(0x1FDB, &[1]u21{
+        0x1F77,
+    });
+    try instance.map.put(0x1E72, &[1]u21{
+        0x1E73,
+    });
+    try instance.map.put(0x24BB, &[1]u21{
+        0x24D5,
+    });
+    try instance.map.put(0x2C63, &[1]u21{
+        0x1D7D,
+    });
+    try instance.map.put(0x1F2B, &[1]u21{
+        0x1F23,
+    });
+    try instance.map.put(0x15A, &[1]u21{
+        0x15B,
+    });
+    try instance.map.put(0x10C95, &[1]u21{
+        0x10CD5,
+    });
+    try instance.map.put(0x2C21, &[1]u21{
+        0x2C51,
+    });
+    try instance.map.put(0x1E905, &[1]u21{
+        0x1E927,
+    });
+    try instance.map.put(0x104B1, &[1]u21{
+        0x104D9,
+    });
+    try instance.map.put(0x24CD, &[1]u21{
+        0x24E7,
+    });
+    try instance.map.put(0x39F, &[1]u21{
+        0x3BF,
+    });
+    try instance.map.put(0x24CB, &[1]u21{
+        0x24E5,
+    });
+    try instance.map.put(0x411, &[1]u21{
+        0x431,
+    });
+    try instance.map.put(0x1F8C, &[2]u21{
+        0x1F04,
+        0x3B9,
+    });
+    try instance.map.put(0x1F90, &[2]u21{
+        0x1F20,
+        0x3B9,
+    });
+    try instance.map.put(0x1C86, &[1]u21{
+        0x44A,
+    });
+    try instance.map.put(0x10C85, &[1]u21{
+        0x10CC5,
+    });
+    try instance.map.put(0x24C6, &[1]u21{
+        0x24E0,
+    });
+    try instance.map.put(0x10416, &[1]u21{
+        0x1043E,
+    });
+    try instance.map.put(0x1EB2, &[1]u21{
+        0x1EB3,
+    });
+    try instance.map.put(0x3E4, &[1]u21{
+        0x3E5,
+    });
+    try instance.map.put(0x48, &[1]u21{
+        0x68,
+    });
+    try instance.map.put(0x1F6, &[1]u21{
+        0x195,
+    });
+    try instance.map.put(0x1E5C, &[1]u21{
+        0x1E5D,
+    });
+    try instance.map.put(0x186, &[1]u21{
+        0x254,
+    });
+    try instance.map.put(0x2C29, &[1]u21{
+        0x2C59,
+    });
+    try instance.map.put(0xAB83, &[1]u21{
+        0x13B3,
+    });
+    try instance.map.put(0x1B3, &[1]u21{
+        0x1B4,
+    });
+    try instance.map.put(0xAB9C, &[1]u21{
+        0x13CC,
+    });
+    try instance.map.put(0x1CAF, &[1]u21{
+        0x10EF,
+    });
+    try instance.map.put(0x396, &[1]u21{
+        0x3B6,
+    });
+    try instance.map.put(0x23B, &[1]u21{
+        0x23C,
+    });
+    try instance.map.put(0x16E42, &[1]u21{
+        0x16E62,
+    });
+    try instance.map.put(0x2169, &[1]u21{
+        0x2179,
+    });
+    try instance.map.put(0x220, &[1]u21{
+        0x19E,
+    });
+    try instance.map.put(0x2C07, &[1]u21{
+        0x2C37,
+    });
+    try instance.map.put(0x419, &[1]u21{
+        0x439,
+    });
+    try instance.map.put(0xABA1, &[1]u21{
+        0x13D1,
+    });
+    try instance.map.put(0x118A9, &[1]u21{
+        0x118C9,
+    });
+    try instance.map.put(0x506, &[1]u21{
+        0x507,
+    });
+    try instance.map.put(0x1E16, &[1]u21{
+        0x1E17,
+    });
+    try instance.map.put(0x2C19, &[1]u21{
+        0x2C49,
+    });
+    try instance.map.put(0x10CAC, &[1]u21{
+        0x10CEC,
+    });
+    try instance.map.put(0x104D2, &[1]u21{
+        0x104FA,
+    });
+    try instance.map.put(0x104C6, &[1]u21{
+        0x104EE,
+    });
+    try instance.map.put(0x1EC, &[1]u21{
+        0x1ED,
+    });
+    try instance.map.put(0x2C7E, &[1]u21{
+        0x23F,
+    });
+    try instance.map.put(0x1CAD, &[1]u21{
+        0x10ED,
+    });
+    try instance.map.put(0x10AE, &[1]u21{
+        0x2D0E,
+    });
+    try instance.map.put(0x118B6, &[1]u21{
+        0x118D6,
+    });
+    try instance.map.put(0x13F, &[1]u21{
+        0x140,
+    });
+    try instance.map.put(0x400, &[1]u21{
+        0x450,
+    });
+    try instance.map.put(0xA726, &[1]u21{
+        0xA727,
+    });
+    try instance.map.put(0x2CBA, &[1]u21{
+        0x2CBB,
+    });
+    try instance.map.put(0x10CB1, &[1]u21{
+        0x10CF1,
+    });
+    try instance.map.put(0x1E6, &[1]u21{
+        0x1E7,
+    });
+    try instance.map.put(0x20E, &[1]u21{
+        0x20F,
+    });
+    try instance.map.put(0x428, &[1]u21{
+        0x448,
+    });
+    try instance.map.put(0x466, &[1]u21{
+        0x467,
+    });
+    try instance.map.put(0x1F3F, &[1]u21{
+        0x1F37,
+    });
+    try instance.map.put(0x50, &[1]u21{
+        0x70,
+    });
+    try instance.map.put(0xABAE, &[1]u21{
+        0x13DE,
+    });
+    try instance.map.put(0x10CA4, &[1]u21{
+        0x10CE4,
+    });
+    try instance.map.put(0x1CA0, &[1]u21{
+        0x10E0,
+    });
+    try instance.map.put(0x16E54, &[1]u21{
+        0x16E74,
+    });
+    try instance.map.put(0x4A0, &[1]u21{
+        0x4A1,
+    });
+    try instance.map.put(0x22E, &[1]u21{
+        0x22F,
+    });
+    try instance.map.put(0x2C6D, &[1]u21{
+        0x251,
+    });
+    try instance.map.put(0xA748, &[1]u21{
+        0xA749,
+    });
+    try instance.map.put(0x51E, &[1]u21{
+        0x51F,
+    });
+    try instance.map.put(0x52E, &[1]u21{
+        0x52F,
+    });
+    try instance.map.put(0x47E, &[1]u21{
+        0x47F,
+    });
+    try instance.map.put(0x1B2, &[1]u21{
+        0x28B,
+    });
+    try instance.map.put(0x2CB2, &[1]u21{
+        0x2CB3,
+    });
+    try instance.map.put(0x10CA9, &[1]u21{
+        0x10CE9,
+    });
+    try instance.map.put(0x1EE4, &[1]u21{
+        0x1EE5,
+    });
+    try instance.map.put(0x10C9A, &[1]u21{
+        0x10CDA,
+    });
+    try instance.map.put(0x3B0, &[3]u21{
+        0x3C5,
+        0x308,
+        0x301,
+    });
+    try instance.map.put(0x1C9C, &[1]u21{
+        0x10DC,
+    });
+    try instance.map.put(0x10C98, &[1]u21{
+        0x10CD8,
+    });
+    try instance.map.put(0xA7BC, &[1]u21{
+        0xA7BD,
+    });
+    try instance.map.put(0x1ECC, &[1]u21{
+        0x1ECD,
+    });
+    try instance.map.put(0x1E58, &[1]u21{
+        0x1E59,
+    });
+    try instance.map.put(0x3EC, &[1]u21{
+        0x3ED,
+    });
+    try instance.map.put(0x490, &[1]u21{
+        0x491,
+    });
+    try instance.map.put(0x1E4E, &[1]u21{
+        0x1E4F,
+    });
+    try instance.map.put(0x191, &[1]u21{
+        0x192,
+    });
+    try instance.map.put(0x1F2C, &[1]u21{
+        0x1F24,
+    });
+    try instance.map.put(0x1E70, &[1]u21{
+        0x1E71,
+    });
+    try instance.map.put(0x59, &[1]u21{
+        0x79,
+    });
+    try instance.map.put(0x386, &[1]u21{
+        0x3AC,
+    });
+    try instance.map.put(0x1F8F, &[2]u21{
+        0x1F07,
+        0x3B9,
+    });
+    try instance.map.put(0x1F0C, &[1]u21{
+        0x1F04,
+    });
+    try instance.map.put(0xFF22, &[1]u21{
+        0xFF42,
+    });
+    try instance.map.put(0xD5, &[1]u21{
+        0xF5,
+    });
+    try instance.map.put(0x2CB4, &[1]u21{
+        0x2CB5,
+    });
+    try instance.map.put(0x10423, &[1]u21{
+        0x1044B,
+    });
+    try instance.map.put(0x164, &[1]u21{
+        0x165,
+    });
+    try instance.map.put(0x392, &[1]u21{
+        0x3B2,
+    });
+    try instance.map.put(0x1E86, &[1]u21{
+        0x1E87,
+    });
+    try instance.map.put(0x494, &[1]u21{
+        0x495,
+    });
+    try instance.map.put(0x58, &[1]u21{
+        0x78,
+    });
+    try instance.map.put(0x10C, &[1]u21{
+        0x10D,
+    });
+    try instance.map.put(0x470, &[1]u21{
+        0x471,
+    });
+    try instance.map.put(0x1CB5, &[1]u21{
+        0x10F5,
+    });
+    try instance.map.put(0x10C5, &[1]u21{
+        0x2D25,
+    });
+    try instance.map.put(0x1A4, &[1]u21{
+        0x1A5,
+    });
+    try instance.map.put(0x1E6E, &[1]u21{
+        0x1E6F,
+    });
+    try instance.map.put(0x1EA4, &[1]u21{
+        0x1EA5,
+    });
+    try instance.map.put(0x2C18, &[1]u21{
+        0x2C48,
+    });
+    try instance.map.put(0x21E, &[1]u21{
+        0x21F,
+    });
+    try instance.map.put(0x2C6F, &[1]u21{
+        0x250,
+    });
+    try instance.map.put(0xAB8A, &[1]u21{
+        0x13BA,
+    });
+    try instance.map.put(0x118BF, &[1]u21{
+        0x118DF,
+    });
+    try instance.map.put(0x181, &[1]u21{
+        0x253,
+    });
+    try instance.map.put(0x1FEC, &[1]u21{
+        0x1FE5,
+    });
+    try instance.map.put(0x550, &[1]u21{
+        0x580,
+    });
+    try instance.map.put(0x1CB, &[1]u21{
+        0x1CC,
+    });
+    try instance.map.put(0x401, &[1]u21{
+        0x451,
+    });
+    try instance.map.put(0xA754, &[1]u21{
+        0xA755,
+    });
+    try instance.map.put(0x1F83, &[2]u21{
+        0x1F03,
+        0x3B9,
+    });
+    try instance.map.put(0x40C, &[1]u21{
+        0x45C,
+    });
+    try instance.map.put(0xFF2D, &[1]u21{
+        0xFF4D,
+    });
+    try instance.map.put(0x10AB, &[1]u21{
+        0x2D0B,
+    });
+    try instance.map.put(0x1E98, &[2]u21{
+        0x77,
+        0x30A,
+    });
+    try instance.map.put(0x226, &[1]u21{
+        0x227,
+    });
+    try instance.map.put(0x555, &[1]u21{
+        0x585,
+    });
+    try instance.map.put(0x1E2E, &[1]u21{
+        0x1E2F,
+    });
+    try instance.map.put(0xFB04, &[3]u21{
+        0x66,
+        0x66,
+        0x6C,
+    });
+    try instance.map.put(0x44, &[1]u21{
+        0x64,
+    });
+    try instance.map.put(0x1E918, &[1]u21{
+        0x1E93A,
+    });
+    try instance.map.put(0xA738, &[1]u21{
+        0xA739,
+    });
+    try instance.map.put(0xA7B4, &[1]u21{
+        0xA7B5,
+    });
+    try instance.map.put(0x1EAE, &[1]u21{
+        0x1EAF,
+    });
+    try instance.map.put(0x2C8C, &[1]u21{
+        0x2C8D,
+    });
+    try instance.map.put(0x548, &[1]u21{
+        0x578,
+    });
+    try instance.map.put(0x1E2A, &[1]u21{
+        0x1E2B,
+    });
+    try instance.map.put(0xABA6, &[1]u21{
+        0x13D6,
+    });
+    try instance.map.put(0x1E8, &[1]u21{
+        0x1E9,
+    });
+    try instance.map.put(0xA68C, &[1]u21{
+        0xA68D,
+    });
+    try instance.map.put(0x3F7, &[1]u21{
+        0x3F8,
+    });
+    try instance.map.put(0x541, &[1]u21{
+        0x571,
+    });
+    try instance.map.put(0xABAC, &[1]u21{
+        0x13DC,
+    });
+    try instance.map.put(0x53D, &[1]u21{
+        0x56D,
+    });
+    try instance.map.put(0xA650, &[1]u21{
+        0xA651,
+    });
+    try instance.map.put(0x16C, &[1]u21{
+        0x16D,
+    });
+    try instance.map.put(0xA662, &[1]u21{
+        0xA663,
+    });
+    try instance.map.put(0xA7AA, &[1]u21{
+        0x266,
+    });
+    try instance.map.put(0x1CAE, &[1]u21{
+        0x10EE,
+    });
+    try instance.map.put(0xA7C7, &[1]u21{
+        0xA7C8,
+    });
+    try instance.map.put(0x1CA8, &[1]u21{
+        0x10E8,
+    });
+    try instance.map.put(0x2C09, &[1]u21{
+        0x2C39,
+    });
+    try instance.map.put(0x122, &[1]u21{
+        0x123,
+    });
+    try instance.map.put(0xA756, &[1]u21{
+        0xA757,
+    });
+    try instance.map.put(0xABA8, &[1]u21{
+        0x13D8,
+    });
+    try instance.map.put(0x3EE, &[1]u21{
+        0x3EF,
+    });
+    try instance.map.put(0x1FD9, &[1]u21{
+        0x1FD1,
+    });
+    try instance.map.put(0xA792, &[1]u21{
+        0xA793,
+    });
+    try instance.map.put(0xA758, &[1]u21{
+        0xA759,
+    });
+    try instance.map.put(0x1F4A, &[1]u21{
+        0x1F42,
+    });
+    try instance.map.put(0x394, &[1]u21{
+        0x3B4,
+    });
+    try instance.map.put(0x4D6, &[1]u21{
+        0x4D7,
+    });
+    try instance.map.put(0xAB7F, &[1]u21{
+        0x13AF,
+    });
+    try instance.map.put(0xD4, &[1]u21{
+        0xF4,
+    });
+    try instance.map.put(0xAB74, &[1]u21{
+        0x13A4,
+    });
+    try instance.map.put(0x10A, &[1]u21{
+        0x10B,
+    });
+    try instance.map.put(0x1E1E, &[1]u21{
+        0x1E1F,
+    });
+    try instance.map.put(0x1F9D, &[2]u21{
+        0x1F25,
+        0x3B9,
+    });
+    try instance.map.put(0x10C8E, &[1]u21{
+        0x10CCE,
+    });
+    try instance.map.put(0x149, &[2]u21{
+        0x2BC,
+        0x6E,
+    });
+    try instance.map.put(0x10AF, &[1]u21{
+        0x2D0F,
+    });
+    try instance.map.put(0x1CA, &[1]u21{
+        0x1CC,
+    });
+    try instance.map.put(0x1E4C, &[1]u21{
+        0x1E4D,
+    });
+    try instance.map.put(0x10C96, &[1]u21{
+        0x10CD6,
+    });
+    try instance.map.put(0x2CEB, &[1]u21{
+        0x2CEC,
+    });
+    try instance.map.put(0x196, &[1]u21{
+        0x269,
+    });
+    try instance.map.put(0x1E1C, &[1]u21{
+        0x1E1D,
+    });
+    try instance.map.put(0x2C8E, &[1]u21{
+        0x2C8F,
+    });
+    try instance.map.put(0x1E8E, &[1]u21{
+        0x1E8F,
+    });
+    try instance.map.put(0x118AD, &[1]u21{
+        0x118CD,
+    });
+    try instance.map.put(0x1BC, &[1]u21{
+        0x1BD,
+    });
+    try instance.map.put(0x23E, &[1]u21{
+        0x2C66,
+    });
+    try instance.map.put(0x2CA6, &[1]u21{
+        0x2CA7,
+    });
+    try instance.map.put(0x1D1, &[1]u21{
+        0x1D2,
+    });
+    try instance.map.put(0x1C96, &[1]u21{
+        0x10D6,
+    });
+    try instance.map.put(0xA656, &[1]u21{
+        0xA657,
+    });
+    try instance.map.put(0x110, &[1]u21{
+        0x111,
+    });
+    try instance.map.put(0x16E, &[1]u21{
+        0x16F,
+    });
+    try instance.map.put(0x48C, &[1]u21{
+        0x48D,
+    });
+    try instance.map.put(0x370, &[1]u21{
+        0x371,
+    });
+    try instance.map.put(0x3DC, &[1]u21{
+        0x3DD,
+    });
+    try instance.map.put(0x104BA, &[1]u21{
+        0x104E2,
+    });
+    try instance.map.put(0x1E32, &[1]u21{
+        0x1E33,
+    });
+    try instance.map.put(0x128, &[1]u21{
+        0x129,
+    });
+    try instance.map.put(0x3D0, &[1]u21{
+        0x3B2,
+    });
+    try instance.map.put(0x1E26, &[1]u21{
+        0x1E27,
+    });
+    try instance.map.put(0x1F39, &[1]u21{
+        0x1F31,
+    });
+    try instance.map.put(0x1FF3, &[2]u21{
+        0x3C9,
+        0x3B9,
+    });
+    try instance.map.put(0x4CD, &[1]u21{
+        0x4CE,
+    });
+    try instance.map.put(0x1FD8, &[1]u21{
+        0x1FD0,
+    });
+    try instance.map.put(0x1FD2, &[3]u21{
+        0x3B9,
+        0x308,
+        0x300,
+    });
+    try instance.map.put(0xA750, &[1]u21{
+        0xA751,
+    });
+    try instance.map.put(0xA7A8, &[1]u21{
+        0xA7A9,
+    });
+    try instance.map.put(0xAB72, &[1]u21{
+        0x13A2,
+    });
+    try instance.map.put(0xAB7B, &[1]u21{
+        0x13AB,
+    });
+    try instance.map.put(0xAB7E, &[1]u21{
+        0x13AE,
+    });
+    try instance.map.put(0x104B3, &[1]u21{
+        0x104DB,
+    });
+    try instance.map.put(0x104B8, &[1]u21{
+        0x104E0,
+    });
+    try instance.map.put(0x10C9D, &[1]u21{
+        0x10CDD,
+    });
+    try instance.map.put(0xA7BE, &[1]u21{
+        0xA7BF,
+    });
+    try instance.map.put(0xA734, &[1]u21{
+        0xA735,
+    });
+    try instance.map.put(0x224, &[1]u21{
+        0x225,
+    });
+    try instance.map.put(0x1041C, &[1]u21{
+        0x10444,
+    });
+    try instance.map.put(0x13F8, &[1]u21{
+        0x13F0,
+    });
+    try instance.map.put(0x4C7, &[1]u21{
+        0x4C8,
+    });
+    try instance.map.put(0x118A7, &[1]u21{
+        0x118C7,
+    });
+    try instance.map.put(0x1FC3, &[2]u21{
+        0x3B7,
+        0x3B9,
+    });
+    try instance.map.put(0x3EA, &[1]u21{
+        0x3EB,
+    });
+    try instance.map.put(0x1E66, &[1]u21{
+        0x1E67,
+    });
+    try instance.map.put(0xFF35, &[1]u21{
+        0xFF55,
+    });
+    try instance.map.put(0x2CF2, &[1]u21{
+        0x2CF3,
+    });
+    try instance.map.put(0x1C95, &[1]u21{
+        0x10D5,
+    });
+    try instance.map.put(0x1F4C, &[1]u21{
+        0x1F44,
+    });
+    try instance.map.put(0x537, &[1]u21{
+        0x567,
+    });
+    try instance.map.put(0xA65E, &[1]u21{
+        0xA65F,
+    });
+    try instance.map.put(0x1040A, &[1]u21{
+        0x10432,
+    });
+    try instance.map.put(0x10CA8, &[1]u21{
+        0x10CE8,
+    });
+    try instance.map.put(0x1FE6, &[2]u21{
+        0x3C5,
+        0x342,
+    });
+    try instance.map.put(0x41, &[1]u21{
+        0x61,
+    });
+    try instance.map.put(0x1D7, &[1]u21{
+        0x1D8,
+    });
+    try instance.map.put(0x3E0, &[1]u21{
+        0x3E1,
+    });
+    try instance.map.put(0x1E22, &[1]u21{
+        0x1E23,
+    });
+    try instance.map.put(0x1CB0, &[1]u21{
+        0x10F0,
+    });
+    try instance.map.put(0x118B5, &[1]u21{
+        0x118D5,
+    });
+    try instance.map.put(0x1FDA, &[1]u21{
+        0x1F76,
+    });
+    try instance.map.put(0x10C92, &[1]u21{
+        0x10CD2,
+    });
+    try instance.map.put(0x2CD4, &[1]u21{
+        0x2CD5,
+    });
+    try instance.map.put(0x1F1B, &[1]u21{
+        0x1F13,
+    });
+    try instance.map.put(0x1E91C, &[1]u21{
+        0x1E93E,
+    });
+    try instance.map.put(0x2163, &[1]u21{
+        0x2173,
+    });
+    try instance.map.put(0x48E, &[1]u21{
+        0x48F,
+    });
+    try instance.map.put(0x24CC, &[1]u21{
+        0x24E6,
+    });
+    try instance.map.put(0x2C7F, &[1]u21{
+        0x240,
+    });
+    try instance.map.put(0x1CA4, &[1]u21{
+        0x10E4,
+    });
+    try instance.map.put(0x2CAC, &[1]u21{
+        0x2CAD,
+    });
+    try instance.map.put(0xA7C9, &[1]u21{
+        0xA7CA,
+    });
+    try instance.map.put(0x1CB6, &[1]u21{
+        0x10F6,
+    });
+    try instance.map.put(0x10B7, &[1]u21{
+        0x2D17,
+    });
     try instance.map.put(0x1FA3, &[2]u21{
         0x1F63,
         0x3B9,
+    });
+    try instance.map.put(0x24C4, &[1]u21{
+        0x24DE,
+    });
+    try instance.map.put(0x1E10, &[1]u21{
+        0x1E11,
+    });
+    try instance.map.put(0x1EB0, &[1]u21{
+        0x1EB1,
     });
 
     return instance;
@@ -455,23 +4610,26 @@ pub fn init(allocator: *std.mem.Allocator) !CaseFoldMap {
 
 const Self = @This();
 pub fn deinit(self: *Self) void {
-    self.lower_map.deinit();
     self.map.deinit();
 }
 
+/// CaseFold is the result of the toCaseFold method. It can be a simple, one code point value or a
+/// sequence of code points in the full case fold scenario.
 pub const CaseFold = union(enum) {
     simple: u21,
     full: []const u21,
 };
 
 /// toCaseFold will convert a code point into its case folded equivalent. Note that this can result
-/// in a mapping to more than one code point, known as the full case fold. In the case of a simple
-/// case fold, the returned CaseFold has the lowercase version if available or the same code point 
-/// otherwise.
+/// in a mapping to more than one code point, known as the full case fold.
 pub fn toCaseFold(self: Self, cp: u21) CaseFold {
     if (self.map.get(cp)) |seq| {
-        return .{ .full = seq };
+        if (seq.len == 1) {
+            return .{ .simple = seq[0] };
+        } else {
+            return .{ .full = seq };
+        }
     } else {
-        return .{ .simple = self.lower_map.toLower(cp) };
+        return .{ .simple = cp };
     }
 }

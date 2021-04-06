@@ -3,17 +3,14 @@
 
 const std = @import("std");
 const unicode = std.unicode;
-const LowerMap = @import("LowerMap.zig");
 const CaseFoldMap = @This();
 
 allocator: *std.mem.Allocator,
-lower_map: LowerMap,
 map: std.AutoHashMap(u21, []const u21),
 
 pub fn init(allocator: *std.mem.Allocator) !CaseFoldMap {{
     var instance = CaseFoldMap{{
         .allocator = allocator,
-        .lower_map = try LowerMap.init(allocator),
         .map = std.AutoHashMap(u21, []const u21).init(allocator),
     }};
 
