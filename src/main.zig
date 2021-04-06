@@ -5,6 +5,8 @@ const expectEqualSlices = std.testing.expectEqualSlices;
 
 const CaseFoldMap = @import("ziglyph.zig").CaseFoldMap;
 const Control = @import("ziglyph.zig").Control;
+const Decimal = @import("ziglyph.zig").Decimal;
+const Digit = @import("ziglyph.zig").Digit;
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
 const Letter = @import("ziglyph.zig").Letter;
 const Lower = @import("ziglyph.zig").Lower;
@@ -83,8 +85,8 @@ test "Ziglyph struct" {
     const z = 'z';
     expect(try ziglyph.isAlphaNum(z));
     expect(!try ziglyph.isControl(z));
-    // isDigit cannot fail.
-    expect(!ziglyph.isDigit(z));
+    expect(!try ziglyph.isDecimal(z));
+    expect(!try ziglyph.isDigit(z));
     expect(try ziglyph.isGraphic(z));
     expect(try ziglyph.isLetter(z));
     expect(try ziglyph.isLower(z));
@@ -293,8 +295,20 @@ test "isControl" {
     expect(!z.isControl('A'));
 }
 
+test "isDecimal" {
+    var z = try Decimal.init(std.testing.allocator);
+    defer z.deinit();
+
+    var cp: u21 = '0';
+    while (cp <= '9') : (cp += 1) {
+        expect(z.isDecimal(cp));
+    }
+    expect(!z.isDecimal('\u{0003}'));
+    expect(!z.isDecimal('A'));
+}
+
 test "isDigit" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = try Digit.init(std.testing.allocator);
     defer z.deinit();
 
     var cp: u21 = '0';
