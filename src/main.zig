@@ -9,6 +9,7 @@ const Control = @import("ziglyph.zig").Control;
 const Decimal = @import("ziglyph.zig").Decimal;
 const Digit = @import("ziglyph.zig").Digit;
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
+const Extend = @import("ziglyph.zig").Extend;
 const Format = @import("ziglyph.zig").Format;
 const Letter = @import("ziglyph.zig").Letter;
 const Lower = @import("ziglyph.zig").Lower;
@@ -343,6 +344,14 @@ test "isGraphic" {
     expect(try z.isGraphic(' '));
     expect(try z.isGraphic('='));
     expect(!try z.isGraphic('\u{0003}'));
+}
+
+test "isExtend" {
+    var z = try Extend.init(std.testing.allocator);
+    defer z.deinit();
+
+    expect(z.isExtend('\u{1E8D0}'));
+    expect(z.isExtend('\u{E0020}'));
 }
 
 test "isFormat" {

@@ -38,7 +38,6 @@ pub fn init(allocator: *mem.Allocator) !Format {
     instance.array[69648] = true;
     instance.array[69664] = true;
     instance.array[917332] = true;
-    instance.array[917363] = true;
 
     var index: u21 = 0;
     index = 1363;
@@ -75,6 +74,10 @@ pub fn init(allocator: *mem.Allocator) !Format {
     }
     index = 118982;
     while (index <= 118989) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 917363;
+    while (index <= 917458) : (index += 1) {
         instance.array[index] = true;
     }
 

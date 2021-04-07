@@ -21,6 +21,8 @@ pub const Decimal = @import("components/Decimal.zig");
 pub const Digit = @import("components/Digit.zig");
 /// Code point decomposition.
 pub const DecomposeMap = @import("components/DecomposeMap.zig");
+/// Grapheme Extend.
+pub const Extend = @import("components/Extend.zig");
 /// Format control characters.
 pub const Format = @import("components/Format.zig");
 /// Unicode letters.
@@ -412,6 +414,12 @@ pub const Ziglyph = struct {
 
     // Self-contained methods.
 
+    /// isConsonantPrefixed checks for this Indic syllable characteristic.
+    pub fn isConsonantPrefixed(self: Self, cp: u21) bool {
+        if (cp == 0x1193F or cp == 0x11A3A) return true;
+        return (cp >= 0x111C2 and cp <= 0x111C3) or (cp >= 0x11A84 and cp <= 0x11A89);
+    }
+
     /// isCr checks for carriage return.
     pub fn isCr(self: Self, cp: u21) bool {
         return cp == 0x000D;
@@ -450,6 +458,11 @@ pub const Ziglyph = struct {
     /// isLf checks for line feed.
     pub fn isLf(self: Self, cp: u21) bool {
         return cp == 0x000A;
+    }
+
+    /// isPrecedingRepha checks for this Indic syllalbe characteristic.
+    pub fn isPrecedingRepha(self: Self, cp: u21) bool {
+        return cp == 0x0D4E or cp == 0x11941 or cp == 0x11D46;
     }
 
     /// isPrepend checks for Prepended_Concatenation_Mark

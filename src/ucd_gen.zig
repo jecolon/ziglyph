@@ -42,7 +42,10 @@ const UcdGenerator = struct {
     decimal_ranges: ArrayList(Range),
     digit: ArrayList(u21),
     digit_ranges: ArrayList(Range),
+    extend: ArrayList(u21),
+    extend_ranges: ArrayList(Range),
     format: ArrayList(u21),
+    format_ranges: ArrayList(Range),
     letter: ArrayList(u21),
     letter_ranges: ArrayList(Range),
     lower: ArrayList(u21),
@@ -53,6 +56,7 @@ const UcdGenerator = struct {
     space: ArrayList(u21),
     symbol: ArrayList(u21),
     title: ArrayList(u21),
+    title_ranges: ArrayList(Range),
     unassigned: ArrayList(u21),
     unassigned_ranges: ArrayList(Range),
     upper: ArrayList(u21),
@@ -78,7 +82,10 @@ const UcdGenerator = struct {
             .decimal_ranges = ArrayList(Range).init(allocator),
             .digit = ArrayList(u21).init(allocator),
             .digit_ranges = ArrayList(Range).init(allocator),
+            .extend = ArrayList(u21).init(allocator),
+            .extend_ranges = ArrayList(Range).init(allocator),
             .format = ArrayList(u21).init(allocator),
+            .format_ranges = ArrayList(Range).init(allocator),
             .letter = ArrayList(u21).init(allocator),
             .letter_ranges = ArrayList(Range).init(allocator),
             .lower = ArrayList(u21).init(allocator),
@@ -89,6 +96,7 @@ const UcdGenerator = struct {
             .space = ArrayList(u21).init(allocator),
             .symbol = ArrayList(u21).init(allocator),
             .title = ArrayList(u21).init(allocator),
+            .title_ranges = ArrayList(Range).init(allocator),
             .unassigned = ArrayList(u21).init(allocator),
             .unassigned_ranges = ArrayList(Range).init(allocator),
             .upper = ArrayList(u21).init(allocator),
@@ -115,7 +123,10 @@ const UcdGenerator = struct {
         self.decimal_ranges.deinit();
         self.digit.deinit();
         self.digit_ranges.deinit();
+        self.extend.deinit();
+        self.extend_ranges.deinit();
         self.format.deinit();
+        self.format_ranges.deinit();
         self.letter.deinit();
         self.letter_ranges.deinit();
         self.lower.deinit();
@@ -125,6 +136,7 @@ const UcdGenerator = struct {
         self.space.deinit();
         self.symbol.deinit();
         self.title.deinit();
+        self.title_ranges.deinit();
         self.unassigned.deinit();
         self.unassigned_ranges.deinit();
         self.upper.deinit();
@@ -209,27 +221,9 @@ const UcdGenerator = struct {
                     if (mem.eql(u8, field, "Cc") and !contains(self.control.items, code_point)) {
                         try self.control.append(code_point);
                     }
-                    if (mem.eql(u8, field, "Cf") and !contains(self.format.items, code_point)) {
-                        try self.format.append(code_point);
-                    }
                     switch (field[0]) {
-                        'L' => {
-                            if (!contains(self.letter.items, code_point)) {
-                                try self.letter.append(code_point);
-                            }
-                            if (mem.eql(u8, field, "Ll")) {
-                                if (!contains(self.lower.items, code_point)) {
-                                    try self.lower.append(code_point);
-                                }
-                            } else if (mem.eql(u8, field, "Lt")) {
-                                if (!contains(self.title.items, code_point)) {
-                                    try self.title.append(code_point);
-                                }
-                            } else if (mem.eql(u8, field, "Lu")) {
-                                if (!contains(self.upper.items, code_point)) {
-                                    try self.upper.append(code_point);
-                                }
-                            }
+                        'L' => if (!contains(self.letter.items, code_point)) {
+                            try self.letter.append(code_point);
                         },
                         'M' => if (!contains(self.mark.items, code_point)) {
                             try self.mark.append(code_point);
@@ -315,6 +309,7 @@ const UcdGenerator = struct {
             const Property = enum {
                 Alphabetic,
                 Cased,
+                Extend,
                 Lowercase,
                 Uppercase,
             };
@@ -338,6 +333,8 @@ const UcdGenerator = struct {
                         prop = .Alphabetic;
                     } else if (mem.startsWith(u8, field, " Cased")) {
                         prop = .Cased;
+                    } else if (mem.startsWith(u8, field, " Grapheme_Extend")) {
+                        prop = .Extend;
                     } else if (mem.startsWith(u8, field, " Lowercase")) {
                         prop = .Lowercase;
                     } else if (mem.startsWith(u8, field, " Uppercase")) {
@@ -350,6 +347,7 @@ const UcdGenerator = struct {
                                 switch (p) {
                                     .Alphabetic => try self.alpha.append(cp),
                                     .Cased => try self.cased.append(cp),
+                                    .Extend => try self.extend.append(cp),
                                     .Lowercase => try self.lower.append(cp),
                                     .Uppercase => try self.upper.append(cp),
                                 }
@@ -358,6 +356,7 @@ const UcdGenerator = struct {
                                 switch (p) {
                                     .Alphabetic => try self.alpha_ranges.append(range),
                                     .Cased => try self.cased_ranges.append(range),
+                                    .Extend => try self.extend_ranges.append(range),
                                     .Lowercase => try self.lower_ranges.append(range),
                                     .Uppercase => try self.upper_ranges.append(range),
                                 }
@@ -453,7 +452,11 @@ const UcdGenerator = struct {
                 range: Range,
             };
             const Property = enum {
+                Format,
+                Lower,
+                Title,
                 Unassigned,
+                Upper,
             };
             var it: Item = undefined;
             var prop: ?Property = null;
@@ -473,18 +476,34 @@ const UcdGenerator = struct {
                 } else if (i == 1 and field.len != 0) {
                     if (mem.startsWith(u8, field, " Cn")) {
                         prop = .Unassigned;
+                    } else if (mem.startsWith(u8, field, " Cf")) {
+                        prop = .Format;
+                    } else if (mem.startsWith(u8, field, " Ll")) {
+                        prop = .Lower;
+                    } else if (mem.startsWith(u8, field, " Lt")) {
+                        prop = .Title;
+                    } else if (mem.startsWith(u8, field, " Lu")) {
+                        prop = .Upper;
                     }
 
                     if (prop) |p| {
                         switch (it) {
                             .cp => |cp| {
                                 switch (p) {
+                                    .Format => try self.format.append(cp),
+                                    .Lower => try self.letter.append(cp),
+                                    .Title => try self.title.append(cp),
                                     .Unassigned => try self.unassigned.append(cp),
+                                    .Upper => try self.upper.append(cp),
                                 }
                             },
                             .range => |range| {
                                 switch (p) {
+                                    .Format => try self.format_ranges.append(range),
+                                    .Lower => try self.lower_ranges.append(range),
+                                    .Title => try self.title_ranges.append(range),
                                     .Unassigned => try self.unassigned_ranges.append(range),
+                                    .Upper => try self.upper_ranges.append(range),
                                 }
                             },
                         }
@@ -535,10 +554,18 @@ const UcdGenerator = struct {
                 .ranges = self.digit_ranges.items,
             },
             .{
+                .name = "Extend",
+                .filename = "components/Extend.zig",
+                .ascii_opt = "return null;",
+                .items = self.extend.items,
+                .ranges = self.extend_ranges.items,
+            },
+            .{
                 .name = "Format",
                 .filename = "components/Format.zig",
                 .ascii_opt = "return null;",
                 .items = self.format.items,
+                .ranges = self.format_ranges.items,
             },
             .{
                 .name = "Letter",
@@ -589,6 +616,7 @@ const UcdGenerator = struct {
                 .filename = "components/Title.zig",
                 .ascii_opt = "return null;",
                 .items = self.title.items,
+                .ranges = self.title_ranges.items,
             },
             .{
                 .name = "Unassigned",
