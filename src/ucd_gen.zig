@@ -1,75 +1,12 @@
 const std = @import("std");
 
 const ArrayList = std.ArrayList;
-const AutoHashMap = std.AutoHashMap;
 const fmt = std.fmt;
 const io = std.io;
 const mem = std.mem;
 
-const Range = @import("record.zig").Range;
+const Collection = @import("Collection.zig");
 const Record = @import("record.zig").Record;
-
-const comp_path = "components/";
-
-const Collection = struct {
-    allocator: *mem.Allocator,
-    kind: []const u8,
-    lo: u21,
-    hi: u21,
-    records: []Record,
-
-    fn init(allocator: *mem.Allocator, kind: []const u8, lo: u21, hi: u21, records: []Record) !Collection {
-        return Collection{
-            .allocator = allocator,
-            .kind = kind,
-            .lo = lo,
-            .hi = hi,
-            .records = records,
-        };
-    }
-
-    fn deinit(self: *Collection) void {
-        self.allocator.free(self.kind);
-    }
-
-    fn writeFile(self: Collection) !void {
-        const header_tpl = @embedFile("parts/collection_header_tpl.txt");
-        const trailer_tpl = @embedFile("parts/collection_trailer_tpl.txt");
-
-        // Prepare output files.
-        var name = try self.allocator.alloc(u8, mem.replacementSize(u8, self.kind, "_", ""));
-        defer self.allocator.free(name);
-        _ = mem.replace(u8, self.kind, "_", "", name);
-        var filename = try mem.concat(self.allocator, u8, &[_][]const u8{ comp_path, name, ".zig" });
-        defer self.allocator.free(filename);
-        var file = try std.fs.cwd().createFile(filename, .{});
-        defer file.close();
-        var buf_writer = io.bufferedWriter(file.writer());
-        const writer = buf_writer.writer();
-
-        // Write data.
-        const array_len = self.hi - self.lo + 1;
-        _ = try writer.print(header_tpl, .{ self.kind, name, array_len, self.lo, self.hi });
-        _ = try writer.write("    var index: u21 = 0;\n");
-
-        for (self.records) |record| {
-            switch (record) {
-                .single => |cp| {
-                    _ = try writer.print("    instance.array[{d}] = true;\n", .{cp - self.lo});
-                },
-                .range => |range| {
-                    _ = try writer.print("    index = {d};\n", .{range.lo - self.lo});
-                    _ = try writer.print("    while (index <= {d}) : (index += 1) {{\n", .{range.hi - self.lo});
-                    _ = try writer.write("        instance.array[index] = true;\n");
-                    _ = try writer.write("    }\n");
-                },
-            }
-        }
-
-        _ = try writer.print(trailer_tpl, .{ name, self.kind });
-        try buf_writer.flush();
-    }
-};
 
 const UcdGenerator = struct {
     allocator: *mem.Allocator,
@@ -82,8 +19,8 @@ const UcdGenerator = struct {
 
     const Self = @This();
 
-    // data/ucd/extracted/DerivedGeneralCategory.txt
-    fn process_file(self: *Self, path: []const u8) !void {
+    // Files with the code point type in field index 1.
+    fn processF1(self: *Self, path: []const u8) !void {
         // Setup input.
         var file = try std.fs.cwd().openFile(path, .{});
         defer file.close();
@@ -149,16 +86,8 @@ const UcdGenerator = struct {
                                 records.toOwnedSlice(),
                             ));
                             // Reset extremes.
-                            switch (record) {
-                                .single => |cp| {
-                                    lo = cp;
-                                    hi = cp;
-                                },
-                                .range => |range| {
-                                    lo = range.lo;
-                                    hi = range.hi;
-                                },
-                            }
+                            lo = 0x10FFFF;
+                            hi = 0;
                             // Update kind.
                             try kind.appendSlice(field);
                         }
@@ -166,6 +95,100 @@ const UcdGenerator = struct {
                         // Initialize kind.
                         try kind.appendSlice(field);
                     }
+                    // Add this record.
+                    try records.append(record);
+                } else {
+                    continue;
+                }
+            }
+        }
+
+        // Write out files.
+        var dir = std.fs.path.basename(path);
+        const dot = mem.lastIndexOf(u8, dir, ".");
+        if (dot) |d| dir = dir[0..d];
+        for (collections.items) |collection| {
+            try collection.writeFile(dir);
+        }
+    }
+
+    // data/ucd/extracted/DerivedGeneralCategory.txt
+    fn processGenCat(self: *Self) !void {
+        // Setup input.
+        var file = try std.fs.cwd().openFile("data/ucd/extracted/DerivedGeneralCategory.txt", .{});
+        defer file.close();
+        var buf_reader = io.bufferedReader(file.reader());
+        var input_stream = buf_reader.reader();
+
+        // Iterate over lines.
+        var buf: [640]u8 = undefined;
+        var collections = ArrayList(Collection).init(self.allocator);
+        defer {
+            for (collections.items) |*collection| {
+                collection.deinit();
+            }
+            collections.deinit();
+        }
+        var records = ArrayList(Record).init(self.allocator);
+        defer records.deinit();
+        var kind = ArrayList(u8).init(self.allocator);
+        defer kind.deinit();
+        var lo: u21 = 0x10FFFF;
+        var hi: u21 = 0;
+        while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+            // Skip empty lines.
+            if (line.len == 0) continue;
+
+            if (mem.indexOf(u8, line, "General_Category=")) |_| {
+                // Record kind.
+                const equals = mem.indexOf(u8, line, "=").?;
+                const current_kind = mem.trim(u8, line[equals + 1 ..], " ");
+                // Check if new collection started.
+                if (kind.items.len != 0) {
+                    // New collection for new record kind.
+                    if (!mem.eql(u8, kind.items, current_kind)) {
+                        try collections.append(try Collection.init(
+                            self.allocator,
+                            kind.toOwnedSlice(),
+                            lo,
+                            hi,
+                            records.toOwnedSlice(),
+                        ));
+                        // Reset extremes.
+                        lo = 0x10FFFF;
+                        hi = 0;
+                        // Update kind.
+                        try kind.appendSlice(current_kind);
+                    }
+                } else {
+                    // Initialize kind.
+                    try kind.appendSlice(current_kind);
+                }
+            }
+            // Iterate over fields.
+            var fields = mem.split(line, ";");
+            var field_index: usize = 0;
+            var record: Record = undefined;
+            while (fields.next()) |raw| : (field_index += 1) {
+                var field = mem.trim(u8, raw, " ");
+                // Skip empty or comment fields.
+                if (field.len == 0 or field[0] == '#') continue;
+                // Construct record.
+                if (field_index == 0) {
+                    // Ranges.
+                    if (mem.indexOf(u8, field, "..")) |dots| {
+                        const r_lo = try fmt.parseInt(u21, field[0..dots], 16);
+                        if (r_lo < lo) lo = r_lo;
+                        const r_hi = try fmt.parseInt(u21, field[dots + 2 ..], 16);
+                        if (r_hi > hi) hi = r_hi;
+                        record = .{ .range = .{ .lo = r_lo, .hi = r_hi } };
+                    } else {
+                        const code_point = try fmt.parseInt(u21, field, 16);
+                        if (code_point < lo) lo = code_point;
+                        if (code_point > hi) hi = code_point;
+                        record = .{ .single = code_point };
+                    }
+                    // Add this record.
                     try records.append(record);
                 } else {
                     continue;
@@ -175,16 +198,76 @@ const UcdGenerator = struct {
 
         // Write out files.
         for (collections.items) |collection| {
-            try collection.writeFile();
+            try collection.writeFile("DerivedGeneralCategory");
         }
+    }
+
+    // data/ucd/CaseFolding.txt
+    fn processCaseFold(self: *Self) !void {
+        // Setup input.
+        var in_file = try std.fs.cwd().openFile("data/ucd/CaseFolding.txt", .{});
+        defer in_file.close();
+        var buf_reader = io.bufferedReader(in_file.reader());
+        var input_stream = buf_reader.reader();
+        // Setup output.
+        const header_tpl = @embedFile("parts/fold_map_header_tpl.txt");
+        const trailer_tpl = @embedFile("parts/fold_map_trailer_tpl.txt");
+        var cwd = std.fs.cwd();
+        cwd.makeDir("components/CaseFolding") catch |err| switch (err) {
+            error.PathAlreadyExists => {},
+            else => return err,
+        };
+        var out_file = try cwd.createFile("components/CaseFolding/CaseFoldMap.zig", .{});
+        defer out_file.close();
+        var buf_writer = io.bufferedWriter(out_file.writer());
+        const writer = buf_writer.writer();
+        _ = try writer.print(header_tpl, .{});
+
+        // Iterate over lines.
+        var buf: [640]u8 = undefined;
+        while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+            // Skip comments or empty lines.
+            if (line.len == 0 or line[0] == '#') continue;
+            // Iterate over fields.
+            var fields = mem.split(line, ";");
+            var field_index: usize = 0;
+            var code_point: []const u8 = undefined;
+            while (fields.next()) |raw| : (field_index += 1) {
+                if (field_index == 0) {
+                    // Code point.
+                    code_point = raw;
+                } else if (field_index == 2) {
+                    // Mapping.
+                    var field = mem.trim(u8, raw, " ");
+                    var cp_iter = mem.split(field, " ");
+                    _ = try writer.print("    instance.map.put(0x{s}, &[_]u21{{\n", .{code_point});
+                    while (cp_iter.next()) |cp| {
+                        _ = try writer.print("        0x{s},\n", .{cp});
+                    }
+                    _ = try writer.write("    });\n");
+                } else {
+                    continue;
+                }
+            }
+        }
+
+        // Finish writing.
+        _ = try writer.print(trailer_tpl, .{});
+        try buf_writer.flush();
     }
 };
 
 pub fn main() !void {
-    //var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    //defer arena.deinit();
-    //var allocator = &arena.allocator;
-    var allocator = std.testing.allocator;
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    var allocator = &arena.allocator;
+    //var allocator = std.testing.allocator;
     var ugen = UcdGenerator.new(allocator);
-    try ugen.process_file("data/ucd/DerivedCoreProperties.txt");
+    try ugen.processF1("data/ucd/DerivedCoreProperties.txt");
+    try ugen.processF1("data/ucd/PropList.txt");
+    try ugen.processF1("data/ucd/auxiliary/GraphemeBreakProperty.txt");
+    try ugen.processF1("data/ucd/extracted/DerivedNumericType.txt");
+    try ugen.processF1("data/ucd/extracted/DerivedDecompositionType.txt");
+    try ugen.processGenCat();
+    try ugen.processCaseFold();
 }

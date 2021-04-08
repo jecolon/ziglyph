@@ -5,37 +5,43 @@
 //    2. Array length
 //    3. Highest code point
 //    4. Lowest code point
-//! Unicode Alphabetic code points.
+//! Unicode ID_Continue code points.
 
 const std = @import("std");
 const mem = std.mem;
 
-const Alphabetic = @This();
+const IDContinue = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
 lo: u21 = 65,
-hi: u21 = 201546,
+hi: u21 = 917999,
 
-pub fn init(allocator: *mem.Allocator) !Alphabetic {
-    var instance = Alphabetic{
+pub fn init(allocator: *mem.Allocator) !IDContinue {
+    var instance = IDContinue{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 201482),
+        .array = try allocator.alloc(bool, 917935),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
+    index = 2097135;
+    while (index <= 2097144) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 0;
     while (index <= 25) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[30] = true;
     index = 32;
     while (index <= 57) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[105] = true;
     instance.array[116] = true;
+    instance.array[118] = true;
     instance.array[121] = true;
     index = 127;
     while (index <= 149) : (index += 1) {
@@ -81,7 +87,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     instance.array[683] = true;
     instance.array[685] = true;
-    instance.array[772] = true;
+    index = 703;
+    while (index <= 814) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 815;
     while (index <= 818) : (index += 1) {
         instance.array[index] = true;
@@ -98,6 +107,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     instance.array[830] = true;
     instance.array[837] = true;
+    instance.array[838] = true;
     index = 839;
     while (index <= 841) : (index += 1) {
         instance.array[index] = true;
@@ -115,6 +125,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 1088) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 1090;
+    while (index <= 1094) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 1097;
     while (index <= 1262) : (index += 1) {
         instance.array[index] = true;
@@ -128,7 +142,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 1351) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 1391;
+    index = 1360;
     while (index <= 1404) : (index += 1) {
         instance.array[index] = true;
     }
@@ -164,11 +178,11 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     index = 1546;
-    while (index <= 1558) : (index += 1) {
+    while (index <= 1566) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 1560;
-    while (index <= 1566) : (index += 1) {
+    index = 1567;
+    while (index <= 1576) : (index += 1) {
         instance.array[index] = true;
     }
     index = 1581;
@@ -185,7 +199,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 1691) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 1696;
+    index = 1694;
     while (index <= 1699) : (index += 1) {
         instance.array[index] = true;
     }
@@ -197,9 +211,16 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 1703) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[1708] = true;
+    index = 1705;
+    while (index <= 1708) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 1709;
     while (index <= 1710) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 1711;
+    while (index <= 1720) : (index += 1) {
         instance.array[index] = true;
     }
     index = 1721;
@@ -214,7 +235,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     index = 1775;
-    while (index <= 1790) : (index += 1) {
+    while (index <= 1801) : (index += 1) {
         instance.array[index] = true;
     }
     index = 1804;
@@ -226,8 +247,16 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[1904] = true;
+    index = 1919;
+    while (index <= 1928) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 1929;
     while (index <= 1961) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 1962;
+    while (index <= 1970) : (index += 1) {
         instance.array[index] = true;
     }
     index = 1971;
@@ -235,12 +264,13 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[1977] = true;
+    instance.array[1980] = true;
     index = 1983;
     while (index <= 2004) : (index += 1) {
         instance.array[index] = true;
     }
     index = 2005;
-    while (index <= 2006) : (index += 1) {
+    while (index <= 2008) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[2009] = true;
@@ -255,11 +285,15 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     instance.array[2023] = true;
     index = 2024;
-    while (index <= 2027) : (index += 1) {
+    while (index <= 2028) : (index += 1) {
         instance.array[index] = true;
     }
     index = 2047;
     while (index <= 2071) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 2072;
+    while (index <= 2074) : (index += 1) {
         instance.array[index] = true;
     }
     index = 2079;
@@ -274,15 +308,11 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 2182) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 2195;
-    while (index <= 2206) : (index += 1) {
+    index = 2194;
+    while (index <= 2208) : (index += 1) {
         instance.array[index] = true;
     }
     index = 2210;
-    while (index <= 2216) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 2223;
     while (index <= 2241) : (index += 1) {
         instance.array[index] = true;
     }
@@ -293,6 +323,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     instance.array[2297] = true;
     instance.array[2298] = true;
+    instance.array[2299] = true;
     instance.array[2300] = true;
     index = 2301;
     while (index <= 2303) : (index += 1) {
@@ -306,12 +337,13 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 2315) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[2316] = true;
     index = 2317;
     while (index <= 2318) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[2319] = true;
-    index = 2324;
+    index = 2320;
     while (index <= 2326) : (index += 1) {
         instance.array[index] = true;
     }
@@ -321,6 +353,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     index = 2337;
     while (index <= 2338) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 2341;
+    while (index <= 2350) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[2352] = true;
@@ -354,6 +390,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 2424) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[2427] = true;
     instance.array[2428] = true;
     index = 2429;
     while (index <= 2431) : (index += 1) {
@@ -371,6 +408,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 2443) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[2444] = true;
     instance.array[2445] = true;
     instance.array[2454] = true;
     index = 2459;
@@ -385,11 +423,16 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 2466) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 2469;
+    while (index <= 2478) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 2479;
     while (index <= 2480) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[2491] = true;
+    instance.array[2493] = true;
     index = 2496;
     while (index <= 2497) : (index += 1) {
         instance.array[index] = true;
@@ -423,6 +466,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 2552) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[2555] = true;
     index = 2557;
     while (index <= 2559) : (index += 1) {
         instance.array[index] = true;
@@ -436,7 +480,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     index = 2570;
-    while (index <= 2571) : (index += 1) {
+    while (index <= 2572) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[2576] = true;
@@ -445,6 +489,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[2589] = true;
+    index = 2597;
+    while (index <= 2606) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 2607;
     while (index <= 2608) : (index += 1) {
         instance.array[index] = true;
@@ -483,6 +531,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 2680) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[2683] = true;
     instance.array[2684] = true;
     index = 2685;
     while (index <= 2687) : (index += 1) {
@@ -501,6 +550,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 2699) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[2700] = true;
     instance.array[2703] = true;
     index = 2719;
     while (index <= 2720) : (index += 1) {
@@ -510,9 +560,13 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 2722) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 2725;
+    while (index <= 2734) : (index += 1) {
+        instance.array[index] = true;
+    }
     instance.array[2744] = true;
     index = 2745;
-    while (index <= 2747) : (index += 1) {
+    while (index <= 2750) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[2752] = true;
@@ -544,6 +598,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 2808) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[2811] = true;
     instance.array[2812] = true;
     instance.array[2813] = true;
     instance.array[2814] = true;
@@ -560,7 +615,11 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 2827) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[2837] = true;
+    instance.array[2828] = true;
+    index = 2836;
+    while (index <= 2837) : (index += 1) {
+        instance.array[index] = true;
+    }
     instance.array[2838] = true;
     index = 2843;
     while (index <= 2844) : (index += 1) {
@@ -572,6 +631,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     index = 2849;
     while (index <= 2850) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 2853;
+    while (index <= 2862) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[2864] = true;
@@ -627,13 +690,19 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 2955) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[2956] = true;
     instance.array[2959] = true;
     instance.array[2966] = true;
+    index = 2981;
+    while (index <= 2990) : (index += 1) {
+        instance.array[index] = true;
+    }
     instance.array[3007] = true;
     index = 3008;
     while (index <= 3010) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[3011] = true;
     index = 3012;
     while (index <= 3019) : (index += 1) {
         instance.array[index] = true;
@@ -664,7 +733,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     index = 3081;
-    while (index <= 3083) : (index += 1) {
+    while (index <= 3084) : (index += 1) {
         instance.array[index] = true;
     }
     index = 3092;
@@ -681,6 +750,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     index = 3105;
     while (index <= 3106) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 3109;
+    while (index <= 3118) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[3135] = true;
@@ -709,6 +782,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 3192) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[3195] = true;
     instance.array[3196] = true;
     instance.array[3197] = true;
     instance.array[3198] = true;
@@ -725,7 +799,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 3210) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[3211] = true;
+    index = 3211;
+    while (index <= 3212) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 3220;
     while (index <= 3221) : (index += 1) {
         instance.array[index] = true;
@@ -737,6 +814,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     index = 3233;
     while (index <= 3234) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 3237;
+    while (index <= 3246) : (index += 1) {
         instance.array[index] = true;
     }
     index = 3248;
@@ -763,6 +844,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 3321) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 3322;
+    while (index <= 3323) : (index += 1) {
+        instance.array[index] = true;
+    }
     instance.array[3324] = true;
     index = 3325;
     while (index <= 3327) : (index += 1) {
@@ -780,6 +865,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 3339) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[3340] = true;
     instance.array[3341] = true;
     index = 3347;
     while (index <= 3349) : (index += 1) {
@@ -792,6 +878,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     index = 3361;
     while (index <= 3362) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 3365;
+    while (index <= 3374) : (index += 1) {
         instance.array[index] = true;
     }
     index = 3385;
@@ -820,6 +910,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 3461) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[3465] = true;
     index = 3470;
     while (index <= 3472) : (index += 1) {
         instance.array[index] = true;
@@ -831,6 +922,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     instance.array[3477] = true;
     index = 3479;
     while (index <= 3486) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 3493;
+    while (index <= 3502) : (index += 1) {
         instance.array[index] = true;
     }
     index = 3505;
@@ -855,7 +950,14 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[3589] = true;
-    instance.array[3596] = true;
+    index = 3590;
+    while (index <= 3597) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 3599;
+    while (index <= 3608) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 3648;
     while (index <= 3649) : (index += 1) {
         instance.array[index] = true;
@@ -880,10 +982,6 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     index = 3699;
-    while (index <= 3704) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 3706;
     while (index <= 3707) : (index += 1) {
         instance.array[index] = true;
     }
@@ -893,12 +991,34 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[3717] = true;
-    instance.array[3724] = true;
+    index = 3719;
+    while (index <= 3724) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 3727;
+    while (index <= 3736) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 3739;
     while (index <= 3742) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[3775] = true;
+    index = 3799;
+    while (index <= 3800) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 3807;
+    while (index <= 3816) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[3828] = true;
+    instance.array[3830] = true;
+    instance.array[3832] = true;
+    index = 3837;
+    while (index <= 3838) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 3839;
     while (index <= 3846) : (index += 1) {
         instance.array[index] = true;
@@ -913,7 +1033,11 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     instance.array[3902] = true;
     index = 3903;
-    while (index <= 3904) : (index += 1) {
+    while (index <= 3907) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 3909;
+    while (index <= 3910) : (index += 1) {
         instance.array[index] = true;
     }
     index = 3911;
@@ -928,6 +1052,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 3963) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[3973] = true;
     index = 4031;
     while (index <= 4073) : (index += 1) {
         instance.array[index] = true;
@@ -942,10 +1067,14 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     instance.array[4080] = true;
     index = 4081;
-    while (index <= 4085) : (index += 1) {
+    while (index <= 4086) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[4087] = true;
+    index = 4088;
+    while (index <= 4089) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 4090;
     while (index <= 4091) : (index += 1) {
         instance.array[index] = true;
@@ -955,6 +1084,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[4094] = true;
+    index = 4095;
+    while (index <= 4104) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 4111;
     while (index <= 4116) : (index += 1) {
         instance.array[index] = true;
@@ -1016,6 +1149,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     instance.array[4172] = true;
     instance.array[4173] = true;
     instance.array[4174] = true;
+    index = 4175;
+    while (index <= 4184) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 4185;
     while (index <= 4187) : (index += 1) {
         instance.array[index] = true;
@@ -1094,6 +1231,14 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 4889) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 4892;
+    while (index <= 4894) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 4904;
+    while (index <= 4912) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 4927;
     while (index <= 4942) : (index += 1) {
         instance.array[index] = true;
@@ -1139,7 +1284,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     index = 5841;
-    while (index <= 5842) : (index += 1) {
+    while (index <= 5843) : (index += 1) {
         instance.array[index] = true;
     }
     index = 5855;
@@ -1147,7 +1292,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     index = 5873;
-    while (index <= 5874) : (index += 1) {
+    while (index <= 5875) : (index += 1) {
         instance.array[index] = true;
     }
     index = 5887;
@@ -1174,6 +1319,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 6002) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 6003;
+    while (index <= 6004) : (index += 1) {
+        instance.array[index] = true;
+    }
     instance.array[6005] = true;
     index = 6006;
     while (index <= 6012) : (index += 1) {
@@ -1188,8 +1337,25 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 6023) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 6024;
+    while (index <= 6034) : (index += 1) {
+        instance.array[index] = true;
+    }
     instance.array[6038] = true;
     instance.array[6043] = true;
+    instance.array[6044] = true;
+    index = 6047;
+    while (index <= 6056) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 6090;
+    while (index <= 6092) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 6095;
+    while (index <= 6104) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 6111;
     while (index <= 6145) : (index += 1) {
         instance.array[index] = true;
@@ -1246,6 +1412,14 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 6391) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 6392;
+    while (index <= 6394) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 6405;
+    while (index <= 6414) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 6415;
     while (index <= 6444) : (index += 1) {
         instance.array[index] = true;
@@ -1262,6 +1436,11 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 6536) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 6543;
+    while (index <= 6552) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[6553] = true;
     index = 6591;
     while (index <= 6613) : (index += 1) {
         instance.array[index] = true;
@@ -1286,6 +1465,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 6685) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[6687] = true;
     instance.array[6688] = true;
     instance.array[6689] = true;
     index = 6690;
@@ -1301,10 +1481,23 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     index = 6706;
-    while (index <= 6707) : (index += 1) {
+    while (index <= 6715) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[6718] = true;
+    index = 6719;
+    while (index <= 6728) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 6735;
+    while (index <= 6744) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[6758] = true;
+    index = 6767;
+    while (index <= 6780) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 6782;
     while (index <= 6783) : (index += 1) {
         instance.array[index] = true;
@@ -1318,6 +1511,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 6898) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[6899] = true;
     instance.array[6900] = true;
     index = 6901;
     while (index <= 6905) : (index += 1) {
@@ -1330,9 +1524,20 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[6913] = true;
-    instance.array[6914] = true;
+    index = 6914;
+    while (index <= 6915) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 6916;
     while (index <= 6922) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 6927;
+    while (index <= 6936) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 6954;
+    while (index <= 6962) : (index += 1) {
         instance.array[index] = true;
     }
     index = 6975;
@@ -1357,7 +1562,8 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 7016) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 7019;
+    instance.array[7017] = true;
+    index = 7018;
     while (index <= 7020) : (index += 1) {
         instance.array[index] = true;
     }
@@ -1365,10 +1571,15 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 7022) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 7023;
+    while (index <= 7032) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 7033;
     while (index <= 7076) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[7077] = true;
     instance.array[7078] = true;
     index = 7079;
     while (index <= 7080) : (index += 1) {
@@ -1382,6 +1593,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     instance.array[7085] = true;
     index = 7086;
     while (index <= 7088) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 7089;
+    while (index <= 7090) : (index += 1) {
         instance.array[index] = true;
     }
     index = 7103;
@@ -1400,9 +1615,20 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 7156) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[7157] = true;
+    index = 7157;
+    while (index <= 7158) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 7167;
+    while (index <= 7176) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 7180;
     while (index <= 7182) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 7183;
+    while (index <= 7192) : (index += 1) {
         instance.array[index] = true;
     }
     index = 7193;
@@ -1425,16 +1651,36 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 7294) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 7311;
+    while (index <= 7313) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 7315;
+    while (index <= 7327) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[7328] = true;
+    index = 7329;
+    while (index <= 7335) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 7336;
     while (index <= 7339) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[7340] = true;
     index = 7341;
     while (index <= 7346) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[7347] = true;
     index = 7348;
     while (index <= 7349) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[7350] = true;
+    index = 7351;
+    while (index <= 7352) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[7353] = true;
@@ -1459,8 +1705,12 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 7550) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 7590;
-    while (index <= 7603) : (index += 1) {
+    index = 7551;
+    while (index <= 7608) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 7610;
+    while (index <= 7614) : (index += 1) {
         instance.array[index] = true;
     }
     index = 7615;
@@ -1527,10 +1777,24 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 8123) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 8190;
+    while (index <= 8191) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[8211] = true;
     instance.array[8240] = true;
     instance.array[8254] = true;
     index = 8271;
     while (index <= 8283) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 8335;
+    while (index <= 8347) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[8352] = true;
+    index = 8356;
+    while (index <= 8367) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[8385] = true;
@@ -1540,6 +1804,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[8404] = true;
+    instance.array[8407] = true;
     index = 8408;
     while (index <= 8412) : (index += 1) {
         instance.array[index] = true;
@@ -1551,6 +1816,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 8428) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[8429] = true;
     index = 8430;
     while (index <= 8435) : (index += 1) {
         instance.array[index] = true;
@@ -1581,10 +1847,6 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 8519) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 9333;
-    while (index <= 9384) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 11199;
     while (index <= 11245) : (index += 1) {
         instance.array[index] = true;
@@ -1609,6 +1871,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 11437) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 11438;
+    while (index <= 11440) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 11441;
     while (index <= 11442) : (index += 1) {
         instance.array[index] = true;
@@ -1624,6 +1890,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[11566] = true;
+    instance.array[11582] = true;
     index = 11583;
     while (index <= 11605) : (index += 1) {
         instance.array[index] = true;
@@ -1664,12 +1931,19 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 11710) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[11758] = true;
     instance.array[12228] = true;
     instance.array[12229] = true;
     instance.array[12230] = true;
     index = 12256;
     while (index <= 12264) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 12265;
+    while (index <= 12268) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 12269;
+    while (index <= 12270) : (index += 1) {
         instance.array[index] = true;
     }
     index = 12272;
@@ -1684,6 +1958,14 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     instance.array[12283] = true;
     index = 12288;
     while (index <= 12373) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 12376;
+    while (index <= 12377) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 12378;
+    while (index <= 12379) : (index += 1) {
         instance.array[index] = true;
     }
     index = 12380;
@@ -1750,6 +2032,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 42462) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 42463;
+    while (index <= 42472) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 42473;
     while (index <= 42474) : (index += 1) {
         instance.array[index] = true;
@@ -1759,8 +2045,9 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[42541] = true;
+    instance.array[42542] = true;
     index = 42547;
-    while (index <= 42554) : (index += 1) {
+    while (index <= 42556) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[42558] = true;
@@ -1782,6 +2069,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     index = 42661;
     while (index <= 42670) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 42671;
+    while (index <= 42672) : (index += 1) {
         instance.array[index] = true;
     }
     index = 42710;
@@ -1830,6 +2121,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 42948) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[42949] = true;
     index = 42950;
     while (index <= 42953) : (index += 1) {
         instance.array[index] = true;
@@ -1848,6 +2140,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[42982] = true;
+    instance.array[42987] = true;
     index = 43007;
     while (index <= 43058) : (index += 1) {
         instance.array[index] = true;
@@ -1864,7 +2157,18 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 43138) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[43140] = true;
+    index = 43139;
+    while (index <= 43140) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 43151;
+    while (index <= 43160) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 43167;
+    while (index <= 43184) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 43185;
     while (index <= 43190) : (index += 1) {
         instance.array[index] = true;
@@ -1875,12 +2179,16 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[43198] = true;
+    index = 43199;
+    while (index <= 43208) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 43209;
     while (index <= 43236) : (index += 1) {
         instance.array[index] = true;
     }
     index = 43237;
-    while (index <= 43241) : (index += 1) {
+    while (index <= 43244) : (index += 1) {
         instance.array[index] = true;
     }
     index = 43247;
@@ -1891,7 +2199,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 43280) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[43281] = true;
+    index = 43281;
+    while (index <= 43282) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 43295;
     while (index <= 43323) : (index += 1) {
         instance.array[index] = true;
@@ -1905,6 +2216,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 43377) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[43378] = true;
     index = 43379;
     while (index <= 43380) : (index += 1) {
         instance.array[index] = true;
@@ -1922,10 +2234,14 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     index = 43389;
-    while (index <= 43390) : (index += 1) {
+    while (index <= 43391) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[43406] = true;
+    index = 43407;
+    while (index <= 43416) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 43423;
     while (index <= 43427) : (index += 1) {
         instance.array[index] = true;
@@ -1934,6 +2250,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     instance.array[43429] = true;
     index = 43430;
     while (index <= 43438) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 43439;
+    while (index <= 43448) : (index += 1) {
         instance.array[index] = true;
     }
     index = 43449;
@@ -1975,6 +2295,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     instance.array[43531] = true;
     instance.array[43532] = true;
+    index = 43535;
+    while (index <= 43544) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 43551;
     while (index <= 43566) : (index += 1) {
         instance.array[index] = true;
@@ -2010,8 +2334,12 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 43644) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[43645] = true;
+    index = 43645;
+    while (index <= 43646) : (index += 1) {
+        instance.array[index] = true;
+    }
     instance.array[43647] = true;
+    instance.array[43648] = true;
     instance.array[43649] = true;
     index = 43674;
     while (index <= 43675) : (index += 1) {
@@ -2037,6 +2365,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[43700] = true;
+    instance.array[43701] = true;
     index = 43712;
     while (index <= 43717) : (index += 1) {
         instance.array[index] = true;
@@ -2090,6 +2419,12 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     instance.array[43943] = true;
     index = 43944;
     while (index <= 43945) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[43947] = true;
+    instance.array[43948] = true;
+    index = 43951;
+    while (index <= 43960) : (index += 1) {
         instance.array[index] = true;
     }
     index = 43967;
@@ -2163,6 +2498,22 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 64954) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 64959;
+    while (index <= 64974) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 64991;
+    while (index <= 65006) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 65010;
+    while (index <= 65011) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 65036;
+    while (index <= 65038) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 65071;
     while (index <= 65075) : (index += 1) {
         instance.array[index] = true;
@@ -2171,10 +2522,15 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 65211) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 65231;
+    while (index <= 65240) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 65248;
     while (index <= 65273) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[65278] = true;
     index = 65280;
     while (index <= 65305) : (index += 1) {
         instance.array[index] = true;
@@ -2244,6 +2600,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 65843) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[65980] = true;
     index = 66111;
     while (index <= 66139) : (index += 1) {
         instance.array[index] = true;
@@ -2252,6 +2609,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 66191) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[66207] = true;
     index = 66239;
     while (index <= 66270) : (index += 1) {
         instance.array[index] = true;
@@ -2296,6 +2654,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     index = 66575;
     while (index <= 66652) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 66655;
+    while (index <= 66664) : (index += 1) {
         instance.array[index] = true;
     }
     index = 66671;
@@ -2401,6 +2763,11 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 68084) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 68087;
+    while (index <= 68089) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[68094] = true;
     index = 68127;
     while (index <= 68155) : (index += 1) {
         instance.array[index] = true;
@@ -2415,6 +2782,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     index = 68232;
     while (index <= 68259) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 68260;
+    while (index <= 68261) : (index += 1) {
         instance.array[index] = true;
     }
     index = 68287;
@@ -2453,6 +2824,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 68838) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 68847;
+    while (index <= 68856) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 69183;
     while (index <= 69224) : (index += 1) {
         instance.array[index] = true;
@@ -2474,6 +2849,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 69380) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 69381;
+    while (index <= 69391) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 69487;
     while (index <= 69507) : (index += 1) {
         instance.array[index] = true;
@@ -2490,7 +2869,15 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     index = 69623;
-    while (index <= 69636) : (index += 1) {
+    while (index <= 69637) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 69669;
+    while (index <= 69678) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 69694;
+    while (index <= 69696) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[69697] = true;
@@ -2510,8 +2897,16 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 69751) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 69752;
+    while (index <= 69753) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 69775;
     while (index <= 69799) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 69807;
+    while (index <= 69816) : (index += 1) {
         instance.array[index] = true;
     }
     index = 69823;
@@ -2528,7 +2923,11 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     instance.array[69867] = true;
     index = 69868;
-    while (index <= 69873) : (index += 1) {
+    while (index <= 69875) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 69877;
+    while (index <= 69886) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[69891] = true;
@@ -2541,6 +2940,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 69937) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[69938] = true;
     instance.array[69941] = true;
     index = 69951;
     while (index <= 69952) : (index += 1) {
@@ -2559,13 +2959,24 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 70013) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[70014] = true;
+    index = 70014;
+    while (index <= 70015) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 70016;
     while (index <= 70019) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 70024;
+    while (index <= 70027) : (index += 1) {
+        instance.array[index] = true;
+    }
     instance.array[70029] = true;
     instance.array[70030] = true;
+    index = 70031;
+    while (index <= 70040) : (index += 1) {
+        instance.array[index] = true;
+    }
     instance.array[70041] = true;
     instance.array[70043] = true;
     index = 70079;
@@ -2589,7 +3000,11 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[70131] = true;
-    instance.array[70134] = true;
+    instance.array[70132] = true;
+    index = 70133;
+    while (index <= 70134) : (index += 1) {
+        instance.array[index] = true;
+    }
     instance.array[70141] = true;
     index = 70207;
     while (index <= 70213) : (index += 1) {
@@ -2618,7 +3033,11 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     index = 70306;
-    while (index <= 70311) : (index += 1) {
+    while (index <= 70313) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 70319;
+    while (index <= 70328) : (index += 1) {
         instance.array[index] = true;
     }
     index = 70335;
@@ -2653,6 +3072,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 70392) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 70394;
+    while (index <= 70395) : (index += 1) {
+        instance.array[index] = true;
+    }
     instance.array[70396] = true;
     index = 70397;
     while (index <= 70398) : (index += 1) {
@@ -2668,7 +3091,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     index = 70410;
-    while (index <= 70411) : (index += 1) {
+    while (index <= 70412) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[70415] = true;
@@ -2679,6 +3102,14 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     index = 70433;
     while (index <= 70434) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 70437;
+    while (index <= 70443) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 70447;
+    while (index <= 70451) : (index += 1) {
         instance.array[index] = true;
     }
     index = 70591;
@@ -2697,15 +3128,21 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 70656) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 70658;
+    index = 70657;
     while (index <= 70659) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[70660] = true;
+    instance.array[70661] = true;
     index = 70662;
     while (index <= 70665) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 70671;
+    while (index <= 70680) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[70685] = true;
     index = 70686;
     while (index <= 70688) : (index += 1) {
         instance.array[index] = true;
@@ -2733,11 +3170,19 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[70784] = true;
+    index = 70785;
+    while (index <= 70786) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 70787;
     while (index <= 70788) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[70790] = true;
+    index = 70799;
+    while (index <= 70808) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 70975;
     while (index <= 71021) : (index += 1) {
         instance.array[index] = true;
@@ -2759,6 +3204,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[71037] = true;
+    index = 71038;
+    while (index <= 71039) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 71063;
     while (index <= 71066) : (index += 1) {
         instance.array[index] = true;
@@ -2785,8 +3234,15 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     instance.array[71164] = true;
     instance.array[71165] = true;
-    instance.array[71167] = true;
+    index = 71166;
+    while (index <= 71167) : (index += 1) {
+        instance.array[index] = true;
+    }
     instance.array[71171] = true;
+    index = 71183;
+    while (index <= 71192) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 71231;
     while (index <= 71273) : (index += 1) {
         instance.array[index] = true;
@@ -2802,7 +3258,13 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 71284) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[71285] = true;
+    instance.array[71286] = true;
     instance.array[71287] = true;
+    index = 71295;
+    while (index <= 71304) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 71359;
     while (index <= 71385) : (index += 1) {
         instance.array[index] = true;
@@ -2821,7 +3283,11 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     instance.array[71397] = true;
     index = 71398;
-    while (index <= 71401) : (index += 1) {
+    while (index <= 71402) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 71407;
+    while (index <= 71416) : (index += 1) {
         instance.array[index] = true;
     }
     index = 71615;
@@ -2837,8 +3303,16 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[71671] = true;
+    index = 71672;
+    while (index <= 71673) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 71775;
     while (index <= 71838) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 71839;
+    while (index <= 71848) : (index += 1) {
         instance.array[index] = true;
     }
     index = 71870;
@@ -2870,10 +3344,17 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 71931) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[71932] = true;
+    instance.array[71933] = true;
     instance.array[71934] = true;
     instance.array[71935] = true;
     instance.array[71936] = true;
     instance.array[71937] = true;
+    instance.array[71938] = true;
+    index = 71951;
+    while (index <= 71960) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 72031;
     while (index <= 72038) : (index += 1) {
         instance.array[index] = true;
@@ -2898,6 +3379,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 72094) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[72095] = true;
     instance.array[72096] = true;
     instance.array[72098] = true;
     instance.array[72099] = true;
@@ -2910,7 +3392,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 72177) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 72180;
+    index = 72178;
     while (index <= 72183) : (index += 1) {
         instance.array[index] = true;
     }
@@ -2920,6 +3402,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 72189) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[72198] = true;
     instance.array[72207] = true;
     index = 72208;
     while (index <= 72213) : (index += 1) {
@@ -2942,6 +3425,10 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[72278] = true;
+    index = 72279;
+    while (index <= 72280) : (index += 1) {
+        instance.array[index] = true;
+    }
     instance.array[72284] = true;
     index = 72319;
     while (index <= 72375) : (index += 1) {
@@ -2965,7 +3452,12 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[72701] = true;
+    instance.array[72702] = true;
     instance.array[72703] = true;
+    index = 72719;
+    while (index <= 72728) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 72753;
     while (index <= 72782) : (index += 1) {
         instance.array[index] = true;
@@ -3011,12 +3503,15 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     index = 72958;
-    while (index <= 72960) : (index += 1) {
+    while (index <= 72964) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[72962] = true;
     instance.array[72965] = true;
     instance.array[72966] = true;
+    index = 72975;
+    while (index <= 72984) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 72991;
     while (index <= 72996) : (index += 1) {
         instance.array[index] = true;
@@ -3043,7 +3538,12 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     }
     instance.array[73044] = true;
     instance.array[73045] = true;
+    instance.array[73046] = true;
     instance.array[73047] = true;
+    index = 73055;
+    while (index <= 73064) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 73375;
     while (index <= 73393) : (index += 1) {
         instance.array[index] = true;
@@ -3085,16 +3585,32 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 92701) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 92703;
+    while (index <= 92712) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 92815;
     while (index <= 92844) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 92847;
+    while (index <= 92851) : (index += 1) {
         instance.array[index] = true;
     }
     index = 92863;
     while (index <= 92910) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 92911;
+    while (index <= 92917) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 92927;
     while (index <= 92930) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 92943;
+    while (index <= 92952) : (index += 1) {
         instance.array[index] = true;
     }
     index = 92962;
@@ -3132,6 +3648,7 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
         instance.array[index] = true;
     }
     instance.array[94114] = true;
+    instance.array[94115] = true;
     index = 94127;
     while (index <= 94128) : (index += 1) {
         instance.array[index] = true;
@@ -3180,7 +3697,38 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 113752) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[113757] = true;
+    index = 113756;
+    while (index <= 113757) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 119076;
+    while (index <= 119077) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 119078;
+    while (index <= 119080) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 119084;
+    while (index <= 119089) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 119098;
+    while (index <= 119105) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 119108;
+    while (index <= 119114) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 119145;
+    while (index <= 119148) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 119297;
+    while (index <= 119299) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 119743;
     while (index <= 119827) : (index += 1) {
         instance.array[index] = true;
@@ -3292,6 +3840,28 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 120714) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 120717;
+    while (index <= 120766) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 121279;
+    while (index <= 121333) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 121338;
+    while (index <= 121387) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[121396] = true;
+    instance.array[121411] = true;
+    index = 121434;
+    while (index <= 121438) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 121440;
+    while (index <= 121454) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 122815;
     while (index <= 122821) : (index += 1) {
         instance.array[index] = true;
@@ -3316,8 +3886,16 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 123115) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 123119;
+    while (index <= 123125) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 123126;
     while (index <= 123132) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 123135;
+    while (index <= 123144) : (index += 1) {
         instance.array[index] = true;
     }
     instance.array[123149] = true;
@@ -3325,16 +3903,35 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 123562) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 123563;
+    while (index <= 123566) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 123567;
+    while (index <= 123576) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 124863;
     while (index <= 125059) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 125071;
+    while (index <= 125077) : (index += 1) {
         instance.array[index] = true;
     }
     index = 125119;
     while (index <= 125186) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[125190] = true;
+    index = 125187;
+    while (index <= 125193) : (index += 1) {
+        instance.array[index] = true;
+    }
     instance.array[125194] = true;
+    index = 125199;
+    while (index <= 125208) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 126399;
     while (index <= 126402) : (index += 1) {
         instance.array[index] = true;
@@ -3419,16 +4016,8 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 126586) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 127215;
-    while (index <= 127240) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 127247;
-    while (index <= 127272) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 127279;
-    while (index <= 127304) : (index += 1) {
+    index = 129967;
+    while (index <= 129976) : (index += 1) {
         instance.array[index] = true;
     }
     index = 131007;
@@ -3459,17 +4048,21 @@ pub fn init(allocator: *mem.Allocator) !Alphabetic {
     while (index <= 201481) : (index += 1) {
         instance.array[index] = true;
     }
+    index = 917695;
+    while (index <= 917934) : (index += 1) {
+        instance.array[index] = true;
+    }
 
     // Placeholder: 0. Struct name
     return instance;
 }
 
-pub fn deinit(self: *Alphabetic) void {
+pub fn deinit(self: *IDContinue) void {
     self.allocator.free(self.array);
 }
 
-// isAlphabetic checks if cp is of the kind Alphabetic.
-pub fn isAlphabetic(self: Alphabetic, cp: u21) bool {
+// isIDContinue checks if cp is of the kind ID_Continue.
+pub fn isIDContinue(self: IDContinue, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
     const index = cp - self.lo;
     return if (index >= self.array.len) false else self.array[index];
