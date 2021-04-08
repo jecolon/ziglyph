@@ -20034,6 +20034,10 @@ pub fn init(allocator: *std.mem.Allocator) !DecomposeMap {
 
 const Self = @This();
 pub fn deinit(self: *Self) void {
+    var iter = self.map.iterator();
+    while (iter.next()) |entry| {
+        self.allocator.free(entry.value);
+    }
     self.map.deinit();
 }
 

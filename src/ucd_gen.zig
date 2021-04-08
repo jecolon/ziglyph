@@ -7,6 +7,7 @@ const mem = std.mem;
 
 const Collection = @import("Collection.zig");
 const Record = @import("record.zig").Record;
+const ascii = @import("ascii.zig");
 
 const UcdGenerator = struct {
     allocator: *mem.Allocator,
@@ -41,7 +42,9 @@ const UcdGenerator = struct {
         var kind = ArrayList(u8).init(self.allocator);
         defer kind.deinit();
         var lo: u21 = 0x10FFFF;
+        var prev_lo: u21 = 0x10FFFF;
         var hi: u21 = 0;
+        var prev_hi: u21 = 0;
         while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
             // Skip comments or empty lines.
             if (line.len == 0 or line[0] == '#') continue;
@@ -58,14 +61,26 @@ const UcdGenerator = struct {
                     // Ranges.
                     if (mem.indexOf(u8, field, "..")) |dots| {
                         const r_lo = try fmt.parseInt(u21, field[0..dots], 16);
-                        if (r_lo < lo) lo = r_lo;
+                        if (r_lo < lo) {
+                            prev_lo = lo;
+                            lo = r_lo;
+                        }
                         const r_hi = try fmt.parseInt(u21, field[dots + 2 ..], 16);
-                        if (r_hi > hi) hi = r_hi;
+                        if (r_hi > hi) {
+                            prev_hi = hi;
+                            hi = r_hi;
+                        }
                         record = .{ .range = .{ .lo = r_lo, .hi = r_hi } };
                     } else {
                         const code_point = try fmt.parseInt(u21, field, 16);
-                        if (code_point < lo) lo = code_point;
-                        if (code_point > hi) hi = code_point;
+                        if (code_point < lo) {
+                            prev_lo = lo;
+                            lo = code_point;
+                        }
+                        if (code_point > hi) {
+                            prev_hi = hi;
+                            hi = code_point;
+                        }
                         record = .{ .single = code_point };
                     }
                 } else if (field_index == 1) {
@@ -76,18 +91,18 @@ const UcdGenerator = struct {
                     }
                     // Check if new collection started.
                     if (kind.items.len != 0) {
-                        // New collection for new record kind.
                         if (!mem.eql(u8, kind.items, field)) {
+                            // New collection for new record kind.
                             try collections.append(try Collection.init(
                                 self.allocator,
                                 kind.toOwnedSlice(),
-                                lo,
-                                hi,
+                                if (prev_lo == 0x10FFFF) 0 else prev_lo,
+                                if (prev_hi == 0) 0x10FFFF else prev_hi,
                                 records.toOwnedSlice(),
                             ));
                             // Reset extremes.
-                            lo = 0x10FFFF;
-                            hi = 0;
+                            prev_lo = 0x10FFFF;
+                            prev_hi = 0;
                             // Update kind.
                             try kind.appendSlice(field);
                         }
@@ -349,20 +364,152 @@ const UcdGenerator = struct {
         try t_buf.flush();
         try u_buf.flush();
     }
+
+    // data/ucd/SpecialCassing.txt
+    fn processSpecialCasing(self: *Self) !void {
+        // Setup input.
+        var in_file = try std.fs.cwd().openFile("data/ucd/SpecialCasing.txt", .{});
+        defer in_file.close();
+        var buf_reader = io.bufferedReader(in_file.reader());
+        var input_stream = buf_reader.reader();
+        // Setup output.
+        const header_tpl = @embedFile("parts/special_case_header_tpl.txt");
+        const trailer_tpl = @embedFile("parts/special_case_trailer_tpl.txt");
+        var cwd = std.fs.cwd();
+        cwd.makeDir("components/SpecialCasing") catch |err| switch (err) {
+            error.PathAlreadyExists => {},
+            else => return err,
+        };
+        var out_file = try cwd.createFile("components/SpecialCasing/SpecialCaseMap.zig", .{});
+        defer out_file.close();
+        var buf_writer = io.bufferedWriter(out_file.writer());
+        const writer = buf_writer.writer();
+        _ = try writer.print(header_tpl, .{});
+
+        // Iterate over lines.
+        var buf: [640]u8 = undefined;
+        while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+            // Skip comments or empty lines.
+            if (line.len == 0 or line[0] == '#') continue;
+            // Iterate over fields.
+            var fields = mem.split(line, ";");
+            var field_index: usize = 0;
+            var code_point: []const u8 = undefined;
+            var mappings: [3][][]const u8 = undefined;
+            while (fields.next()) |raw| : (field_index += 1) {
+                var field = mem.trim(u8, raw, " ");
+                if (field_index == 0) {
+                    // Code point.
+                    code_point = field;
+                } else if (field_index == 1) {
+                    // Lowercase.
+                    var cp_iter = mem.split(field, " ");
+                    var cp_list = ArrayList([]const u8).init(self.allocator);
+                    while (cp_iter.next()) |cp| {
+                        try cp_list.append(cp);
+                    }
+                    mappings[0] = cp_list.toOwnedSlice();
+                } else if (field_index == 2) {
+                    // Titlecase.
+                    var cp_iter = mem.split(field, " ");
+                    var cp_list = ArrayList([]const u8).init(self.allocator);
+                    while (cp_iter.next()) |cp| {
+                        try cp_list.append(cp);
+                    }
+                    mappings[1] = cp_list.toOwnedSlice();
+                } else if (field_index == 3) {
+                    // Uppercase.
+                    var cp_iter = mem.split(field, " ");
+                    var cp_list = ArrayList([]const u8).init(self.allocator);
+                    while (cp_iter.next()) |cp| {
+                        try cp_list.append(cp);
+                    }
+                    mappings[2] = cp_list.toOwnedSlice();
+                } else if (field_index == 4) {
+                    _ = try writer.print("    try instance.map.put(0x{s}, .{{\n", .{code_point});
+                    if (field.len == 0 or field[0] == '#') {
+                        // No countries or conditions.
+                        _ = try writer.write("        .countries = &[0][]u8{},\n");
+                        _ = try writer.write("        .conditions = &[0][]u8{},\n");
+                    } else {
+                        // Countries and/or conditions.
+                        var countries_started = false;
+                        var conditions_started = false;
+                        var coco_iter = mem.split(field, " ");
+                        while (coco_iter.next()) |cc| {
+                            if (ascii.isLower(cc[0])) {
+                                // Country code.
+                                if (!countries_started) {
+                                    _ = try writer.write("        .countries = &[_][]u8{\n");
+                                    countries_started = true;
+                                }
+                                _ = try writer.print("            \"{s}\",\n", .{cc});
+                            } else {
+                                // Conditions.
+                                if (countries_started) {
+                                    _ = try writer.write("        },\n");
+                                    countries_started = false;
+                                }
+                                if (!conditions_started) {
+                                    _ = try writer.write("        .conditions = &[_][]u8{\n");
+                                    conditions_started = true;
+                                }
+                                _ = try writer.print("            \"{s}\",\n", .{cc});
+                            }
+                        }
+                        if (countries_started) {
+                            _ = try writer.write("        },\n");
+                        }
+                        if (conditions_started) {
+                            _ = try writer.write("        },\n");
+                        }
+                    }
+                    // Mappings.
+                    _ = try writer.write("        .mappings = [3][]u8{\n");
+                    for (mappings) |cmaps| {
+                        if (cmaps.len == 0) {
+                            // No mapping.
+                            _ = try writer.write("            &[0]u8{},\n");
+                        } else {
+                            _ = try writer.write("            &[_]u8{ ");
+                            for (cmaps) |mcp, i| {
+                                if (mcp.len == 0) continue;
+                                if (i != 0) {
+                                    _ = try writer.write(", ");
+                                }
+                                _ = try writer.print("0x{s}", .{mcp});
+                            }
+                            _ = try writer.write(" },\n");
+                        }
+                    }
+                    _ = try writer.write("        },\n    });\n");
+                } else {
+                    continue;
+                }
+            }
+        }
+
+        // Finish writing.
+        _ = try writer.print(trailer_tpl, .{});
+        try buf_writer.flush();
+    }
 };
 
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     var allocator = &arena.allocator;
-    //var allocator = std.testing.allocator;
+    // var allocator = std.testing.allocator;
     var ugen = UcdGenerator.new(allocator);
-    try ugen.processF1("data/ucd/DerivedCoreProperties.txt");
-    try ugen.processF1("data/ucd/PropList.txt");
-    try ugen.processF1("data/ucd/auxiliary/GraphemeBreakProperty.txt");
-    try ugen.processF1("data/ucd/extracted/DerivedNumericType.txt");
-    try ugen.processF1("data/ucd/extracted/DerivedDecompositionType.txt");
-    try ugen.processGenCat();
-    try ugen.processCaseFold();
-    try ugen.processUcd();
+    try ugen.processF1("data/ucd/Blocks.txt");
+    //try ugen.processF1("data/ucd/PropList.txt");
+    //try ugen.processF1("data/ucd/Scripts.txt");
+    //try ugen.processF1("data/ucd/auxiliary/GraphemeBreakProperty.txt");
+    //try ugen.processF1("data/ucd/DerivedCoreProperties.txt");
+    //try ugen.processF1("data/ucd/extracted/DerivedDecompositionType.txt");
+    //try ugen.processF1("data/ucd/extracted/DerivedNumericType.txt");
+    //try ugen.processGenCat();
+    //try ugen.processCaseFold();
+    //try ugen.processUcd();
+    //try ugen.processSpecialCasing();
 }
