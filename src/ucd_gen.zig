@@ -107,7 +107,7 @@ const UcdGenerator = struct {
         var dir = std.fs.path.basename(path);
         const dot = mem.lastIndexOf(u8, dir, ".");
         if (dot) |d| dir = dir[0..d];
-        for (collections.items) |collection| {
+        for (collections.items) |*collection| {
             try collection.writeFile(dir);
         }
     }
@@ -197,7 +197,7 @@ const UcdGenerator = struct {
         }
 
         // Write out files.
-        for (collections.items) |collection| {
+        for (collections.items) |*collection| {
             try collection.writeFile("DerivedGeneralCategory");
         }
     }
@@ -232,19 +232,25 @@ const UcdGenerator = struct {
             var fields = mem.split(line, ";");
             var field_index: usize = 0;
             var code_point: []const u8 = undefined;
+            var select = false;
             while (fields.next()) |raw| : (field_index += 1) {
                 if (field_index == 0) {
                     // Code point.
                     code_point = raw;
+                } else if (field_index == 1) {
+                    if (mem.endsWith(u8, raw, " C") or mem.endsWith(u8, raw, " F")) select = true;
                 } else if (field_index == 2) {
-                    // Mapping.
-                    var field = mem.trim(u8, raw, " ");
-                    var cp_iter = mem.split(field, " ");
-                    _ = try writer.print("    instance.map.put(0x{s}, &[_]u21{{\n", .{code_point});
-                    while (cp_iter.next()) |cp| {
-                        _ = try writer.print("        0x{s},\n", .{cp});
+                    if (select) {
+                        // Mapping.
+                        var field = mem.trim(u8, raw, " ");
+                        var cp_iter = mem.split(field, " ");
+                        _ = try writer.print("    instance.map.put(0x{s}, &[_]u21{{\n", .{code_point});
+                        while (cp_iter.next()) |cp| {
+                            _ = try writer.print("        0x{s},\n", .{cp});
+                        }
+                        _ = try writer.write("    });\n");
+                        select = false;
                     }
-                    _ = try writer.write("    });\n");
                 } else {
                     continue;
                 }
@@ -254,6 +260,94 @@ const UcdGenerator = struct {
         // Finish writing.
         _ = try writer.print(trailer_tpl, .{});
         try buf_writer.flush();
+    }
+
+    // data/ucd/UnicodeData.txt
+    fn processUcd(self: *Self) !void {
+        // Setup input.
+        var in_file = try std.fs.cwd().openFile("data/ucd/UnicodeData.txt", .{});
+        defer in_file.close();
+        var buf_reader = io.bufferedReader(in_file.reader());
+        var input_stream = buf_reader.reader();
+        // Output directory.
+        var cwd = std.fs.cwd();
+        cwd.makeDir("components/UnicodeData") catch |err| switch (err) {
+            error.PathAlreadyExists => {},
+            else => return err,
+        };
+        // Templates.
+        const decomp_header_tpl = @embedFile("parts/decomp_map_header_tpl.txt");
+        const decomp_trailer_tpl = @embedFile("parts/decomp_map_trailer_tpl.txt");
+        const map_header_tpl = @embedFile("parts/map_header_tpl.txt");
+        const map_trailer_tpl = @embedFile("parts/map_trailer_tpl.txt");
+        // Setup output.
+        var d_file = try cwd.createFile("components/UnicodeData/DecomposeMap.zig", .{});
+        defer d_file.close();
+        var d_buf = io.bufferedWriter(d_file.writer());
+        const d_writer = d_buf.writer();
+        var l_file = try cwd.createFile("components/UnicodeData/LowerMap.zig", .{});
+        defer l_file.close();
+        var l_buf = io.bufferedWriter(l_file.writer());
+        const l_writer = l_buf.writer();
+        var t_file = try cwd.createFile("components/UnicodeData/TitleMap.zig", .{});
+        defer t_file.close();
+        var t_buf = io.bufferedWriter(t_file.writer());
+        const t_writer = t_buf.writer();
+        var u_file = try cwd.createFile("components/UnicodeData/UpperMap.zig", .{});
+        defer u_file.close();
+        var u_buf = io.bufferedWriter(u_file.writer());
+        const u_writer = u_buf.writer();
+
+        // Headers.
+        _ = try d_writer.print(decomp_header_tpl, .{});
+        _ = try l_writer.print(map_header_tpl, .{"LowerMap"});
+        _ = try t_writer.print(map_header_tpl, .{"TitleMap"});
+        _ = try u_writer.print(map_header_tpl, .{"UpperMap"});
+
+        // Iterate over lines.
+        var buf: [640]u8 = undefined;
+        while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+            // Iterate over fields.
+            var fields = mem.split(line, ";");
+            var field_index: usize = 0;
+            var code_point: []const u8 = undefined;
+            while (fields.next()) |raw| : (field_index += 1) {
+                if (field_index == 0) {
+                    // Code point.
+                    code_point = raw;
+                } else if (field_index == 5 and raw.len != 0) {
+                    // Decomposition.
+                    var cp_iter = mem.split(raw, " ");
+                    _ = try d_writer.print("    instance.map.put(0x{s}, &[_]u21{{\n", .{code_point});
+                    while (cp_iter.next()) |cp| {
+                        if (mem.startsWith(u8, cp, "<")) continue;
+                        _ = try d_writer.print("        0x{s},\n", .{cp});
+                    }
+                    _ = try d_writer.write("    });\n");
+                } else if (field_index == 12 and raw.len != 0) {
+                    // Uppercase mapping.
+                    _ = try u_writer.print("    instance.map.put(0x{s}, 0x{s});\n", .{ code_point, raw });
+                } else if (field_index == 13 and raw.len != 0) {
+                    // Lowercase mapping.
+                    _ = try l_writer.print("    instance.map.put(0x{s}, 0x{s});\n", .{ code_point, raw });
+                } else if (field_index == 14 and raw.len != 0) {
+                    // Titlecase mapping.
+                    _ = try t_writer.print("    instance.map.put(0x{s}, 0x{s});\n", .{ code_point, raw });
+                } else {
+                    continue;
+                }
+            }
+        }
+
+        // Finish writing.
+        _ = try d_writer.print(decomp_trailer_tpl, .{});
+        _ = try l_writer.print(map_trailer_tpl, .{ "Lower", "LowerMap" });
+        _ = try t_writer.print(map_trailer_tpl, .{ "Title", "TitleMap" });
+        _ = try u_writer.print(map_trailer_tpl, .{ "Upper", "UpperMap" });
+        try d_buf.flush();
+        try l_buf.flush();
+        try t_buf.flush();
+        try u_buf.flush();
     }
 };
 
@@ -270,4 +364,5 @@ pub fn main() !void {
     try ugen.processF1("data/ucd/extracted/DerivedDecompositionType.txt");
     try ugen.processGenCat();
     try ugen.processCaseFold();
+    try ugen.processUcd();
 }

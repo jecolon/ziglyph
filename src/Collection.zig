@@ -28,14 +28,13 @@ pub fn deinit(self: *Collection) void {
     self.allocator.free(self.kind);
 }
 
-pub fn writeFile(self: Collection, dir: []const u8) !void {
+pub fn writeFile(self: *Collection, dir: []const u8) !void {
     const header_tpl = @embedFile("parts/collection_header_tpl.txt");
     const trailer_tpl = @embedFile("parts/collection_trailer_tpl.txt");
 
     // Prepare output files.
-    var name = try self.allocator.alloc(u8, mem.replacementSize(u8, self.kind, "_", ""));
+    const name = try self.clean_name();
     defer self.allocator.free(name);
-    _ = mem.replace(u8, self.kind, "_", "", name);
     var dir_name = try mem.concat(self.allocator, u8, &[_][]const u8{
         comp_path,
         "/",
@@ -75,4 +74,16 @@ pub fn writeFile(self: Collection, dir: []const u8) !void {
 
     _ = try writer.print(trailer_tpl, .{ name, self.kind });
     try buf_writer.flush();
+}
+
+fn clean_name(self: *Collection) ![]u8 {
+    var name1 = try self.allocator.alloc(u8, mem.replacementSize(u8, self.kind, "_", ""));
+    defer self.allocator.free(name1);
+    _ = mem.replace(u8, self.kind, "_", "", name1);
+    var name2 = try self.allocator.alloc(u8, mem.replacementSize(u8, name1, "-", ""));
+    defer self.allocator.free(name2);
+    _ = mem.replace(u8, name1, "-", "", name2);
+    var name = try self.allocator.alloc(u8, mem.replacementSize(u8, name1, " ", ""));
+    _ = mem.replace(u8, name2, " ", "", name);
+    return name;
 }

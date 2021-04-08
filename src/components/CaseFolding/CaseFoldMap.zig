@@ -41,9 +41,6 @@ pub fn init(allocator: *std.mem.Allocator) !CaseFoldMap {
     instance.map.put(0x0049, &[_]u21{
         0x0069,
     });
-    instance.map.put(0x0049, &[_]u21{
-        0x0131,
-    });
     instance.map.put(0x004A, &[_]u21{
         0x006A,
     });
@@ -267,9 +264,6 @@ pub fn init(allocator: *std.mem.Allocator) !CaseFoldMap {
     instance.map.put(0x0130, &[_]u21{
         0x0069,
         0x0307,
-    });
-    instance.map.put(0x0130, &[_]u21{
-        0x0069,
     });
     instance.map.put(0x0132, &[_]u21{
         0x0133,
@@ -2042,9 +2036,6 @@ pub fn init(allocator: *std.mem.Allocator) !CaseFoldMap {
         0x0073,
         0x0073,
     });
-    instance.map.put(0x1E9E, &[_]u21{
-        0x00DF,
-    });
     instance.map.put(0x1EA0, &[_]u21{
         0x1EA1,
     });
@@ -2388,57 +2379,33 @@ pub fn init(allocator: *std.mem.Allocator) !CaseFoldMap {
         0x1F00,
         0x03B9,
     });
-    instance.map.put(0x1F88, &[_]u21{
-        0x1F80,
-    });
     instance.map.put(0x1F89, &[_]u21{
         0x1F01,
         0x03B9,
-    });
-    instance.map.put(0x1F89, &[_]u21{
-        0x1F81,
     });
     instance.map.put(0x1F8A, &[_]u21{
         0x1F02,
         0x03B9,
     });
-    instance.map.put(0x1F8A, &[_]u21{
-        0x1F82,
-    });
     instance.map.put(0x1F8B, &[_]u21{
         0x1F03,
         0x03B9,
-    });
-    instance.map.put(0x1F8B, &[_]u21{
-        0x1F83,
     });
     instance.map.put(0x1F8C, &[_]u21{
         0x1F04,
         0x03B9,
     });
-    instance.map.put(0x1F8C, &[_]u21{
-        0x1F84,
-    });
     instance.map.put(0x1F8D, &[_]u21{
         0x1F05,
         0x03B9,
-    });
-    instance.map.put(0x1F8D, &[_]u21{
-        0x1F85,
     });
     instance.map.put(0x1F8E, &[_]u21{
         0x1F06,
         0x03B9,
     });
-    instance.map.put(0x1F8E, &[_]u21{
-        0x1F86,
-    });
     instance.map.put(0x1F8F, &[_]u21{
         0x1F07,
         0x03B9,
-    });
-    instance.map.put(0x1F8F, &[_]u21{
-        0x1F87,
     });
     instance.map.put(0x1F90, &[_]u21{
         0x1F20,
@@ -2476,57 +2443,33 @@ pub fn init(allocator: *std.mem.Allocator) !CaseFoldMap {
         0x1F20,
         0x03B9,
     });
-    instance.map.put(0x1F98, &[_]u21{
-        0x1F90,
-    });
     instance.map.put(0x1F99, &[_]u21{
         0x1F21,
         0x03B9,
-    });
-    instance.map.put(0x1F99, &[_]u21{
-        0x1F91,
     });
     instance.map.put(0x1F9A, &[_]u21{
         0x1F22,
         0x03B9,
     });
-    instance.map.put(0x1F9A, &[_]u21{
-        0x1F92,
-    });
     instance.map.put(0x1F9B, &[_]u21{
         0x1F23,
         0x03B9,
-    });
-    instance.map.put(0x1F9B, &[_]u21{
-        0x1F93,
     });
     instance.map.put(0x1F9C, &[_]u21{
         0x1F24,
         0x03B9,
     });
-    instance.map.put(0x1F9C, &[_]u21{
-        0x1F94,
-    });
     instance.map.put(0x1F9D, &[_]u21{
         0x1F25,
         0x03B9,
-    });
-    instance.map.put(0x1F9D, &[_]u21{
-        0x1F95,
     });
     instance.map.put(0x1F9E, &[_]u21{
         0x1F26,
         0x03B9,
     });
-    instance.map.put(0x1F9E, &[_]u21{
-        0x1F96,
-    });
     instance.map.put(0x1F9F, &[_]u21{
         0x1F27,
         0x03B9,
-    });
-    instance.map.put(0x1F9F, &[_]u21{
-        0x1F97,
     });
     instance.map.put(0x1FA0, &[_]u21{
         0x1F60,
@@ -2564,57 +2507,33 @@ pub fn init(allocator: *std.mem.Allocator) !CaseFoldMap {
         0x1F60,
         0x03B9,
     });
-    instance.map.put(0x1FA8, &[_]u21{
-        0x1FA0,
-    });
     instance.map.put(0x1FA9, &[_]u21{
         0x1F61,
         0x03B9,
-    });
-    instance.map.put(0x1FA9, &[_]u21{
-        0x1FA1,
     });
     instance.map.put(0x1FAA, &[_]u21{
         0x1F62,
         0x03B9,
     });
-    instance.map.put(0x1FAA, &[_]u21{
-        0x1FA2,
-    });
     instance.map.put(0x1FAB, &[_]u21{
         0x1F63,
         0x03B9,
-    });
-    instance.map.put(0x1FAB, &[_]u21{
-        0x1FA3,
     });
     instance.map.put(0x1FAC, &[_]u21{
         0x1F64,
         0x03B9,
     });
-    instance.map.put(0x1FAC, &[_]u21{
-        0x1FA4,
-    });
     instance.map.put(0x1FAD, &[_]u21{
         0x1F65,
         0x03B9,
-    });
-    instance.map.put(0x1FAD, &[_]u21{
-        0x1FA5,
     });
     instance.map.put(0x1FAE, &[_]u21{
         0x1F66,
         0x03B9,
     });
-    instance.map.put(0x1FAE, &[_]u21{
-        0x1FA6,
-    });
     instance.map.put(0x1FAF, &[_]u21{
         0x1F67,
         0x03B9,
-    });
-    instance.map.put(0x1FAF, &[_]u21{
-        0x1FA7,
     });
     instance.map.put(0x1FB2, &[_]u21{
         0x1F70,
@@ -2652,9 +2571,6 @@ pub fn init(allocator: *std.mem.Allocator) !CaseFoldMap {
     instance.map.put(0x1FBC, &[_]u21{
         0x03B1,
         0x03B9,
-    });
-    instance.map.put(0x1FBC, &[_]u21{
-        0x1FB3,
     });
     instance.map.put(0x1FBE, &[_]u21{
         0x03B9,
@@ -2695,9 +2611,6 @@ pub fn init(allocator: *std.mem.Allocator) !CaseFoldMap {
     instance.map.put(0x1FCC, &[_]u21{
         0x03B7,
         0x03B9,
-    });
-    instance.map.put(0x1FCC, &[_]u21{
-        0x1FC3,
     });
     instance.map.put(0x1FD2, &[_]u21{
         0x03B9,
@@ -2804,9 +2717,6 @@ pub fn init(allocator: *std.mem.Allocator) !CaseFoldMap {
     instance.map.put(0x1FFC, &[_]u21{
         0x03C9,
         0x03B9,
-    });
-    instance.map.put(0x1FFC, &[_]u21{
-        0x1FF3,
     });
     instance.map.put(0x2126, &[_]u21{
         0x03C9,

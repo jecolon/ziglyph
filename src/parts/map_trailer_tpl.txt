@@ -7,21 +7,7 @@ pub fn deinit(self: *{1s}) void {{
     self.allocator.free(self.array);
 }}
 
-// ASCII optimization.
-fn ascii_opt(self: {1s}, cp: u21) ?u21 {{
-    if (cp < 128) {{
-        {2s}
-    }} else {{
-        return null;
-    }}
-}}
-
 /// to{0s} maps the code point to the desired case or returns the same code point if no mapping exists.
 pub fn to{0s}(self: {1s}, cp: u21) u21 {{
-    if (self.ascii_opt(cp)) |acp| return acp;
-    if (cp < self.lo or cp > self.hi) return cp;
-    const index = cp - self.lo;
-    if (index >= self.array.len) return cp;
-    const ucp = self.array[index];
-    return if (ucp != 0) ucp else cp;
+    return if (self.map.get(cp)) |mcp| mcp else cp;
 }}
