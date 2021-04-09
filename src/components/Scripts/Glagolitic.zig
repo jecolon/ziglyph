@@ -14,44 +14,44 @@ const Glagolitic = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 11312,
+lo: u21 = 11264,
 hi: u21 = 122922,
 
 pub fn init(allocator: *mem.Allocator) !Glagolitic {
     var instance = Glagolitic{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 111611),
+        .array = try allocator.alloc(bool, 111659),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097104;
-    while (index <= 2097150) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
     while (index <= 46) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 111568;
-    while (index <= 111574) : (index += 1) {
+    index = 48;
+    while (index <= 94) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 111576;
-    while (index <= 111592) : (index += 1) {
+    index = 111616;
+    while (index <= 111622) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 111595;
-    while (index <= 111601) : (index += 1) {
+    index = 111624;
+    while (index <= 111640) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 111603;
-    while (index <= 111604) : (index += 1) {
+    index = 111643;
+    while (index <= 111649) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 111606;
-    while (index <= 111610) : (index += 1) {
+    index = 111651;
+    while (index <= 111652) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 111654;
+    while (index <= 111658) : (index += 1) {
         instance.array[index] = true;
     }
 

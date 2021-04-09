@@ -14,20 +14,20 @@ const Medefaidrin = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 93760,
 hi: u21 = 93855,
 
 pub fn init(allocator: *mem.Allocator) !Medefaidrin {
     var instance = Medefaidrin{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 93856),
+        .array = try allocator.alloc(bool, 96),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 93760;
-    while (index <= 93855) : (index += 1) {
+    index = 0;
+    while (index <= 95) : (index += 1) {
         instance.array[index] = true;
     }
 

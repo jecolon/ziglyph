@@ -14,20 +14,20 @@ const Phoenician = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 67840,
 hi: u21 = 67871,
 
 pub fn init(allocator: *mem.Allocator) !Phoenician {
     var instance = Phoenician{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 67872),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 67840;
-    while (index <= 67871) : (index += 1) {
+    index = 0;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

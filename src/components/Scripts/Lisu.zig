@@ -14,31 +14,31 @@ const Lisu = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 42232,
+lo: u21 = 42192,
 hi: u21 = 73648,
 
 pub fn init(allocator: *mem.Allocator) !Lisu {
     var instance = Lisu{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 31417),
+        .array = try allocator.alloc(bool, 31457),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097112;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 5) : (index += 1) {
+    while (index <= 39) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 6;
-    while (index <= 7) : (index += 1) {
+    index = 40;
+    while (index <= 45) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[31416] = true;
+    index = 46;
+    while (index <= 47) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[31456] = true;
 
     // Placeholder: 0. Struct name
     return instance;

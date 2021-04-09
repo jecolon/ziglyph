@@ -14,33 +14,33 @@ const Cypriot = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 10240,
+lo: u21 = 67584,
 hi: u21 = 67647,
 
 pub fn init(allocator: *mem.Allocator) !Cypriot {
     var instance = Cypriot{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 57408),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 57344;
-    while (index <= 57349) : (index += 1) {
+    index = 0;
+    while (index <= 5) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[57352] = true;
-    index = 57354;
-    while (index <= 57397) : (index += 1) {
+    instance.array[8] = true;
+    index = 10;
+    while (index <= 53) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 57399;
-    while (index <= 57400) : (index += 1) {
+    index = 55;
+    while (index <= 56) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[57404] = true;
-    instance.array[57407] = true;
+    instance.array[60] = true;
+    instance.array[63] = true;
 
     // Placeholder: 0. Struct name
     return instance;

@@ -14,20 +14,20 @@ const CuneiformNumbersandPunctuation = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 74752,
 hi: u21 = 74879,
 
 pub fn init(allocator: *mem.Allocator) !CuneiformNumbersandPunctuation {
     var instance = CuneiformNumbersandPunctuation{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 74880),
+        .array = try allocator.alloc(bool, 128),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 74752;
-    while (index <= 74879) : (index += 1) {
+    index = 0;
+    while (index <= 127) : (index += 1) {
         instance.array[index] = true;
     }
 

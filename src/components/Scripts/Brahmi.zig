@@ -14,42 +14,42 @@ const Brahmi = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 2112,
+lo: u21 = 69632,
 hi: u21 = 69759,
 
 pub fn init(allocator: *mem.Allocator) !Brahmi {
     var instance = Brahmi{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 67648),
+        .array = try allocator.alloc(bool, 128),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[67520] = true;
-    instance.array[67521] = true;
-    instance.array[67522] = true;
-    index = 67523;
-    while (index <= 67575) : (index += 1) {
+    instance.array[0] = true;
+    instance.array[1] = true;
+    instance.array[2] = true;
+    index = 3;
+    while (index <= 55) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 67576;
-    while (index <= 67590) : (index += 1) {
+    index = 56;
+    while (index <= 70) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 67591;
-    while (index <= 67597) : (index += 1) {
+    index = 71;
+    while (index <= 77) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 67602;
-    while (index <= 67621) : (index += 1) {
+    index = 82;
+    while (index <= 101) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 67622;
-    while (index <= 67631) : (index += 1) {
+    index = 102;
+    while (index <= 111) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[67647] = true;
+    instance.array[127] = true;
 
     // Placeholder: 0. Struct name
     return instance;

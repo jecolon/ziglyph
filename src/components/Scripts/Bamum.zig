@@ -14,36 +14,36 @@ const Bamum = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 42726,
+lo: u21 = 42656,
 hi: u21 = 92728,
 
 pub fn init(allocator: *mem.Allocator) !Bamum {
     var instance = Bamum{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 50003),
+        .array = try allocator.alloc(bool, 50073),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097082;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 9) : (index += 1) {
+    while (index <= 69) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 10;
-    while (index <= 11) : (index += 1) {
+    index = 70;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 12;
-    while (index <= 17) : (index += 1) {
+    index = 80;
+    while (index <= 81) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 49434;
-    while (index <= 50002) : (index += 1) {
+    index = 82;
+    while (index <= 87) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 49504;
+    while (index <= 50072) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,36 +14,36 @@ const MeroiticCursive = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 67968,
+lo: u21 = 68000,
 hi: u21 = 68095,
 
 pub fn init(allocator: *mem.Allocator) !MeroiticCursive {
     var instance = MeroiticCursive{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 128),
+        .array = try allocator.alloc(bool, 96),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
+    index = 0;
+    while (index <= 23) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 28;
+    while (index <= 29) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 30;
+    while (index <= 31) : (index += 1) {
+        instance.array[index] = true;
+    }
     index = 32;
-    while (index <= 55) : (index += 1) {
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 60;
-    while (index <= 61) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 62;
-    while (index <= 63) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 64;
-    while (index <= 79) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 82;
-    while (index <= 127) : (index += 1) {
+    index = 50;
+    while (index <= 95) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,45 +14,45 @@ const OtherDefaultIgnorableCodePoint = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 329,
+lo: u21 = 847,
 hi: u21 = 921599,
 
 pub fn init(allocator: *mem.Allocator) !OtherDefaultIgnorableCodePoint {
     var instance = OtherDefaultIgnorableCodePoint{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 921271),
+        .array = try allocator.alloc(bool, 920753),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[518] = true;
-    index = 4118;
-    while (index <= 4119) : (index += 1) {
+    instance.array[0] = true;
+    index = 3600;
+    while (index <= 3601) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 5739;
-    while (index <= 5740) : (index += 1) {
+    index = 5221;
+    while (index <= 5222) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[7964] = true;
-    instance.array[12315] = true;
-    instance.array[65111] = true;
-    index = 65191;
-    while (index <= 65199) : (index += 1) {
+    instance.array[7446] = true;
+    instance.array[11797] = true;
+    instance.array[64593] = true;
+    index = 64673;
+    while (index <= 64681) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[917175] = true;
-    index = 917177;
-    while (index <= 917206) : (index += 1) {
+    instance.array[916657] = true;
+    index = 916659;
+    while (index <= 916688) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 917303;
-    while (index <= 917430) : (index += 1) {
+    index = 916785;
+    while (index <= 916912) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 917671;
-    while (index <= 921270) : (index += 1) {
+    index = 917153;
+    while (index <= 920752) : (index += 1) {
         instance.array[index] = true;
     }
 

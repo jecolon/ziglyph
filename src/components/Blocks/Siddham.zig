@@ -14,20 +14,20 @@ const Siddham = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 71040,
 hi: u21 = 71167,
 
 pub fn init(allocator: *mem.Allocator) !Siddham {
     var instance = Siddham{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 71168),
+        .array = try allocator.alloc(bool, 128),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 71040;
-    while (index <= 71167) : (index += 1) {
+    index = 0;
+    while (index <= 127) : (index += 1) {
         instance.array[index] = true;
     }
 

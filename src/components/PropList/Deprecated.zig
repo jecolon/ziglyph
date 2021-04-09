@@ -14,33 +14,33 @@ const Deprecated = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 105,
+lo: u21 = 329,
 hi: u21 = 917505,
 
 pub fn init(allocator: *mem.Allocator) !Deprecated {
     var instance = Deprecated{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 917401),
+        .array = try allocator.alloc(bool, 917177),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[224] = true;
-    instance.array[1546] = true;
-    instance.array[3854] = true;
-    instance.array[3856] = true;
-    index = 5946;
-    while (index <= 5947) : (index += 1) {
+    instance.array[0] = true;
+    instance.array[1322] = true;
+    instance.array[3630] = true;
+    instance.array[3632] = true;
+    index = 5722;
+    while (index <= 5723) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 8193;
-    while (index <= 8198) : (index += 1) {
+    index = 7969;
+    while (index <= 7974) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[8896] = true;
-    instance.array[8897] = true;
-    instance.array[917400] = true;
+    instance.array[8672] = true;
+    instance.array[8673] = true;
+    instance.array[917176] = true;
 
     // Placeholder: 0. Struct name
     return instance;

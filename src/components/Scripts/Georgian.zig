@@ -14,47 +14,47 @@ const Georgian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 4295,
+lo: u21 = 4256,
 hi: u21 = 11565,
 
 pub fn init(allocator: *mem.Allocator) !Georgian {
     var instance = Georgian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 7271),
+        .array = try allocator.alloc(bool, 7310),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097113;
-    while (index <= 2097150) : (index += 1) {
+    index = 0;
+    while (index <= 37) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[0] = true;
-    instance.array[6] = true;
-    index = 9;
-    while (index <= 51) : (index += 1) {
+    instance.array[39] = true;
+    instance.array[45] = true;
+    index = 48;
+    while (index <= 90) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[53] = true;
-    index = 54;
-    while (index <= 56) : (index += 1) {
+    instance.array[92] = true;
+    index = 93;
+    while (index <= 95) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 3017;
-    while (index <= 3059) : (index += 1) {
+    index = 3056;
+    while (index <= 3098) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 3062;
-    while (index <= 3064) : (index += 1) {
+    index = 3101;
+    while (index <= 3103) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 7225;
-    while (index <= 7262) : (index += 1) {
+    index = 7264;
+    while (index <= 7301) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[7264] = true;
-    instance.array[7270] = true;
+    instance.array[7303] = true;
+    instance.array[7309] = true;
 
     // Placeholder: 0. Struct name
     return instance;

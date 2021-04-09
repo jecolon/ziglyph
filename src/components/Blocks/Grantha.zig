@@ -14,20 +14,20 @@ const Grantha = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 70400,
 hi: u21 = 70527,
 
 pub fn init(allocator: *mem.Allocator) !Grantha {
     var instance = Grantha{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 70528),
+        .array = try allocator.alloc(bool, 128),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 70400;
-    while (index <= 70527) : (index += 1) {
+    index = 0;
+    while (index <= 127) : (index += 1) {
         instance.array[index] = true;
     }
 

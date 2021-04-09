@@ -14,20 +14,20 @@ const SupplementalPunctuation = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 11776,
 hi: u21 = 11903,
 
 pub fn init(allocator: *mem.Allocator) !SupplementalPunctuation {
     var instance = SupplementalPunctuation{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 11904),
+        .array = try allocator.alloc(bool, 128),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 11776;
-    while (index <= 11903) : (index += 1) {
+    index = 0;
+    while (index <= 127) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,43 +14,43 @@ const Square = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 188,
+lo: u21 = 12880,
 hi: u21 = 127547,
 
 pub fn init(allocator: *mem.Allocator) !Square {
     var instance = Square{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 127360),
+        .array = try allocator.alloc(bool, 114668),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[12692] = true;
-    index = 12816;
-    while (index <= 12819) : (index += 1) {
+    instance.array[0] = true;
+    index = 124;
+    while (index <= 127) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 12867;
-    while (index <= 12955) : (index += 1) {
+    index = 175;
+    while (index <= 263) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 12981;
-    while (index <= 13091) : (index += 1) {
+    index = 289;
+    while (index <= 399) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[13123] = true;
-    index = 127092;
-    while (index <= 127123) : (index += 1) {
+    instance.array[431] = true;
+    index = 114400;
+    while (index <= 114431) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[127188] = true;
-    index = 127300;
-    while (index <= 127302) : (index += 1) {
+    instance.array[114496] = true;
+    index = 114608;
+    while (index <= 114610) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 127316;
-    while (index <= 127359) : (index += 1) {
+    index = 114624;
+    while (index <= 114667) : (index += 1) {
         instance.array[index] = true;
     }
 

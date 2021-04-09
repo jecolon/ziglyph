@@ -14,28 +14,28 @@ const PsalterPahlavi = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 68505,
-hi: u21 = 71086,
+lo: u21 = 68480,
+hi: u21 = 68527,
 
 pub fn init(allocator: *mem.Allocator) !PsalterPahlavi {
     var instance = PsalterPahlavi{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 2582),
+        .array = try allocator.alloc(bool, 48),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097127;
-    while (index <= 2097144) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 3) : (index += 1) {
+    while (index <= 17) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 16;
-    while (index <= 22) : (index += 1) {
+    index = 25;
+    while (index <= 28) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 41;
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
 

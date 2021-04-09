@@ -14,20 +14,20 @@ const Marchen = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 72816,
 hi: u21 = 72895,
 
 pub fn init(allocator: *mem.Allocator) !Marchen {
     var instance = Marchen{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 72896),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 72816;
-    while (index <= 72895) : (index += 1) {
+    index = 0;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
 

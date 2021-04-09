@@ -14,268 +14,268 @@ const Font = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 160,
+lo: u21 = 8450,
 hi: u21 = 130041,
 
 pub fn init(allocator: *mem.Allocator) !Font {
     var instance = Font{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 129882),
+        .array = try allocator.alloc(bool, 121592),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[8290] = true;
-    index = 8298;
-    while (index <= 8307) : (index += 1) {
+    instance.array[0] = true;
+    index = 8;
+    while (index <= 17) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[8309] = true;
-    index = 8313;
-    while (index <= 8317) : (index += 1) {
+    instance.array[19] = true;
+    index = 23;
+    while (index <= 27) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[8324] = true;
-    instance.array[8328] = true;
-    index = 8332;
-    while (index <= 8333) : (index += 1) {
+    instance.array[34] = true;
+    instance.array[38] = true;
+    index = 42;
+    while (index <= 43) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 8335;
-    while (index <= 8337) : (index += 1) {
+    index = 45;
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 8339;
-    while (index <= 8340) : (index += 1) {
+    index = 49;
+    while (index <= 50) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[8345] = true;
-    index = 8348;
-    while (index <= 8351) : (index += 1) {
+    instance.array[55] = true;
+    index = 58;
+    while (index <= 61) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[8352] = true;
-    index = 8357;
-    while (index <= 8361) : (index += 1) {
+    instance.array[62] = true;
+    index = 67;
+    while (index <= 71) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 64128;
-    while (index <= 64136) : (index += 1) {
+    index = 55838;
+    while (index <= 55846) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[64137] = true;
-    index = 119648;
-    while (index <= 119732) : (index += 1) {
+    instance.array[55847] = true;
+    index = 111358;
+    while (index <= 111442) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 119734;
-    while (index <= 119804) : (index += 1) {
+    index = 111444;
+    while (index <= 111514) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 119806;
-    while (index <= 119807) : (index += 1) {
+    index = 111516;
+    while (index <= 111517) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[119810] = true;
-    index = 119813;
-    while (index <= 119814) : (index += 1) {
+    instance.array[111520] = true;
+    index = 111523;
+    while (index <= 111524) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 119817;
-    while (index <= 119820) : (index += 1) {
+    index = 111527;
+    while (index <= 111530) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 119822;
-    while (index <= 119833) : (index += 1) {
+    index = 111532;
+    while (index <= 111543) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[119835] = true;
-    index = 119837;
-    while (index <= 119843) : (index += 1) {
+    instance.array[111545] = true;
+    index = 111547;
+    while (index <= 111553) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 119845;
-    while (index <= 119909) : (index += 1) {
+    index = 111555;
+    while (index <= 111619) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 119911;
-    while (index <= 119914) : (index += 1) {
+    index = 111621;
+    while (index <= 111624) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 119917;
-    while (index <= 119924) : (index += 1) {
+    index = 111627;
+    while (index <= 111634) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 119926;
-    while (index <= 119932) : (index += 1) {
+    index = 111636;
+    while (index <= 111642) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 119934;
-    while (index <= 119961) : (index += 1) {
+    index = 111644;
+    while (index <= 111671) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 119963;
-    while (index <= 119966) : (index += 1) {
+    index = 111673;
+    while (index <= 111676) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 119968;
-    while (index <= 119972) : (index += 1) {
+    index = 111678;
+    while (index <= 111682) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[119974] = true;
-    index = 119978;
-    while (index <= 119984) : (index += 1) {
+    instance.array[111684] = true;
+    index = 111688;
+    while (index <= 111694) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 119986;
-    while (index <= 120325) : (index += 1) {
+    index = 111696;
+    while (index <= 112035) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 120328;
-    while (index <= 120352) : (index += 1) {
+    index = 112038;
+    while (index <= 112062) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[120353] = true;
-    index = 120354;
-    while (index <= 120378) : (index += 1) {
+    instance.array[112063] = true;
+    index = 112064;
+    while (index <= 112088) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[120379] = true;
-    index = 120380;
-    while (index <= 120410) : (index += 1) {
+    instance.array[112089] = true;
+    index = 112090;
+    while (index <= 112120) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[120411] = true;
-    index = 120412;
-    while (index <= 120436) : (index += 1) {
+    instance.array[112121] = true;
+    index = 112122;
+    while (index <= 112146) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[120437] = true;
-    index = 120438;
-    while (index <= 120468) : (index += 1) {
+    instance.array[112147] = true;
+    index = 112148;
+    while (index <= 112178) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[120469] = true;
-    index = 120470;
-    while (index <= 120494) : (index += 1) {
+    instance.array[112179] = true;
+    index = 112180;
+    while (index <= 112204) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[120495] = true;
-    index = 120496;
-    while (index <= 120526) : (index += 1) {
+    instance.array[112205] = true;
+    index = 112206;
+    while (index <= 112236) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[120527] = true;
-    index = 120528;
-    while (index <= 120552) : (index += 1) {
+    instance.array[112237] = true;
+    index = 112238;
+    while (index <= 112262) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[120553] = true;
-    index = 120554;
-    while (index <= 120584) : (index += 1) {
+    instance.array[112263] = true;
+    index = 112264;
+    while (index <= 112294) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[120585] = true;
-    index = 120586;
-    while (index <= 120610) : (index += 1) {
+    instance.array[112295] = true;
+    index = 112296;
+    while (index <= 112320) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[120611] = true;
-    index = 120612;
-    while (index <= 120619) : (index += 1) {
+    instance.array[112321] = true;
+    index = 112322;
+    while (index <= 112329) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 120622;
-    while (index <= 120671) : (index += 1) {
+    index = 112332;
+    while (index <= 112381) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 126304;
-    while (index <= 126307) : (index += 1) {
+    index = 118014;
+    while (index <= 118017) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 126309;
-    while (index <= 126335) : (index += 1) {
+    index = 118019;
+    while (index <= 118045) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 126337;
-    while (index <= 126338) : (index += 1) {
+    index = 118047;
+    while (index <= 118048) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[126340] = true;
-    instance.array[126343] = true;
-    index = 126345;
-    while (index <= 126354) : (index += 1) {
+    instance.array[118050] = true;
+    instance.array[118053] = true;
+    index = 118055;
+    while (index <= 118064) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 126356;
-    while (index <= 126359) : (index += 1) {
+    index = 118066;
+    while (index <= 118069) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[126361] = true;
-    instance.array[126363] = true;
-    instance.array[126370] = true;
-    instance.array[126375] = true;
-    instance.array[126377] = true;
-    instance.array[126379] = true;
-    index = 126381;
-    while (index <= 126383) : (index += 1) {
+    instance.array[118071] = true;
+    instance.array[118073] = true;
+    instance.array[118080] = true;
+    instance.array[118085] = true;
+    instance.array[118087] = true;
+    instance.array[118089] = true;
+    index = 118091;
+    while (index <= 118093) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 126385;
-    while (index <= 126386) : (index += 1) {
+    index = 118095;
+    while (index <= 118096) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[126388] = true;
-    instance.array[126391] = true;
-    instance.array[126393] = true;
-    instance.array[126395] = true;
-    instance.array[126397] = true;
-    instance.array[126399] = true;
-    index = 126401;
-    while (index <= 126402) : (index += 1) {
+    instance.array[118098] = true;
+    instance.array[118101] = true;
+    instance.array[118103] = true;
+    instance.array[118105] = true;
+    instance.array[118107] = true;
+    instance.array[118109] = true;
+    index = 118111;
+    while (index <= 118112) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[126404] = true;
-    index = 126407;
-    while (index <= 126410) : (index += 1) {
+    instance.array[118114] = true;
+    index = 118117;
+    while (index <= 118120) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 126412;
-    while (index <= 126418) : (index += 1) {
+    index = 118122;
+    while (index <= 118128) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 126420;
-    while (index <= 126423) : (index += 1) {
+    index = 118130;
+    while (index <= 118133) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 126425;
-    while (index <= 126428) : (index += 1) {
+    index = 118135;
+    while (index <= 118138) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[126430] = true;
-    index = 126432;
-    while (index <= 126441) : (index += 1) {
+    instance.array[118140] = true;
+    index = 118142;
+    while (index <= 118151) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 126443;
-    while (index <= 126459) : (index += 1) {
+    index = 118153;
+    while (index <= 118169) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 126465;
-    while (index <= 126467) : (index += 1) {
+    index = 118175;
+    while (index <= 118177) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 126469;
-    while (index <= 126473) : (index += 1) {
+    index = 118179;
+    while (index <= 118183) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 126475;
-    while (index <= 126491) : (index += 1) {
+    index = 118185;
+    while (index <= 118201) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 129872;
-    while (index <= 129881) : (index += 1) {
+    index = 121582;
+    while (index <= 121591) : (index += 1) {
         instance.array[index] = true;
     }
 

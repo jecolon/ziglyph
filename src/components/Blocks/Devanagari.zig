@@ -14,20 +14,20 @@ const Devanagari = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 2304,
 hi: u21 = 2431,
 
 pub fn init(allocator: *mem.Allocator) !Devanagari {
     var instance = Devanagari{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 2432),
+        .array = try allocator.alloc(bool, 128),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2304;
-    while (index <= 2431) : (index += 1) {
+    index = 0;
+    while (index <= 127) : (index += 1) {
         instance.array[index] = true;
     }
 

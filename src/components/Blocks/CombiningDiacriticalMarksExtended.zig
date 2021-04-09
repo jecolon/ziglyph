@@ -14,20 +14,20 @@ const CombiningDiacriticalMarksExtended = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 6832,
 hi: u21 = 6911,
 
 pub fn init(allocator: *mem.Allocator) !CombiningDiacriticalMarksExtended {
     var instance = CombiningDiacriticalMarksExtended{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 6912),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 6832;
-    while (index <= 6911) : (index += 1) {
+    index = 0;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
 

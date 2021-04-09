@@ -14,20 +14,20 @@ const YiSyllables = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 40960,
 hi: u21 = 42127,
 
 pub fn init(allocator: *mem.Allocator) !YiSyllables {
     var instance = YiSyllables{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 42128),
+        .array = try allocator.alloc(bool, 1168),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 40960;
-    while (index <= 42127) : (index += 1) {
+    index = 0;
+    while (index <= 1167) : (index += 1) {
         instance.array[index] = true;
     }
 

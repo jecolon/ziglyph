@@ -14,85 +14,85 @@ const Grantha = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 70402,
-hi: u21 = 92975,
+lo: u21 = 70400,
+hi: u21 = 70516,
 
 pub fn init(allocator: *mem.Allocator) !Grantha {
     var instance = Grantha{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 22574),
+        .array = try allocator.alloc(bool, 117),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097150;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
     while (index <= 1) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 3;
-    while (index <= 10) : (index += 1) {
+    index = 2;
+    while (index <= 3) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 13;
-    while (index <= 14) : (index += 1) {
+    index = 5;
+    while (index <= 12) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 17;
-    while (index <= 38) : (index += 1) {
+    index = 15;
+    while (index <= 16) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 40;
-    while (index <= 46) : (index += 1) {
+    index = 19;
+    while (index <= 40) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 48;
-    while (index <= 49) : (index += 1) {
+    index = 42;
+    while (index <= 48) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 51;
-    while (index <= 55) : (index += 1) {
+    index = 50;
+    while (index <= 51) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[58] = true;
-    instance.array[59] = true;
-    index = 60;
-    while (index <= 61) : (index += 1) {
+    index = 53;
+    while (index <= 57) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[62] = true;
-    index = 63;
-    while (index <= 66) : (index += 1) {
+    instance.array[60] = true;
+    instance.array[61] = true;
+    index = 62;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 69;
-    while (index <= 70) : (index += 1) {
+    instance.array[64] = true;
+    index = 65;
+    while (index <= 68) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 73;
-    while (index <= 75) : (index += 1) {
+    index = 71;
+    while (index <= 72) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[78] = true;
-    instance.array[85] = true;
-    index = 91;
-    while (index <= 95) : (index += 1) {
+    index = 75;
+    while (index <= 77) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 96;
+    instance.array[80] = true;
+    instance.array[87] = true;
+    index = 93;
     while (index <= 97) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 100;
-    while (index <= 106) : (index += 1) {
+    index = 98;
+    while (index <= 99) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 110;
-    while (index <= 114) : (index += 1) {
+    index = 102;
+    while (index <= 108) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 112;
+    while (index <= 116) : (index += 1) {
         instance.array[index] = true;
     }
 

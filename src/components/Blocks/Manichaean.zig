@@ -14,20 +14,20 @@ const Manichaean = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 68288,
 hi: u21 = 68351,
 
 pub fn init(allocator: *mem.Allocator) !Manichaean {
     var instance = Manichaean{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 68352),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 68288;
-    while (index <= 68351) : (index += 1) {
+    index = 0;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

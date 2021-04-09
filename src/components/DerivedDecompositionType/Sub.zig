@@ -14,37 +14,37 @@ const Sub = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 8320,
-hi: u21 = 12447,
+lo: u21 = 7522,
+hi: u21 = 11388,
 
 pub fn init(allocator: *mem.Allocator) !Sub {
     var instance = Sub{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 4128),
+        .array = try allocator.alloc(bool, 3867),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2096354;
-    while (index <= 2096362) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 9) : (index += 1) {
+    while (index <= 8) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 10;
-    while (index <= 12) : (index += 1) {
+    index = 798;
+    while (index <= 807) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[13] = true;
-    instance.array[14] = true;
-    index = 16;
-    while (index <= 28) : (index += 1) {
+    index = 808;
+    while (index <= 810) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[3068] = true;
+    instance.array[811] = true;
+    instance.array[812] = true;
+    index = 814;
+    while (index <= 826) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[3866] = true;
 
     // Placeholder: 0. Struct name
     return instance;

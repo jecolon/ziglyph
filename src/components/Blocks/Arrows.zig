@@ -14,20 +14,20 @@ const Arrows = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 8592,
 hi: u21 = 8703,
 
 pub fn init(allocator: *mem.Allocator) !Arrows {
     var instance = Arrows{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 8704),
+        .array = try allocator.alloc(bool, 112),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 8592;
-    while (index <= 8703) : (index += 1) {
+    index = 0;
+    while (index <= 111) : (index += 1) {
         instance.array[index] = true;
     }
 

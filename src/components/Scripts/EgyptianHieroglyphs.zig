@@ -14,24 +14,24 @@ const EgyptianHieroglyphs = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 2048,
+lo: u21 = 77824,
 hi: u21 = 78904,
 
 pub fn init(allocator: *mem.Allocator) !EgyptianHieroglyphs {
     var instance = EgyptianHieroglyphs{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 76857),
+        .array = try allocator.alloc(bool, 1081),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 75776;
-    while (index <= 76846) : (index += 1) {
+    index = 0;
+    while (index <= 1070) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 76848;
-    while (index <= 76856) : (index += 1) {
+    index = 1072;
+    while (index <= 1080) : (index += 1) {
         instance.array[index] = true;
     }
 

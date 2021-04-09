@@ -14,33 +14,33 @@ const Adlam = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 72704,
+lo: u21 = 125184,
 hi: u21 = 125279,
 
 pub fn init(allocator: *mem.Allocator) !Adlam {
     var instance = Adlam{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 52576),
+        .array = try allocator.alloc(bool, 96),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 52480;
-    while (index <= 52547) : (index += 1) {
+    index = 0;
+    while (index <= 67) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 52548;
-    while (index <= 52554) : (index += 1) {
+    index = 68;
+    while (index <= 74) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[52555] = true;
-    index = 52560;
-    while (index <= 52569) : (index += 1) {
+    instance.array[75] = true;
+    index = 80;
+    while (index <= 89) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 52574;
-    while (index <= 52575) : (index += 1) {
+    index = 94;
+    while (index <= 95) : (index += 1) {
         instance.array[index] = true;
     }
 

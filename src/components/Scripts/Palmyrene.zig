@@ -14,28 +14,28 @@ const Palmyrene = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 67703,
-hi: u21 = 72440,
+lo: u21 = 67680,
+hi: u21 = 67711,
 
 pub fn init(allocator: *mem.Allocator) !Palmyrene {
     var instance = Palmyrene{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 4738),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097129;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 1) : (index += 1) {
+    while (index <= 22) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 2;
-    while (index <= 8) : (index += 1) {
+    index = 23;
+    while (index <= 24) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 25;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

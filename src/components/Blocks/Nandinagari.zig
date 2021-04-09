@@ -14,20 +14,20 @@ const Nandinagari = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 72096,
 hi: u21 = 72191,
 
 pub fn init(allocator: *mem.Allocator) !Nandinagari {
     var instance = Nandinagari{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 72192),
+        .array = try allocator.alloc(bool, 96),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 72096;
-    while (index <= 72191) : (index += 1) {
+    index = 0;
+    while (index <= 95) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,20 +14,20 @@ const KanaSupplement = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 110592,
 hi: u21 = 110847,
 
 pub fn init(allocator: *mem.Allocator) !KanaSupplement {
     var instance = KanaSupplement{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 110848),
+        .array = try allocator.alloc(bool, 256),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 110592;
-    while (index <= 110847) : (index += 1) {
+    index = 0;
+    while (index <= 255) : (index += 1) {
         instance.array[index] = true;
     }
 

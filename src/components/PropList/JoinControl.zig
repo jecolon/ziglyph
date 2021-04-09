@@ -14,20 +14,20 @@ const JoinControl = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 45,
-hi: u21 = 45,
+lo: u21 = 8204,
+hi: u21 = 8205,
 
 pub fn init(allocator: *mem.Allocator) !JoinControl {
     var instance = JoinControl{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1),
+        .array = try allocator.alloc(bool, 2),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 8159;
-    while (index <= 8160) : (index += 1) {
+    index = 0;
+    while (index <= 1) : (index += 1) {
         instance.array[index] = true;
     }
 

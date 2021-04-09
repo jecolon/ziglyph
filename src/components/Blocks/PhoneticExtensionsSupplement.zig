@@ -14,20 +14,20 @@ const PhoneticExtensionsSupplement = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 7552,
 hi: u21 = 7615,
 
 pub fn init(allocator: *mem.Allocator) !PhoneticExtensionsSupplement {
     var instance = PhoneticExtensionsSupplement{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 7616),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 7552;
-    while (index <= 7615) : (index += 1) {
+    index = 0;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

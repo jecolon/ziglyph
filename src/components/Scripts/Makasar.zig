@@ -14,32 +14,32 @@ const Makasar = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 73459,
-hi: u21 = 93823,
+lo: u21 = 73440,
+hi: u21 = 73464,
 
 pub fn init(allocator: *mem.Allocator) !Makasar {
     var instance = Makasar{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 20365),
+        .array = try allocator.alloc(bool, 25),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097133;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 1) : (index += 1) {
+    while (index <= 18) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 2;
-    while (index <= 3) : (index += 1) {
+    index = 19;
+    while (index <= 20) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 4;
-    while (index <= 5) : (index += 1) {
+    index = 21;
+    while (index <= 22) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 23;
+    while (index <= 24) : (index += 1) {
         instance.array[index] = true;
     }
 

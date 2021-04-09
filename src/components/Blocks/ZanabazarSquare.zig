@@ -14,20 +14,20 @@ const ZanabazarSquare = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 72192,
 hi: u21 = 72271,
 
 pub fn init(allocator: *mem.Allocator) !ZanabazarSquare {
     var instance = ZanabazarSquare{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 72272),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 72192;
-    while (index <= 72271) : (index += 1) {
+    index = 0;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,20 +14,20 @@ const OpticalCharacterRecognition = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 9280,
 hi: u21 = 9311,
 
 pub fn init(allocator: *mem.Allocator) !OpticalCharacterRecognition {
     var instance = OpticalCharacterRecognition{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 9312),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 9280;
-    while (index <= 9311) : (index += 1) {
+    index = 0;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

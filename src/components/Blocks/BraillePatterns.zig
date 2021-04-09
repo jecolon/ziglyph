@@ -14,20 +14,20 @@ const BraillePatterns = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 10240,
 hi: u21 = 10495,
 
 pub fn init(allocator: *mem.Allocator) !BraillePatterns {
     var instance = BraillePatterns{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 10496),
+        .array = try allocator.alloc(bool, 256),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 10240;
-    while (index <= 10495) : (index += 1) {
+    index = 0;
+    while (index <= 255) : (index += 1) {
         instance.array[index] = true;
     }
 

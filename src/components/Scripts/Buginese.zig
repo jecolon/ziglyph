@@ -14,33 +14,33 @@ const Buginese = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 994,
+lo: u21 = 6656,
 hi: u21 = 6687,
 
 pub fn init(allocator: *mem.Allocator) !Buginese {
     var instance = Buginese{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 5694),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 5662;
-    while (index <= 5684) : (index += 1) {
+    index = 0;
+    while (index <= 22) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 5685;
-    while (index <= 5686) : (index += 1) {
+    index = 23;
+    while (index <= 24) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 5687;
-    while (index <= 5688) : (index += 1) {
+    index = 25;
+    while (index <= 26) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[5689] = true;
-    index = 5692;
-    while (index <= 5693) : (index += 1) {
+    instance.array[27] = true;
+    index = 30;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

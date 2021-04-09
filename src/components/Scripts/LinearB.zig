@@ -14,44 +14,44 @@ const LinearB = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 65549,
-hi: u21 = 66461,
+lo: u21 = 65536,
+hi: u21 = 65786,
 
 pub fn init(allocator: *mem.Allocator) !LinearB {
     var instance = LinearB{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 913),
+        .array = try allocator.alloc(bool, 251),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097139;
-    while (index <= 2097150) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 25) : (index += 1) {
+    while (index <= 11) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 27;
-    while (index <= 45) : (index += 1) {
+    index = 13;
+    while (index <= 38) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 47;
-    while (index <= 48) : (index += 1) {
+    index = 40;
+    while (index <= 58) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 50;
-    while (index <= 64) : (index += 1) {
+    index = 60;
+    while (index <= 61) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 67;
-    while (index <= 80) : (index += 1) {
+    index = 63;
+    while (index <= 77) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 115;
-    while (index <= 237) : (index += 1) {
+    index = 80;
+    while (index <= 93) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 128;
+    while (index <= 250) : (index += 1) {
         instance.array[index] = true;
     }
 

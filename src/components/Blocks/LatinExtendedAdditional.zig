@@ -14,20 +14,20 @@ const LatinExtendedAdditional = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 7680,
 hi: u21 = 7935,
 
 pub fn init(allocator: *mem.Allocator) !LatinExtendedAdditional {
     var instance = LatinExtendedAdditional{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 7936),
+        .array = try allocator.alloc(bool, 256),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 7680;
-    while (index <= 7935) : (index += 1) {
+    index = 0;
+    while (index <= 255) : (index += 1) {
         instance.array[index] = true;
     }
 

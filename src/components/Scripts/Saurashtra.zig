@@ -14,40 +14,40 @@ const Saurashtra = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 43138,
-hi: u21 = 43273,
+lo: u21 = 43136,
+hi: u21 = 43225,
 
 pub fn init(allocator: *mem.Allocator) !Saurashtra {
     var instance = Saurashtra{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 136),
+        .array = try allocator.alloc(bool, 90),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097150;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 49) : (index += 1) {
+    while (index <= 1) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 50;
-    while (index <= 65) : (index += 1) {
+    index = 2;
+    while (index <= 51) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 66;
+    index = 52;
     while (index <= 67) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 76;
-    while (index <= 77) : (index += 1) {
+    index = 68;
+    while (index <= 69) : (index += 1) {
         instance.array[index] = true;
     }
     index = 78;
-    while (index <= 87) : (index += 1) {
+    while (index <= 79) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 80;
+    while (index <= 89) : (index += 1) {
         instance.array[index] = true;
     }
 

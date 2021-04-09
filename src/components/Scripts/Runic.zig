@@ -14,28 +14,28 @@ const Runic = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 5870,
-hi: u21 = 6067,
+lo: u21 = 5792,
+hi: u21 = 5880,
 
 pub fn init(allocator: *mem.Allocator) !Runic {
     var instance = Runic{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 198),
+        .array = try allocator.alloc(bool, 89),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097074;
-    while (index <= 2097148) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 2) : (index += 1) {
+    while (index <= 74) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 3;
-    while (index <= 10) : (index += 1) {
+    index = 78;
+    while (index <= 80) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 81;
+    while (index <= 88) : (index += 1) {
         instance.array[index] = true;
     }
 

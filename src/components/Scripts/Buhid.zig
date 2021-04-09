@@ -14,24 +14,24 @@ const Buhid = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 5970,
-hi: u21 = 5996,
+lo: u21 = 5952,
+hi: u21 = 5971,
 
 pub fn init(allocator: *mem.Allocator) !Buhid {
     var instance = Buhid{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 27),
+        .array = try allocator.alloc(bool, 20),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097134;
-    while (index <= 2097151) : (index += 1) {
+    index = 0;
+    while (index <= 17) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 0;
-    while (index <= 1) : (index += 1) {
+    index = 18;
+    while (index <= 19) : (index += 1) {
         instance.array[index] = true;
     }
 

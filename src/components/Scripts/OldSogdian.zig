@@ -14,27 +14,27 @@ const OldSogdian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 69405,
-hi: u21 = 69622,
+lo: u21 = 69376,
+hi: u21 = 69415,
 
 pub fn init(allocator: *mem.Allocator) !OldSogdian {
     var instance = OldSogdian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 218),
+        .array = try allocator.alloc(bool, 40),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097123;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 9) : (index += 1) {
+    while (index <= 28) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[10] = true;
+    index = 29;
+    while (index <= 38) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[39] = true;
 
     // Placeholder: 0. Struct name
     return instance;

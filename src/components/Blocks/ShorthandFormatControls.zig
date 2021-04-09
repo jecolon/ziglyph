@@ -14,20 +14,20 @@ const ShorthandFormatControls = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 113824,
 hi: u21 = 113839,
 
 pub fn init(allocator: *mem.Allocator) !ShorthandFormatControls {
     var instance = ShorthandFormatControls{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 113840),
+        .array = try allocator.alloc(bool, 16),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 113824;
-    while (index <= 113839) : (index += 1) {
+    index = 0;
+    while (index <= 15) : (index += 1) {
         instance.array[index] = true;
     }
 

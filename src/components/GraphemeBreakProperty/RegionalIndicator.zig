@@ -14,20 +14,20 @@ const RegionalIndicator = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 2307,
-hi: u21 = 2307,
+lo: u21 = 127462,
+hi: u21 = 127487,
 
 pub fn init(allocator: *mem.Allocator) !RegionalIndicator {
     var instance = RegionalIndicator{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1),
+        .array = try allocator.alloc(bool, 26),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 125155;
-    while (index <= 125180) : (index += 1) {
+    index = 0;
+    while (index <= 25) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,48 +14,48 @@ const GunjalaGondi = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 73063,
-hi: u21 = 73458,
+lo: u21 = 73056,
+hi: u21 = 73129,
 
 pub fn init(allocator: *mem.Allocator) !GunjalaGondi {
     var instance = GunjalaGondi{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 396),
+        .array = try allocator.alloc(bool, 74),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097145;
-    while (index <= 2097150) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 1) : (index += 1) {
+    while (index <= 5) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 3;
-    while (index <= 34) : (index += 1) {
+    index = 7;
+    while (index <= 8) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 35;
-    while (index <= 39) : (index += 1) {
+    index = 10;
+    while (index <= 41) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 41;
-    while (index <= 42) : (index += 1) {
+    index = 42;
+    while (index <= 46) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 44;
-    while (index <= 45) : (index += 1) {
+    index = 48;
+    while (index <= 49) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[46] = true;
-    instance.array[47] = true;
-    instance.array[48] = true;
-    instance.array[49] = true;
-    index = 57;
-    while (index <= 66) : (index += 1) {
+    index = 51;
+    while (index <= 52) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[53] = true;
+    instance.array[54] = true;
+    instance.array[55] = true;
+    instance.array[56] = true;
+    index = 64;
+    while (index <= 73) : (index += 1) {
         instance.array[index] = true;
     }
 

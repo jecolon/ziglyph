@@ -14,20 +14,20 @@ const AncientSymbols = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 65936,
 hi: u21 = 65999,
 
 pub fn init(allocator: *mem.Allocator) !AncientSymbols {
     var instance = AncientSymbols{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 66000),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 65936;
-    while (index <= 65999) : (index += 1) {
+    index = 0;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,20 +14,20 @@ const KangxiRadicals = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 12032,
 hi: u21 = 12255,
 
 pub fn init(allocator: *mem.Allocator) !KangxiRadicals {
     var instance = KangxiRadicals{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 12256),
+        .array = try allocator.alloc(bool, 224),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 12032;
-    while (index <= 12255) : (index += 1) {
+    index = 0;
+    while (index <= 223) : (index += 1) {
         instance.array[index] = true;
     }
 

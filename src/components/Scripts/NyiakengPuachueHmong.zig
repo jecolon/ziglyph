@@ -14,36 +14,36 @@ const NyiakengPuachueHmong = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 123184,
-hi: u21 = 123627,
+lo: u21 = 123136,
+hi: u21 = 123215,
 
 pub fn init(allocator: *mem.Allocator) !NyiakengPuachueHmong {
     var instance = NyiakengPuachueHmong{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 444),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097104;
-    while (index <= 2097148) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 6) : (index += 1) {
+    while (index <= 44) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 7;
-    while (index <= 13) : (index += 1) {
+    index = 48;
+    while (index <= 54) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 16;
-    while (index <= 25) : (index += 1) {
+    index = 55;
+    while (index <= 61) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[30] = true;
-    instance.array[31] = true;
+    index = 64;
+    while (index <= 73) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[78] = true;
+    instance.array[79] = true;
 
     // Placeholder: 0. Struct name
     return instance;

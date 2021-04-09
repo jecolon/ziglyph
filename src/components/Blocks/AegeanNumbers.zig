@@ -14,20 +14,20 @@ const AegeanNumbers = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 65792,
 hi: u21 = 65855,
 
 pub fn init(allocator: *mem.Allocator) !AegeanNumbers {
     var instance = AegeanNumbers{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 65856),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 65792;
-    while (index <= 65855) : (index += 1) {
+    index = 0;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

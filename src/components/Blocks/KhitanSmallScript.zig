@@ -14,20 +14,20 @@ const KhitanSmallScript = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 101120,
 hi: u21 = 101631,
 
 pub fn init(allocator: *mem.Allocator) !KhitanSmallScript {
     var instance = KhitanSmallScript{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 101632),
+        .array = try allocator.alloc(bool, 512),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 101120;
-    while (index <= 101631) : (index += 1) {
+    index = 0;
+    while (index <= 511) : (index += 1) {
         instance.array[index] = true;
     }
 

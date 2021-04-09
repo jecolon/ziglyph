@@ -14,38 +14,38 @@ const LogicalOrderException = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 3776,
+lo: u21 = 3648,
 hi: u21 = 43708,
 
 pub fn init(allocator: *mem.Allocator) !LogicalOrderException {
     var instance = LogicalOrderException{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 39933),
+        .array = try allocator.alloc(bool, 40061),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097024;
-    while (index <= 2097028) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
     while (index <= 4) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 2805;
-    while (index <= 2807) : (index += 1) {
+    index = 128;
+    while (index <= 132) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[2810] = true;
-    index = 39925;
-    while (index <= 39926) : (index += 1) {
+    index = 2933;
+    while (index <= 2935) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[39929] = true;
-    index = 39931;
-    while (index <= 39932) : (index += 1) {
+    instance.array[2938] = true;
+    index = 40053;
+    while (index <= 40054) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[40057] = true;
+    index = 40059;
+    while (index <= 40060) : (index += 1) {
         instance.array[index] = true;
     }
 

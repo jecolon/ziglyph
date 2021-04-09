@@ -14,20 +14,20 @@ const NumberForms = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 8528,
 hi: u21 = 8591,
 
 pub fn init(allocator: *mem.Allocator) !NumberForms {
     var instance = NumberForms{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 8592),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 8528;
-    while (index <= 8591) : (index += 1) {
+    index = 0;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

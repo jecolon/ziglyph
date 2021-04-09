@@ -14,56 +14,56 @@ const OtherGraphemeExtend = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 2519,
+lo: u21 = 2494,
 hi: u21 = 917631,
 
 pub fn init(allocator: *mem.Allocator) !OtherGraphemeExtend {
     var instance = OtherGraphemeExtend{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 915113),
+        .array = try allocator.alloc(bool, 915138),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[2097127] = true;
     instance.array[0] = true;
-    instance.array[359] = true;
+    instance.array[25] = true;
     instance.array[384] = true;
-    instance.array[487] = true;
+    instance.array[409] = true;
     instance.array[512] = true;
-    instance.array[747] = true;
-    index = 766;
-    while (index <= 767) : (index += 1) {
+    instance.array[537] = true;
+    instance.array[772] = true;
+    index = 791;
+    while (index <= 792) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[871] = true;
     instance.array[896] = true;
-    instance.array[1016] = true;
-    instance.array[1032] = true;
-    instance.array[4446] = true;
-    instance.array[5685] = true;
-    index = 9815;
-    while (index <= 9816) : (index += 1) {
+    instance.array[921] = true;
+    instance.array[1041] = true;
+    instance.array[1057] = true;
+    instance.array[4471] = true;
+    instance.array[5710] = true;
+    index = 9840;
+    while (index <= 9841) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 62919;
-    while (index <= 62920) : (index += 1) {
+    index = 62944;
+    while (index <= 62945) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[67943] = true;
     instance.array[67968] = true;
-    instance.array[68313] = true;
-    instance.array[68326] = true;
-    instance.array[68568] = true;
-    instance.array[69465] = true;
-    instance.array[116622] = true;
-    index = 116631;
-    while (index <= 116635) : (index += 1) {
+    instance.array[67993] = true;
+    instance.array[68338] = true;
+    instance.array[68351] = true;
+    instance.array[68593] = true;
+    instance.array[69490] = true;
+    instance.array[116647] = true;
+    index = 116656;
+    while (index <= 116660) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 915017;
-    while (index <= 915112) : (index += 1) {
+    index = 915042;
+    while (index <= 915137) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,20 +14,20 @@ const VerticalForms = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 65040,
 hi: u21 = 65055,
 
 pub fn init(allocator: *mem.Allocator) !VerticalForms {
     var instance = VerticalForms{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 65056),
+        .array = try allocator.alloc(bool, 16),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 65040;
-    while (index <= 65055) : (index += 1) {
+    index = 0;
+    while (index <= 15) : (index += 1) {
         instance.array[index] = true;
     }
 

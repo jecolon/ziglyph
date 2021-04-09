@@ -14,20 +14,20 @@ const LetterlikeSymbols = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 8448,
 hi: u21 = 8527,
 
 pub fn init(allocator: *mem.Allocator) !LetterlikeSymbols {
     var instance = LetterlikeSymbols{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 8528),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 8448;
-    while (index <= 8527) : (index += 1) {
+    index = 0;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
 

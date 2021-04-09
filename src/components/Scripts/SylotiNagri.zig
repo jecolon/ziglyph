@@ -14,38 +14,34 @@ const SylotiNagri = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 43010,
-hi: u21 = 66499,
+lo: u21 = 43008,
+hi: u21 = 43052,
 
 pub fn init(allocator: *mem.Allocator) !SylotiNagri {
     var instance = SylotiNagri{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 23490),
+        .array = try allocator.alloc(bool, 45),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097150;
-    while (index <= 2097151) : (index += 1) {
+    index = 0;
+    while (index <= 1) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[0] = true;
-    index = 1;
-    while (index <= 3) : (index += 1) {
+    instance.array[2] = true;
+    index = 3;
+    while (index <= 5) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[4] = true;
-    index = 5;
-    while (index <= 8) : (index += 1) {
+    instance.array[6] = true;
+    index = 7;
+    while (index <= 10) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[9] = true;
-    index = 10;
-    while (index <= 32) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 33;
+    instance.array[11] = true;
+    index = 12;
     while (index <= 34) : (index += 1) {
         instance.array[index] = true;
     }
@@ -53,12 +49,16 @@ pub fn init(allocator: *mem.Allocator) !SylotiNagri {
     while (index <= 36) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[37] = true;
-    index = 38;
-    while (index <= 41) : (index += 1) {
+    index = 37;
+    while (index <= 38) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[42] = true;
+    instance.array[39] = true;
+    index = 40;
+    while (index <= 43) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[44] = true;
 
     // Placeholder: 0. Struct name
     return instance;

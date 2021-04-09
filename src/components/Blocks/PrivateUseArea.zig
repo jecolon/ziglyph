@@ -14,20 +14,20 @@ const PrivateUseArea = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 57344,
 hi: u21 = 63743,
 
 pub fn init(allocator: *mem.Allocator) !PrivateUseArea {
     var instance = PrivateUseArea{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 63744),
+        .array = try allocator.alloc(bool, 6400),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 57344;
-    while (index <= 63743) : (index += 1) {
+    index = 0;
+    while (index <= 6399) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,28 +14,28 @@ const Gothic = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 66369,
-hi: u21 = 66639,
+lo: u21 = 66352,
+hi: u21 = 66378,
 
 pub fn init(allocator: *mem.Allocator) !Gothic {
     var instance = Gothic{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 271),
+        .array = try allocator.alloc(bool, 27),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097135;
-    while (index <= 2097151) : (index += 1) {
+    index = 0;
+    while (index <= 16) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[0] = true;
-    index = 1;
-    while (index <= 8) : (index += 1) {
+    instance.array[17] = true;
+    index = 18;
+    while (index <= 25) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[9] = true;
+    instance.array[26] = true;
 
     // Placeholder: 0. Struct name
     return instance;

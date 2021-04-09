@@ -14,20 +14,20 @@ const Katakana = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 12448,
 hi: u21 = 12543,
 
 pub fn init(allocator: *mem.Allocator) !Katakana {
     var instance = Katakana{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 12544),
+        .array = try allocator.alloc(bool, 96),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 12448;
-    while (index <= 12543) : (index += 1) {
+    index = 0;
+    while (index <= 95) : (index += 1) {
         instance.array[index] = true;
     }
 

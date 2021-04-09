@@ -14,27 +14,27 @@ const Mandaic = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 2137,
-hi: u21 = 69890,
+lo: u21 = 2112,
+hi: u21 = 2142,
 
 pub fn init(allocator: *mem.Allocator) !Mandaic {
     var instance = Mandaic{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 67754),
+        .array = try allocator.alloc(bool, 31),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097127;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 2) : (index += 1) {
+    while (index <= 24) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[5] = true;
+    index = 25;
+    while (index <= 27) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[30] = true;
 
     // Placeholder: 0. Struct name
     return instance;

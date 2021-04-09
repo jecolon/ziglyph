@@ -14,20 +14,20 @@ const KanaExtendedAª = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 110848,
 hi: u21 = 110895,
 
 pub fn init(allocator: *mem.Allocator) !KanaExtendedAª {
     var instance = KanaExtendedAª{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 110896),
+        .array = try allocator.alloc(bool, 48),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 110848;
-    while (index <= 110895) : (index += 1) {
+    index = 0;
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,20 +14,20 @@ const Elymaic = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 72096,
-hi: u21 = 72103,
+lo: u21 = 69600,
+hi: u21 = 69622,
 
 pub fn init(allocator: *mem.Allocator) !Elymaic {
     var instance = Elymaic{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 8),
+        .array = try allocator.alloc(bool, 23),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2094656;
-    while (index <= 2094678) : (index += 1) {
+    index = 0;
+    while (index <= 22) : (index += 1) {
         instance.array[index] = true;
     }
 

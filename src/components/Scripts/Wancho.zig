@@ -14,31 +14,31 @@ const Wancho = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 69552,
+lo: u21 = 123584,
 hi: u21 = 123647,
 
 pub fn init(allocator: *mem.Allocator) !Wancho {
     var instance = Wancho{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 54096),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 54032;
-    while (index <= 54075) : (index += 1) {
+    index = 0;
+    while (index <= 43) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 54076;
-    while (index <= 54079) : (index += 1) {
+    index = 44;
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 54080;
-    while (index <= 54089) : (index += 1) {
+    index = 48;
+    while (index <= 57) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[54095] = true;
+    instance.array[63] = true;
 
     // Placeholder: 0. Struct name
     return instance;

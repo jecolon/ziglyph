@@ -14,20 +14,20 @@ const CyrillicExtendedCª = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 7296,
 hi: u21 = 7311,
 
 pub fn init(allocator: *mem.Allocator) !CyrillicExtendedCª {
     var instance = CyrillicExtendedCª{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 7312),
+        .array = try allocator.alloc(bool, 16),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 7296;
-    while (index <= 7311) : (index += 1) {
+    index = 0;
+    while (index <= 15) : (index += 1) {
         instance.array[index] = true;
     }
 

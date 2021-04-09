@@ -14,34 +14,34 @@ const Miao = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 70016,
+lo: u21 = 93952,
 hi: u21 = 94111,
 
 pub fn init(allocator: *mem.Allocator) !Miao {
     var instance = Miao{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 24096),
+        .array = try allocator.alloc(bool, 160),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 23936;
-    while (index <= 24010) : (index += 1) {
+    index = 0;
+    while (index <= 74) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[24015] = true;
-    instance.array[24016] = true;
-    index = 24017;
-    while (index <= 24071) : (index += 1) {
+    instance.array[79] = true;
+    instance.array[80] = true;
+    index = 81;
+    while (index <= 135) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 24079;
-    while (index <= 24082) : (index += 1) {
+    index = 143;
+    while (index <= 146) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 24083;
-    while (index <= 24095) : (index += 1) {
+    index = 147;
+    while (index <= 159) : (index += 1) {
         instance.array[index] = true;
     }
 

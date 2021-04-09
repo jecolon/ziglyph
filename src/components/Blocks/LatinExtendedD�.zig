@@ -14,20 +14,20 @@ const LatinExtendedDª = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 42784,
 hi: u21 = 43007,
 
 pub fn init(allocator: *mem.Allocator) !LatinExtendedDª {
     var instance = LatinExtendedDª{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 43008),
+        .array = try allocator.alloc(bool, 224),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 42784;
-    while (index <= 43007) : (index += 1) {
+    index = 0;
+    while (index <= 223) : (index += 1) {
         instance.array[index] = true;
     }
 

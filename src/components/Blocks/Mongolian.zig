@@ -14,20 +14,20 @@ const Mongolian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 6144,
 hi: u21 = 6319,
 
 pub fn init(allocator: *mem.Allocator) !Mongolian {
     var instance = Mongolian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 6320),
+        .array = try allocator.alloc(bool, 176),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 6144;
-    while (index <= 6319) : (index += 1) {
+    index = 0;
+    while (index <= 175) : (index += 1) {
         instance.array[index] = true;
     }
 

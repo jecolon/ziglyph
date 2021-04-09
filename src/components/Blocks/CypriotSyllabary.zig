@@ -14,20 +14,20 @@ const CypriotSyllabary = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 67584,
 hi: u21 = 67647,
 
 pub fn init(allocator: *mem.Allocator) !CypriotSyllabary {
     var instance = CypriotSyllabary{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 67648),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 67584;
-    while (index <= 67647) : (index += 1) {
+    index = 0;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

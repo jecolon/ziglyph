@@ -14,24 +14,24 @@ const Chorasmian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 69573,
-hi: u21 = 71942,
+lo: u21 = 69552,
+hi: u21 = 69579,
 
 pub fn init(allocator: *mem.Allocator) !Chorasmian {
     var instance = Chorasmian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 2370),
+        .array = try allocator.alloc(bool, 28),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097131;
-    while (index <= 2097151) : (index += 1) {
+    index = 0;
+    while (index <= 20) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 0;
-    while (index <= 6) : (index += 1) {
+    index = 21;
+    while (index <= 27) : (index += 1) {
         instance.array[index] = true;
     }
 

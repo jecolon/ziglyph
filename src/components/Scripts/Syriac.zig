@@ -14,39 +14,39 @@ const Syriac = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 1807,
+lo: u21 = 1792,
 hi: u21 = 2154,
 
 pub fn init(allocator: *mem.Allocator) !Syriac {
     var instance = Syriac{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 348),
+        .array = try allocator.alloc(bool, 363),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097137;
-    while (index <= 2097150) : (index += 1) {
+    index = 0;
+    while (index <= 13) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[0] = true;
-    instance.array[1] = true;
-    instance.array[2] = true;
-    index = 3;
-    while (index <= 32) : (index += 1) {
+    instance.array[15] = true;
+    instance.array[16] = true;
+    instance.array[17] = true;
+    index = 18;
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 33;
-    while (index <= 59) : (index += 1) {
+    index = 48;
+    while (index <= 74) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 62;
-    while (index <= 64) : (index += 1) {
+    index = 77;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 337;
-    while (index <= 347) : (index += 1) {
+    index = 352;
+    while (index <= 362) : (index += 1) {
         instance.array[index] = true;
     }
 

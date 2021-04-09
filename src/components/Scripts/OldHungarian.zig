@@ -14,28 +14,28 @@ const OldHungarian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 68800,
-hi: u21 = 121343,
+lo: u21 = 68736,
+hi: u21 = 68863,
 
 pub fn init(allocator: *mem.Allocator) !OldHungarian {
     var instance = OldHungarian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 52544),
+        .array = try allocator.alloc(bool, 128),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097088;
-    while (index <= 2097138) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
     while (index <= 50) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 58;
-    while (index <= 63) : (index += 1) {
+    index = 64;
+    while (index <= 114) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 122;
+    while (index <= 127) : (index += 1) {
         instance.array[index] = true;
     }
 

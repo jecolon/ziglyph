@@ -14,20 +14,20 @@ const Lycian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 66208,
-hi: u21 = 66256,
+lo: u21 = 66176,
+hi: u21 = 66204,
 
 pub fn init(allocator: *mem.Allocator) !Lycian {
     var instance = Lycian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 49),
+        .array = try allocator.alloc(bool, 29),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097120;
-    while (index <= 2097148) : (index += 1) {
+    index = 0;
+    while (index <= 28) : (index += 1) {
         instance.array[index] = true;
     }
 

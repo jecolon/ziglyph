@@ -14,20 +14,20 @@ const EarlyDynasticCuneiform = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 74880,
 hi: u21 = 75087,
 
 pub fn init(allocator: *mem.Allocator) !EarlyDynasticCuneiform {
     var instance = EarlyDynasticCuneiform{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 75088),
+        .array = try allocator.alloc(bool, 208),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 74880;
-    while (index <= 75087) : (index += 1) {
+    index = 0;
+    while (index <= 207) : (index += 1) {
         instance.array[index] = true;
     }
 

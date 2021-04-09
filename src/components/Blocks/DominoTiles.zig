@@ -14,20 +14,20 @@ const DominoTiles = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 127024,
 hi: u21 = 127135,
 
 pub fn init(allocator: *mem.Allocator) !DominoTiles {
     var instance = DominoTiles{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 127136),
+        .array = try allocator.alloc(bool, 112),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 127024;
-    while (index <= 127135) : (index += 1) {
+    index = 0;
+    while (index <= 111) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,25 +14,25 @@ const OtherIDContinue = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 33,
+lo: u21 = 183,
 hi: u21 = 6618,
 
 pub fn init(allocator: *mem.Allocator) !OtherIDContinue {
     var instance = OtherIDContinue{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 6586),
+        .array = try allocator.alloc(bool, 6436),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[150] = true;
-    instance.array[870] = true;
-    index = 4936;
-    while (index <= 4944) : (index += 1) {
+    instance.array[0] = true;
+    instance.array[720] = true;
+    index = 4786;
+    while (index <= 4794) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[6585] = true;
+    instance.array[6435] = true;
 
     // Placeholder: 0. Struct name
     return instance;

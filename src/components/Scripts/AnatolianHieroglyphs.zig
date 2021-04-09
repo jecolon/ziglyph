@@ -14,20 +14,20 @@ const AnatolianHieroglyphs = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 67808,
-hi: u21 = 67826,
+lo: u21 = 82944,
+hi: u21 = 83526,
 
 pub fn init(allocator: *mem.Allocator) !AnatolianHieroglyphs {
     var instance = AnatolianHieroglyphs{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 19),
+        .array = try allocator.alloc(bool, 583),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 15136;
-    while (index <= 15718) : (index += 1) {
+    index = 0;
+    while (index <= 582) : (index += 1) {
         instance.array[index] = true;
     }
 

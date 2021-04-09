@@ -14,25 +14,25 @@ const ImperialAramaic = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 67671,
-hi: u21 = 68220,
+lo: u21 = 67648,
+hi: u21 = 67679,
 
 pub fn init(allocator: *mem.Allocator) !ImperialAramaic {
     var instance = ImperialAramaic{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 550),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097129;
-    while (index <= 2097150) : (index += 1) {
+    index = 0;
+    while (index <= 21) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[0] = true;
-    index = 1;
-    while (index <= 8) : (index += 1) {
+    instance.array[23] = true;
+    index = 24;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

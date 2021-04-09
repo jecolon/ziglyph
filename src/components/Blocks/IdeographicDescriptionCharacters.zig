@@ -14,20 +14,20 @@ const IdeographicDescriptionCharacters = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 12272,
 hi: u21 = 12287,
 
 pub fn init(allocator: *mem.Allocator) !IdeographicDescriptionCharacters {
     var instance = IdeographicDescriptionCharacters{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 12288),
+        .array = try allocator.alloc(bool, 16),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 12272;
-    while (index <= 12287) : (index += 1) {
+    index = 0;
+    while (index <= 15) : (index += 1) {
         instance.array[index] = true;
     }
 

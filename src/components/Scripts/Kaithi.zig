@@ -14,53 +14,53 @@ const Kaithi = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 7104,
+lo: u21 = 69760,
 hi: u21 = 69837,
 
 pub fn init(allocator: *mem.Allocator) !Kaithi {
     var instance = Kaithi{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 62734),
+        .array = try allocator.alloc(bool, 78),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 62656;
-    while (index <= 62657) : (index += 1) {
+    index = 0;
+    while (index <= 1) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[62658] = true;
-    index = 62659;
-    while (index <= 62703) : (index += 1) {
+    instance.array[2] = true;
+    index = 3;
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 62704;
-    while (index <= 62706) : (index += 1) {
+    index = 48;
+    while (index <= 50) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 62707;
-    while (index <= 62710) : (index += 1) {
+    index = 51;
+    while (index <= 54) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 62711;
-    while (index <= 62712) : (index += 1) {
+    index = 55;
+    while (index <= 56) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 62713;
-    while (index <= 62714) : (index += 1) {
+    index = 57;
+    while (index <= 58) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 62715;
-    while (index <= 62716) : (index += 1) {
+    index = 59;
+    while (index <= 60) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[62717] = true;
-    index = 62718;
-    while (index <= 62721) : (index += 1) {
+    instance.array[61] = true;
+    index = 62;
+    while (index <= 65) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[62733] = true;
+    instance.array[77] = true;
 
     // Placeholder: 0. Struct name
     return instance;

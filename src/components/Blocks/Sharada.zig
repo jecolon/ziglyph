@@ -14,20 +14,20 @@ const Sharada = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 70016,
 hi: u21 = 70111,
 
 pub fn init(allocator: *mem.Allocator) !Sharada {
     var instance = Sharada{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 70112),
+        .array = try allocator.alloc(bool, 96),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 70016;
-    while (index <= 70111) : (index += 1) {
+    index = 0;
+    while (index <= 95) : (index += 1) {
         instance.array[index] = true;
     }
 

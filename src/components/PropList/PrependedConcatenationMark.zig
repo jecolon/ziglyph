@@ -14,27 +14,27 @@ const PrependedConcatenationMark = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 1757,
-hi: u21 = 127487,
+lo: u21 = 1536,
+hi: u21 = 69837,
 
 pub fn init(allocator: *mem.Allocator) !PrependedConcatenationMark {
     var instance = PrependedConcatenationMark{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 125731),
+        .array = try allocator.alloc(bool, 68302),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2096931;
-    while (index <= 2096936) : (index += 1) {
+    index = 0;
+    while (index <= 5) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[0] = true;
-    instance.array[50] = true;
-    instance.array[517] = true;
-    instance.array[68064] = true;
-    instance.array[68080] = true;
+    instance.array[221] = true;
+    instance.array[271] = true;
+    instance.array[738] = true;
+    instance.array[68285] = true;
+    instance.array[68301] = true;
 
     // Placeholder: 0. Struct name
     return instance;

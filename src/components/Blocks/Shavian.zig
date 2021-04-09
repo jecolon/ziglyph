@@ -14,20 +14,20 @@ const Shavian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 66640,
 hi: u21 = 66687,
 
 pub fn init(allocator: *mem.Allocator) !Shavian {
     var instance = Shavian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 66688),
+        .array = try allocator.alloc(bool, 48),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 66640;
-    while (index <= 66687) : (index += 1) {
+    index = 0;
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
 

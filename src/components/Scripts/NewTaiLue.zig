@@ -14,33 +14,33 @@ const NewTaiLue = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 6576,
-hi: u21 = 11310,
+lo: u21 = 6528,
+hi: u21 = 6623,
 
 pub fn init(allocator: *mem.Allocator) !NewTaiLue {
     var instance = NewTaiLue{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 4735),
+        .array = try allocator.alloc(bool, 96),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097104;
-    while (index <= 2097147) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 25) : (index += 1) {
+    while (index <= 43) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 32;
-    while (index <= 41) : (index += 1) {
+    index = 48;
+    while (index <= 73) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[42] = true;
-    index = 46;
-    while (index <= 47) : (index += 1) {
+    index = 80;
+    while (index <= 89) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[90] = true;
+    index = 94;
+    while (index <= 95) : (index += 1) {
         instance.array[index] = true;
     }
 

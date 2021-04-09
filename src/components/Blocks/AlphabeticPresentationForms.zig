@@ -14,20 +14,20 @@ const AlphabeticPresentationForms = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 64256,
 hi: u21 = 64335,
 
 pub fn init(allocator: *mem.Allocator) !AlphabeticPresentationForms {
     var instance = AlphabeticPresentationForms{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 64336),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 64256;
-    while (index <= 64335) : (index += 1) {
+    index = 0;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,24 +14,24 @@ const Osage = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 66776,
-hi: u21 = 94176,
+lo: u21 = 66736,
+hi: u21 = 66811,
 
 pub fn init(allocator: *mem.Allocator) !Osage {
     var instance = Osage{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 27401),
+        .array = try allocator.alloc(bool, 76),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097112;
-    while (index <= 2097147) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
     while (index <= 35) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 40;
+    while (index <= 75) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,49 +14,49 @@ const Chakma = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 68000,
+lo: u21 = 69888,
 hi: u21 = 69959,
 
 pub fn init(allocator: *mem.Allocator) !Chakma {
     var instance = Chakma{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1960),
+        .array = try allocator.alloc(bool, 72),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 1888;
-    while (index <= 1890) : (index += 1) {
+    index = 0;
+    while (index <= 2) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 1891;
-    while (index <= 1926) : (index += 1) {
+    index = 3;
+    while (index <= 38) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 1927;
-    while (index <= 1931) : (index += 1) {
+    index = 39;
+    while (index <= 43) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[1932] = true;
-    index = 1933;
-    while (index <= 1940) : (index += 1) {
+    instance.array[44] = true;
+    index = 45;
+    while (index <= 52) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 1942;
-    while (index <= 1951) : (index += 1) {
+    index = 54;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 1952;
-    while (index <= 1955) : (index += 1) {
+    index = 64;
+    while (index <= 67) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[1956] = true;
-    index = 1957;
-    while (index <= 1958) : (index += 1) {
+    instance.array[68] = true;
+    index = 69;
+    while (index <= 70) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[1959] = true;
+    instance.array[71] = true;
 
     // Placeholder: 0. Struct name
     return instance;

@@ -14,49 +14,49 @@ const Coptic = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 6528,
+lo: u21 = 994,
 hi: u21 = 11519,
 
 pub fn init(allocator: *mem.Allocator) !Coptic {
     var instance = Coptic{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 4992),
+        .array = try allocator.alloc(bool, 10526),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2091618;
-    while (index <= 2091631) : (index += 1) {
+    index = 0;
+    while (index <= 13) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 4864;
-    while (index <= 4964) : (index += 1) {
+    index = 10398;
+    while (index <= 10498) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 4965;
-    while (index <= 4970) : (index += 1) {
+    index = 10499;
+    while (index <= 10504) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 4971;
-    while (index <= 4974) : (index += 1) {
+    index = 10505;
+    while (index <= 10508) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 4975;
-    while (index <= 4977) : (index += 1) {
+    index = 10509;
+    while (index <= 10511) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 4978;
-    while (index <= 4979) : (index += 1) {
+    index = 10512;
+    while (index <= 10513) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 4985;
-    while (index <= 4988) : (index += 1) {
+    index = 10519;
+    while (index <= 10522) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[4989] = true;
-    index = 4990;
-    while (index <= 4991) : (index += 1) {
+    instance.array[10523] = true;
+    index = 10524;
+    while (index <= 10525) : (index += 1) {
         instance.array[index] = true;
     }
 

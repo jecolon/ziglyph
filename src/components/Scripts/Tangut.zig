@@ -14,29 +14,29 @@ const Tangut = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 72960,
+lo: u21 = 94176,
 hi: u21 = 101640,
 
 pub fn init(allocator: *mem.Allocator) !Tangut {
     var instance = Tangut{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 28681),
+        .array = try allocator.alloc(bool, 7465),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[21216] = true;
-    index = 21248;
-    while (index <= 27383) : (index += 1) {
+    instance.array[0] = true;
+    index = 32;
+    while (index <= 6167) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 27392;
-    while (index <= 28159) : (index += 1) {
+    index = 6176;
+    while (index <= 6943) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 28672;
-    while (index <= 28680) : (index += 1) {
+    index = 7456;
+    while (index <= 7464) : (index += 1) {
         instance.array[index] = true;
     }
 

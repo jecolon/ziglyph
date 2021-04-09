@@ -14,20 +14,20 @@ const SupplementalSymbolsandPictographs = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 129280,
 hi: u21 = 129535,
 
 pub fn init(allocator: *mem.Allocator) !SupplementalSymbolsandPictographs {
     var instance = SupplementalSymbolsandPictographs{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 129536),
+        .array = try allocator.alloc(bool, 256),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 129280;
-    while (index <= 129535) : (index += 1) {
+    index = 0;
+    while (index <= 255) : (index += 1) {
         instance.array[index] = true;
     }
 

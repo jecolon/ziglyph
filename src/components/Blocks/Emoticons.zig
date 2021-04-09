@@ -14,20 +14,20 @@ const Emoticons = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 128512,
 hi: u21 = 128591,
 
 pub fn init(allocator: *mem.Allocator) !Emoticons {
     var instance = Emoticons{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 128592),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 128512;
-    while (index <= 128591) : (index += 1) {
+    index = 0;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,24 +14,24 @@ const InscriptionalParthian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 68440,
-hi: u21 = 68466,
+lo: u21 = 68416,
+hi: u21 = 68447,
 
 pub fn init(allocator: *mem.Allocator) !InscriptionalParthian {
     var instance = InscriptionalParthian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 27),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097128;
-    while (index <= 2097149) : (index += 1) {
+    index = 0;
+    while (index <= 21) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 0;
-    while (index <= 7) : (index += 1) {
+    index = 24;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

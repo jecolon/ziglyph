@@ -14,20 +14,20 @@ const BassaVah = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 92880,
 hi: u21 = 92927,
 
 pub fn init(allocator: *mem.Allocator) !BassaVah {
     var instance = BassaVah{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 92928),
+        .array = try allocator.alloc(bool, 48),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 92880;
-    while (index <= 92927) : (index += 1) {
+    index = 0;
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
 

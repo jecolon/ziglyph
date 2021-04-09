@@ -14,20 +14,20 @@ const OldTurkic = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 69760,
-hi: u21 = 69761,
+lo: u21 = 68608,
+hi: u21 = 68680,
 
 pub fn init(allocator: *mem.Allocator) !OldTurkic {
     var instance = OldTurkic{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 2),
+        .array = try allocator.alloc(bool, 73),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2096000;
-    while (index <= 2096072) : (index += 1) {
+    index = 0;
+    while (index <= 72) : (index += 1) {
         instance.array[index] = true;
     }
 

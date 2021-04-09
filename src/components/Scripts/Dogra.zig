@@ -14,36 +14,36 @@ const Dogra = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 71724,
-hi: u21 = 73061,
+lo: u21 = 71680,
+hi: u21 = 71739,
 
 pub fn init(allocator: *mem.Allocator) !Dogra {
     var instance = Dogra{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1338),
+        .array = try allocator.alloc(bool, 60),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097108;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 2) : (index += 1) {
+    while (index <= 43) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 3;
-    while (index <= 11) : (index += 1) {
+    index = 44;
+    while (index <= 46) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[12] = true;
-    index = 13;
-    while (index <= 14) : (index += 1) {
+    index = 47;
+    while (index <= 55) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[15] = true;
+    instance.array[56] = true;
+    index = 57;
+    while (index <= 58) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[59] = true;
 
     // Placeholder: 0. Struct name
     return instance;

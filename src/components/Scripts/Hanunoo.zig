@@ -14,24 +14,24 @@ const Hanunoo = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 5938,
-hi: u21 = 5969,
+lo: u21 = 5920,
+hi: u21 = 5940,
 
 pub fn init(allocator: *mem.Allocator) !Hanunoo {
     var instance = Hanunoo{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 32),
+        .array = try allocator.alloc(bool, 21),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097134;
-    while (index <= 2097151) : (index += 1) {
+    index = 0;
+    while (index <= 17) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 0;
-    while (index <= 2) : (index += 1) {
+    index = 18;
+    while (index <= 20) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,20 +14,20 @@ const Khojki = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 70144,
 hi: u21 = 70223,
 
 pub fn init(allocator: *mem.Allocator) !Khojki {
     var instance = Khojki{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 70224),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 70144;
-    while (index <= 70223) : (index += 1) {
+    index = 0;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
 

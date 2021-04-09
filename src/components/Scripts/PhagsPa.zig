@@ -14,24 +14,24 @@ const PhagsPa = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 1984,
+lo: u21 = 43072,
 hi: u21 = 43127,
 
 pub fn init(allocator: *mem.Allocator) !PhagsPa {
     var instance = PhagsPa{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 41144),
+        .array = try allocator.alloc(bool, 56),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 41088;
-    while (index <= 41139) : (index += 1) {
+    index = 0;
+    while (index <= 51) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 41140;
-    while (index <= 41143) : (index += 1) {
+    index = 52;
+    while (index <= 55) : (index += 1) {
         instance.array[index] = true;
     }
 

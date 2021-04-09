@@ -14,20 +14,20 @@ const TangutComponents = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 100352,
 hi: u21 = 101119,
 
 pub fn init(allocator: *mem.Allocator) !TangutComponents {
     var instance = TangutComponents{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 101120),
+        .array = try allocator.alloc(bool, 768),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 100352;
-    while (index <= 101119) : (index += 1) {
+    index = 0;
+    while (index <= 767) : (index += 1) {
         instance.array[index] = true;
     }
 

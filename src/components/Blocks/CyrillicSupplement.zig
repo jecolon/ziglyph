@@ -14,20 +14,20 @@ const CyrillicSupplement = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 1280,
 hi: u21 = 1327,
 
 pub fn init(allocator: *mem.Allocator) !CyrillicSupplement {
     var instance = CyrillicSupplement{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1328),
+        .array = try allocator.alloc(bool, 48),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 1280;
-    while (index <= 1327) : (index += 1) {
+    index = 0;
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
 

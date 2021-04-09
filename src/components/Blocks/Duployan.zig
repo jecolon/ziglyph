@@ -14,20 +14,20 @@ const Duployan = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 113664,
 hi: u21 = 113823,
 
 pub fn init(allocator: *mem.Allocator) !Duployan {
     var instance = Duployan{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 113824),
+        .array = try allocator.alloc(bool, 160),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 113664;
-    while (index <= 113823) : (index += 1) {
+    index = 0;
+    while (index <= 159) : (index += 1) {
         instance.array[index] = true;
     }
 

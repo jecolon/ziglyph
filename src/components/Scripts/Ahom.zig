@@ -14,52 +14,52 @@ const Ahom = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 71453,
-hi: u21 = 83526,
+lo: u21 = 71424,
+hi: u21 = 71487,
 
 pub fn init(allocator: *mem.Allocator) !Ahom {
     var instance = Ahom{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 12074),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097123;
-    while (index <= 2097149) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 2) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 3;
-    while (index <= 4) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 5;
-    while (index <= 8) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[9] = true;
-    index = 10;
-    while (index <= 14) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 19;
-    while (index <= 28) : (index += 1) {
+    while (index <= 26) : (index += 1) {
         instance.array[index] = true;
     }
     index = 29;
-    while (index <= 30) : (index += 1) {
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 31;
+    index = 32;
     while (index <= 33) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[34] = true;
+    index = 34;
+    while (index <= 37) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[38] = true;
+    index = 39;
+    while (index <= 43) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 48;
+    while (index <= 57) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 58;
+    while (index <= 59) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 60;
+    while (index <= 62) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[63] = true;
 
     // Placeholder: 0. Struct name
     return instance;

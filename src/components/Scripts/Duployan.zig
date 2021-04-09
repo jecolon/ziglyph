@@ -14,40 +14,40 @@ const Duployan = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 66816,
+lo: u21 = 113664,
 hi: u21 = 113823,
 
 pub fn init(allocator: *mem.Allocator) !Duployan {
     var instance = Duployan{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 47008),
+        .array = try allocator.alloc(bool, 160),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 46848;
-    while (index <= 46954) : (index += 1) {
+    index = 0;
+    while (index <= 106) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 46960;
-    while (index <= 46972) : (index += 1) {
+    index = 112;
+    while (index <= 124) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 46976;
-    while (index <= 46984) : (index += 1) {
+    index = 128;
+    while (index <= 136) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 46992;
-    while (index <= 47001) : (index += 1) {
+    index = 144;
+    while (index <= 153) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[47004] = true;
-    index = 47005;
-    while (index <= 47006) : (index += 1) {
+    instance.array[156] = true;
+    index = 157;
+    while (index <= 158) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[47007] = true;
+    instance.array[159] = true;
 
     // Placeholder: 0. Struct name
     return instance;

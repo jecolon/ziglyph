@@ -14,29 +14,29 @@ const Yi = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 40981,
-hi: u21 = 66335,
+lo: u21 = 40960,
+hi: u21 = 42182,
 
 pub fn init(allocator: *mem.Allocator) !Yi {
     var instance = Yi{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 25355),
+        .array = try allocator.alloc(bool, 1223),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097131;
-    while (index <= 2097151) : (index += 1) {
+    index = 0;
+    while (index <= 20) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[0] = true;
-    index = 1;
-    while (index <= 1143) : (index += 1) {
+    instance.array[21] = true;
+    index = 22;
+    while (index <= 1164) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 1147;
-    while (index <= 1201) : (index += 1) {
+    index = 1168;
+    while (index <= 1222) : (index += 1) {
         instance.array[index] = true;
     }
 

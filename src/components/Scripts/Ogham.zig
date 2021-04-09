@@ -14,25 +14,25 @@ const Ogham = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 5761,
-hi: u21 = 5866,
+lo: u21 = 5760,
+hi: u21 = 5788,
 
 pub fn init(allocator: *mem.Allocator) !Ogham {
     var instance = Ogham{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 106),
+        .array = try allocator.alloc(bool, 29),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[2097151] = true;
-    index = 0;
-    while (index <= 25) : (index += 1) {
+    instance.array[0] = true;
+    index = 1;
+    while (index <= 26) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[26] = true;
     instance.array[27] = true;
+    instance.array[28] = true;
 
     // Placeholder: 0. Struct name
     return instance;

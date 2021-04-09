@@ -14,32 +14,32 @@ const Sogdian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 69376,
+lo: u21 = 69424,
 hi: u21 = 69465,
 
 pub fn init(allocator: *mem.Allocator) !Sogdian {
     var instance = Sogdian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 90),
+        .array = try allocator.alloc(bool, 42),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 48;
-    while (index <= 69) : (index += 1) {
+    index = 0;
+    while (index <= 21) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 70;
-    while (index <= 80) : (index += 1) {
+    index = 22;
+    while (index <= 32) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 81;
-    while (index <= 84) : (index += 1) {
+    index = 33;
+    while (index <= 36) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 85;
-    while (index <= 89) : (index += 1) {
+    index = 37;
+    while (index <= 41) : (index += 1) {
         instance.array[index] = true;
     }
 

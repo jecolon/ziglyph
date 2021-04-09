@@ -14,28 +14,28 @@ const VariationSelector = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 9,
+lo: u21 = 6155,
 hi: u21 = 917999,
 
 pub fn init(allocator: *mem.Allocator) !VariationSelector {
     var instance = VariationSelector{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 917991),
+        .array = try allocator.alloc(bool, 911845),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 6146;
-    while (index <= 6148) : (index += 1) {
+    index = 0;
+    while (index <= 2) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 65015;
-    while (index <= 65030) : (index += 1) {
+    index = 58869;
+    while (index <= 58884) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 917751;
-    while (index <= 917990) : (index += 1) {
+    index = 911605;
+    while (index <= 911844) : (index += 1) {
         instance.array[index] = true;
     }
 

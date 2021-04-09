@@ -14,20 +14,20 @@ const Syriac = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 1792,
 hi: u21 = 1871,
 
 pub fn init(allocator: *mem.Allocator) !Syriac {
     var instance = Syriac{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1872),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 1792;
-    while (index <= 1871) : (index += 1) {
+    index = 0;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
 

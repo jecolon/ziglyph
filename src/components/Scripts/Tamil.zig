@@ -14,104 +14,104 @@ const Tamil = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 2947,
+lo: u21 = 2946,
 hi: u21 = 73727,
 
 pub fn init(allocator: *mem.Allocator) !Tamil {
     var instance = Tamil{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 70781),
+        .array = try allocator.alloc(bool, 70782),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[2097151] = true;
     instance.array[0] = true;
-    index = 2;
-    while (index <= 7) : (index += 1) {
+    instance.array[1] = true;
+    index = 3;
+    while (index <= 8) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 11;
-    while (index <= 13) : (index += 1) {
+    index = 12;
+    while (index <= 14) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 15;
-    while (index <= 18) : (index += 1) {
+    index = 16;
+    while (index <= 19) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 22;
-    while (index <= 23) : (index += 1) {
+    index = 23;
+    while (index <= 24) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[25] = true;
-    index = 27;
-    while (index <= 28) : (index += 1) {
+    instance.array[26] = true;
+    index = 28;
+    while (index <= 29) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 32;
-    while (index <= 33) : (index += 1) {
+    index = 33;
+    while (index <= 34) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 37;
-    while (index <= 39) : (index += 1) {
+    index = 38;
+    while (index <= 40) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 43;
-    while (index <= 54) : (index += 1) {
+    index = 44;
+    while (index <= 55) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 59;
-    while (index <= 60) : (index += 1) {
+    index = 60;
+    while (index <= 61) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[61] = true;
-    index = 62;
-    while (index <= 63) : (index += 1) {
+    instance.array[62] = true;
+    index = 63;
+    while (index <= 64) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 67;
-    while (index <= 69) : (index += 1) {
+    index = 68;
+    while (index <= 70) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 71;
-    while (index <= 73) : (index += 1) {
+    index = 72;
+    while (index <= 74) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[74] = true;
-    instance.array[77] = true;
-    instance.array[84] = true;
-    index = 99;
-    while (index <= 108) : (index += 1) {
+    instance.array[75] = true;
+    instance.array[78] = true;
+    instance.array[85] = true;
+    index = 100;
+    while (index <= 109) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 109;
-    while (index <= 111) : (index += 1) {
+    index = 110;
+    while (index <= 112) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 112;
-    while (index <= 117) : (index += 1) {
+    index = 113;
+    while (index <= 118) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[118] = true;
     instance.array[119] = true;
-    index = 70717;
-    while (index <= 70737) : (index += 1) {
+    instance.array[120] = true;
+    index = 70718;
+    while (index <= 70738) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 70738;
-    while (index <= 70745) : (index += 1) {
+    index = 70739;
+    while (index <= 70746) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 70746;
-    while (index <= 70749) : (index += 1) {
+    index = 70747;
+    while (index <= 70750) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 70750;
-    while (index <= 70766) : (index += 1) {
+    index = 70751;
+    while (index <= 70767) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[70780] = true;
+    instance.array[70781] = true;
 
     // Placeholder: 0. Struct name
     return instance;

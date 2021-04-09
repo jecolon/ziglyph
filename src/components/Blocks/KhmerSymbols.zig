@@ -14,20 +14,20 @@ const KhmerSymbols = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 6624,
 hi: u21 = 6655,
 
 pub fn init(allocator: *mem.Allocator) !KhmerSymbols {
     var instance = KhmerSymbols{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 6656),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 6624;
-    while (index <= 6655) : (index += 1) {
+    index = 0;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

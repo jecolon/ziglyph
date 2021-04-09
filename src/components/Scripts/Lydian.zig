@@ -14,23 +14,23 @@ const Lydian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 43520,
+lo: u21 = 67872,
 hi: u21 = 67903,
 
 pub fn init(allocator: *mem.Allocator) !Lydian {
     var instance = Lydian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 24384),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 24352;
-    while (index <= 24377) : (index += 1) {
+    index = 0;
+    while (index <= 25) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[24383] = true;
+    instance.array[31] = true;
 
     // Placeholder: 0. Struct name
     return instance;

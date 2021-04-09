@@ -14,20 +14,20 @@ const Myanmar = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 4096,
 hi: u21 = 4255,
 
 pub fn init(allocator: *mem.Allocator) !Myanmar {
     var instance = Myanmar{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 4256),
+        .array = try allocator.alloc(bool, 160),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 4096;
-    while (index <= 4255) : (index += 1) {
+    index = 0;
+    while (index <= 159) : (index += 1) {
         instance.array[index] = true;
     }
 

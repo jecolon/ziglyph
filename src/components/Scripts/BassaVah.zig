@@ -14,27 +14,27 @@ const BassaVah = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 92912,
-hi: u21 = 113770,
+lo: u21 = 92880,
+hi: u21 = 92917,
 
 pub fn init(allocator: *mem.Allocator) !BassaVah {
     var instance = BassaVah{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 20859),
+        .array = try allocator.alloc(bool, 38),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097120;
-    while (index <= 2097149) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 4) : (index += 1) {
+    while (index <= 29) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[5] = true;
+    index = 32;
+    while (index <= 36) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[37] = true;
 
     // Placeholder: 0. Struct name
     return instance;

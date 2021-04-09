@@ -14,20 +14,20 @@ const UnifiedCanadianAboriginalSyllabicsExtended = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 6320,
 hi: u21 = 6399,
 
 pub fn init(allocator: *mem.Allocator) !UnifiedCanadianAboriginalSyllabicsExtended {
     var instance = UnifiedCanadianAboriginalSyllabicsExtended{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 6400),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 6320;
-    while (index <= 6399) : (index += 1) {
+    index = 0;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,20 +14,20 @@ const TaiXuanJingSymbols = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 119552,
 hi: u21 = 119647,
 
 pub fn init(allocator: *mem.Allocator) !TaiXuanJingSymbols {
     var instance = TaiXuanJingSymbols{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 119648),
+        .array = try allocator.alloc(bool, 96),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 119552;
-    while (index <= 119647) : (index += 1) {
+    index = 0;
+    while (index <= 95) : (index += 1) {
         instance.array[index] = true;
     }
 

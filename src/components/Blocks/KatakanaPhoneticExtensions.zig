@@ -14,20 +14,20 @@ const KatakanaPhoneticExtensions = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 12784,
 hi: u21 = 12799,
 
 pub fn init(allocator: *mem.Allocator) !KatakanaPhoneticExtensions {
     var instance = KatakanaPhoneticExtensions{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 12800),
+        .array = try allocator.alloc(bool, 16),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 12784;
-    while (index <= 12799) : (index += 1) {
+    index = 0;
+    while (index <= 15) : (index += 1) {
         instance.array[index] = true;
     }
 

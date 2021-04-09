@@ -14,31 +14,31 @@ const CanadianAboriginal = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 5121,
+lo: u21 = 5120,
 hi: u21 = 6389,
 
 pub fn init(allocator: *mem.Allocator) !CanadianAboriginal {
     var instance = CanadianAboriginal{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1269),
+        .array = try allocator.alloc(bool, 1270),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[2097151] = true;
-    index = 0;
-    while (index <= 619) : (index += 1) {
+    instance.array[0] = true;
+    index = 1;
+    while (index <= 620) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[620] = true;
     instance.array[621] = true;
-    index = 622;
-    while (index <= 638) : (index += 1) {
+    instance.array[622] = true;
+    index = 623;
+    while (index <= 639) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 1199;
-    while (index <= 1268) : (index += 1) {
+    index = 1200;
+    while (index <= 1269) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,36 +14,36 @@ const Hiragana = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 12445,
+lo: u21 = 12353,
 hi: u21 = 127488,
 
 pub fn init(allocator: *mem.Allocator) !Hiragana {
     var instance = Hiragana{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 115044),
+        .array = try allocator.alloc(bool, 115136),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097060;
-    while (index <= 2097145) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 1) : (index += 1) {
+    while (index <= 85) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[2] = true;
-    index = 98148;
-    while (index <= 98433) : (index += 1) {
+    index = 92;
+    while (index <= 93) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 98483;
-    while (index <= 98485) : (index += 1) {
+    instance.array[94] = true;
+    index = 98240;
+    while (index <= 98525) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[115043] = true;
+    index = 98575;
+    while (index <= 98577) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[115135] = true;
 
     // Placeholder: 0. Struct name
     return instance;

@@ -14,20 +14,20 @@ const Lepcha = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 7168,
 hi: u21 = 7247,
 
 pub fn init(allocator: *mem.Allocator) !Lepcha {
     var instance = Lepcha{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 7248),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 7168;
-    while (index <= 7247) : (index += 1) {
+    index = 0;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
 

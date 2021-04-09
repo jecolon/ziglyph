@@ -14,18 +14,19 @@ const Medial = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 64337,
+lo: u21 = 64341,
 hi: u21 = 65268,
 
 pub fn init(allocator: *mem.Allocator) !Medial {
     var instance = Medial{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 932),
+        .array = try allocator.alloc(bool, 928),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
+    instance.array[0] = true;
     instance.array[4] = true;
     instance.array[8] = true;
     instance.array[12] = true;
@@ -37,39 +38,39 @@ pub fn init(allocator: *mem.Allocator) !Medial {
     instance.array[36] = true;
     instance.array[40] = true;
     instance.array[44] = true;
-    instance.array[48] = true;
+    instance.array[60] = true;
     instance.array[64] = true;
     instance.array[68] = true;
     instance.array[72] = true;
-    instance.array[76] = true;
-    instance.array[82] = true;
+    instance.array[78] = true;
+    instance.array[84] = true;
     instance.array[88] = true;
-    instance.array[92] = true;
-    instance.array[133] = true;
-    instance.array[150] = true;
-    instance.array[152] = true;
-    instance.array[174] = true;
-    index = 398;
-    while (index <= 419) : (index += 1) {
+    instance.array[129] = true;
+    instance.array[146] = true;
+    instance.array[148] = true;
+    instance.array[170] = true;
+    index = 394;
+    while (index <= 415) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 483;
-    while (index <= 490) : (index += 1) {
+    index = 479;
+    while (index <= 486) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[800] = true;
+    instance.array[796] = true;
+    instance.array[802] = true;
+    instance.array[804] = true;
     instance.array[806] = true;
     instance.array[808] = true;
     instance.array[810] = true;
-    instance.array[812] = true;
-    instance.array[814] = true;
-    instance.array[827] = true;
-    instance.array[833] = true;
+    instance.array[823] = true;
+    instance.array[829] = true;
+    instance.array[835] = true;
     instance.array[839] = true;
     instance.array[843] = true;
     instance.array[847] = true;
     instance.array[851] = true;
-    instance.array[855] = true;
+    instance.array[863] = true;
     instance.array[867] = true;
     instance.array[871] = true;
     instance.array[875] = true;
@@ -84,8 +85,7 @@ pub fn init(allocator: *mem.Allocator) !Medial {
     instance.array[911] = true;
     instance.array[915] = true;
     instance.array[919] = true;
-    instance.array[923] = true;
-    instance.array[931] = true;
+    instance.array[927] = true;
 
     // Placeholder: 0. Struct name
     return instance;

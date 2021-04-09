@@ -14,27 +14,27 @@ const OldSouthArabian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 68221,
-hi: u21 = 68437,
+lo: u21 = 68192,
+hi: u21 = 68223,
 
 pub fn init(allocator: *mem.Allocator) !OldSouthArabian {
     var instance = OldSouthArabian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 217),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097123;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 1) : (index += 1) {
+    while (index <= 28) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[2] = true;
+    index = 29;
+    while (index <= 30) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[31] = true;
 
     // Placeholder: 0. Struct name
     return instance;

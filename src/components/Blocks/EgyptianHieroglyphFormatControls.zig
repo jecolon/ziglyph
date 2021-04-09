@@ -14,20 +14,20 @@ const EgyptianHieroglyphFormatControls = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 78896,
 hi: u21 = 78911,
 
 pub fn init(allocator: *mem.Allocator) !EgyptianHieroglyphFormatControls {
     var instance = EgyptianHieroglyphFormatControls{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 78912),
+        .array = try allocator.alloc(bool, 16),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 78896;
-    while (index <= 78911) : (index += 1) {
+    index = 0;
+    while (index <= 15) : (index += 1) {
         instance.array[index] = true;
     }
 

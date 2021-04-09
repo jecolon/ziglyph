@@ -14,20 +14,20 @@ const HangulCompatibilityJamo = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 12592,
 hi: u21 = 12687,
 
 pub fn init(allocator: *mem.Allocator) !HangulCompatibilityJamo {
     var instance = HangulCompatibilityJamo{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 12688),
+        .array = try allocator.alloc(bool, 96),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 12592;
-    while (index <= 12687) : (index += 1) {
+    index = 0;
+    while (index <= 95) : (index += 1) {
         instance.array[index] = true;
     }
 

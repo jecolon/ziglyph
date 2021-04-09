@@ -14,30 +14,30 @@ const PatternWhiteSpace = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 32,
+lo: u21 = 9,
 hi: u21 = 8233,
 
 pub fn init(allocator: *mem.Allocator) !PatternWhiteSpace {
     var instance = PatternWhiteSpace{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 8202),
+        .array = try allocator.alloc(bool, 8225),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097129;
-    while (index <= 2097133) : (index += 1) {
+    index = 0;
+    while (index <= 4) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[0] = true;
-    instance.array[101] = true;
-    index = 8174;
-    while (index <= 8175) : (index += 1) {
+    instance.array[23] = true;
+    instance.array[124] = true;
+    index = 8197;
+    while (index <= 8198) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[8200] = true;
-    instance.array[8201] = true;
+    instance.array[8223] = true;
+    instance.array[8224] = true;
 
     // Placeholder: 0. Struct name
     return instance;

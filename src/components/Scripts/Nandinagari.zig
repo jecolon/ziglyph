@@ -14,47 +14,47 @@ const Nandinagari = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 72106,
-hi: u21 = 123180,
+lo: u21 = 72096,
+hi: u21 = 72164,
 
 pub fn init(allocator: *mem.Allocator) !Nandinagari {
     var instance = Nandinagari{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 51075),
+        .array = try allocator.alloc(bool, 69),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097142;
-    while (index <= 2097149) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 38) : (index += 1) {
+    while (index <= 7) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 39;
-    while (index <= 41) : (index += 1) {
+    index = 10;
+    while (index <= 48) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 42;
-    while (index <= 45) : (index += 1) {
+    index = 49;
+    while (index <= 51) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 48;
-    while (index <= 49) : (index += 1) {
+    index = 52;
+    while (index <= 55) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 50;
-    while (index <= 53) : (index += 1) {
+    index = 58;
+    while (index <= 59) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[54] = true;
-    instance.array[55] = true;
-    instance.array[56] = true;
-    instance.array[57] = true;
-    instance.array[58] = true;
+    index = 60;
+    while (index <= 63) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[64] = true;
+    instance.array[65] = true;
+    instance.array[66] = true;
+    instance.array[67] = true;
+    instance.array[68] = true;
 
     // Placeholder: 0. Struct name
     return instance;

@@ -14,20 +14,20 @@ const Tags = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 917504,
 hi: u21 = 917631,
 
 pub fn init(allocator: *mem.Allocator) !Tags {
     var instance = Tags{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 917632),
+        .array = try allocator.alloc(bool, 128),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 917504;
-    while (index <= 917631) : (index += 1) {
+    index = 0;
+    while (index <= 127) : (index += 1) {
         instance.array[index] = true;
     }
 

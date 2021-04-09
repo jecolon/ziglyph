@@ -14,20 +14,20 @@ const CopticEpactNumbers = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 66272,
 hi: u21 = 66303,
 
 pub fn init(allocator: *mem.Allocator) !CopticEpactNumbers {
     var instance = CopticEpactNumbers{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 66304),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 66272;
-    while (index <= 66303) : (index += 1) {
+    index = 0;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

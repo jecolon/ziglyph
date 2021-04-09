@@ -14,28 +14,28 @@ const Cherokee = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 5112,
+lo: u21 = 5024,
 hi: u21 = 43967,
 
 pub fn init(allocator: *mem.Allocator) !Cherokee {
     var instance = Cherokee{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 38856),
+        .array = try allocator.alloc(bool, 38944),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097064;
-    while (index <= 2097149) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 5) : (index += 1) {
+    while (index <= 85) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 38776;
-    while (index <= 38855) : (index += 1) {
+    index = 88;
+    while (index <= 93) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 38864;
+    while (index <= 38943) : (index += 1) {
         instance.array[index] = true;
     }
 

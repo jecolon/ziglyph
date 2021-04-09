@@ -14,42 +14,42 @@ const ZanabazarSquare = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 71680,
+lo: u21 = 72192,
 hi: u21 = 72263,
 
 pub fn init(allocator: *mem.Allocator) !ZanabazarSquare {
     var instance = ZanabazarSquare{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 584),
+        .array = try allocator.alloc(bool, 72),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[512] = true;
-    index = 513;
-    while (index <= 522) : (index += 1) {
+    instance.array[0] = true;
+    index = 1;
+    while (index <= 10) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 523;
-    while (index <= 562) : (index += 1) {
+    index = 11;
+    while (index <= 50) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 563;
-    while (index <= 568) : (index += 1) {
+    index = 51;
+    while (index <= 56) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[569] = true;
-    instance.array[570] = true;
-    index = 571;
-    while (index <= 574) : (index += 1) {
+    instance.array[57] = true;
+    instance.array[58] = true;
+    index = 59;
+    while (index <= 62) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 575;
-    while (index <= 582) : (index += 1) {
+    index = 63;
+    while (index <= 70) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[583] = true;
+    instance.array[71] = true;
 
     // Placeholder: 0. Struct name
     return instance;

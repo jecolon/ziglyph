@@ -14,20 +14,20 @@ const HalfwidthandFullwidthForms = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 65280,
 hi: u21 = 65519,
 
 pub fn init(allocator: *mem.Allocator) !HalfwidthandFullwidthForms {
     var instance = HalfwidthandFullwidthForms{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 65520),
+        .array = try allocator.alloc(bool, 240),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 65280;
-    while (index <= 65519) : (index += 1) {
+    index = 0;
+    while (index <= 239) : (index += 1) {
         instance.array[index] = true;
     }
 

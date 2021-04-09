@@ -14,20 +14,20 @@ const BoxDrawing = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 9472,
 hi: u21 = 9599,
 
 pub fn init(allocator: *mem.Allocator) !BoxDrawing {
     var instance = BoxDrawing{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 9600),
+        .array = try allocator.alloc(bool, 128),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 9472;
-    while (index <= 9599) : (index += 1) {
+    index = 0;
+    while (index <= 127) : (index += 1) {
         instance.array[index] = true;
     }
 

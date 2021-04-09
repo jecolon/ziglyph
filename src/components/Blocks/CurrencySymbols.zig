@@ -14,20 +14,20 @@ const CurrencySymbols = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 8352,
 hi: u21 = 8399,
 
 pub fn init(allocator: *mem.Allocator) !CurrencySymbols {
     var instance = CurrencySymbols{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 8400),
+        .array = try allocator.alloc(bool, 48),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 8352;
-    while (index <= 8399) : (index += 1) {
+    index = 0;
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
 

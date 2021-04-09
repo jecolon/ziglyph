@@ -14,28 +14,28 @@ const Hatran = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 67828,
-hi: u21 = 70278,
+lo: u21 = 67808,
+hi: u21 = 67839,
 
 pub fn init(allocator: *mem.Allocator) !Hatran {
     var instance = Hatran{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 2451),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097132;
-    while (index <= 2097150) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 1) : (index += 1) {
+    while (index <= 18) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 7;
-    while (index <= 11) : (index += 1) {
+    index = 20;
+    while (index <= 21) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 27;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

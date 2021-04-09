@@ -14,20 +14,20 @@ const EnclosedCJKLettersandMonths = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 12800,
 hi: u21 = 13055,
 
 pub fn init(allocator: *mem.Allocator) !EnclosedCJKLettersandMonths {
     var instance = EnclosedCJKLettersandMonths{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 13056),
+        .array = try allocator.alloc(bool, 256),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 12800;
-    while (index <= 13055) : (index += 1) {
+    index = 0;
+    while (index <= 255) : (index += 1) {
         instance.array[index] = true;
     }
 

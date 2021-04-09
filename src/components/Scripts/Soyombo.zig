@@ -14,51 +14,51 @@ const Soyombo = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 72192,
+lo: u21 = 72272,
 hi: u21 = 72354,
 
 pub fn init(allocator: *mem.Allocator) !Soyombo {
     var instance = Soyombo{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 163),
+        .array = try allocator.alloc(bool, 83),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[80] = true;
-    index = 81;
-    while (index <= 86) : (index += 1) {
+    instance.array[0] = true;
+    index = 1;
+    while (index <= 6) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 87;
-    while (index <= 88) : (index += 1) {
+    index = 7;
+    while (index <= 8) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 89;
-    while (index <= 91) : (index += 1) {
+    index = 9;
+    while (index <= 11) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 92;
-    while (index <= 137) : (index += 1) {
+    index = 12;
+    while (index <= 57) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 138;
-    while (index <= 150) : (index += 1) {
+    index = 58;
+    while (index <= 70) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[151] = true;
-    index = 152;
-    while (index <= 153) : (index += 1) {
+    instance.array[71] = true;
+    index = 72;
+    while (index <= 73) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 154;
-    while (index <= 156) : (index += 1) {
+    index = 74;
+    while (index <= 76) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[157] = true;
-    index = 158;
-    while (index <= 162) : (index += 1) {
+    instance.array[77] = true;
+    index = 78;
+    while (index <= 82) : (index += 1) {
         instance.array[index] = true;
     }
 

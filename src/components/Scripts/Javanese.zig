@@ -14,58 +14,58 @@ const Javanese = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 43395,
-hi: u21 = 43754,
+lo: u21 = 43392,
+hi: u21 = 43487,
 
 pub fn init(allocator: *mem.Allocator) !Javanese {
     var instance = Javanese{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 360),
+        .array = try allocator.alloc(bool, 96),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097149;
-    while (index <= 2097151) : (index += 1) {
+    index = 0;
+    while (index <= 2) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[0] = true;
-    index = 1;
-    while (index <= 47) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[48] = true;
-    index = 49;
+    instance.array[3] = true;
+    index = 4;
     while (index <= 50) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 51;
-    while (index <= 54) : (index += 1) {
+    instance.array[51] = true;
+    index = 52;
+    while (index <= 53) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 55;
-    while (index <= 56) : (index += 1) {
+    index = 54;
+    while (index <= 57) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 57;
-    while (index <= 58) : (index += 1) {
+    index = 58;
+    while (index <= 59) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 59;
+    index = 60;
     while (index <= 61) : (index += 1) {
         instance.array[index] = true;
     }
     index = 62;
-    while (index <= 74) : (index += 1) {
+    while (index <= 64) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 77;
-    while (index <= 86) : (index += 1) {
+    index = 65;
+    while (index <= 77) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 91;
-    while (index <= 92) : (index += 1) {
+    index = 80;
+    while (index <= 89) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 94;
+    while (index <= 95) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,28 +14,28 @@ const Mahajani = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 68288,
+lo: u21 = 69968,
 hi: u21 = 70006,
 
 pub fn init(allocator: *mem.Allocator) !Mahajani {
     var instance = Mahajani{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1719),
+        .array = try allocator.alloc(bool, 39),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 1680;
-    while (index <= 1714) : (index += 1) {
+    index = 0;
+    while (index <= 34) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[1715] = true;
-    index = 1716;
-    while (index <= 1717) : (index += 1) {
+    instance.array[35] = true;
+    index = 36;
+    while (index <= 37) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[1718] = true;
+    instance.array[38] = true;
 
     // Placeholder: 0. Struct name
     return instance;

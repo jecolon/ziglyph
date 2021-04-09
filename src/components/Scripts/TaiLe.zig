@@ -14,24 +14,24 @@ const TaiLe = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 6512,
-hi: u21 = 65547,
+lo: u21 = 6480,
+hi: u21 = 6516,
 
 pub fn init(allocator: *mem.Allocator) !TaiLe {
     var instance = TaiLe{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 59036),
+        .array = try allocator.alloc(bool, 37),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097120;
-    while (index <= 2097149) : (index += 1) {
+    index = 0;
+    while (index <= 29) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 0;
-    while (index <= 4) : (index += 1) {
+    index = 32;
+    while (index <= 36) : (index += 1) {
         instance.array[index] = true;
     }
 

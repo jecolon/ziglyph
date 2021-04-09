@@ -14,20 +14,20 @@ const Dingbats = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 9984,
 hi: u21 = 10175,
 
 pub fn init(allocator: *mem.Allocator) !Dingbats {
     var instance = Dingbats{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 10176),
+        .array = try allocator.alloc(bool, 192),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 9984;
-    while (index <= 10175) : (index += 1) {
+    index = 0;
+    while (index <= 191) : (index += 1) {
         instance.array[index] = true;
     }
 

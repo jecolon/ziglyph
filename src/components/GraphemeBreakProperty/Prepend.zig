@@ -14,40 +14,40 @@ const Prepend = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 13,
+lo: u21 = 1536,
 hi: u21 = 73030,
 
 pub fn init(allocator: *mem.Allocator) !Prepend {
     var instance = Prepend{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 73018),
+        .array = try allocator.alloc(bool, 71495),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 1523;
-    while (index <= 1528) : (index += 1) {
+    index = 0;
+    while (index <= 5) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[1744] = true;
-    instance.array[1794] = true;
-    instance.array[2261] = true;
-    instance.array[3393] = true;
-    instance.array[69808] = true;
-    instance.array[69824] = true;
-    index = 70069;
-    while (index <= 70070) : (index += 1) {
+    instance.array[221] = true;
+    instance.array[271] = true;
+    instance.array[738] = true;
+    instance.array[1870] = true;
+    instance.array[68285] = true;
+    instance.array[68301] = true;
+    index = 68546;
+    while (index <= 68547) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[71986] = true;
-    instance.array[71988] = true;
-    instance.array[72237] = true;
-    index = 72311;
-    while (index <= 72316) : (index += 1) {
+    instance.array[70463] = true;
+    instance.array[70465] = true;
+    instance.array[70714] = true;
+    index = 70788;
+    while (index <= 70793) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[73017] = true;
+    instance.array[71494] = true;
 
     // Placeholder: 0. Struct name
     return instance;

@@ -14,28 +14,28 @@ const ASCIIHexDigit = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 65,
-hi: u21 = 837,
+lo: u21 = 48,
+hi: u21 = 102,
 
 pub fn init(allocator: *mem.Allocator) !ASCIIHexDigit {
     var instance = ASCIIHexDigit{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 773),
+        .array = try allocator.alloc(bool, 55),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097135;
-    while (index <= 2097144) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 5) : (index += 1) {
+    while (index <= 9) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 32;
-    while (index <= 37) : (index += 1) {
+    index = 17;
+    while (index <= 22) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 49;
+    while (index <= 54) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,25 +14,25 @@ const Tifinagh = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 11631,
-hi: u21 = 43009,
+lo: u21 = 11568,
+hi: u21 = 11647,
 
 pub fn init(allocator: *mem.Allocator) !Tifinagh {
     var instance = Tifinagh{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 31379),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097089;
-    while (index <= 2097144) : (index += 1) {
+    index = 0;
+    while (index <= 55) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[0] = true;
-    instance.array[1] = true;
-    instance.array[16] = true;
+    instance.array[63] = true;
+    instance.array[64] = true;
+    instance.array[79] = true;
 
     // Placeholder: 0. Struct name
     return instance;

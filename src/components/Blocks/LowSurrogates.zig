@@ -14,20 +14,20 @@ const LowSurrogates = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 56320,
 hi: u21 = 57343,
 
 pub fn init(allocator: *mem.Allocator) !LowSurrogates {
     var instance = LowSurrogates{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 57344),
+        .array = try allocator.alloc(bool, 1024),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 56320;
-    while (index <= 57343) : (index += 1) {
+    index = 0;
+    while (index <= 1023) : (index += 1) {
         instance.array[index] = true;
     }
 

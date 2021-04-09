@@ -14,43 +14,43 @@ const Samaritan = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 2070,
-hi: u21 = 42231,
+lo: u21 = 2048,
+hi: u21 = 2110,
 
 pub fn init(allocator: *mem.Allocator) !Samaritan {
     var instance = Samaritan{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 40162),
+        .array = try allocator.alloc(bool, 63),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097130;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 3) : (index += 1) {
+    while (index <= 21) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[4] = true;
-    index = 5;
-    while (index <= 13) : (index += 1) {
+    index = 22;
+    while (index <= 25) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[14] = true;
-    index = 15;
-    while (index <= 17) : (index += 1) {
+    instance.array[26] = true;
+    index = 27;
+    while (index <= 35) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[18] = true;
-    index = 19;
-    while (index <= 23) : (index += 1) {
+    instance.array[36] = true;
+    index = 37;
+    while (index <= 39) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 26;
-    while (index <= 40) : (index += 1) {
+    instance.array[40] = true;
+    index = 41;
+    while (index <= 45) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 48;
+    while (index <= 62) : (index += 1) {
         instance.array[index] = true;
     }
 

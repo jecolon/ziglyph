@@ -14,29 +14,29 @@ const OldPersian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 66504,
-hi: u21 = 68096,
+lo: u21 = 66464,
+hi: u21 = 66517,
 
 pub fn init(allocator: *mem.Allocator) !OldPersian {
     var instance = OldPersian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1593),
+        .array = try allocator.alloc(bool, 54),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097112;
-    while (index <= 2097147) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 7) : (index += 1) {
+    while (index <= 35) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[8] = true;
-    index = 9;
-    while (index <= 13) : (index += 1) {
+    index = 40;
+    while (index <= 47) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[48] = true;
+    index = 49;
+    while (index <= 53) : (index += 1) {
         instance.array[index] = true;
     }
 

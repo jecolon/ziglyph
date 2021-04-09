@@ -14,28 +14,28 @@ const Tagbanwa = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 5998,
-hi: u21 = 6430,
+lo: u21 = 5984,
+hi: u21 = 6003,
 
 pub fn init(allocator: *mem.Allocator) !Tagbanwa {
     var instance = Tagbanwa{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 433),
+        .array = try allocator.alloc(bool, 20),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097138;
-    while (index <= 2097150) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 2) : (index += 1) {
+    while (index <= 12) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 4;
-    while (index <= 5) : (index += 1) {
+    index = 14;
+    while (index <= 16) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 18;
+    while (index <= 19) : (index += 1) {
         instance.array[index] = true;
     }
 

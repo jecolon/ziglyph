@@ -14,44 +14,44 @@ const Batak = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 7142,
-hi: u21 = 69632,
+lo: u21 = 7104,
+hi: u21 = 7167,
 
 pub fn init(allocator: *mem.Allocator) !Batak {
     var instance = Batak{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 62491),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097114;
-    while (index <= 2097151) : (index += 1) {
+    index = 0;
+    while (index <= 37) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[0] = true;
-    instance.array[1] = true;
-    index = 2;
-    while (index <= 3) : (index += 1) {
+    instance.array[38] = true;
+    instance.array[39] = true;
+    index = 40;
+    while (index <= 41) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 4;
-    while (index <= 6) : (index += 1) {
+    index = 42;
+    while (index <= 44) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[7] = true;
-    instance.array[8] = true;
-    index = 9;
-    while (index <= 11) : (index += 1) {
+    instance.array[45] = true;
+    instance.array[46] = true;
+    index = 47;
+    while (index <= 49) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 12;
-    while (index <= 13) : (index += 1) {
+    index = 50;
+    while (index <= 51) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 22;
-    while (index <= 25) : (index += 1) {
+    index = 60;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

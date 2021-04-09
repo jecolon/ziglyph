@@ -14,50 +14,50 @@ const Katakana = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 746,
+lo: u21 = 12449,
 hi: u21 = 110951,
 
 pub fn init(allocator: *mem.Allocator) !Katakana {
     var instance = Katakana{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 110206),
+        .array = try allocator.alloc(bool, 98503),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 11703;
-    while (index <= 11792) : (index += 1) {
+    index = 0;
+    while (index <= 89) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 11795;
-    while (index <= 11796) : (index += 1) {
+    index = 92;
+    while (index <= 93) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[11797] = true;
-    index = 12038;
-    while (index <= 12053) : (index += 1) {
+    instance.array[94] = true;
+    index = 335;
+    while (index <= 350) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 12262;
-    while (index <= 12308) : (index += 1) {
+    index = 559;
+    while (index <= 605) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 12310;
-    while (index <= 12397) : (index += 1) {
+    index = 607;
+    while (index <= 694) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 64636;
-    while (index <= 64645) : (index += 1) {
+    index = 52933;
+    while (index <= 52942) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 64647;
-    while (index <= 64691) : (index += 1) {
+    index = 52944;
+    while (index <= 52988) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[109846] = true;
-    index = 110202;
-    while (index <= 110205) : (index += 1) {
+    instance.array[98143] = true;
+    index = 98499;
+    while (index <= 98502) : (index += 1) {
         instance.array[index] = true;
     }
 

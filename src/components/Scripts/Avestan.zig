@@ -14,24 +14,24 @@ const Avestan = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 68409,
-hi: u21 = 78894,
+lo: u21 = 68352,
+hi: u21 = 68415,
 
 pub fn init(allocator: *mem.Allocator) !Avestan {
     var instance = Avestan{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 10486),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097095;
-    while (index <= 2097148) : (index += 1) {
+    index = 0;
+    while (index <= 53) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 0;
-    while (index <= 6) : (index += 1) {
+    index = 57;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

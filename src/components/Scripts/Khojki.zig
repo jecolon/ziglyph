@@ -14,49 +14,49 @@ const Khojki = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 67072,
+lo: u21 = 70144,
 hi: u21 = 70206,
 
 pub fn init(allocator: *mem.Allocator) !Khojki {
     var instance = Khojki{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 3135),
+        .array = try allocator.alloc(bool, 63),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 3072;
-    while (index <= 3089) : (index += 1) {
+    index = 0;
+    while (index <= 17) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 3091;
-    while (index <= 3115) : (index += 1) {
+    index = 19;
+    while (index <= 43) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 3116;
-    while (index <= 3118) : (index += 1) {
+    index = 44;
+    while (index <= 46) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 3119;
-    while (index <= 3121) : (index += 1) {
+    index = 47;
+    while (index <= 49) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 3122;
-    while (index <= 3123) : (index += 1) {
+    index = 50;
+    while (index <= 51) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[3124] = true;
-    instance.array[3125] = true;
-    index = 3126;
-    while (index <= 3127) : (index += 1) {
+    instance.array[52] = true;
+    instance.array[53] = true;
+    index = 54;
+    while (index <= 55) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 3128;
-    while (index <= 3133) : (index += 1) {
+    index = 56;
+    while (index <= 61) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[3134] = true;
+    instance.array[62] = true;
 
     // Placeholder: 0. Struct name
     return instance;

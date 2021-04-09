@@ -14,20 +14,20 @@ const SmallKanaExtension = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 110896,
 hi: u21 = 110959,
 
 pub fn init(allocator: *mem.Allocator) !SmallKanaExtension {
     var instance = SmallKanaExtension{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 110960),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 110896;
-    while (index <= 110959) : (index += 1) {
+    index = 0;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,28 +14,28 @@ const LinearA = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 67392,
-hi: u21 = 70002,
+lo: u21 = 67072,
+hi: u21 = 67431,
 
 pub fn init(allocator: *mem.Allocator) !LinearA {
     var instance = LinearA{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 2611),
+        .array = try allocator.alloc(bool, 360),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2096832;
-    while (index <= 2097142) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 21) : (index += 1) {
+    while (index <= 310) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 32;
-    while (index <= 39) : (index += 1) {
+    index = 320;
+    while (index <= 341) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 352;
+    while (index <= 359) : (index += 1) {
         instance.array[index] = true;
     }
 

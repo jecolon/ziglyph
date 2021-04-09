@@ -14,36 +14,36 @@ const Multani = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 68736,
+lo: u21 = 70272,
 hi: u21 = 70313,
 
 pub fn init(allocator: *mem.Allocator) !Multani {
     var instance = Multani{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1578),
+        .array = try allocator.alloc(bool, 42),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 1536;
-    while (index <= 1542) : (index += 1) {
+    index = 0;
+    while (index <= 6) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[1544] = true;
-    index = 1546;
-    while (index <= 1549) : (index += 1) {
+    instance.array[8] = true;
+    index = 10;
+    while (index <= 13) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 1551;
-    while (index <= 1565) : (index += 1) {
+    index = 15;
+    while (index <= 29) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 1567;
-    while (index <= 1576) : (index += 1) {
+    index = 31;
+    while (index <= 40) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[1577] = true;
+    instance.array[41] = true;
 
     // Placeholder: 0. Struct name
     return instance;

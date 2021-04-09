@@ -14,20 +14,20 @@ const MathematicalOperators = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 8704,
 hi: u21 = 8959,
 
 pub fn init(allocator: *mem.Allocator) !MathematicalOperators {
     var instance = MathematicalOperators{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 8960),
+        .array = try allocator.alloc(bool, 256),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 8704;
-    while (index <= 8959) : (index += 1) {
+    index = 0;
+    while (index <= 255) : (index += 1) {
         instance.array[index] = true;
     }
 

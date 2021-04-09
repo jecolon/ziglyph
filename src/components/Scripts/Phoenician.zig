@@ -14,27 +14,27 @@ const Phoenician = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 43072,
+lo: u21 = 67840,
 hi: u21 = 67871,
 
 pub fn init(allocator: *mem.Allocator) !Phoenician {
     var instance = Phoenician{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 24800),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 24768;
-    while (index <= 24789) : (index += 1) {
+    index = 0;
+    while (index <= 21) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 24790;
-    while (index <= 24795) : (index += 1) {
+    index = 22;
+    while (index <= 27) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[24799] = true;
+    instance.array[31] = true;
 
     // Placeholder: 0. Struct name
     return instance;

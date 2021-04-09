@@ -14,20 +14,20 @@ const OldPersian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 66464,
 hi: u21 = 66527,
 
 pub fn init(allocator: *mem.Allocator) !OldPersian {
     var instance = OldPersian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 66528),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 66464;
-    while (index <= 66527) : (index += 1) {
+    index = 0;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

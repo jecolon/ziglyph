@@ -14,26 +14,26 @@ const OtherIDStart = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 183,
+lo: u21 = 6277,
 hi: u21 = 12444,
 
 pub fn init(allocator: *mem.Allocator) !OtherIDStart {
     var instance = OtherIDStart{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 12262),
+        .array = try allocator.alloc(bool, 6168),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 6094;
-    while (index <= 6095) : (index += 1) {
+    index = 0;
+    while (index <= 1) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[8289] = true;
-    instance.array[8311] = true;
-    index = 12260;
-    while (index <= 12261) : (index += 1) {
+    instance.array[2195] = true;
+    instance.array[2217] = true;
+    index = 6166;
+    while (index <= 6167) : (index += 1) {
         instance.array[index] = true;
     }
 

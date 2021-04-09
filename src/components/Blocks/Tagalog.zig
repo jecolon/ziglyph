@@ -14,20 +14,20 @@ const Tagalog = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 5888,
 hi: u21 = 5919,
 
 pub fn init(allocator: *mem.Allocator) !Tagalog {
     var instance = Tagalog{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 5920),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 5888;
-    while (index <= 5919) : (index += 1) {
+    index = 0;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

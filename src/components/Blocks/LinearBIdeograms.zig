@@ -14,20 +14,20 @@ const LinearBIdeograms = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 65664,
 hi: u21 = 65791,
 
 pub fn init(allocator: *mem.Allocator) !LinearBIdeograms {
     var instance = LinearBIdeograms{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 65792),
+        .array = try allocator.alloc(bool, 128),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 65664;
-    while (index <= 65791) : (index += 1) {
+    index = 0;
+    while (index <= 127) : (index += 1) {
         instance.array[index] = true;
     }
 

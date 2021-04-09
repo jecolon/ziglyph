@@ -14,20 +14,20 @@ const Ethiopic = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 4608,
 hi: u21 = 4991,
 
 pub fn init(allocator: *mem.Allocator) !Ethiopic {
     var instance = Ethiopic{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 4992),
+        .array = try allocator.alloc(bool, 384),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 4608;
-    while (index <= 4991) : (index += 1) {
+    index = 0;
+    while (index <= 383) : (index += 1) {
         instance.array[index] = true;
     }
 

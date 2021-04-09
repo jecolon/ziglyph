@@ -14,20 +14,20 @@ const Arabic = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 1536,
 hi: u21 = 1791,
 
 pub fn init(allocator: *mem.Allocator) !Arabic {
     var instance = Arabic{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1792),
+        .array = try allocator.alloc(bool, 256),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 1536;
-    while (index <= 1791) : (index += 1) {
+    index = 0;
+    while (index <= 255) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,54 +14,54 @@ const PahawhHmong = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 70144,
+lo: u21 = 92928,
 hi: u21 = 93071,
 
 pub fn init(allocator: *mem.Allocator) !PahawhHmong {
     var instance = PahawhHmong{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 22928),
+        .array = try allocator.alloc(bool, 144),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 22784;
-    while (index <= 22831) : (index += 1) {
+    index = 0;
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 22832;
-    while (index <= 22838) : (index += 1) {
+    index = 48;
+    while (index <= 54) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 22839;
-    while (index <= 22843) : (index += 1) {
+    index = 55;
+    while (index <= 59) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 22844;
-    while (index <= 22847) : (index += 1) {
+    index = 60;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 22848;
-    while (index <= 22851) : (index += 1) {
+    index = 64;
+    while (index <= 67) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[22852] = true;
-    instance.array[22853] = true;
-    index = 22864;
-    while (index <= 22873) : (index += 1) {
+    instance.array[68] = true;
+    instance.array[69] = true;
+    index = 80;
+    while (index <= 89) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 22875;
-    while (index <= 22881) : (index += 1) {
+    index = 91;
+    while (index <= 97) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 22883;
-    while (index <= 22903) : (index += 1) {
+    index = 99;
+    while (index <= 119) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 22909;
-    while (index <= 22927) : (index += 1) {
+    index = 125;
+    while (index <= 143) : (index += 1) {
         instance.array[index] = true;
     }
 

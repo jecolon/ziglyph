@@ -14,20 +14,20 @@ const Hebrew = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 1424,
 hi: u21 = 1535,
 
 pub fn init(allocator: *mem.Allocator) !Hebrew {
     var instance = Hebrew{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1536),
+        .array = try allocator.alloc(bool, 112),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 1424;
-    while (index <= 1535) : (index += 1) {
+    index = 0;
+    while (index <= 111) : (index += 1) {
         instance.array[index] = true;
     }
 

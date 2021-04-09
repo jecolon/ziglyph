@@ -14,27 +14,27 @@ const Thaana = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 1958,
-hi: u21 = 2306,
+lo: u21 = 1920,
+hi: u21 = 1969,
 
 pub fn init(allocator: *mem.Allocator) !Thaana {
     var instance = Thaana{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 349),
+        .array = try allocator.alloc(bool, 50),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097114;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 10) : (index += 1) {
+    while (index <= 37) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[11] = true;
+    index = 38;
+    while (index <= 48) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[49] = true;
 
     // Placeholder: 0. Struct name
     return instance;

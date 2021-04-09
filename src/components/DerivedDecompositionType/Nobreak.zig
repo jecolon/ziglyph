@@ -14,23 +14,23 @@ const Nobreak = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 3852,
-hi: u21 = 64340,
+lo: u21 = 160,
+hi: u21 = 8239,
 
 pub fn init(allocator: *mem.Allocator) !Nobreak {
     var instance = Nobreak{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 60489),
+        .array = try allocator.alloc(bool, 8080),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[2093460] = true;
     instance.array[0] = true;
-    instance.array[4347] = true;
-    instance.array[4357] = true;
-    instance.array[4387] = true;
+    instance.array[3692] = true;
+    instance.array[8039] = true;
+    instance.array[8049] = true;
+    instance.array[8079] = true;
 
     // Placeholder: 0. Struct name
     return instance;

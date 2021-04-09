@@ -14,47 +14,47 @@ const Modi = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 71216,
-hi: u21 = 92766,
+lo: u21 = 71168,
+hi: u21 = 71257,
 
 pub fn init(allocator: *mem.Allocator) !Modi {
     var instance = Modi{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 21551),
+        .array = try allocator.alloc(bool, 90),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097104;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 2) : (index += 1) {
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 3;
-    while (index <= 10) : (index += 1) {
+    index = 48;
+    while (index <= 50) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 11;
-    while (index <= 12) : (index += 1) {
+    index = 51;
+    while (index <= 58) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[13] = true;
-    instance.array[14] = true;
-    index = 15;
-    while (index <= 16) : (index += 1) {
+    index = 59;
+    while (index <= 60) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 17;
-    while (index <= 19) : (index += 1) {
+    instance.array[61] = true;
+    instance.array[62] = true;
+    index = 63;
+    while (index <= 64) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[20] = true;
-    index = 32;
-    while (index <= 41) : (index += 1) {
+    index = 65;
+    while (index <= 67) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[68] = true;
+    index = 80;
+    while (index <= 89) : (index += 1) {
         instance.array[index] = true;
     }
 

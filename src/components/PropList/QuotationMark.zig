@@ -14,52 +14,52 @@ const QuotationMark = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 33,
+lo: u21 = 34,
 hi: u21 = 65379,
 
 pub fn init(allocator: *mem.Allocator) !QuotationMark {
     var instance = QuotationMark{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 65347),
+        .array = try allocator.alloc(bool, 65346),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[1] = true;
-    instance.array[6] = true;
-    instance.array[138] = true;
-    instance.array[154] = true;
+    instance.array[0] = true;
+    instance.array[5] = true;
+    instance.array[137] = true;
+    instance.array[153] = true;
+    instance.array[8182] = true;
     instance.array[8183] = true;
     instance.array[8184] = true;
-    instance.array[8185] = true;
-    index = 8186;
-    while (index <= 8187) : (index += 1) {
+    index = 8185;
+    while (index <= 8186) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[8187] = true;
     instance.array[8188] = true;
     instance.array[8189] = true;
-    instance.array[8190] = true;
+    instance.array[8215] = true;
     instance.array[8216] = true;
-    instance.array[8217] = true;
-    instance.array[11809] = true;
+    instance.array[11808] = true;
+    instance.array[12266] = true;
     instance.array[12267] = true;
     instance.array[12268] = true;
     instance.array[12269] = true;
-    instance.array[12270] = true;
-    instance.array[12284] = true;
-    index = 12285;
-    while (index <= 12286) : (index += 1) {
+    instance.array[12283] = true;
+    index = 12284;
+    while (index <= 12285) : (index += 1) {
         instance.array[index] = true;
     }
+    instance.array[65055] = true;
     instance.array[65056] = true;
     instance.array[65057] = true;
     instance.array[65058] = true;
-    instance.array[65059] = true;
-    instance.array[65249] = true;
-    instance.array[65254] = true;
+    instance.array[65248] = true;
+    instance.array[65253] = true;
+    instance.array[65344] = true;
     instance.array[65345] = true;
-    instance.array[65346] = true;
 
     // Placeholder: 0. Struct name
     return instance;

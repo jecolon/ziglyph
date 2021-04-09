@@ -14,20 +14,20 @@ const Sundanese = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 7040,
 hi: u21 = 7103,
 
 pub fn init(allocator: *mem.Allocator) !Sundanese {
     var instance = Sundanese{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 7104),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 7040;
-    while (index <= 7103) : (index += 1) {
+    index = 0;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

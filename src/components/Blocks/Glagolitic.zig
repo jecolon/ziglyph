@@ -14,20 +14,20 @@ const Glagolitic = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 11264,
 hi: u21 = 11359,
 
 pub fn init(allocator: *mem.Allocator) !Glagolitic {
     var instance = Glagolitic{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 11360),
+        .array = try allocator.alloc(bool, 96),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 11264;
-    while (index <= 11359) : (index += 1) {
+    index = 0;
+    while (index <= 95) : (index += 1) {
         instance.array[index] = true;
     }
 

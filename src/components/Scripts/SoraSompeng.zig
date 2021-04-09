@@ -14,24 +14,24 @@ const SoraSompeng = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 69872,
-hi: u21 = 71338,
+lo: u21 = 69840,
+hi: u21 = 69881,
 
 pub fn init(allocator: *mem.Allocator) !SoraSompeng {
     var instance = SoraSompeng{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1467),
+        .array = try allocator.alloc(bool, 42),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097120;
-    while (index <= 2097144) : (index += 1) {
+    index = 0;
+    while (index <= 24) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 0;
-    while (index <= 9) : (index += 1) {
+    index = 32;
+    while (index <= 41) : (index += 1) {
         instance.array[index] = true;
     }
 

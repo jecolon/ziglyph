@@ -14,20 +14,20 @@ const YiRadicals = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 42128,
 hi: u21 = 42191,
 
 pub fn init(allocator: *mem.Allocator) !YiRadicals {
     var instance = YiRadicals{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 42192),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 42128;
-    while (index <= 42191) : (index += 1) {
+    index = 0;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

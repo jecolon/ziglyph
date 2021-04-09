@@ -14,31 +14,31 @@ const KayahLi = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 43274,
-hi: u21 = 43334,
+lo: u21 = 43264,
+hi: u21 = 43311,
 
 pub fn init(allocator: *mem.Allocator) !KayahLi {
     var instance = KayahLi{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 61),
+        .array = try allocator.alloc(bool, 48),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097142;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 27) : (index += 1) {
+    while (index <= 9) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 28;
-    while (index <= 35) : (index += 1) {
+    index = 10;
+    while (index <= 37) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[37] = true;
+    index = 38;
+    while (index <= 45) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[47] = true;
 
     // Placeholder: 0. Struct name
     return instance;

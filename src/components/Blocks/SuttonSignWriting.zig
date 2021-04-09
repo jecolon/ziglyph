@@ -14,20 +14,20 @@ const SuttonSignWriting = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 120832,
 hi: u21 = 121519,
 
 pub fn init(allocator: *mem.Allocator) !SuttonSignWriting {
     var instance = SuttonSignWriting{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 121520),
+        .array = try allocator.alloc(bool, 688),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 120832;
-    while (index <= 121519) : (index += 1) {
+    index = 0;
+    while (index <= 687) : (index += 1) {
         instance.array[index] = true;
     }
 

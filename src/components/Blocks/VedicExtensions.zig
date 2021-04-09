@@ -14,20 +14,20 @@ const VedicExtensions = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 7376,
 hi: u21 = 7423,
 
 pub fn init(allocator: *mem.Allocator) !VedicExtensions {
     var instance = VedicExtensions{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 7424),
+        .array = try allocator.alloc(bool, 48),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 7376;
-    while (index <= 7423) : (index += 1) {
+    index = 0;
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
 

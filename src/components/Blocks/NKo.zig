@@ -14,20 +14,20 @@ const NKo = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 1984,
 hi: u21 = 2047,
 
 pub fn init(allocator: *mem.Allocator) !NKo {
     var instance = NKo{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 2048),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 1984;
-    while (index <= 2047) : (index += 1) {
+    index = 0;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

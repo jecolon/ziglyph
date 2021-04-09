@@ -14,40 +14,40 @@ const Armenian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 1369,
+lo: u21 = 1329,
 hi: u21 = 64279,
 
 pub fn init(allocator: *mem.Allocator) !Armenian {
     var instance = Armenian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 62911),
+        .array = try allocator.alloc(bool, 62951),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097112;
-    while (index <= 2097149) : (index += 1) {
+    index = 0;
+    while (index <= 37) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[0] = true;
-    index = 1;
-    while (index <= 6) : (index += 1) {
+    instance.array[40] = true;
+    index = 41;
+    while (index <= 46) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 7;
-    while (index <= 47) : (index += 1) {
+    index = 47;
+    while (index <= 87) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[48] = true;
-    instance.array[49] = true;
-    index = 52;
-    while (index <= 53) : (index += 1) {
+    instance.array[88] = true;
+    instance.array[89] = true;
+    index = 92;
+    while (index <= 93) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[54] = true;
-    index = 62906;
-    while (index <= 62910) : (index += 1) {
+    instance.array[94] = true;
+    index = 62946;
+    while (index <= 62950) : (index += 1) {
         instance.array[index] = true;
     }
 

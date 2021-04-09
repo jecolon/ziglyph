@@ -14,20 +14,20 @@ const ChessSymbols = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 129536,
 hi: u21 = 129647,
 
 pub fn init(allocator: *mem.Allocator) !ChessSymbols {
     var instance = ChessSymbols{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 129648),
+        .array = try allocator.alloc(bool, 112),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 129536;
-    while (index <= 129647) : (index += 1) {
+    index = 0;
+    while (index <= 111) : (index += 1) {
         instance.array[index] = true;
     }
 

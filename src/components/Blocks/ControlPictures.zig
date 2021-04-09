@@ -14,20 +14,20 @@ const ControlPictures = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 9216,
 hi: u21 = 9279,
 
 pub fn init(allocator: *mem.Allocator) !ControlPictures {
     var instance = ControlPictures{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 9280),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 9216;
-    while (index <= 9279) : (index += 1) {
+    index = 0;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

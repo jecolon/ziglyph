@@ -14,20 +14,20 @@ const MayanNumerals = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 119520,
 hi: u21 = 119551,
 
 pub fn init(allocator: *mem.Allocator) !MayanNumerals {
     var instance = MayanNumerals{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 119552),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 119520;
-    while (index <= 119551) : (index += 1) {
+    index = 0;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

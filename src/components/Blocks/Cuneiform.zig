@@ -14,20 +14,20 @@ const Cuneiform = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 73728,
 hi: u21 = 74751,
 
 pub fn init(allocator: *mem.Allocator) !Cuneiform {
     var instance = Cuneiform{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 74752),
+        .array = try allocator.alloc(bool, 1024),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 73728;
-    while (index <= 74751) : (index += 1) {
+    index = 0;
+    while (index <= 1023) : (index += 1) {
         instance.array[index] = true;
     }
 

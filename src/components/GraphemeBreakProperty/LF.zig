@@ -14,19 +14,19 @@ const LF = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
-hi: u21 = 9,
+lo: u21 = 10,
+hi: u21 = 10,
 
 pub fn init(allocator: *mem.Allocator) !LF {
     var instance = LF{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 10),
+        .array = try allocator.alloc(bool, 1),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[10] = true;
+    instance.array[0] = true;
 
     // Placeholder: 0. Struct name
     return instance;

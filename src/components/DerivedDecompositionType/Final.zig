@@ -14,182 +14,182 @@ const Final = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 64336,
+lo: u21 = 64337,
 hi: u21 = 65276,
 
 pub fn init(allocator: *mem.Allocator) !Final {
     var instance = Final{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 941),
+        .array = try allocator.alloc(bool, 940),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[1] = true;
-    instance.array[3] = true;
-    instance.array[7] = true;
-    instance.array[11] = true;
-    instance.array[15] = true;
-    instance.array[19] = true;
-    instance.array[23] = true;
-    instance.array[27] = true;
-    instance.array[31] = true;
-    instance.array[35] = true;
-    instance.array[39] = true;
-    instance.array[43] = true;
-    instance.array[47] = true;
-    instance.array[51] = true;
-    instance.array[53] = true;
-    instance.array[55] = true;
-    instance.array[57] = true;
-    instance.array[59] = true;
-    instance.array[61] = true;
-    instance.array[63] = true;
-    instance.array[67] = true;
-    instance.array[71] = true;
-    instance.array[75] = true;
-    instance.array[79] = true;
-    instance.array[81] = true;
-    instance.array[85] = true;
-    instance.array[87] = true;
-    instance.array[91] = true;
-    instance.array[95] = true;
-    instance.array[97] = true;
-    instance.array[132] = true;
-    instance.array[136] = true;
-    instance.array[138] = true;
-    instance.array[140] = true;
-    instance.array[143] = true;
-    instance.array[145] = true;
-    instance.array[147] = true;
-    instance.array[149] = true;
-    instance.array[155] = true;
-    instance.array[157] = true;
-    instance.array[159] = true;
-    instance.array[161] = true;
-    instance.array[163] = true;
-    instance.array[165] = true;
-    instance.array[167] = true;
-    instance.array[170] = true;
-    instance.array[173] = true;
-    index = 276;
-    while (index <= 326) : (index += 1) {
+    instance.array[0] = true;
+    instance.array[2] = true;
+    instance.array[6] = true;
+    instance.array[10] = true;
+    instance.array[14] = true;
+    instance.array[18] = true;
+    instance.array[22] = true;
+    instance.array[26] = true;
+    instance.array[30] = true;
+    instance.array[34] = true;
+    instance.array[38] = true;
+    instance.array[42] = true;
+    instance.array[46] = true;
+    instance.array[50] = true;
+    instance.array[52] = true;
+    instance.array[54] = true;
+    instance.array[56] = true;
+    instance.array[58] = true;
+    instance.array[60] = true;
+    instance.array[62] = true;
+    instance.array[66] = true;
+    instance.array[70] = true;
+    instance.array[74] = true;
+    instance.array[78] = true;
+    instance.array[80] = true;
+    instance.array[84] = true;
+    instance.array[86] = true;
+    instance.array[90] = true;
+    instance.array[94] = true;
+    instance.array[96] = true;
+    instance.array[131] = true;
+    instance.array[135] = true;
+    instance.array[137] = true;
+    instance.array[139] = true;
+    instance.array[142] = true;
+    instance.array[144] = true;
+    instance.array[146] = true;
+    instance.array[148] = true;
+    instance.array[154] = true;
+    instance.array[156] = true;
+    instance.array[158] = true;
+    instance.array[160] = true;
+    instance.array[162] = true;
+    instance.array[164] = true;
+    instance.array[166] = true;
+    instance.array[169] = true;
+    instance.array[172] = true;
+    index = 275;
+    while (index <= 325) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 449;
-    while (index <= 476) : (index += 1) {
+    index = 448;
+    while (index <= 475) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[492] = true;
-    instance.array[513] = true;
-    instance.array[520] = true;
-    index = 522;
-    while (index <= 523) : (index += 1) {
+    instance.array[491] = true;
+    instance.array[512] = true;
+    instance.array[519] = true;
+    index = 521;
+    while (index <= 522) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 526;
-    while (index <= 527) : (index += 1) {
+    index = 525;
+    while (index <= 526) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[530] = true;
-    instance.array[532] = true;
-    index = 534;
-    while (index <= 535) : (index += 1) {
+    instance.array[529] = true;
+    instance.array[531] = true;
+    index = 533;
+    while (index <= 534) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 537;
-    while (index <= 538) : (index += 1) {
+    index = 536;
+    while (index <= 537) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[540] = true;
-    index = 542;
-    while (index <= 543) : (index += 1) {
+    instance.array[539] = true;
+    index = 541;
+    while (index <= 542) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[545] = true;
-    index = 548;
-    while (index <= 550) : (index += 1) {
+    instance.array[544] = true;
+    index = 547;
+    while (index <= 549) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 552;
-    while (index <= 556) : (index += 1) {
+    index = 551;
+    while (index <= 555) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 558;
-    while (index <= 562) : (index += 1) {
+    index = 557;
+    while (index <= 561) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 564;
-    while (index <= 565) : (index += 1) {
+    index = 563;
+    while (index <= 564) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[567] = true;
-    instance.array[571] = true;
-    index = 582;
-    while (index <= 583) : (index += 1) {
+    instance.array[566] = true;
+    instance.array[570] = true;
+    index = 581;
+    while (index <= 582) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 585;
-    while (index <= 588) : (index += 1) {
+    index = 584;
+    while (index <= 587) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 590;
-    while (index <= 611) : (index += 1) {
+    index = 589;
+    while (index <= 610) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 614;
-    while (index <= 615) : (index += 1) {
+    index = 613;
+    while (index <= 614) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[617] = true;
-    index = 619;
-    while (index <= 626) : (index += 1) {
+    instance.array[616] = true;
+    index = 618;
+    while (index <= 625) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 630;
-    while (index <= 631) : (index += 1) {
+    index = 629;
+    while (index <= 630) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[818] = true;
-    instance.array[820] = true;
-    instance.array[822] = true;
-    instance.array[824] = true;
-    instance.array[826] = true;
-    instance.array[830] = true;
-    instance.array[832] = true;
-    instance.array[836] = true;
-    instance.array[838] = true;
-    instance.array[842] = true;
-    instance.array[846] = true;
-    instance.array[850] = true;
-    instance.array[854] = true;
-    instance.array[858] = true;
-    instance.array[860] = true;
-    instance.array[862] = true;
-    instance.array[864] = true;
-    instance.array[866] = true;
-    instance.array[870] = true;
-    instance.array[874] = true;
-    instance.array[878] = true;
-    instance.array[882] = true;
-    instance.array[886] = true;
-    instance.array[890] = true;
-    instance.array[894] = true;
-    instance.array[898] = true;
-    instance.array[902] = true;
-    instance.array[906] = true;
-    instance.array[910] = true;
-    instance.array[914] = true;
-    instance.array[918] = true;
-    instance.array[922] = true;
-    instance.array[926] = true;
-    instance.array[928] = true;
-    instance.array[930] = true;
-    instance.array[934] = true;
-    instance.array[936] = true;
-    instance.array[938] = true;
-    instance.array[940] = true;
+    instance.array[817] = true;
+    instance.array[819] = true;
+    instance.array[821] = true;
+    instance.array[823] = true;
+    instance.array[825] = true;
+    instance.array[829] = true;
+    instance.array[831] = true;
+    instance.array[835] = true;
+    instance.array[837] = true;
+    instance.array[841] = true;
+    instance.array[845] = true;
+    instance.array[849] = true;
+    instance.array[853] = true;
+    instance.array[857] = true;
+    instance.array[859] = true;
+    instance.array[861] = true;
+    instance.array[863] = true;
+    instance.array[865] = true;
+    instance.array[869] = true;
+    instance.array[873] = true;
+    instance.array[877] = true;
+    instance.array[881] = true;
+    instance.array[885] = true;
+    instance.array[889] = true;
+    instance.array[893] = true;
+    instance.array[897] = true;
+    instance.array[901] = true;
+    instance.array[905] = true;
+    instance.array[909] = true;
+    instance.array[913] = true;
+    instance.array[917] = true;
+    instance.array[921] = true;
+    instance.array[925] = true;
+    instance.array[927] = true;
+    instance.array[929] = true;
+    instance.array[933] = true;
+    instance.array[935] = true;
+    instance.array[937] = true;
+    instance.array[939] = true;
 
     // Placeholder: 0. Struct name
     return instance;

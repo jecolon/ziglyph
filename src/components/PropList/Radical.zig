@@ -14,28 +14,28 @@ const Radical = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 11931,
-hi: u21 = 19903,
+lo: u21 = 11904,
+hi: u21 = 12245,
 
 pub fn init(allocator: *mem.Allocator) !Radical {
     var instance = Radical{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 7973),
+        .array = try allocator.alloc(bool, 342),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097125;
-    while (index <= 2097150) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 88) : (index += 1) {
+    while (index <= 25) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 101;
-    while (index <= 314) : (index += 1) {
+    index = 27;
+    while (index <= 115) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 128;
+    while (index <= 341) : (index += 1) {
         instance.array[index] = true;
     }
 

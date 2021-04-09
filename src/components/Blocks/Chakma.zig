@@ -14,20 +14,20 @@ const Chakma = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 69888,
 hi: u21 = 69967,
 
 pub fn init(allocator: *mem.Allocator) !Chakma {
     var instance = Chakma{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 69968),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 69888;
-    while (index <= 69967) : (index += 1) {
+    index = 0;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
 

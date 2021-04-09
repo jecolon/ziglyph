@@ -14,28 +14,28 @@ const Bopomofo = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 11904,
+lo: u21 = 746,
 hi: u21 = 12735,
 
 pub fn init(allocator: *mem.Allocator) !Bopomofo {
     var instance = Bopomofo{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 832),
+        .array = try allocator.alloc(bool, 11990),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2085994;
-    while (index <= 2085995) : (index += 1) {
+    index = 0;
+    while (index <= 1) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 645;
-    while (index <= 687) : (index += 1) {
+    index = 11803;
+    while (index <= 11845) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 800;
-    while (index <= 831) : (index += 1) {
+    index = 11958;
+    while (index <= 11989) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,20 +14,20 @@ const CJKCompatibilityForms = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 65072,
 hi: u21 = 65103,
 
 pub fn init(allocator: *mem.Allocator) !CJKCompatibilityForms {
     var instance = CJKCompatibilityForms{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 65104),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 65072;
-    while (index <= 65103) : (index += 1) {
+    index = 0;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

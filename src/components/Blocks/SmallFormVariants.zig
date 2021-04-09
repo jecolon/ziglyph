@@ -14,20 +14,20 @@ const SmallFormVariants = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 65104,
 hi: u21 = 65135,
 
 pub fn init(allocator: *mem.Allocator) !SmallFormVariants {
     var instance = SmallFormVariants{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 65136),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 65104;
-    while (index <= 65135) : (index += 1) {
+    index = 0;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,20 +14,20 @@ const Kannada = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 3200,
 hi: u21 = 3327,
 
 pub fn init(allocator: *mem.Allocator) !Kannada {
     var instance = Kannada{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 3328),
+        .array = try allocator.alloc(bool, 128),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 3200;
-    while (index <= 3327) : (index += 1) {
+    index = 0;
+    while (index <= 127) : (index += 1) {
         instance.array[index] = true;
     }
 

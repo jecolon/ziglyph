@@ -14,24 +14,24 @@ const OldPermic = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 66422,
-hi: u21 = 68497,
+lo: u21 = 66384,
+hi: u21 = 66426,
 
 pub fn init(allocator: *mem.Allocator) !OldPermic {
     var instance = OldPermic{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 2076),
+        .array = try allocator.alloc(bool, 43),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097114;
-    while (index <= 2097151) : (index += 1) {
+    index = 0;
+    while (index <= 37) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 0;
-    while (index <= 4) : (index += 1) {
+    index = 38;
+    while (index <= 42) : (index += 1) {
         instance.array[index] = true;
     }
 

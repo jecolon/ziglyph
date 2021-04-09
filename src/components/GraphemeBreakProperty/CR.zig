@@ -14,8 +14,8 @@ const CR = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 10,
-hi: u21 = 10,
+lo: u21 = 13,
+hi: u21 = 13,
 
 pub fn init(allocator: *mem.Allocator) !CR {
     var instance = CR{
@@ -26,7 +26,7 @@ pub fn init(allocator: *mem.Allocator) !CR {
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[3] = true;
+    instance.array[0] = true;
 
     // Placeholder: 0. Struct name
     return instance;

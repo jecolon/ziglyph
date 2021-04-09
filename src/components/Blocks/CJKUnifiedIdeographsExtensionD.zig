@@ -14,20 +14,20 @@ const CJKUnifiedIdeographsExtensionD = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 177984,
 hi: u21 = 178207,
 
 pub fn init(allocator: *mem.Allocator) !CJKUnifiedIdeographsExtensionD {
     var instance = CJKUnifiedIdeographsExtensionD{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 178208),
+        .array = try allocator.alloc(bool, 224),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 177984;
-    while (index <= 178207) : (index += 1) {
+    index = 0;
+    while (index <= 223) : (index += 1) {
         instance.array[index] = true;
     }
 

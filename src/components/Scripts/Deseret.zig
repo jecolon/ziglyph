@@ -14,20 +14,20 @@ const Deseret = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 768,
-hi: u21 = 879,
+lo: u21 = 66560,
+hi: u21 = 66639,
 
 pub fn init(allocator: *mem.Allocator) !Deseret {
     var instance = Deseret{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 112),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 65792;
-    while (index <= 65871) : (index += 1) {
+    index = 0;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
 

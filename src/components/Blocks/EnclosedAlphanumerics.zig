@@ -14,20 +14,20 @@ const EnclosedAlphanumerics = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 9312,
 hi: u21 = 9471,
 
 pub fn init(allocator: *mem.Allocator) !EnclosedAlphanumerics {
     var instance = EnclosedAlphanumerics{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 9472),
+        .array = try allocator.alloc(bool, 160),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 9312;
-    while (index <= 9471) : (index += 1) {
+    index = 0;
+    while (index <= 159) : (index += 1) {
         instance.array[index] = true;
     }
 

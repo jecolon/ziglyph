@@ -41,10 +41,6 @@ const UcdGenerator = struct {
         defer records.deinit();
         var kind = ArrayList(u8).init(self.allocator);
         defer kind.deinit();
-        var lo: u21 = 0x10FFFF;
-        var prev_lo: u21 = 0x10FFFF;
-        var hi: u21 = 0;
-        var prev_hi: u21 = 0;
         while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
             // Skip comments or empty lines.
             if (line.len == 0 or line[0] == '#') continue;
@@ -58,31 +54,17 @@ const UcdGenerator = struct {
                 if (field.len == 0 or field[0] == '#') continue;
                 // Construct record.
                 if (field_index == 0) {
-                    // Ranges.
                     if (mem.indexOf(u8, field, "..")) |dots| {
+                        // Ranges.
                         const r_lo = try fmt.parseInt(u21, field[0..dots], 16);
-                        if (r_lo < lo) {
-                            prev_lo = lo;
-                            lo = r_lo;
-                        }
                         const r_hi = try fmt.parseInt(u21, field[dots + 2 ..], 16);
-                        if (r_hi > hi) {
-                            prev_hi = hi;
-                            hi = r_hi;
-                        }
                         record = .{ .range = .{ .lo = r_lo, .hi = r_hi } };
                     } else {
                         const code_point = try fmt.parseInt(u21, field, 16);
-                        if (code_point < lo) {
-                            prev_lo = lo;
-                            lo = code_point;
-                        }
-                        if (code_point > hi) {
-                            prev_hi = hi;
-                            hi = code_point;
-                        }
                         record = .{ .single = code_point };
                     }
+                    // Add this record.
+                    try records.append(record);
                 } else if (field_index == 1) {
                     // Record kind.
                     // Possible comment at end.
@@ -93,25 +75,39 @@ const UcdGenerator = struct {
                     if (kind.items.len != 0) {
                         if (!mem.eql(u8, kind.items, field)) {
                             // New collection for new record kind.
+                            // Last record belongs to next collection.
+                            const one_past = records.pop();
+                            // Calculate lo/hi.
+                            var lo: u21 = 0x10FFFF;
+                            var hi: u21 = 0;
+                            for (records.items) |rec| {
+                                switch (rec) {
+                                    .single => |cp| {
+                                        if (cp < lo) lo = cp;
+                                        if (cp > hi) hi = cp;
+                                    },
+                                    .range => |range| {
+                                        if (range.lo < lo) lo = range.lo;
+                                        if (range.hi > hi) hi = range.hi;
+                                    },
+                                }
+                            }
                             try collections.append(try Collection.init(
                                 self.allocator,
                                 kind.toOwnedSlice(),
-                                if (prev_lo == 0x10FFFF) 0 else prev_lo,
-                                if (prev_hi == 0) 0x10FFFF else prev_hi,
+                                lo,
+                                hi,
                                 records.toOwnedSlice(),
                             ));
-                            // Reset extremes.
-                            prev_lo = 0x10FFFF;
-                            prev_hi = 0;
                             // Update kind.
                             try kind.appendSlice(field);
+                            // Add first record of new collection.
+                            try records.append(one_past);
                         }
                     } else {
                         // Initialize kind.
                         try kind.appendSlice(field);
                     }
-                    // Add this record.
-                    try records.append(record);
                 } else {
                     continue;
                 }
@@ -502,14 +498,14 @@ pub fn main() !void {
     // var allocator = std.testing.allocator;
     var ugen = UcdGenerator.new(allocator);
     try ugen.processF1("data/ucd/Blocks.txt");
-    //try ugen.processF1("data/ucd/PropList.txt");
-    //try ugen.processF1("data/ucd/Scripts.txt");
-    //try ugen.processF1("data/ucd/auxiliary/GraphemeBreakProperty.txt");
-    //try ugen.processF1("data/ucd/DerivedCoreProperties.txt");
-    //try ugen.processF1("data/ucd/extracted/DerivedDecompositionType.txt");
-    //try ugen.processF1("data/ucd/extracted/DerivedNumericType.txt");
-    //try ugen.processGenCat();
-    //try ugen.processCaseFold();
-    //try ugen.processUcd();
-    //try ugen.processSpecialCasing();
+    try ugen.processF1("data/ucd/PropList.txt");
+    try ugen.processF1("data/ucd/Scripts.txt");
+    try ugen.processF1("data/ucd/auxiliary/GraphemeBreakProperty.txt");
+    try ugen.processF1("data/ucd/DerivedCoreProperties.txt");
+    try ugen.processF1("data/ucd/extracted/DerivedDecompositionType.txt");
+    try ugen.processF1("data/ucd/extracted/DerivedNumericType.txt");
+    try ugen.processGenCat();
+    try ugen.processCaseFold();
+    try ugen.processUcd();
+    try ugen.processSpecialCasing();
 }

@@ -14,20 +14,20 @@ const LisuSupplement = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 73648,
 hi: u21 = 73663,
 
 pub fn init(allocator: *mem.Allocator) !LisuSupplement {
     var instance = LisuSupplement{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 73664),
+        .array = try allocator.alloc(bool, 16),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 73648;
-    while (index <= 73663) : (index += 1) {
+    index = 0;
+    while (index <= 15) : (index += 1) {
         instance.array[index] = true;
     }
 

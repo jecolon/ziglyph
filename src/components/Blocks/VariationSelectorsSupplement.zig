@@ -14,20 +14,20 @@ const VariationSelectorsSupplement = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 917760,
 hi: u21 = 917999,
 
 pub fn init(allocator: *mem.Allocator) !VariationSelectorsSupplement {
     var instance = VariationSelectorsSupplement{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 918000),
+        .array = try allocator.alloc(bool, 240),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 917760;
-    while (index <= 917999) : (index += 1) {
+    index = 0;
+    while (index <= 239) : (index += 1) {
         instance.array[index] = true;
     }
 

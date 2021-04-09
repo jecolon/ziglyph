@@ -14,24 +14,24 @@ const IDSBinaryOperator = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 12274,
+lo: u21 = 12272,
 hi: u21 = 12283,
 
 pub fn init(allocator: *mem.Allocator) !IDSBinaryOperator {
     var instance = IDSBinaryOperator{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 10),
+        .array = try allocator.alloc(bool, 12),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097150;
-    while (index <= 2097151) : (index += 1) {
+    index = 0;
+    while (index <= 1) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 2;
-    while (index <= 9) : (index += 1) {
+    index = 4;
+    while (index <= 11) : (index += 1) {
         instance.array[index] = true;
     }
 

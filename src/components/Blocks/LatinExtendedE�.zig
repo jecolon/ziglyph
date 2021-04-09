@@ -14,20 +14,20 @@ const LatinExtendedEª = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 43824,
 hi: u21 = 43887,
 
 pub fn init(allocator: *mem.Allocator) !LatinExtendedEª {
     var instance = LatinExtendedEª{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 43888),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 43824;
-    while (index <= 43887) : (index += 1) {
+    index = 0;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

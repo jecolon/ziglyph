@@ -14,29 +14,29 @@ const BidiControl = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 8204,
+lo: u21 = 1564,
 hi: u21 = 8297,
 
 pub fn init(allocator: *mem.Allocator) !BidiControl {
     var instance = BidiControl{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 94),
+        .array = try allocator.alloc(bool, 6734),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[2090512] = true;
-    index = 2;
-    while (index <= 3) : (index += 1) {
+    instance.array[0] = true;
+    index = 6642;
+    while (index <= 6643) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 30;
-    while (index <= 34) : (index += 1) {
+    index = 6670;
+    while (index <= 6674) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 90;
-    while (index <= 93) : (index += 1) {
+    index = 6730;
+    while (index <= 6733) : (index += 1) {
         instance.array[index] = true;
     }
 

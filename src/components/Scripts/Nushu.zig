@@ -14,21 +14,21 @@ const Nushu = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 72272,
+lo: u21 = 94177,
 hi: u21 = 111355,
 
 pub fn init(allocator: *mem.Allocator) !Nushu {
     var instance = Nushu{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 39084),
+        .array = try allocator.alloc(bool, 17179),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[21905] = true;
-    index = 38688;
-    while (index <= 39083) : (index += 1) {
+    instance.array[0] = true;
+    index = 16783;
+    while (index <= 17178) : (index += 1) {
         instance.array[index] = true;
     }
 

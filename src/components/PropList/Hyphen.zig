@@ -14,31 +14,31 @@ const Hyphen = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 34,
+lo: u21 = 45,
 hi: u21 = 65381,
 
 pub fn init(allocator: *mem.Allocator) !Hyphen {
     var instance = Hyphen{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 65348),
+        .array = try allocator.alloc(bool, 65337),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    instance.array[11] = true;
-    instance.array[139] = true;
-    instance.array[1384] = true;
-    instance.array[6116] = true;
-    index = 8174;
-    while (index <= 8175) : (index += 1) {
+    instance.array[0] = true;
+    instance.array[128] = true;
+    instance.array[1373] = true;
+    instance.array[6105] = true;
+    index = 8163;
+    while (index <= 8164) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[11765] = true;
-    instance.array[12505] = true;
-    instance.array[65089] = true;
-    instance.array[65259] = true;
-    instance.array[65347] = true;
+    instance.array[11754] = true;
+    instance.array[12494] = true;
+    instance.array[65078] = true;
+    instance.array[65248] = true;
+    instance.array[65336] = true;
 
     // Placeholder: 0. Struct name
     return instance;

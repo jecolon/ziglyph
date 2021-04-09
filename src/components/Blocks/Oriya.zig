@@ -14,20 +14,20 @@ const Oriya = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 2816,
 hi: u21 = 2943,
 
 pub fn init(allocator: *mem.Allocator) !Oriya {
     var instance = Oriya{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 2944),
+        .array = try allocator.alloc(bool, 128),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2816;
-    while (index <= 2943) : (index += 1) {
+    index = 0;
+    while (index <= 127) : (index += 1) {
         instance.array[index] = true;
     }
 

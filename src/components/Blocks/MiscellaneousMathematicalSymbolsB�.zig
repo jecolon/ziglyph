@@ -14,20 +14,20 @@ const MiscellaneousMathematicalSymbolsBª = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 10624,
 hi: u21 = 10751,
 
 pub fn init(allocator: *mem.Allocator) !MiscellaneousMathematicalSymbolsBª {
     var instance = MiscellaneousMathematicalSymbolsBª{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 10752),
+        .array = try allocator.alloc(bool, 128),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 10624;
-    while (index <= 10751) : (index += 1) {
+    index = 0;
+    while (index <= 127) : (index += 1) {
         instance.array[index] = true;
     }
 

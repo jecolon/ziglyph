@@ -14,24 +14,24 @@ const OldNorthArabian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 67712,
+lo: u21 = 68224,
 hi: u21 = 68255,
 
 pub fn init(allocator: *mem.Allocator) !OldNorthArabian {
     var instance = OldNorthArabian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 544),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 512;
-    while (index <= 540) : (index += 1) {
+    index = 0;
+    while (index <= 28) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 541;
-    while (index <= 543) : (index += 1) {
+    index = 29;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,20 +14,20 @@ const GreekExtended = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 7936,
 hi: u21 = 8191,
 
 pub fn init(allocator: *mem.Allocator) !GreekExtended {
     var instance = GreekExtended{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 8192),
+        .array = try allocator.alloc(bool, 256),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 7936;
-    while (index <= 8191) : (index += 1) {
+    index = 0;
+    while (index <= 255) : (index += 1) {
         instance.array[index] = true;
     }
 

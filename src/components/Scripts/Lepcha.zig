@@ -14,48 +14,48 @@ const Lepcha = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 7204,
-hi: u21 = 7257,
+lo: u21 = 7168,
+hi: u21 = 7247,
 
 pub fn init(allocator: *mem.Allocator) !Lepcha {
     var instance = Lepcha{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 54),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097116;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 7) : (index += 1) {
+    while (index <= 35) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 8;
-    while (index <= 15) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 16;
-    while (index <= 17) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 18;
-    while (index <= 19) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 23;
-    while (index <= 27) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 28;
-    while (index <= 37) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 41;
+    index = 36;
     while (index <= 43) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 44;
+    while (index <= 51) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 52;
+    while (index <= 53) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 54;
+    while (index <= 55) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 59;
+    while (index <= 63) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 64;
+    while (index <= 73) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 77;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
 

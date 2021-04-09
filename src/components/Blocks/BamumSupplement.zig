@@ -14,20 +14,20 @@ const BamumSupplement = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 92160,
 hi: u21 = 92735,
 
 pub fn init(allocator: *mem.Allocator) !BamumSupplement {
     var instance = BamumSupplement{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 92736),
+        .array = try allocator.alloc(bool, 576),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 92160;
-    while (index <= 92735) : (index += 1) {
+    index = 0;
+    while (index <= 575) : (index += 1) {
         instance.array[index] = true;
     }
 

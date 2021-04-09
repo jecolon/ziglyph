@@ -14,31 +14,31 @@ const Rejang = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 43335,
-hi: u21 = 66204,
+lo: u21 = 43312,
+hi: u21 = 43359,
 
 pub fn init(allocator: *mem.Allocator) !Rejang {
     var instance = Rejang{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 22870),
+        .array = try allocator.alloc(bool, 48),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097129;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 10) : (index += 1) {
+    while (index <= 22) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 11;
-    while (index <= 12) : (index += 1) {
+    index = 23;
+    while (index <= 33) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[24] = true;
+    index = 34;
+    while (index <= 35) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[47] = true;
 
     // Placeholder: 0. Struct name
     return instance;

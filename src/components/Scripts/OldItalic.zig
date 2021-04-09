@@ -14,28 +14,28 @@ const OldItalic = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 66336,
-hi: u21 = 66368,
+lo: u21 = 66304,
+hi: u21 = 66351,
 
 pub fn init(allocator: *mem.Allocator) !OldItalic {
     var instance = OldItalic{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 33),
+        .array = try allocator.alloc(bool, 48),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097120;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 3) : (index += 1) {
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 13;
-    while (index <= 15) : (index += 1) {
+    index = 32;
+    while (index <= 35) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 45;
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
 

@@ -14,37 +14,37 @@ const Vai = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 42508,
-hi: u21 = 43137,
+lo: u21 = 42240,
+hi: u21 = 42539,
 
 pub fn init(allocator: *mem.Allocator) !Vai {
     var instance = Vai{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 630),
+        .array = try allocator.alloc(bool, 300),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2096884;
-    while (index <= 2097151) : (index += 1) {
+    index = 0;
+    while (index <= 267) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[0] = true;
-    index = 1;
-    while (index <= 3) : (index += 1) {
+    instance.array[268] = true;
+    index = 269;
+    while (index <= 271) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 4;
-    while (index <= 19) : (index += 1) {
+    index = 272;
+    while (index <= 287) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 20;
-    while (index <= 29) : (index += 1) {
+    index = 288;
+    while (index <= 297) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 30;
-    while (index <= 31) : (index += 1) {
+    index = 298;
+    while (index <= 299) : (index += 1) {
         instance.array[index] = true;
     }
 

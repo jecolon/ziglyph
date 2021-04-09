@@ -14,20 +14,20 @@ const IDSTrinaryOperator = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 11904,
-hi: u21 = 11929,
+lo: u21 = 12274,
+hi: u21 = 12275,
 
 pub fn init(allocator: *mem.Allocator) !IDSTrinaryOperator {
     var instance = IDSTrinaryOperator{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 26),
+        .array = try allocator.alloc(bool, 2),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 370;
-    while (index <= 371) : (index += 1) {
+    index = 0;
+    while (index <= 1) : (index += 1) {
         instance.array[index] = true;
     }
 

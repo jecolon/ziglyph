@@ -14,20 +14,20 @@ const Carian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 67872,
-hi: u21 = 67897,
+lo: u21 = 66208,
+hi: u21 = 66256,
 
 pub fn init(allocator: *mem.Allocator) !Carian {
     var instance = Carian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 26),
+        .array = try allocator.alloc(bool, 49),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2095488;
-    while (index <= 2095536) : (index += 1) {
+    index = 0;
+    while (index <= 48) : (index += 1) {
         instance.array[index] = true;
     }
 

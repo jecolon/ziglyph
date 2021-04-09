@@ -14,23 +14,23 @@ const CaucasianAlbanian = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 66927,
-hi: u21 = 92909,
+lo: u21 = 66864,
+hi: u21 = 66927,
 
 pub fn init(allocator: *mem.Allocator) !CaucasianAlbanian {
     var instance = CaucasianAlbanian{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 25983),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097089;
-    while (index <= 2097140) : (index += 1) {
+    index = 0;
+    while (index <= 51) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[0] = true;
+    instance.array[63] = true;
 
     // Placeholder: 0. Struct name
     return instance;

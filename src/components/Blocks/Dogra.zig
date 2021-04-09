@@ -14,20 +14,20 @@ const Dogra = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 71680,
 hi: u21 = 71759,
 
 pub fn init(allocator: *mem.Allocator) !Dogra {
     var instance = Dogra{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 71760),
+        .array = try allocator.alloc(bool, 80),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 71680;
-    while (index <= 71759) : (index += 1) {
+    index = 0;
+    while (index <= 79) : (index += 1) {
         instance.array[index] = true;
     }
 

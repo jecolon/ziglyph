@@ -14,20 +14,20 @@ const KayahLi = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 43264,
 hi: u21 = 43311,
 
 pub fn init(allocator: *mem.Allocator) !KayahLi {
     var instance = KayahLi{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 43312),
+        .array = try allocator.alloc(bool, 48),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 43264;
-    while (index <= 43311) : (index += 1) {
+    index = 0;
+    while (index <= 47) : (index += 1) {
         instance.array[index] = true;
     }
 

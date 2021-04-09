@@ -14,20 +14,20 @@ const Malayalam = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 3328,
 hi: u21 = 3455,
 
 pub fn init(allocator: *mem.Allocator) !Malayalam {
     var instance = Malayalam{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 3456),
+        .array = try allocator.alloc(bool, 128),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 3328;
-    while (index <= 3455) : (index += 1) {
+    index = 0;
+    while (index <= 127) : (index += 1) {
         instance.array[index] = true;
     }
 

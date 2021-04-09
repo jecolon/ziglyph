@@ -14,20 +14,20 @@ const HighSurrogates = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 55296,
 hi: u21 = 56191,
 
 pub fn init(allocator: *mem.Allocator) !HighSurrogates {
     var instance = HighSurrogates{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 56192),
+        .array = try allocator.alloc(bool, 896),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 55296;
-    while (index <= 56191) : (index += 1) {
+    index = 0;
+    while (index <= 895) : (index += 1) {
         instance.array[index] = true;
     }
 

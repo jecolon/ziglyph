@@ -14,20 +14,20 @@ const Tirhuta = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 70784,
 hi: u21 = 70879,
 
 pub fn init(allocator: *mem.Allocator) !Tirhuta {
     var instance = Tirhuta{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 70880),
+        .array = try allocator.alloc(bool, 96),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 70784;
-    while (index <= 70879) : (index += 1) {
+    index = 0;
+    while (index <= 95) : (index += 1) {
         instance.array[index] = true;
     }
 

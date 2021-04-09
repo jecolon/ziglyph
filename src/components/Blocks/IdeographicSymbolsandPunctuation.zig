@@ -14,20 +14,20 @@ const IdeographicSymbolsandPunctuation = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 94176,
 hi: u21 = 94207,
 
 pub fn init(allocator: *mem.Allocator) !IdeographicSymbolsandPunctuation {
     var instance = IdeographicSymbolsandPunctuation{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 94208),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 94176;
-    while (index <= 94207) : (index += 1) {
+    index = 0;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

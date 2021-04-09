@@ -14,36 +14,36 @@ const OtherUppercase = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 9398,
+lo: u21 = 8544,
 hi: u21 = 127369,
 
 pub fn init(allocator: *mem.Allocator) !OtherUppercase {
     var instance = OtherUppercase{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 117972),
+        .array = try allocator.alloc(bool, 118826),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2096298;
-    while (index <= 2096313) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 25) : (index += 1) {
+    while (index <= 15) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 117882;
-    while (index <= 117907) : (index += 1) {
+    index = 854;
+    while (index <= 879) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 117914;
-    while (index <= 117939) : (index += 1) {
+    index = 118736;
+    while (index <= 118761) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 117946;
-    while (index <= 117971) : (index += 1) {
+    index = 118768;
+    while (index <= 118793) : (index += 1) {
+        instance.array[index] = true;
+    }
+    index = 118800;
+    while (index <= 118825) : (index += 1) {
         instance.array[index] = true;
     }
 

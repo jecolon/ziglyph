@@ -14,24 +14,24 @@ const Osmanya = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 66720,
-hi: u21 = 67589,
+lo: u21 = 66688,
+hi: u21 = 66729,
 
 pub fn init(allocator: *mem.Allocator) !Osmanya {
     var instance = Osmanya{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 870),
+        .array = try allocator.alloc(bool, 42),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097120;
-    while (index <= 2097149) : (index += 1) {
+    index = 0;
+    while (index <= 29) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 0;
-    while (index <= 9) : (index += 1) {
+    index = 32;
+    while (index <= 41) : (index += 1) {
         instance.array[index] = true;
     }
 

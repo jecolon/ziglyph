@@ -14,20 +14,20 @@ const LatinExtendedCª = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 11360,
 hi: u21 = 11391,
 
 pub fn init(allocator: *mem.Allocator) !LatinExtendedCª {
     var instance = LatinExtendedCª{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 11392),
+        .array = try allocator.alloc(bool, 32),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 11360;
-    while (index <= 11391) : (index += 1) {
+    index = 0;
+    while (index <= 31) : (index += 1) {
         instance.array[index] = true;
     }
 

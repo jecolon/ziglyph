@@ -14,20 +14,20 @@ const Balinese = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 6912,
 hi: u21 = 7039,
 
 pub fn init(allocator: *mem.Allocator) !Balinese {
     var instance = Balinese{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 7040),
+        .array = try allocator.alloc(bool, 128),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 6912;
-    while (index <= 7039) : (index += 1) {
+    index = 0;
+    while (index <= 127) : (index += 1) {
         instance.array[index] = true;
     }
 

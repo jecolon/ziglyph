@@ -14,20 +14,20 @@ const Samaritan = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 0,
+lo: u21 = 2048,
 hi: u21 = 2111,
 
 pub fn init(allocator: *mem.Allocator) !Samaritan {
     var instance = Samaritan{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 2112),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2048;
-    while (index <= 2111) : (index += 1) {
+    index = 0;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 

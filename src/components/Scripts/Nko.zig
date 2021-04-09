@@ -14,43 +14,43 @@ const Nko = @This();
 
 allocator: *mem.Allocator,
 array: []bool,
-lo: u21 = 1994,
-hi: u21 = 7041,
+lo: u21 = 1984,
+hi: u21 = 2047,
 
 pub fn init(allocator: *mem.Allocator) !Nko {
     var instance = Nko{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 5048),
+        .array = try allocator.alloc(bool, 64),
     };
 
     mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
-    index = 2097142;
-    while (index <= 2097151) : (index += 1) {
-        instance.array[index] = true;
-    }
     index = 0;
-    while (index <= 32) : (index += 1) {
+    while (index <= 9) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 33;
-    while (index <= 41) : (index += 1) {
+    index = 10;
+    while (index <= 42) : (index += 1) {
         instance.array[index] = true;
     }
-    index = 42;
-    while (index <= 43) : (index += 1) {
+    index = 43;
+    while (index <= 51) : (index += 1) {
         instance.array[index] = true;
     }
-    instance.array[44] = true;
-    index = 45;
-    while (index <= 47) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[48] = true;
-    instance.array[51] = true;
     index = 52;
     while (index <= 53) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[54] = true;
+    index = 55;
+    while (index <= 57) : (index += 1) {
+        instance.array[index] = true;
+    }
+    instance.array[58] = true;
+    instance.array[61] = true;
+    index = 62;
+    while (index <= 63) : (index += 1) {
         instance.array[index] = true;
     }
 
