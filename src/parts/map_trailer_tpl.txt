@@ -4,7 +4,7 @@
 }}
 
 pub fn deinit(self: *{1s}) void {{
-    self.allocator.free(self.array);
+    self.map.deinit();
 }}
 
 /// to{0s} maps the code point to the desired case or returns the same code point if no mapping exists.

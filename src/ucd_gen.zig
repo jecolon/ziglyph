@@ -255,7 +255,7 @@ const UcdGenerator = struct {
                         // Mapping.
                         var field = mem.trim(u8, raw, " ");
                         var cp_iter = mem.split(field, " ");
-                        _ = try writer.print("    instance.map.put(0x{s}, &[_]u21{{\n", .{code_point});
+                        _ = try writer.print("    try instance.map.put(0x{s}, &[_]u21{{\n", .{code_point});
                         while (cp_iter.next()) |cp| {
                             _ = try writer.print("        0x{s},\n", .{cp});
                         }
@@ -329,7 +329,7 @@ const UcdGenerator = struct {
                 } else if (field_index == 5 and raw.len != 0) {
                     // Decomposition.
                     var cp_iter = mem.split(raw, " ");
-                    _ = try d_writer.print("    instance.map.put(0x{s}, &[_]u21{{\n", .{code_point});
+                    _ = try d_writer.print("    try instance.map.put(0x{s}, &[_]u21{{\n", .{code_point});
                     while (cp_iter.next()) |cp| {
                         if (mem.startsWith(u8, cp, "<")) continue;
                         _ = try d_writer.print("        0x{s},\n", .{cp});
@@ -337,13 +337,13 @@ const UcdGenerator = struct {
                     _ = try d_writer.write("    });\n");
                 } else if (field_index == 12 and raw.len != 0) {
                     // Uppercase mapping.
-                    _ = try u_writer.print("    instance.map.put(0x{s}, 0x{s});\n", .{ code_point, raw });
+                    _ = try u_writer.print("    try instance.map.put(0x{s}, 0x{s});\n", .{ code_point, raw });
                 } else if (field_index == 13 and raw.len != 0) {
                     // Lowercase mapping.
-                    _ = try l_writer.print("    instance.map.put(0x{s}, 0x{s});\n", .{ code_point, raw });
+                    _ = try l_writer.print("    try instance.map.put(0x{s}, 0x{s});\n", .{ code_point, raw });
                 } else if (field_index == 14 and raw.len != 0) {
                     // Titlecase mapping.
-                    _ = try t_writer.print("    instance.map.put(0x{s}, 0x{s});\n", .{ code_point, raw });
+                    _ = try t_writer.print("    try instance.map.put(0x{s}, 0x{s});\n", .{ code_point, raw });
                 } else {
                     continue;
                 }

@@ -4,72 +4,93 @@
 //! used functionality, see the Ziglyph struct below.
 
 const std = @import("std");
-const ascii = @import("ascii.zig"); // Pending std.ascii fix.
 const mem = std.mem;
+const ascii = @import("ascii.zig");
 
-/// Alphabetic code points.
-pub const Alpha = @import("components/Alpha.zig");
+/// Alphabeticbetic code points.
+pub const Alphabetic = @import("components/DerivedCoreProperties/Alphabetic.zig");
 /// Cased code points are either lower, upper, or title cased, but not all three.
-pub const Cased = @import("components/Cased.zig");
-/// Code point case folding.
-pub const CaseFoldMap = @import("components/CaseFoldMap.zig");
+pub const Cased = @import("components/DerivedCoreProperties/Cased.zig");
 /// Control code points like form feed.
-pub const Control = @import("components/Control.zig");
+pub const Control = @import("components/DerivedGeneralCategory/Control.zig");
 /// Decimal code points.
-pub const Decimal = @import("components/Decimal.zig");
+pub const Decimal = @import("components/DerivedGeneralCategory/DecimalNumber.zig");
 /// Digit code points.
-pub const Digit = @import("components/Digit.zig");
-/// Code point decomposition.
-pub const DecomposeMap = @import("components/DecomposeMap.zig");
-/// Grapheme Extend.
-pub const Extend = @import("components/Extend.zig");
-/// Format control characters.
-pub const Format = @import("components/Format.zig");
-/// Unicode letters.
-pub const Letter = @import("components/Letter.zig");
+pub const Digit = @import("components/DerivedNumericType/Digit.zig");
+/// Hexadecimal digits.
+pub const HexDigit = @import("components/PropList/HexDigit.zig");
 /// Lowercase letters.
-pub const Lower = @import("components/Lower.zig");
-/// Marks from different alphabets.
-pub const Mark = @import("components/Mark.zig");
-/// Unicode numbers.
-pub const Number = @import("components/Number.zig");
-/// Punctuation code points.
-pub const Punct = @import("components/Punct.zig");
-/// Unicode space code points.
-pub const Space = @import("components/Space.zig");
-/// All sorts of symbols.
-pub const Symbol = @import("components/Symbol.zig");
+pub const Lower = @import("components/DerivedGeneralCategory/LowercaseLetter.zig");
+const ModLetter = @import("components/DerivedGeneralCategory/ModifierLetter.zig");
+const OtherLetter = @import("components/DerivedGeneralCategory/OtherLetter.zig");
 /// Titlecase letters.
-pub const Title = @import("components/Title.zig");
+pub const Title = @import("components/DerivedGeneralCategory/TitlecaseLetter.zig");
 /// Uppercase letters.
-pub const Upper = @import("components/Upper.zig");
-/// Unassigned code points.
-pub const Unassigned = @import("components/Unassigned.zig");
+pub const Upper = @import("components/DerivedGeneralCategory/UppercaseLetter.zig");
+/// Marks.
+const SpacingMark = @import("components/DerivedGeneralCategory/SpacingMark.zig");
+const NonSpacingMark = @import("components/DerivedGeneralCategory/NonspacingMark.zig");
+const EnclosingMark = @import("components/DerivedGeneralCategory/EnclosingMark.zig");
+/// Numbers.
+const LetterNumber = @import("components/DerivedGeneralCategory/LetterNumber.zig");
+const OtherNumber = @import("components/DerivedGeneralCategory/OtherNumber.zig");
+/// Punctuation.
+const ClosePunct = @import("components/DerivedGeneralCategory/ClosePunctuation.zig");
+const ConnectPunct = @import("components/DerivedGeneralCategory/ConnectorPunctuation.zig");
+const DashPunct = @import("components/DerivedGeneralCategory/DashPunctuation.zig");
+const InitialPunct = @import("components/DerivedGeneralCategory/InitialPunctuation.zig");
+const OpenPunct = @import("components/DerivedGeneralCategory/OpenPunctuation.zig");
+const OtherPunct = @import("components/DerivedGeneralCategory/OtherPunctuation.zig");
+/// Symbols
+pub const MathSymbol = @import("components/DerivedGeneralCategory/MathSymbol.zig");
+const ModSymbol = @import("components/DerivedGeneralCategory/ModifierSymbol.zig");
+pub const CurrencySymbol = @import("components/DerivedGeneralCategory/CurrencySymbol.zig");
+const OtherSymbol = @import("components/DerivedGeneralCategory/OtherSymbol.zig");
+/// WhiteSpace.
+pub const WhiteSpace = @import("components/PropList/WhiteSpace.zig");
 
+/// Case fold mappings.
+pub const CaseFoldMap = @import("components/CaseFolding/CaseFoldMap.zig");
+/// Code point decomposition.
+pub const DecomposeMap = @import("components/UnicodeData/DecomposeMap.zig");
 /// Mapping to lowercase.
-pub const LowerMap = @import("components/LowerMap.zig");
+pub const LowerMap = @import("components/UnicodeData/LowerMap.zig");
 /// Mapping to titlecase.
-pub const TitleMap = @import("components/TitleMap.zig");
+pub const TitleMap = @import("components/UnicodeData/TitleMap.zig");
 /// Mapping to uppercase.
-pub const UpperMap = @import("components/UpperMap.zig");
+pub const UpperMap = @import("components/UnicodeData/UpperMap.zig");
 
 /// Ziglyph consolidates all the major Unicode utility functions in one place. Because these functions
 /// each consume memory for their respective code point data, this struct performs lazy initialization
 /// to only consume memory when needed.
 pub const Ziglyph = struct {
     allocator: *mem.Allocator,
-    alpha: ?Alpha = null,
+    alpha: ?Alphabetic = null,
+    cased: ?Cased = null,
     control: ?Control = null,
     decimal: ?Decimal = null,
     digit: ?Digit = null,
-    letter: ?Letter = null,
+    hex: ?HexDigit = null,
+    mod_letter: ?ModLetter = null,
+    other_letter: ?OtherLetter = null,
     lower: ?Lower = null,
     lower_map: ?LowerMap = null,
-    mark: ?Mark = null,
-    number: ?Number = null,
-    punct: ?Punct = null,
-    space: ?Space = null,
-    symbol: ?Symbol = null,
+    spacing_mark: ?SpacingMark = null,
+    nonspacing_mark: ?NonSpacingMark = null,
+    enclosing_mark: ?EnclosingMark = null,
+    letter_number: ?LetterNumber = null,
+    other_number: ?OtherNumber = null,
+    close_punct: ?ClosePunct = null,
+    connect_punct: ?ConnectPunct = null,
+    dash_punct: ?DashPunct = null,
+    initial_punct: ?InitialPunct = null,
+    open_punct: ?OpenPunct = null,
+    other_punct: ?OtherPunct = null,
+    math_symbol: ?MathSymbol = null,
+    mod_symbol: ?ModSymbol = null,
+    currency_symbol: ?CurrencySymbol = null,
+    other_symbol: ?OtherSymbol = null,
+    whitespace: ?WhiteSpace = null,
     title: ?Title = null,
     title_map: ?TitleMap = null,
     upper: ?Upper = null,
@@ -87,17 +108,26 @@ pub const Ziglyph = struct {
         if (self.alpha) |*alpha| {
             alpha.deinit();
         }
+        if (self.cased) |*cased| {
+            cased.deinit();
+        }
+        if (self.control) |*control| {
+            control.deinit();
+        }
         if (self.decimal) |*decimal| {
             decimal.deinit();
         }
         if (self.digit) |*digit| {
             digit.deinit();
         }
-        if (self.control) |*control| {
-            control.deinit();
+        if (self.hex) |*hex| {
+            hex.deinit();
         }
-        if (self.letter) |*letter| {
-            letter.deinit();
+        if (self.mod_letter) |*mod_letter| {
+            mod_letter.deinit();
+        }
+        if (self.other_letter) |*other_letter| {
+            other_letter.deinit();
         }
         if (self.lower) |*lower| {
             lower.deinit();
@@ -105,20 +135,53 @@ pub const Ziglyph = struct {
         if (self.lower_map) |*lower_map| {
             lower_map.deinit();
         }
-        if (self.mark) |*mark| {
-            mark.deinit();
+        if (self.spacing_mark) |*spacing_mark| {
+            spacing_mark.deinit();
         }
-        if (self.number) |*number| {
-            number.deinit();
+        if (self.nonspacing_mark) |*nonspacing_mark| {
+            nonspacing_mark.deinit();
         }
-        if (self.punct) |*punct| {
-            punct.deinit();
+        if (self.enclosing_mark) |*enclosing_mark| {
+            enclosing_mark.deinit();
         }
-        if (self.space) |*space| {
-            space.deinit();
+        if (self.letter_number) |*letter_number| {
+            letter_number.deinit();
         }
-        if (self.symbol) |*symbol| {
-            symbol.deinit();
+        if (self.other_number) |*other_number| {
+            other_number.deinit();
+        }
+        if (self.close_punct) |*close_punct| {
+            close_punct.deinit();
+        }
+        if (self.connect_punct) |*connect_punct| {
+            connect_punct.deinit();
+        }
+        if (self.dash_punct) |*dash_punct| {
+            dash_punct.deinit();
+        }
+        if (self.initial_punct) |*initial_punct| {
+            initial_punct.deinit();
+        }
+        if (self.open_punct) |*open_punct| {
+            open_punct.deinit();
+        }
+        if (self.other_punct) |*other_punct| {
+            other_punct.deinit();
+        }
+        if (self.whitespace) |*whitespace| {
+            whitespace.deinit();
+        }
+        if (self.math_symbol) |*math_symbol| {
+            math_symbol.deinit();
+        }
+        if (self.mod_symbol) |*mod_symbol| {
+            mod_symbol.deinit();
+        }
+        if (self.currency_symbol) |*currency_symbol| {
+            currency_symbol.deinit();
+        }
+        if (self.other_symbol) |*other_symbol| {
+            other_symbol.deinit();
         }
         if (self.title) |*title| {
             title.deinit();
@@ -134,32 +197,29 @@ pub const Ziglyph = struct {
         }
     }
 
-    /// isAlpha detects if a code point is alphabetic.
-    pub fn isAlpha(self: *Self, cp: u21) !bool {
-        if (cp < 128) {
-            return ascii.isAlpha(@intCast(u8, cp));
-        }
-
+    /// isAlphabetic detects if a code point is alphabetic.
+    pub fn isAlphabetic(self: *Self, cp: u21) !bool {
         // Lazy init.
         if (self.alpha == null) {
-            self.alpha = try Alpha.init(self.allocator);
+            self.alpha = try Alphabetic.init(self.allocator);
         }
 
-        return self.alpha.?.isAlpha(cp);
+        return self.alpha.?.isAlphabetic(cp);
     }
 
     /// isAlphaNum covers all the Unicode alphabetic and number space, not just ASCII.
     pub fn isAlphaNum(self: *Self, cp: u21) !bool {
-        if (cp < 128) {
-            return ascii.isAlNum(@intCast(u8, cp));
-        }
+        return (try self.isAlphabetic(cp)) or (try self.isNumber(cp));
+    }
 
+    /// isCased detects cased letters.
+    pub fn isCased(self: *Self, cp: u21) !bool {
         // Lazy init.
-        if (self.number == null) {
-            self.number = try Number.init(self.allocator);
+        if (self.cased == null) {
+            self.cased = try Cased.init(self.allocator);
         }
 
-        return (try self.isAlpha(cp)) or self.number.?.isNumber(cp);
+        return self.cased.?.isCased(cp);
     }
 
     // isDecimal detects all Unicode digits.
@@ -169,76 +229,47 @@ pub const Ziglyph = struct {
             self.decimal = try Decimal.init(self.allocator);
         }
 
-        return self.decimal.?.isDecimal(cp);
+        return self.decimal.?.isDecimalNumber(cp);
     }
 
     // isDigit detects all Unicode digits.
     pub fn isDigit(self: *Self, cp: u21) !bool {
         // ASCII optimization.
-        if (cp < 128) {
-            return ascii.isDigit(@intCast(u8, cp));
-        }
-
         // Lazy init.
         if (self.digit == null) {
             self.digit = try Digit.init(self.allocator);
         }
 
-        return self.digit.?.isDigit(cp);
+        return self.digit.?.isDigit(cp) or (try self.isDecimal(cp));
     }
 
     /// isGraphic detects any code point that can be represented graphically, including spaces.
     pub fn isGraphic(self: *Self, cp: u21) !bool {
-        // ASCII optimization.
-        if (cp == ' ') return true;
-
-        if (cp < 128) {
-            return ascii.isGraph(@intCast(u8, cp));
-        }
-
         // Lazy init.
-        if (self.space == null) {
-            self.space = try Space.init(self.allocator);
+        if (self.whitespace == null) {
+            self.whitespace = try WhiteSpace.init(self.allocator);
         }
 
-        return (try self.isPrint(cp)) or self.space.?.isSpace(cp);
+        return (try self.isPrint(cp)) or self.whitespace.?.isWhiteSpace(cp);
     }
 
     // isHex detects the 16 ASCII characters 0-9 A-F, and a-f.
-    pub fn isHex(self: Self, cp: u21) bool {
-        return ascii.isXDigit(@intCast(u8, cp));
+    pub fn isHexDigit(self: *Self, cp: u21) !bool {
+        if (self.hex == null) self.hex = try HexDigit.init(self.allocator);
+        return self.hex.?.isHexDigit(cp);
     }
 
     /// isPrint detects any code point that can be printed, but not spaces.
     pub fn isPrint(self: *Self, cp: u21) !bool {
-        // ASCII optimization.
-        if (cp == ' ') return true;
-
-        if (cp < 128) {
-            return ascii.isPrint(@intCast(u8, cp));
-        }
-
-        // Lazy init.
-        if (self.mark == null) {
-            self.mark = try Mark.init(self.allocator);
-        }
-        if (self.punct == null) {
-            self.punct = try Punct.init(self.allocator);
-        }
-        if (self.symbol == null) {
-            self.symbol = try Symbol.init(self.allocator);
-        }
-
-        return (try self.isAlphaNum(cp)) or self.mark.?.isMark(cp) or self.punct.?.isPunct(cp) or self.symbol.?.isSymbol(cp);
+        return (try self.isAlphaNum(cp)) or
+            (try self.isMark(cp)) or
+            (try self.isPunct(cp)) or
+            (try self.isSymbol(cp)) or
+            (try self.isWhiteSpace(cp));
     }
 
     /// isControl detects control code points such as form feeds.
     pub fn isControl(self: *Self, cp: u21) !bool {
-        // ASCII optimization.
-        if (cp < 128) {
-            return ascii.isCntrl(@intCast(u8, cp));
-        }
-
         // Lazy init.
         if (self.control == null) {
             self.control = try Control.init(self.allocator);
@@ -249,104 +280,137 @@ pub const Ziglyph = struct {
 
     /// isLetter covers all letters in Unicode, not just ASCII.
     pub fn isLetter(self: *Self, cp: u21) !bool {
-        // ASCII optimization.
-        if (cp < 128) {
-            return ascii.isAlpha(@intCast(u8, cp));
-        }
-
         // Lazy init.
-        if (self.letter == null) {
-            self.letter = try Letter.init(self.allocator);
+        if (self.lower == null) {
+            self.lower = try Lower.init(self.allocator);
+        }
+        if (self.mod_letter == null) {
+            self.mod_letter = try ModLetter.init(self.allocator);
+        }
+        if (self.other_letter == null) {
+            self.other_letter = try OtherLetter.init(self.allocator);
+        }
+        if (self.title == null) {
+            self.title = try Title.init(self.allocator);
+        }
+        if (self.upper == null) {
+            self.upper = try Upper.init(self.allocator);
         }
 
-        return self.letter.?.isLetter(cp);
+        return self.lower.?.isLowercaseLetter(cp) or
+            self.mod_letter.?.isModifierLetter(cp) or
+            self.other_letter.?.isOtherLetter(cp) or
+            self.title.?.isTitlecaseLetter(cp) or
+            self.upper.?.isUppercaseLetter(cp);
     }
 
     /// isLower detects code points that are lowercase.
     pub fn isLower(self: *Self, cp: u21) !bool {
-        // ASCII optimization.
-        if (cp < 128) {
-            return ascii.isLower(@intCast(u8, cp));
-        }
-
         // Lazy init.
         if (self.lower == null) {
             self.lower = try Lower.init(self.allocator);
         }
 
-        return self.lower.?.isLower(cp);
+        return (try self.isCased(cp)) and self.lower.?.isLowercaseLetter(cp);
     }
 
     /// isMark detects special code points that serve as marks in different alphabets.
     pub fn isMark(self: *Self, cp: u21) !bool {
         // Lazy init.
-        if (self.mark == null) {
-            self.mark = try Mark.init(self.allocator);
+        if (self.spacing_mark == null) {
+            self.spacing_mark = try SpacingMark.init(self.allocator);
+        }
+        if (self.nonspacing_mark == null) {
+            self.nonspacing_mark = try NonSpacingMark.init(self.allocator);
+        }
+        if (self.enclosing_mark == null) {
+            self.enclosing_mark = try EnclosingMark.init(self.allocator);
         }
 
-        return self.mark.?.isMark(cp);
+        return self.spacing_mark.?.isSpacingMark(cp) or
+            self.nonspacing_mark.?.isNonspacingMark(cp) or
+            self.enclosing_mark.?.isEnclosingMark(cp);
     }
 
     /// isNumber covers all Unicode numbers, not just ASII.
     pub fn isNumber(self: *Self, cp: u21) !bool {
-        // ASCII optimization.
-        if (cp < 128) {
-            return ascii.isDigit(@intCast(u8, cp));
-        }
-
         // Lazy init.
-        if (self.number == null) {
-            self.number = try Number.init(self.allocator);
+        if (self.decimal == null) {
+            self.decimal = try Decimal.init(self.allocator);
+        }
+        if (self.letter_number == null) {
+            self.letter_number = try LetterNumber.init(self.allocator);
+        }
+        if (self.other_number == null) {
+            self.other_number = try OtherNumber.init(self.allocator);
         }
 
-        return self.number.?.isNumber(cp);
+        return self.decimal.?.isDecimalNumber(cp) or
+            self.letter_number.?.isLetterNumber(cp) or
+            self.other_number.?.isOtherNumber(cp);
     }
 
     /// isPunct detects punctuation characters. Note some punctuation maybe considered symbols by Unicode.
     pub fn isPunct(self: *Self, cp: u21) !bool {
-        // ASCII optimization.
-        if (cp < 128) {
-            return ascii.isPunct(@intCast(u8, cp));
-        }
-
         // Lazy init.
-        if (self.punct == null) {
-            self.punct = try Punct.init(self.allocator);
+        if (self.close_punct == null) {
+            self.close_punct = try ClosePunct.init(self.allocator);
+        }
+        if (self.connect_punct == null) {
+            self.connect_punct = try ConnectPunct.init(self.allocator);
+        }
+        if (self.dash_punct == null) {
+            self.dash_punct = try DashPunct.init(self.allocator);
+        }
+        if (self.initial_punct == null) {
+            self.initial_punct = try InitialPunct.init(self.allocator);
+        }
+        if (self.open_punct == null) {
+            self.open_punct = try OpenPunct.init(self.allocator);
+        }
+        if (self.other_punct == null) {
+            self.other_punct = try OtherPunct.init(self.allocator);
         }
 
-        return self.punct.?.isPunct(cp);
+        return self.close_punct.?.isClosePunctuation(cp) or
+            self.connect_punct.?.isConnectorPunctuation(cp) or
+            self.dash_punct.?.isDashPunctuation(cp) or
+            self.initial_punct.?.isInitialPunctuation(cp) or
+            self.open_punct.?.isOpenPunctuation(cp) or
+            self.other_punct.?.isOtherPunctuation(cp);
     }
 
-    /// isSpace adheres to the strict meaning of space as per Unicode, excluding some control characters
-    /// such as tab \t.
-    pub fn isSpace(self: *Self, cp: u21) !bool {
-        // ASCII optimization.
-        if (cp < 128) {
-            return ascii.isSpace(@intCast(u8, cp));
-        }
-
+    /// isWhiteSpace checks for spaces.
+    pub fn isWhiteSpace(self: *Self, cp: u21) !bool {
         // Lazy init.
-        if (self.space == null) {
-            self.space = try Space.init(self.allocator);
+        if (self.whitespace == null) {
+            self.whitespace = try WhiteSpace.init(self.allocator);
         }
 
-        return self.space.?.isSpace(cp);
+        return self.whitespace.?.isWhiteSpace(cp);
     }
 
     // isSymbol detects symbols which curiosly may include some code points commonly thought of as
     // punctuation.
     pub fn isSymbol(self: *Self, cp: u21) !bool {
-        // ASCII optimization.
-        if (cp < 128) {
-            return ascii.isSymbol(@intCast(u8, cp));
-        }
-
         // Lazy init.
-        if (self.symbol == null) {
-            self.symbol = try Symbol.init(self.allocator);
+        if (self.math_symbol == null) {
+            self.math_symbol = try MathSymbol.init(self.allocator);
+        }
+        if (self.mod_symbol == null) {
+            self.mod_symbol = try ModSymbol.init(self.allocator);
+        }
+        if (self.currency_symbol == null) {
+            self.currency_symbol = try CurrencySymbol.init(self.allocator);
+        }
+        if (self.other_symbol == null) {
+            self.other_symbol = try OtherSymbol.init(self.allocator);
         }
 
-        return self.symbol.?.isSymbol(cp);
+        return self.math_symbol.?.isMathSymbol(cp) or
+            self.mod_symbol.?.isModifierSymbol(cp) or
+            self.currency_symbol.?.isCurrencySymbol(cp) or
+            self.other_symbol.?.isOtherSymbol(cp);
     }
 
     /// isTitle detects code points in titlecase.
@@ -356,32 +420,22 @@ pub const Ziglyph = struct {
             self.title = try Title.init(self.allocator);
         }
 
-        return self.title.?.isTitle(cp);
+        return (try self.isCased(cp)) and self.title.?.isTitlecaseLetter(cp);
     }
 
     /// isTitle detects code points in uppercase.
     pub fn isUpper(self: *Self, cp: u21) !bool {
-        // ASCII optimization.
-        if (cp < 128) {
-            return ascii.isUpper(@intCast(u8, cp));
-        }
-
         // Lazy init.
         if (self.upper == null) {
             self.upper = try Upper.init(self.allocator);
         }
 
-        return self.upper.?.isUpper(cp);
+        return (try self.isCased(cp)) and self.upper.?.isUppercaseLetter(cp);
     }
 
     /// toLower returns the lowercase code point for the given code point. It returns the same 
     /// code point given if no mapping exists.
     pub fn toLower(self: *Self, cp: u21) !u21 {
-        // ASCII optimization.
-        if (cp < 128) {
-            return ascii.toLower(@intCast(u8, cp));
-        }
-
         // Lazy init.
         if (self.lower_map == null) {
             self.lower_map = try LowerMap.init(self.allocator);
@@ -410,93 +464,5 @@ pub const Ziglyph = struct {
         }
 
         return self.upper_map.?.toUpper(cp);
-    }
-
-    // Self-contained methods.
-
-    /// isConsonantPrefixed checks for this Indic syllable characteristic.
-    pub fn isConsonantPrefixed(self: Self, cp: u21) bool {
-        if (cp == 0x1193F or cp == 0x11A3A) return true;
-        return (cp >= 0x111C2 and cp <= 0x111C3) or (cp >= 0x11A84 and cp <= 0x11A89);
-    }
-
-    /// isCr checks for carriage return.
-    pub fn isCr(self: Self, cp: u21) bool {
-        return cp == 0x000D;
-    }
-
-    /// isDefIgnorable checks for Default_Ignorable_Code_Point.
-    pub fn isDefIgnorable(self: Self, cp: u21) bool {
-        const list = [_]u21{ 0x00AD, 0x034F, 0x061C, 0x180E, 0x2065, 0x3164, 0xFEFF, 0xFFA0, 0xE0000, 0xE0001 };
-        for (list) |dicp| {
-            if (cp == dicp) return true;
-        }
-
-        return (cp >= 0x115F and cp <= 0x1160) or
-            (cp >= 0x17B4 and cp <= 0x17B5) or
-            (cp >= 0x180B and cp <= 0x180D) or
-            (cp >= 0x200B and cp <= 0x200F) or
-            (cp >= 0x202A and cp <= 0x202E) or
-            (cp >= 0x2060 and cp <= 0x2064) or
-            (cp >= 0x2066 and cp <= 0x206F) or
-            (cp >= 0xFE00 and cp <= 0xFE0F) or
-            (cp >= 0xFFF0 and cp <= 0xFFF8) or
-            (cp >= 0x1BCA0 and cp <= 0x1BCA3) or
-            (cp >= 0x1D173 and cp <= 0x1D17A) or
-            (cp >= 0xE0002 and cp <= 0xE001F) or
-            (cp >= 0xE0020 and cp <= 0xE007F) or
-            (cp >= 0xE0080 and cp <= 0xE00FF) or
-            (cp >= 0xE0100 and cp <= 0xE01EF) or
-            (cp >= 0xE01F0 and cp <= 0xE0FFF);
-    }
-
-    /// isEmojiMod checks for emoji modifierss.
-    pub fn isEmojiMod(self: Self, cp: u21) bool {
-        return cp >= 0x1F3FB and cp <= 0x1F3FF;
-    }
-
-    /// isLf checks for line feed.
-    pub fn isLf(self: Self, cp: u21) bool {
-        return cp == 0x000A;
-    }
-
-    /// isPrecedingRepha checks for this Indic syllalbe characteristic.
-    pub fn isPrecedingRepha(self: Self, cp: u21) bool {
-        return cp == 0x0D4E or cp == 0x11941 or cp == 0x11D46;
-    }
-
-    /// isPrepend checks for Prepended_Concatenation_Mark
-    pub fn isPrepend(self: Self, cp: u21) bool {
-        const list = [_]u21{ 0x06DD, 0x070F, 0x08E2, 0x110BD, 0x110CD };
-        for (list) |ppcp| {
-            if (cp == ppcp) return true;
-        }
-
-        return cp >= 0x0600 and cp <= 0x0605;
-    }
-
-    /// isRi checks for regional indicators.
-    pub fn isRi(self: Self, cp: u21) bool {
-        return cp >= 0x1F1E6 and cp <= 0x1F1FF;
-    }
-
-    /// isZl checks for line separator.
-    pub fn isZl(self: Self, cp: u21) bool {
-        return cp == 0x2028;
-    }
-
-    /// isZp checks for paragraph separator.
-    pub fn isZp(self: Self, cp: u21) bool {
-        return cp == 0x2029;
-    }
-
-    /// isZwj checks for zero width joiner.
-    pub fn isZwj(self: Self, cp: u21) bool {
-        return cp == 0x200D;
-    }
-
-    /// isZwnj checks for zero width non-joiner.
-    pub fn isZwnj(self: Self, cp: u21) bool {
-        return cp == 0x200C;
     }
 };
