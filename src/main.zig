@@ -29,23 +29,47 @@ pub fn main() !void {
         if (try z.isControl(r)) { // added 1.1M to binary!!
             std.debug.print("\tis control\n", .{});
         }
+        if (z.isAsciiControl(r)) { // added 1.1M to binary!!
+            std.debug.print("\tis ASCII control\n", .{});
+        }
+        if (z.isAsciiDigit(r)) { // added 1.1M to binary!!
+            std.debug.print("\tis ASCII digit\n", .{});
+        }
         if (try z.isNumber(r)) { // added 100K to binary
             std.debug.print("\tis number\n", .{});
+        }
+        if (z.isAsciiNumber(r)) { // added 100K to binary
+            std.debug.print("\tis ASCII number\n", .{});
         }
         if (try z.isHexDigit(r)) { // added 100K to binary
             std.debug.print("\tis hex digit\n", .{});
         }
+        if (z.isAsciiHexDigit(r)) { // added 100K to binary
+            std.debug.print("\tis ASCII hex digit\n", .{});
+        }
         if (try z.isGraphic(r)) { // added 0 to binary
             std.debug.print("\tis graphic\n", .{});
+        }
+        if (z.isAsciiGraphic(r)) { // added 0 to binary
+            std.debug.print("\tis ASCII graphic\n", .{});
         }
         if (try z.isAlphaNum(r)) { // adds 0 to binary
             std.debug.print("\tis alphanumeric\n", .{});
         }
+        if (z.isAsciiAlphaNum(r)) { // adds 0 to binary
+            std.debug.print("\tis ASCII alphanumeric\n", .{});
+        }
         if (try z.isLetter(r)) { // added 200K to binary !!
             std.debug.print("\tis letter\n", .{});
         }
+        if (z.isAsciiLetter(r)) { // added 200K to binary !!
+            std.debug.print("\tis ASCII letter\n", .{});
+        }
         if (try z.isLower(r)) { // added 200K to binary
             std.debug.print("\tis lower case\n", .{});
+        }
+        if (z.isAsciiLower(r)) { // added 200K to binary
+            std.debug.print("\tis ASCII lower case\n", .{});
         }
         if (try z.isMark(r)) { // added 1.1M to binary !!
             std.debug.print("\tis mark\n", .{});
@@ -53,17 +77,32 @@ pub fn main() !void {
         if (try z.isPrint(r)) { // added 0 to binary
             std.debug.print("\tis printable\n", .{});
         }
+        if (z.isAsciiPrint(r)) { // added 0 to binary
+            std.debug.print("\tis ASCII printable\n", .{});
+        }
         if (!try z.isPrint(r)) {
             std.debug.print("\tis not printable\n", .{});
+        }
+        if (!z.isAsciiPrint(r)) {
+            std.debug.print("\tis not ASCII printable\n", .{});
         }
         if (try z.isPunct(r)) { // added 137K to binary
             std.debug.print("\tis punct\n", .{});
         }
+        if (z.isAsciiPunct(r)) { // added 137K to binary
+            std.debug.print("\tis ASCII punct\n", .{});
+        }
         if (try z.isWhiteSpace(r)) { // Adds 12K to binary
             std.debug.print("\tis whitespace\n", .{});
         }
+        if (z.isAsciiWhiteSpace(r)) { // Adds 12K to binary
+            std.debug.print("\tis ASCII whitespace\n", .{});
+        }
         if (try z.isSymbol(r)) { // added 131K to binary
             std.debug.print("\tis symbol\n", .{});
+        }
+        if (z.isAsciiSymbol(r)) { // added 131K to binary
+            std.debug.print("\tis ASCII symbol\n", .{});
         }
         if (try z.isTitle(r)) { // Base binary at 18K
             std.debug.print("\tis title case\n", .{});
@@ -72,7 +111,29 @@ pub fn main() !void {
             std.debug.print("\tis upper case\n", .{});
             std.debug.print("\tcase folded: {}\n", .{fold_map.toCaseFold(r)});
         }
+        if (z.isAsciiUpper(r)) { // added 100K to binary
+            std.debug.print("\tis ASCII upper case\n", .{});
+        }
     }
+}
+
+test "ASCII methods" {
+    var ziglyph = try Ziglyph.init(std.testing.allocator);
+    defer ziglyph.deinit();
+
+    const z = 'F';
+    expect(ziglyph.isAsciiAlphabetic(z));
+    expect(ziglyph.isAsciiAlphaNum(z));
+    expect(ziglyph.isAsciiHexDigit(z));
+    expect(ziglyph.isAsciiGraphic(z));
+    expect(ziglyph.isAsciiPrint(z));
+    expect(ziglyph.isAsciiUpper(z));
+    expect(!ziglyph.isAsciiControl(z));
+    expect(!ziglyph.isAsciiDigit(z));
+    expect(!ziglyph.isAsciiNumber(z));
+    expect(!ziglyph.isAsciiLower(z));
+    expectEqual(ziglyph.toAsciiLower(z), 'f');
+    expect(ziglyph.isAsciiLower(ziglyph.toAsciiLower(z)));
 }
 
 test "Ziglyph struct" {
@@ -133,47 +194,92 @@ test "basics" {
     const mixed = [_]u21{ '5', 'o', '9', '!', ' ', '℃', 'ᾭ', 'G' };
     for (mixed) |r| {
         std.debug.print("\nFor {u}:\n", .{r});
-        if (try z.isControl(r)) {
+        if (try z.isControl(r)) { // added 1.1M to binary!!
             std.debug.print("\tis control\n", .{});
         }
-        if (try z.isNumber(r)) {
+        if (z.isAsciiControl(r)) { // added 1.1M to binary!!
+            std.debug.print("\tis ASCII control\n", .{});
+        }
+        if (z.isAsciiDigit(r)) { // added 1.1M to binary!!
+            std.debug.print("\tis ASCII digit\n", .{});
+        }
+        if (try z.isNumber(r)) { // added 100K to binary
             std.debug.print("\tis number\n", .{});
         }
-        if (try z.isHexDigit(r)) {
+        if (z.isAsciiNumber(r)) { // added 100K to binary
+            std.debug.print("\tis ASCII number\n", .{});
+        }
+        if (try z.isHexDigit(r)) { // added 100K to binary
             std.debug.print("\tis hex digit\n", .{});
         }
-        if (try z.isGraphic(r)) {
+        if (z.isAsciiHexDigit(r)) { // added 100K to binary
+            std.debug.print("\tis ASCII hex digit\n", .{});
+        }
+        if (try z.isGraphic(r)) { // added 0 to binary
             std.debug.print("\tis graphic\n", .{});
         }
-        if (try z.isLetter(r)) {
+        if (z.isAsciiGraphic(r)) { // added 0 to binary
+            std.debug.print("\tis ASCII graphic\n", .{});
+        }
+        if (try z.isAlphaNum(r)) { // adds 0 to binary
+            std.debug.print("\tis alphanumeric\n", .{});
+        }
+        if (z.isAsciiAlphaNum(r)) { // adds 0 to binary
+            std.debug.print("\tis ASCII alphanumeric\n", .{});
+        }
+        if (try z.isLetter(r)) { // added 200K to binary !!
             std.debug.print("\tis letter\n", .{});
         }
-        if (try z.isLower(r)) {
+        if (z.isAsciiLetter(r)) { // added 200K to binary !!
+            std.debug.print("\tis ASCII letter\n", .{});
+        }
+        if (try z.isLower(r)) { // added 200K to binary
             std.debug.print("\tis lower case\n", .{});
         }
-        if (try z.isMark(r)) {
+        if (z.isAsciiLower(r)) { // added 200K to binary
+            std.debug.print("\tis ASCII lower case\n", .{});
+        }
+        if (try z.isMark(r)) { // added 1.1M to binary !!
             std.debug.print("\tis mark\n", .{});
         }
-        if (try z.isPrint(r)) {
+        if (try z.isPrint(r)) { // added 0 to binary
             std.debug.print("\tis printable\n", .{});
+        }
+        if (z.isAsciiPrint(r)) { // added 0 to binary
+            std.debug.print("\tis ASCII printable\n", .{});
         }
         if (!try z.isPrint(r)) {
             std.debug.print("\tis not printable\n", .{});
         }
-        if (try z.isPunct(r)) {
+        if (!z.isAsciiPrint(r)) {
+            std.debug.print("\tis not ASCII printable\n", .{});
+        }
+        if (try z.isPunct(r)) { // added 137K to binary
             std.debug.print("\tis punct\n", .{});
         }
-        if (try z.isWhiteSpace(r)) {
-            std.debug.print("\tis space\n", .{});
+        if (z.isAsciiPunct(r)) { // added 137K to binary
+            std.debug.print("\tis ASCII punct\n", .{});
         }
-        if (try z.isSymbol(r)) {
+        if (try z.isWhiteSpace(r)) { // Adds 12K to binary
+            std.debug.print("\tis whitespace\n", .{});
+        }
+        if (z.isAsciiWhiteSpace(r)) { // Adds 12K to binary
+            std.debug.print("\tis ASCII whitespace\n", .{});
+        }
+        if (try z.isSymbol(r)) { // added 131K to binary
             std.debug.print("\tis symbol\n", .{});
         }
-        if (try z.isTitle(r)) {
+        if (z.isAsciiSymbol(r)) { // added 131K to binary
+            std.debug.print("\tis ASCII symbol\n", .{});
+        }
+        if (try z.isTitle(r)) { // Base binary at 18K
             std.debug.print("\tis title case\n", .{});
         }
-        if (try z.isUpper(r)) {
+        if (try z.isUpper(r)) { // added 100K to binary
             std.debug.print("\tis upper case\n", .{});
+        }
+        if (z.isAsciiUpper(r)) { // added 100K to binary
+            std.debug.print("\tis ASCII upper case\n", .{});
         }
     }
 }

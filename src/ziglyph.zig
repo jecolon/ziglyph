@@ -13,9 +13,9 @@ pub const Alphabetic = @import("components/DerivedCoreProperties/Alphabetic.zig"
 pub const Cased = @import("components/DerivedCoreProperties/Cased.zig");
 /// Control code points like form feed.
 pub const Control = @import("components/DerivedGeneralCategory/Control.zig");
-/// Decimal code points.
+/// Decimal number code points.
 pub const Decimal = @import("components/DerivedGeneralCategory/DecimalNumber.zig");
-/// Digit code points.
+/// Unicode digit code points, which do not include ASCII digits.
 pub const Digit = @import("components/DerivedNumericType/Digit.zig");
 /// Hexadecimal digits.
 pub const HexDigit = @import("components/PropList/HexDigit.zig");
@@ -27,23 +27,25 @@ const OtherLetter = @import("components/DerivedGeneralCategory/OtherLetter.zig")
 pub const Title = @import("components/DerivedGeneralCategory/TitlecaseLetter.zig");
 /// Uppercase letters.
 pub const Upper = @import("components/DerivedGeneralCategory/UppercaseLetter.zig");
-/// Marks.
+// Marks.
 const SpacingMark = @import("components/DerivedGeneralCategory/SpacingMark.zig");
 const NonSpacingMark = @import("components/DerivedGeneralCategory/NonspacingMark.zig");
 const EnclosingMark = @import("components/DerivedGeneralCategory/EnclosingMark.zig");
-/// Numbers.
+// Numbers.
 const LetterNumber = @import("components/DerivedGeneralCategory/LetterNumber.zig");
 const OtherNumber = @import("components/DerivedGeneralCategory/OtherNumber.zig");
-/// Punctuation.
+// Punctuation.
 const ClosePunct = @import("components/DerivedGeneralCategory/ClosePunctuation.zig");
 const ConnectPunct = @import("components/DerivedGeneralCategory/ConnectorPunctuation.zig");
 const DashPunct = @import("components/DerivedGeneralCategory/DashPunctuation.zig");
 const InitialPunct = @import("components/DerivedGeneralCategory/InitialPunctuation.zig");
 const OpenPunct = @import("components/DerivedGeneralCategory/OpenPunctuation.zig");
 const OtherPunct = @import("components/DerivedGeneralCategory/OtherPunctuation.zig");
-/// Symbols
+// Symbols
+/// Mathematical symbols.
 pub const MathSymbol = @import("components/DerivedGeneralCategory/MathSymbol.zig");
 const ModSymbol = @import("components/DerivedGeneralCategory/ModifierSymbol.zig");
+/// Currency symbols.
 pub const CurrencySymbol = @import("components/DerivedGeneralCategory/CurrencySymbol.zig");
 const OtherSymbol = @import("components/DerivedGeneralCategory/OtherSymbol.zig");
 /// WhiteSpace.
@@ -207,9 +209,19 @@ pub const Ziglyph = struct {
         return self.alpha.?.isAlphabetic(cp);
     }
 
+    /// isAsciiAlphabetic detects ASCII only letters.
+    pub fn isAsciiAlphabetic(self: Self, cp: u21) bool {
+        return if (cp < 128) ascii.isAlpha(@intCast(u8, cp)) else false;
+    }
+
     /// isAlphaNum covers all the Unicode alphabetic and number space, not just ASCII.
     pub fn isAlphaNum(self: *Self, cp: u21) !bool {
         return (try self.isAlphabetic(cp)) or (try self.isNumber(cp));
+    }
+
+    /// isAsciiAlphaNum detects ASCII only letters or numbers.
+    pub fn isAsciiAlphaNum(self: Self, cp: u21) bool {
+        return if (cp < 128) ascii.isAlNum(@intCast(u8, cp)) else false;
     }
 
     /// isCased detects cased letters.
@@ -232,15 +244,19 @@ pub const Ziglyph = struct {
         return self.decimal.?.isDecimalNumber(cp);
     }
 
-    // isDigit detects all Unicode digits.
+    // isDigit detects all Unicode digits, which don't include the ASCII digits..
     pub fn isDigit(self: *Self, cp: u21) !bool {
-        // ASCII optimization.
         // Lazy init.
         if (self.digit == null) {
             self.digit = try Digit.init(self.allocator);
         }
 
         return self.digit.?.isDigit(cp) or (try self.isDecimal(cp));
+    }
+
+    /// isAsciiAlphabetic detects ASCII only letters.
+    pub fn isAsciiDigit(self: Self, cp: u21) bool {
+        return if (cp < 128) ascii.isDigit(@intCast(u8, cp)) else false;
     }
 
     /// isGraphic detects any code point that can be represented graphically, including spaces.
@@ -253,10 +269,20 @@ pub const Ziglyph = struct {
         return (try self.isPrint(cp)) or self.whitespace.?.isWhiteSpace(cp);
     }
 
+    /// isAsciiGraphic detects ASCII only graphic code points.
+    pub fn isAsciiGraphic(self: Self, cp: u21) bool {
+        return if (cp < 128) ascii.isGraph(@intCast(u8, cp)) else false;
+    }
+
     // isHex detects the 16 ASCII characters 0-9 A-F, and a-f.
     pub fn isHexDigit(self: *Self, cp: u21) !bool {
         if (self.hex == null) self.hex = try HexDigit.init(self.allocator);
         return self.hex.?.isHexDigit(cp);
+    }
+
+    /// isAsciiHexDigit detects ASCII only hexadecimal digits.
+    pub fn isAsciiHexDigit(self: Self, cp: u21) bool {
+        return if (cp < 128) ascii.isXDigit(@intCast(u8, cp)) else false;
     }
 
     /// isPrint detects any code point that can be printed, but not spaces.
@@ -268,6 +294,11 @@ pub const Ziglyph = struct {
             (try self.isWhiteSpace(cp));
     }
 
+    /// isAsciiPrint detects ASCII printable code points.
+    pub fn isAsciiPrint(self: Self, cp: u21) bool {
+        return if (cp < 128) ascii.isPrint(@intCast(u8, cp)) else false;
+    }
+
     /// isControl detects control code points such as form feeds.
     pub fn isControl(self: *Self, cp: u21) !bool {
         // Lazy init.
@@ -276,6 +307,11 @@ pub const Ziglyph = struct {
         }
 
         return self.control.?.isControl(cp);
+    }
+
+    /// isAsciiControl detects ASCII only control code points.
+    pub fn isAsciiControl(self: Self, cp: u21) bool {
+        return if (cp < 128) ascii.isCntrl(@intCast(u8, cp)) else false;
     }
 
     /// isLetter covers all letters in Unicode, not just ASCII.
@@ -304,6 +340,11 @@ pub const Ziglyph = struct {
             self.upper.?.isUppercaseLetter(cp);
     }
 
+    /// isAsciiLetter detects ASCII only letters.
+    pub fn isAsciiLetter(self: Self, cp: u21) bool {
+        return if (cp < 128) ascii.isAlpha(@intCast(u8, cp)) else false;
+    }
+
     /// isLower detects code points that are lowercase.
     pub fn isLower(self: *Self, cp: u21) !bool {
         // Lazy init.
@@ -312,6 +353,11 @@ pub const Ziglyph = struct {
         }
 
         return (try self.isCased(cp)) and self.lower.?.isLowercaseLetter(cp);
+    }
+
+    /// isAsciiLower detects ASCII only lowercase letters.
+    pub fn isAsciiLower(self: Self, cp: u21) bool {
+        return if (cp < 128) ascii.isLower(@intCast(u8, cp)) else false;
     }
 
     /// isMark detects special code points that serve as marks in different alphabets.
@@ -350,6 +396,11 @@ pub const Ziglyph = struct {
             self.other_number.?.isOtherNumber(cp);
     }
 
+    /// isAsciiNumber detects ASCII only numbers.
+    pub fn isAsciiNumber(self: Self, cp: u21) bool {
+        return if (cp < 128) ascii.isDigit(@intCast(u8, cp)) else false;
+    }
+
     /// isPunct detects punctuation characters. Note some punctuation maybe considered symbols by Unicode.
     pub fn isPunct(self: *Self, cp: u21) !bool {
         // Lazy init.
@@ -380,6 +431,11 @@ pub const Ziglyph = struct {
             self.other_punct.?.isOtherPunctuation(cp);
     }
 
+    /// isAsciiPunct detects ASCII only punctuation.
+    pub fn isAsciiPunct(self: Self, cp: u21) bool {
+        return if (cp < 128) ascii.isPunct(@intCast(u8, cp)) else false;
+    }
+
     /// isWhiteSpace checks for spaces.
     pub fn isWhiteSpace(self: *Self, cp: u21) !bool {
         // Lazy init.
@@ -388,6 +444,11 @@ pub const Ziglyph = struct {
         }
 
         return self.whitespace.?.isWhiteSpace(cp);
+    }
+
+    /// isAsciiWhiteSpace detects ASCII only whitespace.
+    pub fn isAsciiWhiteSpace(self: Self, cp: u21) bool {
+        return if (cp < 128) ascii.isSpace(@intCast(u8, cp)) else false;
     }
 
     // isSymbol detects symbols which curiosly may include some code points commonly thought of as
@@ -413,6 +474,11 @@ pub const Ziglyph = struct {
             self.other_symbol.?.isOtherSymbol(cp);
     }
 
+    /// isAsciiSymbol detects ASCII only symbols.
+    pub fn isAsciiSymbol(self: Self, cp: u21) bool {
+        return if (cp < 128) ascii.isSymbol(@intCast(u8, cp)) else false;
+    }
+
     /// isTitle detects code points in titlecase.
     pub fn isTitle(self: *Self, cp: u21) !bool {
         // Lazy init.
@@ -423,7 +489,7 @@ pub const Ziglyph = struct {
         return (try self.isCased(cp)) and self.title.?.isTitlecaseLetter(cp);
     }
 
-    /// isTitle detects code points in uppercase.
+    /// isUpper detects code points in uppercase.
     pub fn isUpper(self: *Self, cp: u21) !bool {
         // Lazy init.
         if (self.upper == null) {
@@ -431,6 +497,11 @@ pub const Ziglyph = struct {
         }
 
         return (try self.isCased(cp)) and self.upper.?.isUppercaseLetter(cp);
+    }
+
+    /// isAsciiUpper detects ASCII only uppercase letters.
+    pub fn isAsciiUpper(self: Self, cp: u21) bool {
+        return if (cp < 128) ascii.isUpper(@intCast(u8, cp)) else false;
     }
 
     /// toLower returns the lowercase code point for the given code point. It returns the same 
@@ -442,6 +513,11 @@ pub const Ziglyph = struct {
         }
 
         return self.lower_map.?.toLower(cp);
+    }
+
+    /// toAsciiLower converts an ASCII letter to lowercase.
+    pub fn toAsciiLower(self: Self, cp: u21) u21 {
+        return if (cp < 128) ascii.toLower(@intCast(u8, cp)) else cp;
     }
 
     /// toTitle returns the titlecase code point for the given code point. It returns the same 
@@ -464,5 +540,10 @@ pub const Ziglyph = struct {
         }
 
         return self.upper_map.?.toUpper(cp);
+    }
+
+    /// toAsciiUpper converts an ASCII letter to uppercase.
+    pub fn toAsciiUpper(self: Self, cp: u21) u21 {
+        return if (cp < 128) ascii.toUpper(@intCast(u8, cp)) else false;
     }
 };
