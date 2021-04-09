@@ -78,7 +78,7 @@ test "Component structs" {
 
     const z = 'z';
     // No lazy init, no 'try' here.
-    // The Ziglyph.isLetter method does this internally to dtect a letter.
+    // The Ziglyph.isLetter method does this internally to detect a letter.
     expect(lower.isLowercaseLetter(z) or
         mod_letter.isModifierLetter(z) or
         other_letter.isOtherLetter(z) or
