@@ -50,7 +50,7 @@ pub fn main() !void {
                 n_count += 1;
             } else if (try ziglyph.isPunct(cp)) {
                 p_count += 1;
-            } else if (try ziglyph.isSpace(cp)) {
+            } else if (try ziglyph.isWhiteSpace(cp)) {
                 z_count += 1;
             } else if (try ziglyph.isSymbol(cp)) {
                 s_count += 1;

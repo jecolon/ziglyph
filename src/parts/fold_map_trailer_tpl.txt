@@ -7,8 +7,7 @@ pub fn deinit(self: *Self) void {{
     self.map.deinit();
 }}
 
-/// CaseFold is the result of the toCaseFold method. It can be a simple, one code point value or a
-/// sequence of code points in the full case fold scenario.
+/// CaseFold can be a simple, one code point value or a sequence of code points in the full case fold scenario.
 pub const CaseFold = union(enum) {{
     simple: u21,
     full: []const u21,
