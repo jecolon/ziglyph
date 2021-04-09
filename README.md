@@ -1,6 +1,11 @@
 # ziglyph
 Unicode processing with Zig.
 
+## Status
+This is pre-release software. Breaking changes and rough edges abound!
+* 2021-04-09: Unicode database ETL and analysis phase. Working out the best way to split the data
+and apply the spec rules.
+
 ## Background
 This library has been built from scratch in Zig. Although initially inspired by the Go `unicode`
 package, Ziglyph is now completely independent and unique in and of itself.
@@ -10,10 +15,11 @@ There are two modes of usage: via the consolidated Ziglyph struct or using the i
 structs for more fine grained control over memory usage and binary size. The Ziglyph struct provides
 the convenience of having all the methods in one place, with lazy initialization of the underlying
 structs to only use the resources necessary. However this comes at the cost of more error handling,
-given that when calling a method such as `isUpper`, Ziglyph may need to lazily initialize the `Upper`
-struct, which may fail. The same method directly on the `Upper` struct doesn't allocate and thus cannot
-fail. On the other hand, the Ziglyph struct has some added optimizations when handling ASCII text, using
-the Zig `std.ascii` functions under the hood and avoiding allocation altogether.
+given that when calling a method such as `isUpper`, Ziglyph may need to lazily initialize underlying
+structs, which may fail. The same method directly on the `Upper` struct doesn't allocate and thus cannot
+fail. On the other hand, methods that consolidate Unicode General Categories such as `isLetter`, can
+only be found on the `Ziglyph` struct itself. View the source for such methods to see which component
+structs are involved to comply with the Unicode spec's rules.
 
 ### Using the Ziglyph Struct
 ```zig
@@ -47,13 +53,24 @@ const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 
 // Import the components.
-const Letter = @import("ziglyph.zig").Letter;
+// A letter in Unicode is not a trivial thing!
+const Lower = @import("ziglyph.zig").Lower;
+const Title = @import("ziglyph.zig").Title;
 const Upper = @import("ziglyph.zig").Upper;
+const ModLetter = @import("components/DerivedGeneralCategory/ModifierLetter.zig");
+const OtherLetter = @import("components/DerivedGeneralCategory/OtherLetter.zig");
+// Case mapping.
 const UpperMap = @import("ziglyph.zig").UpperMap;
 
 test "Component structs" {
-    var letter = try Letter.init(std.testing.allocator);
-    defer letter.deinit();
+    var mod_letter = try ModLetter.init(allocator);
+    defer mod_letter.deinit();
+    var other_letter = try OtherLetter.init(allocator);
+    defer other_letter.deinit();
+    var lower = try Lower.init(allocator);
+    defer lower.deinit();
+    var title = try Title.init(allocator);
+    defer title.deinit();
     var upper = try Upper.init(std.testing.allocator);
     defer upper.deinit();
     var upper_map = try UpperMap.init(std.testing.allocator);
@@ -61,10 +78,15 @@ test "Component structs" {
 
     const z = 'z';
     // No lazy init, no 'try' here.
-    expect(letter.isLetter(z));
-    expect(!upper.isUpper(z));
+    // The Ziglyph.isLetter method does this internally to dtect a letter.
+    expect(lower.isLowercaseLetter(z) or
+        mod_letter.isModifierLetter(z) or
+        other_letter.isOtherLetter(z) or
+        title.isTitlecaseLetter(z) or
+        upper.isUppercaseLetter(z));
+    expect(!upper.isUppercaseLetter(z));
     const uz = upper_map.toUpper(z);
-    expect(upper.isUpper(uz));
+    expect(upper.isUppercaseLetter(uz));
     expectEqual(uz, 'Z');
 }
 ```
@@ -120,8 +142,4 @@ utility (Linux or Mac) to gauge the execution speed of Ziglyph. This program rea
 [src/data/lang_mix.txt](src/data/lang_mix.txt), which is about 3.9MiB of text in Chinese, English, 
 French, and Spanish from the full texts of "Alice in Wonderland", "Don Quijote", "The Three Musketeers",
 and a Chinese book I don't have the title of. All from the [Project Gutenberg](https://www.gutenberg.org/)
-website, so all Public Domain. On my Linux, Ryzen 5 2600X, 16GiB RAM machine, it takes roughly 45ms.
-
-## Source Doc Comments
-You can get descriptions for all the public methods in the [src/ziglyph.zig](src/ziglyph.zig)  and
-[src/components/DecomposeMap.zig](src/components/DecomposeMap.zig) files' doc comments.
+website, so all Public Domain. On my Linux, Ryzen 5 2600X, 16GiB RAM machine, it takes roughly 59ms.
