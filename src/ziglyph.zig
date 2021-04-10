@@ -14,9 +14,7 @@ pub const Control = @import("components/autogen/DerivedGeneralCategory/Control.z
 /// Unicode letters.
 pub const Letter = @import("components/aggregate/Letter.zig");
 // Marks.
-const SpacingMark = @import("components/autogen/DerivedGeneralCategory/SpacingMark.zig");
-const NonSpacingMark = @import("components/autogen/DerivedGeneralCategory/NonspacingMark.zig");
-const EnclosingMark = @import("components/autogen/DerivedGeneralCategory/EnclosingMark.zig");
+pub const Mark = @import("components/aggregate/Mark.zig");
 // Numbers.
 pub const Number = @import("components/aggregate/Number.zig");
 // Punctuation.
@@ -43,9 +41,7 @@ pub const Ziglyph = struct {
     alpha: ?Alphabetic = null,
     control: ?Control = null,
     letter: ?Letter = null,
-    spacing_mark: ?SpacingMark = null,
-    nonspacing_mark: ?NonSpacingMark = null,
-    enclosing_mark: ?EnclosingMark = null,
+    mark: ?Mark = null,
     number: ?Number = null,
     punct: ?Punct = null,
     math_symbol: ?MathSymbol = null,
@@ -66,9 +62,7 @@ pub const Ziglyph = struct {
         if (self.control) |*control| control.deinit();
         if (self.letter) |*letter| letter.deinit();
         if (self.number) |*number| number.deinit();
-        if (self.spacing_mark) |*spacing_mark| spacing_mark.deinit();
-        if (self.nonspacing_mark) |*nonspacing_mark| nonspacing_mark.deinit();
-        if (self.enclosing_mark) |*enclosing_mark| enclosing_mark.deinit();
+        if (self.mark) |*mark| mark.deinit();
         if (self.punct) |*punct| punct.deinit();
         if (self.space) |*space| space.deinit();
         if (self.whitespace) |*whitespace| whitespace.deinit();
@@ -108,7 +102,7 @@ pub const Ziglyph = struct {
 
     /// isCombining detects Unicode base characters.
     pub fn isCombining(self: *Self, cp: u21) !bool {
-        return self.isMark(cp);
+        return (try self.isMark(cp));
     }
 
     /// isCased detects cased letters.
@@ -210,12 +204,8 @@ pub const Ziglyph = struct {
     /// isMark detects special code points that serve as marks in different alphabets.
     pub fn isMark(self: *Self, cp: u21) !bool {
         // Lazy init.
-        if (self.spacing_mark == null) self.spacing_mark = try SpacingMark.init(self.allocator);
-        if (self.nonspacing_mark == null) self.nonspacing_mark = try NonSpacingMark.init(self.allocator);
-        if (self.enclosing_mark == null) self.enclosing_mark = try EnclosingMark.init(self.allocator);
-
-        return self.spacing_mark.?.isSpacingMark(cp) or self.nonspacing_mark.?.isNonspacingMark(cp) or
-            self.enclosing_mark.?.isEnclosingMark(cp);
+        if (self.mark == null) self.mark = try Mark.init(self.allocator);
+        return (try self.mark.?.isMark(cp));
     }
 
     /// isNumber covers all Unicode numbers, not just ASII.
