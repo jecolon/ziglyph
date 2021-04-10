@@ -20,12 +20,7 @@ pub const Number = @import("components/aggregate/Number.zig");
 // Punctuation.
 pub const Punct = @import("components/aggregate/Punct.zig");
 // Symbols
-/// Mathematical symbols.
-pub const MathSymbol = @import("components/autogen/DerivedGeneralCategory/MathSymbol.zig");
-const ModSymbol = @import("components/autogen/DerivedGeneralCategory/ModifierSymbol.zig");
-/// Currency symbols.
-pub const CurrencySymbol = @import("components/autogen/DerivedGeneralCategory/CurrencySymbol.zig");
-const OtherSymbol = @import("components/autogen/DerivedGeneralCategory/OtherSymbol.zig");
+pub const Symbol = @import("components/aggregate/Symbol.zig");
 /// WhiteSpace.
 pub const WhiteSpace = @import("components/autogen/PropList/WhiteSpace.zig");
 pub const Space = @import("components/autogen/DerivedGeneralCategory/SpaceSeparator.zig");
@@ -44,10 +39,7 @@ pub const Ziglyph = struct {
     mark: ?Mark = null,
     number: ?Number = null,
     punct: ?Punct = null,
-    math_symbol: ?MathSymbol = null,
-    mod_symbol: ?ModSymbol = null,
-    currency_symbol: ?CurrencySymbol = null,
-    other_symbol: ?OtherSymbol = null,
+    symbol: ?Symbol = null,
     space: ?Space = null,
     whitespace: ?WhiteSpace = null,
 
@@ -66,10 +58,7 @@ pub const Ziglyph = struct {
         if (self.punct) |*punct| punct.deinit();
         if (self.space) |*space| space.deinit();
         if (self.whitespace) |*whitespace| whitespace.deinit();
-        if (self.math_symbol) |*math_symbol| math_symbol.deinit();
-        if (self.mod_symbol) |*mod_symbol| mod_symbol.deinit();
-        if (self.currency_symbol) |*currency_symbol| currency_symbol.deinit();
-        if (self.other_symbol) |*other_symbol| other_symbol.deinit();
+        if (self.symbol) |*symbol| symbol.deinit();
     }
 
     /// isAlphabetic detects if a code point is alphabetic.
@@ -255,13 +244,9 @@ pub const Ziglyph = struct {
     // punctuation.
     pub fn isSymbol(self: *Self, cp: u21) !bool {
         // Lazy init.
-        if (self.math_symbol == null) self.math_symbol = try MathSymbol.init(self.allocator);
-        if (self.mod_symbol == null) self.mod_symbol = try ModSymbol.init(self.allocator);
-        if (self.currency_symbol == null) self.currency_symbol = try CurrencySymbol.init(self.allocator);
-        if (self.other_symbol == null) self.other_symbol = try OtherSymbol.init(self.allocator);
+        if (self.symbol == null) self.symbol = try Symbol.init(self.allocator);
 
-        return self.math_symbol.?.isMathSymbol(cp) or self.mod_symbol.?.isModifierSymbol(cp) or
-            self.currency_symbol.?.isCurrencySymbol(cp) or self.other_symbol.?.isOtherSymbol(cp);
+        return (try self.symbol.?.isSymbol(cp));
     }
 
     /// isAsciiSymbol detects ASCII only symbols.

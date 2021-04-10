@@ -1,6 +1,5 @@
 const std = @import("std");
 const mem = std.mem;
-const ascii = @import("../../ascii.zig");
 
 pub const Enclosing = @import("../autogen/DerivedGeneralCategory/EnclosingMark.zig");
 pub const Nonspacing = @import("../autogen/DerivedGeneralCategory/NonspacingMark.zig");
