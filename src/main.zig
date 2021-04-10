@@ -3,11 +3,10 @@ const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
-const Letter = @import("ziglyph.zig").Letter;
 const Control = @import("ziglyph.zig").Control;
-const Decimal = @import("ziglyph.zig").Decimal;
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
-const HexDigit = @import("ziglyph.zig").HexDigit;
+const Letter = @import("ziglyph.zig").Letter;
+const Number = @import("ziglyph.zig").Number;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
 
 pub fn main() !void {
@@ -402,27 +401,27 @@ test "isControl" {
 }
 
 test "isDecimal" {
-    var z = try Decimal.init(std.testing.allocator);
+    var z = try Number.init(std.testing.allocator);
     defer z.deinit();
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        expect(z.isDecimalNumber(cp));
+        expect(try z.isDecimal(cp));
     }
-    expect(!z.isDecimalNumber('\u{0003}'));
-    expect(!z.isDecimalNumber('A'));
+    expect(!try z.isDecimal('\u{0003}'));
+    expect(!try z.isDecimal('A'));
 }
 
 test "isHexDigit" {
-    var z = try HexDigit.init(std.testing.allocator);
+    var z = try Number.init(std.testing.allocator);
     defer z.deinit();
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        expect(z.isHexDigit(cp));
+        expect(try z.isHexDigit(cp));
     }
-    expect(!z.isHexDigit('\u{0003}'));
-    expect(!z.isHexDigit('Z'));
+    expect(!try z.isHexDigit('\u{0003}'));
+    expect(!try z.isHexDigit('Z'));
 }
 
 test "isGraphic" {

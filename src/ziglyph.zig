@@ -11,12 +11,6 @@ const ascii = @import("ascii.zig");
 pub const Alphabetic = @import("components/autogen/DerivedCoreProperties/Alphabetic.zig");
 /// Control code points like form feed.
 pub const Control = @import("components/autogen/DerivedGeneralCategory/Control.zig");
-/// Decimal number code points.
-pub const Decimal = @import("components/autogen/DerivedGeneralCategory/DecimalNumber.zig");
-/// Unicode digit code points, which do not include ASCII digits.
-pub const Digit = @import("components/autogen/DerivedNumericType/Digit.zig");
-/// Hexadecimal digits.
-pub const HexDigit = @import("components/autogen/PropList/HexDigit.zig");
 /// Unicode letters.
 pub const Letter = @import("components/aggregate/Letter.zig");
 // Marks.
@@ -24,8 +18,7 @@ const SpacingMark = @import("components/autogen/DerivedGeneralCategory/SpacingMa
 const NonSpacingMark = @import("components/autogen/DerivedGeneralCategory/NonspacingMark.zig");
 const EnclosingMark = @import("components/autogen/DerivedGeneralCategory/EnclosingMark.zig");
 // Numbers.
-const LetterNumber = @import("components/autogen/DerivedGeneralCategory/LetterNumber.zig");
-const OtherNumber = @import("components/autogen/DerivedGeneralCategory/OtherNumber.zig");
+pub const Number = @import("components/aggregate/Number.zig");
 // Punctuation.
 pub const Punct = @import("components/aggregate/Punct.zig");
 // Symbols
@@ -49,15 +42,11 @@ pub const Ziglyph = struct {
     allocator: *mem.Allocator,
     alpha: ?Alphabetic = null,
     control: ?Control = null,
-    decimal: ?Decimal = null,
-    digit: ?Digit = null,
-    hex: ?HexDigit = null,
     letter: ?Letter = null,
     spacing_mark: ?SpacingMark = null,
     nonspacing_mark: ?NonSpacingMark = null,
     enclosing_mark: ?EnclosingMark = null,
-    letter_number: ?LetterNumber = null,
-    other_number: ?OtherNumber = null,
+    number: ?Number = null,
     punct: ?Punct = null,
     math_symbol: ?MathSymbol = null,
     mod_symbol: ?ModSymbol = null,
@@ -75,15 +64,11 @@ pub const Ziglyph = struct {
     pub fn deinit(self: *Self) void {
         if (self.alpha) |*alpha| alpha.deinit();
         if (self.control) |*control| control.deinit();
-        if (self.decimal) |*decimal| decimal.deinit();
-        if (self.digit) |*digit| digit.deinit();
         if (self.letter) |*letter| letter.deinit();
-        if (self.hex) |*hex| hex.deinit();
+        if (self.number) |*number| number.deinit();
         if (self.spacing_mark) |*spacing_mark| spacing_mark.deinit();
         if (self.nonspacing_mark) |*nonspacing_mark| nonspacing_mark.deinit();
         if (self.enclosing_mark) |*enclosing_mark| enclosing_mark.deinit();
-        if (self.letter_number) |*letter_number| letter_number.deinit();
-        if (self.other_number) |*other_number| other_number.deinit();
         if (self.punct) |*punct| punct.deinit();
         if (self.space) |*space| space.deinit();
         if (self.whitespace) |*whitespace| whitespace.deinit();
@@ -136,15 +121,15 @@ pub const Ziglyph = struct {
     // isDecimal detects all Unicode digits.
     pub fn isDecimal(self: *Self, cp: u21) !bool {
         // Lazy init.
-        if (self.decimal == null) self.decimal = try Decimal.init(self.allocator);
-        return self.decimal.?.isDecimalNumber(cp);
+        if (self.number == null) self.number = try Number.init(self.allocator);
+        return (try self.number.?.isDecimal(cp));
     }
 
     // isDigit detects all Unicode digits, which don't include the ASCII digits..
     pub fn isDigit(self: *Self, cp: u21) !bool {
         // Lazy init.
-        if (self.digit == null) self.digit = try Digit.init(self.allocator);
-        return self.digit.?.isDigit(cp) or (try self.isDecimal(cp));
+        if (self.number == null) self.number = try Number.init(self.allocator);
+        return (try self.number.?.isDigit(cp));
     }
 
     /// isAsciiAlphabetic detects ASCII only letters.
@@ -166,8 +151,8 @@ pub const Ziglyph = struct {
 
     // isHex detects the 16 ASCII characters 0-9 A-F, and a-f.
     pub fn isHexDigit(self: *Self, cp: u21) !bool {
-        if (self.hex == null) self.hex = try HexDigit.init(self.allocator);
-        return self.hex.?.isHexDigit(cp);
+        if (self.number == null) self.number = try Number.init(self.allocator);
+        return (try self.number.?.isHexDigit(cp));
     }
 
     /// isAsciiHexDigit detects ASCII only hexadecimal digits.
@@ -236,12 +221,8 @@ pub const Ziglyph = struct {
     /// isNumber covers all Unicode numbers, not just ASII.
     pub fn isNumber(self: *Self, cp: u21) !bool {
         // Lazy init.
-        if (self.decimal == null) self.decimal = try Decimal.init(self.allocator);
-        if (self.letter_number == null) self.letter_number = try LetterNumber.init(self.allocator);
-        if (self.other_number == null) self.other_number = try OtherNumber.init(self.allocator);
-
-        return self.decimal.?.isDecimalNumber(cp) or self.letter_number.?.isLetterNumber(cp) or
-            self.other_number.?.isOtherNumber(cp);
+        if (self.number == null) self.number = try Number.init(self.allocator);
+        return (try self.number.?.isNumber(cp));
     }
 
     /// isAsciiNumber detects ASCII only numbers.
