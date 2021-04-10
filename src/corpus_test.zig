@@ -16,6 +16,7 @@ const OtherNumber = @import("components/DerivedGeneralCategory/OtherNumber.zig")
 const ClosePunct = @import("components/DerivedGeneralCategory/ClosePunctuation.zig");
 const ConnectPunct = @import("components/DerivedGeneralCategory/ConnectorPunctuation.zig");
 const DashPunct = @import("components/DerivedGeneralCategory/DashPunctuation.zig");
+const FinalPunct = @import("components/UnicodeData/FinalPunctuation.zig");
 const InitialPunct = @import("components/DerivedGeneralCategory/InitialPunctuation.zig");
 const OpenPunct = @import("components/DerivedGeneralCategory/OpenPunctuation.zig");
 const OtherPunct = @import("components/DerivedGeneralCategory/OtherPunctuation.zig");
@@ -63,6 +64,8 @@ pub fn main() !void {
     defer connect_punct.deinit();
     var dash_punct = try DashPunct.init(allocator);
     defer dash_punct.deinit();
+    var final_punct = try FinalPunct.init(allocator);
+    defer final_punct.deinit();
     var initial_punct = try InitialPunct.init(allocator);
     defer initial_punct.deinit();
     var open_punct = try OpenPunct.init(allocator);
@@ -139,6 +142,7 @@ pub fn main() !void {
             } else if (close_punct.isClosePunctuation(cp) or
                 connect_punct.isConnectorPunctuation(cp) or
                 dash_punct.isDashPunctuation(cp) or
+                final_punct.isFinalPunctuation(cp) or
                 initial_punct.isInitialPunctuation(cp) or
                 open_punct.isOpenPunctuation(cp) or
                 other_punct.isOtherPunctuation(cp))

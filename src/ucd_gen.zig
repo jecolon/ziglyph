@@ -316,6 +316,8 @@ const UcdGenerator = struct {
         _ = try u_writer.print(map_header_tpl, .{"UpperMap"});
 
         // Iterate over lines.
+        var pf_records = ArrayList(Record).init(self.allocator);
+        defer pf_records.deinit();
         var buf: [640]u8 = undefined;
         while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
             // Iterate over fields.
@@ -326,6 +328,10 @@ const UcdGenerator = struct {
                 if (field_index == 0) {
                     // Code point.
                     code_point = raw;
+                } else if (field_index == 2 and mem.eql(u8, raw, "Pf")) {
+                    // Final Punctuation.
+                    const cp = try fmt.parseInt(u21, code_point, 16);
+                    try pf_records.append(.{ .single = cp });
                 } else if (field_index == 5 and raw.len != 0) {
                     // Decomposition.
                     var cp_iter = mem.split(raw, " ");
@@ -359,6 +365,24 @@ const UcdGenerator = struct {
         try l_buf.flush();
         try t_buf.flush();
         try u_buf.flush();
+
+        // Final Punctuation collection.
+        if (pf_records.items.len != 0) {
+            var pf_lo: u21 = 0x10FFFF;
+            var pf_hi: u21 = 0;
+            for (pf_records.items) |pfr| {
+                switch (pfr) {
+                    .single => |cp| {
+                        if (cp < pf_lo) pf_lo = cp;
+                        if (cp > pf_hi) pf_hi = cp;
+                    },
+                    else => unreachable,
+                }
+            }
+            std.debug.assert(pf_lo < pf_hi);
+            var pf_collection = try Collection.init(self.allocator, "Final_Punctuation", pf_lo, pf_hi, pf_records.toOwnedSlice());
+            try pf_collection.writeFile("UnicodeData");
+        }
     }
 
     // data/ucd/SpecialCassing.txt

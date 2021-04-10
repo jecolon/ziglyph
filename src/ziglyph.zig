@@ -38,6 +38,7 @@ const OtherNumber = @import("components/DerivedGeneralCategory/OtherNumber.zig")
 const ClosePunct = @import("components/DerivedGeneralCategory/ClosePunctuation.zig");
 const ConnectPunct = @import("components/DerivedGeneralCategory/ConnectorPunctuation.zig");
 const DashPunct = @import("components/DerivedGeneralCategory/DashPunctuation.zig");
+const FinalPunct = @import("components/UnicodeData/FinalPunctuation.zig");
 const InitialPunct = @import("components/DerivedGeneralCategory/InitialPunctuation.zig");
 const OpenPunct = @import("components/DerivedGeneralCategory/OpenPunctuation.zig");
 const OtherPunct = @import("components/DerivedGeneralCategory/OtherPunctuation.zig");
@@ -50,6 +51,7 @@ pub const CurrencySymbol = @import("components/DerivedGeneralCategory/CurrencySy
 const OtherSymbol = @import("components/DerivedGeneralCategory/OtherSymbol.zig");
 /// WhiteSpace.
 pub const WhiteSpace = @import("components/PropList/WhiteSpace.zig");
+pub const Space = @import("components/DerivedGeneralCategory/SpaceSeparator.zig");
 
 /// Case fold mappings.
 pub const CaseFoldMap = @import("components/CaseFolding/CaseFoldMap.zig");
@@ -85,6 +87,7 @@ pub const Ziglyph = struct {
     close_punct: ?ClosePunct = null,
     connect_punct: ?ConnectPunct = null,
     dash_punct: ?DashPunct = null,
+    final_punct: ?FinalPunct = null,
     initial_punct: ?InitialPunct = null,
     open_punct: ?OpenPunct = null,
     other_punct: ?OtherPunct = null,
@@ -92,6 +95,7 @@ pub const Ziglyph = struct {
     mod_symbol: ?ModSymbol = null,
     currency_symbol: ?CurrencySymbol = null,
     other_symbol: ?OtherSymbol = null,
+    space: ?Space = null,
     whitespace: ?WhiteSpace = null,
     title: ?Title = null,
     title_map: ?TitleMap = null,
@@ -161,6 +165,9 @@ pub const Ziglyph = struct {
         if (self.dash_punct) |*dash_punct| {
             dash_punct.deinit();
         }
+        if (self.final_punct) |*final_punct| {
+            final_punct.deinit();
+        }
         if (self.initial_punct) |*initial_punct| {
             initial_punct.deinit();
         }
@@ -169,6 +176,9 @@ pub const Ziglyph = struct {
         }
         if (self.other_punct) |*other_punct| {
             other_punct.deinit();
+        }
+        if (self.space) |*space| {
+            space.deinit();
         }
         if (self.whitespace) |*whitespace| {
             whitespace.deinit();
@@ -262,11 +272,11 @@ pub const Ziglyph = struct {
     /// isGraphic detects any code point that can be represented graphically, including spaces.
     pub fn isGraphic(self: *Self, cp: u21) !bool {
         // Lazy init.
-        if (self.whitespace == null) {
-            self.whitespace = try WhiteSpace.init(self.allocator);
+        if (self.space == null) {
+            self.space = try Space.init(self.allocator);
         }
 
-        return (try self.isPrint(cp)) or self.whitespace.?.isWhiteSpace(cp);
+        return (try self.isPrint(cp)) or self.space.?.isSpaceSeparator(cp);
     }
 
     /// isAsciiGraphic detects ASCII only graphic code points.
@@ -413,6 +423,9 @@ pub const Ziglyph = struct {
         if (self.dash_punct == null) {
             self.dash_punct = try DashPunct.init(self.allocator);
         }
+        if (self.final_punct == null) {
+            self.final_punct = try FinalPunct.init(self.allocator);
+        }
         if (self.initial_punct == null) {
             self.initial_punct = try InitialPunct.init(self.allocator);
         }
@@ -426,6 +439,7 @@ pub const Ziglyph = struct {
         return self.close_punct.?.isClosePunctuation(cp) or
             self.connect_punct.?.isConnectorPunctuation(cp) or
             self.dash_punct.?.isDashPunctuation(cp) or
+            self.final_punct.?.isFinalPunctuation(cp) or
             self.initial_punct.?.isInitialPunctuation(cp) or
             self.open_punct.?.isOpenPunctuation(cp) or
             self.other_punct.?.isOtherPunctuation(cp);
@@ -434,6 +448,16 @@ pub const Ziglyph = struct {
     /// isAsciiPunct detects ASCII only punctuation.
     pub fn isAsciiPunct(self: Self, cp: u21) bool {
         return if (cp < 128) ascii.isPunct(@intCast(u8, cp)) else false;
+    }
+
+    /// isSpace detects code points that are Unicode space separators.
+    pub fn isSpace(self: *Self, cp: u21) !bool {
+        // Lazy init.
+        if (self.space == null) {
+            self.space = try Space.init(self.allocator);
+        }
+
+        return self.space.?.isSpaceSeparator(cp);
     }
 
     /// isWhiteSpace checks for spaces.
