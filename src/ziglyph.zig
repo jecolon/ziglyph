@@ -11,6 +11,8 @@ const ascii = @import("ascii.zig");
 pub const Alphabetic = @import("components/autogen/DerivedCoreProperties/Alphabetic.zig");
 /// Control code points like form feed.
 pub const Control = @import("components/autogen/DerivedGeneralCategory/Control.zig");
+/// Code point decomposition.
+pub const DecomposeMap = @import("components/autogen/UnicodeData/DecomposeMap.zig");
 /// Unicode letters.
 pub const Letter = @import("components/aggregate/Letter.zig");
 // Marks.
@@ -19,14 +21,10 @@ pub const Mark = @import("components/aggregate/Mark.zig");
 pub const Number = @import("components/aggregate/Number.zig");
 // Punctuation.
 pub const Punct = @import("components/aggregate/Punct.zig");
+/// Spaces
+pub const Space = @import("components/aggregate/Space.zig");
 // Symbols
 pub const Symbol = @import("components/aggregate/Symbol.zig");
-/// WhiteSpace.
-pub const WhiteSpace = @import("components/autogen/PropList/WhiteSpace.zig");
-pub const Space = @import("components/autogen/DerivedGeneralCategory/SpaceSeparator.zig");
-
-/// Code point decomposition.
-pub const DecomposeMap = @import("components/autogen/UnicodeData/DecomposeMap.zig");
 
 /// Ziglyph consolidates all the major Unicode utility functions in one place. Because these functions
 /// each consume memory for their respective code point data, this struct performs lazy initialization
@@ -41,7 +39,6 @@ pub const Ziglyph = struct {
     punct: ?Punct = null,
     symbol: ?Symbol = null,
     space: ?Space = null,
-    whitespace: ?WhiteSpace = null,
 
     pub fn init(allocator: *mem.Allocator) !Ziglyph {
         return Ziglyph{ .allocator = allocator };
@@ -53,11 +50,10 @@ pub const Ziglyph = struct {
         if (self.alpha) |*alpha| alpha.deinit();
         if (self.control) |*control| control.deinit();
         if (self.letter) |*letter| letter.deinit();
-        if (self.number) |*number| number.deinit();
         if (self.mark) |*mark| mark.deinit();
+        if (self.number) |*number| number.deinit();
         if (self.punct) |*punct| punct.deinit();
         if (self.space) |*space| space.deinit();
-        if (self.whitespace) |*whitespace| whitespace.deinit();
         if (self.symbol) |*symbol| symbol.deinit();
     }
 
@@ -122,9 +118,7 @@ pub const Ziglyph = struct {
 
     /// isGraphic detects any code point that can be represented graphically, including spaces.
     pub fn isGraphic(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.space == null) self.space = try Space.init(self.allocator);
-        return (try self.isPrint(cp)) or self.space.?.isSpaceSeparator(cp);
+        return (try self.isPrint(cp)) or (try self.isSpace(cp));
     }
 
     /// isAsciiGraphic detects ASCII only graphic code points.
@@ -225,14 +219,14 @@ pub const Ziglyph = struct {
     pub fn isSpace(self: *Self, cp: u21) !bool {
         // Lazy init.
         if (self.space == null) self.space = try Space.init(self.allocator);
-        return self.space.?.isSpaceSeparator(cp);
+        return self.space.?.isSpace(cp);
     }
 
     /// isWhiteSpace checks for spaces.
     pub fn isWhiteSpace(self: *Self, cp: u21) !bool {
         // Lazy init.
-        if (self.whitespace == null) self.whitespace = try WhiteSpace.init(self.allocator);
-        return self.whitespace.?.isWhiteSpace(cp);
+        if (self.space == null) self.space = try Space.init(self.allocator);
+        return (try self.space.?.isWhiteSpace(cp));
     }
 
     /// isAsciiWhiteSpace detects ASCII only whitespace.
