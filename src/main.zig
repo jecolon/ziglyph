@@ -3,24 +3,19 @@ const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
-const CaseFoldMap = @import("ziglyph.zig").CaseFoldMap;
-const Cased = @import("ziglyph.zig").Cased;
 const Control = @import("ziglyph.zig").Control;
-const Decimal = @import("ziglyph.zig").Decimal;
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
-const HexDigit = @import("ziglyph.zig").HexDigit;
-const Lower = @import("ziglyph.zig").Lower;
-const LowerMap = @import("ziglyph.zig").LowerMap;
-const Title = @import("ziglyph.zig").Title;
-const TitleMap = @import("ziglyph.zig").TitleMap;
-const Upper = @import("ziglyph.zig").Upper;
-const UpperMap = @import("ziglyph.zig").UpperMap;
+const Letter = @import("ziglyph.zig").Letter;
+const Number = @import("ziglyph.zig").Number;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
 
 pub fn main() !void {
     var z = try Ziglyph.init(std.testing.allocator);
     defer z.deinit();
-    var fold_map = try CaseFoldMap.init(std.testing.allocator);
+    var letter = try Letter.init(std.testing.allocator);
+    defer letter.deinit();
+
+    var fold_map = try letter.init(std.testing.allocator);
     defer fold_map.deinit();
 
     const mixed = [_]u21{ '5', 'o', '9', '!', ' ', '℃', 'ᾭ', 'G' };
@@ -169,21 +164,16 @@ test "Ziglyph struct" {
     expectEqual(tz, 'Z');
 }
 
-test "Component structs" {
+test "Component struct" {
     // Simple structs don't require init / deinit.
-    var letter = try Ziglyph.init(std.testing.allocator);
+    var letter = try Letter.init(std.testing.allocator);
     defer letter.deinit();
-    var upper = try Upper.init(std.testing.allocator);
-    defer upper.deinit();
-    var upper_map = try UpperMap.init(std.testing.allocator);
-    defer upper_map.deinit();
 
     const z = 'z';
-    // No lazy init, no 'try' here.
     expect(try letter.isLetter(z));
-    expect(!upper.isUppercaseLetter(z));
-    const uz = upper_map.toUpper(z);
-    expect(upper.isUppercaseLetter(uz));
+    expect(!try letter.isUpper(z));
+    const uz = try letter.toUpper(z);
+    expect(try letter.isUpper(uz));
     expectEqual(uz, 'Z');
 }
 
@@ -285,53 +275,51 @@ test "basics" {
 }
 
 test "isCased" {
-    //var z = try LowerMap.init(std.testing.allocator);
-    var z = try Cased.init(std.testing.allocator);
+    var z = try Letter.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(z.isCased('a'));
-    expect(z.isCased('A'));
-    expect(!z.isCased('1'));
+    expect(try z.isCased('a'));
+    expect(try z.isCased('A'));
+    expect(!try z.isCased('1'));
 }
 
 test "isLower" {
-    var z = try Lower.init(std.testing.allocator);
+    var z = try Letter.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(z.isLowercaseLetter('a'));
-    expect(z.isLowercaseLetter('é'));
-    expect(z.isLowercaseLetter('i'));
-    expect(!z.isLowercaseLetter('A'));
-    expect(!z.isLowercaseLetter('É'));
-    expect(!z.isLowercaseLetter('İ'));
+    expect(try z.isLower('a'));
+    expect(try z.isLower('é'));
+    expect(try z.isLower('i'));
+    expect(!try z.isLower('A'));
+    expect(!try z.isLower('É'));
+    expect(!try z.isLower('İ'));
 }
 
 test "toCaseFold" {
-    //var z = try LowerMap.init(std.testing.allocator);
-    var z = try CaseFoldMap.init(std.testing.allocator);
+    var z = try Letter.init(std.testing.allocator);
     defer z.deinit();
 
-    var result = z.toCaseFold('A');
+    var result = try z.toCaseFold('A');
     switch (result) {
         .simple => |cp| expectEqual(cp, 'a'),
         .full => @panic("Got .full, wanted .simple for A"),
     }
-    result = z.toCaseFold('a');
+    result = try z.toCaseFold('a');
     switch (result) {
         .simple => |cp| expectEqual(cp, 'a'),
         .full => @panic("Got .full, wanted .simple for a"),
     }
-    result = z.toCaseFold('1');
+    result = try z.toCaseFold('1');
     switch (result) {
         .simple => |cp| expectEqual(cp, '1'),
         .full => @panic("Got .full, wanted .simple for 1"),
     }
-    result = z.toCaseFold('\u{00DF}');
+    result = try z.toCaseFold('\u{00DF}');
     switch (result) {
         .simple => @panic("Got .simple, wanted .full for 0x00DF"),
         .full => |s| expectEqualSlices(u21, s, &[_]u21{ 0x0073, 0x0073 }),
     }
-    result = z.toCaseFold('\u{0390}');
+    result = try z.toCaseFold('\u{0390}');
     switch (result) {
         .simple => @panic("Got .simple, wanted .full for 0x0390"),
         .full => |s| expectEqualSlices(u21, s, &[_]u21{ 0x03B9, 0x0308, 0x0301 }),
@@ -339,66 +327,65 @@ test "toCaseFold" {
 }
 
 test "toLower" {
-    //var z = try LowerMap.init(std.testing.allocator);
-    var z = try LowerMap.init(std.testing.allocator);
+    var z = try Letter.init(std.testing.allocator);
     defer z.deinit();
 
-    expectEqual(z.toLower('a'), 'a');
-    expectEqual(z.toLower('A'), 'a');
-    expectEqual(z.toLower('İ'), 'i');
-    expectEqual(z.toLower('É'), 'é');
-    expectEqual(z.toLower(0x80), 0x80);
-    expectEqual(z.toLower(0x80), 0x80);
-    expectEqual(z.toLower('Å'), 'å');
-    expectEqual(z.toLower('å'), 'å');
-    expectEqual(z.toLower('\u{212A}'), 'k');
+    expectEqual(try z.toLower('a'), 'a');
+    expectEqual(try z.toLower('A'), 'a');
+    expectEqual(try z.toLower('İ'), 'i');
+    expectEqual(try z.toLower('É'), 'é');
+    expectEqual(try z.toLower(0x80), 0x80);
+    expectEqual(try z.toLower(0x80), 0x80);
+    expectEqual(try z.toLower('Å'), 'å');
+    expectEqual(try z.toLower('å'), 'å');
+    expectEqual(try z.toLower('\u{212A}'), 'k');
 }
 
 test "isUpper" {
-    var z = try Upper.init(std.testing.allocator);
+    var z = try Letter.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(!z.isUppercaseLetter('a'));
-    expect(!z.isUppercaseLetter('é'));
-    expect(!z.isUppercaseLetter('i'));
-    expect(z.isUppercaseLetter('A'));
-    expect(z.isUppercaseLetter('É'));
-    expect(z.isUppercaseLetter('İ'));
+    expect(!try z.isUpper('a'));
+    expect(!try z.isUpper('é'));
+    expect(!try z.isUpper('i'));
+    expect(try z.isUpper('A'));
+    expect(try z.isUpper('É'));
+    expect(try z.isUpper('İ'));
 }
 
 test "toUpper" {
-    var z = try UpperMap.init(std.testing.allocator);
+    var z = try Letter.init(std.testing.allocator);
     defer z.deinit();
 
-    expectEqual(z.toUpper('a'), 'A');
-    expectEqual(z.toUpper('A'), 'A');
-    expectEqual(z.toUpper('i'), 'I');
-    expectEqual(z.toUpper('é'), 'É');
-    expectEqual(z.toUpper(0x80), 0x80);
-    expectEqual(z.toUpper('Å'), 'Å');
-    expectEqual(z.toUpper('å'), 'Å');
+    expectEqual(try z.toUpper('a'), 'A');
+    expectEqual(try z.toUpper('A'), 'A');
+    expectEqual(try z.toUpper('i'), 'I');
+    expectEqual(try z.toUpper('é'), 'É');
+    expectEqual(try z.toUpper(0x80), 0x80);
+    expectEqual(try z.toUpper('Å'), 'Å');
+    expectEqual(try z.toUpper('å'), 'Å');
 }
 
 test "isTitle" {
-    var z = try Title.init(std.testing.allocator);
+    var z = try Letter.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(!z.isTitlecaseLetter('a'));
-    expect(!z.isTitlecaseLetter('é'));
-    expect(!z.isTitlecaseLetter('i'));
-    expect(z.isTitlecaseLetter('\u{1FBC}'));
-    expect(z.isTitlecaseLetter('\u{1FCC}'));
-    expect(z.isTitlecaseLetter('ǈ'));
+    expect(!try z.isTitle('a'));
+    expect(!try z.isTitle('é'));
+    expect(!try z.isTitle('i'));
+    expect(try z.isTitle('\u{1FBC}'));
+    expect(try z.isTitle('\u{1FCC}'));
+    expect(try z.isTitle('ǈ'));
 }
 
 test "toTitle" {
-    var z = try TitleMap.init(std.testing.allocator);
+    var z = try Letter.init(std.testing.allocator);
     defer z.deinit();
 
-    expectEqual(z.toTitle('a'), 'A');
-    expectEqual(z.toTitle('A'), 'A');
-    expectEqual(z.toTitle('i'), 'I');
-    expectEqual(z.toTitle('é'), 'É');
+    expectEqual(try z.toTitle('a'), 'A');
+    expectEqual(try z.toTitle('A'), 'A');
+    expectEqual(try z.toTitle('i'), 'I');
+    expectEqual(try z.toTitle('é'), 'É');
 }
 
 test "isControl" {
@@ -414,27 +401,27 @@ test "isControl" {
 }
 
 test "isDecimal" {
-    var z = try Decimal.init(std.testing.allocator);
+    var z = try Number.init(std.testing.allocator);
     defer z.deinit();
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        expect(z.isDecimalNumber(cp));
+        expect(try z.isDecimal(cp));
     }
-    expect(!z.isDecimalNumber('\u{0003}'));
-    expect(!z.isDecimalNumber('A'));
+    expect(!try z.isDecimal('\u{0003}'));
+    expect(!try z.isDecimal('A'));
 }
 
 test "isHexDigit" {
-    var z = try HexDigit.init(std.testing.allocator);
+    var z = try Number.init(std.testing.allocator);
     defer z.deinit();
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        expect(z.isHexDigit(cp));
+        expect(try z.isHexDigit(cp));
     }
-    expect(!z.isHexDigit('\u{0003}'));
-    expect(!z.isHexDigit('Z'));
+    expect(!try z.isHexDigit('\u{0003}'));
+    expect(!try z.isHexDigit('Z'));
 }
 
 test "isGraphic" {
@@ -485,7 +472,7 @@ test "isPrint" {
 }
 
 test "isLetter" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = try Letter.init(std.testing.allocator);
     defer z.deinit();
 
     var cp: u21 = 'a';

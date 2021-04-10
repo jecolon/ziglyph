@@ -2,32 +2,33 @@ const std = @import("std");
 const unicode = std.unicode;
 
 const Control = @import("ziglyph.zig").Control;
-const Lower = @import("components/DerivedGeneralCategory/LowercaseLetter.zig");
-const ModLetter = @import("components/DerivedGeneralCategory/ModifierLetter.zig");
-const OtherLetter = @import("components/DerivedGeneralCategory/OtherLetter.zig");
-const Title = @import("components/DerivedGeneralCategory/TitlecaseLetter.zig");
-const Upper = @import("components/DerivedGeneralCategory/UppercaseLetter.zig");
-const SpacingMark = @import("components/DerivedGeneralCategory/SpacingMark.zig");
-const NonSpacingMark = @import("components/DerivedGeneralCategory/NonspacingMark.zig");
-const EnclosingMark = @import("components/DerivedGeneralCategory/EnclosingMark.zig");
-const Decimal = @import("components/DerivedGeneralCategory/DecimalNumber.zig");
-const LetterNumber = @import("components/DerivedGeneralCategory/LetterNumber.zig");
-const OtherNumber = @import("components/DerivedGeneralCategory/OtherNumber.zig");
-const ClosePunct = @import("components/DerivedGeneralCategory/ClosePunctuation.zig");
-const ConnectPunct = @import("components/DerivedGeneralCategory/ConnectorPunctuation.zig");
-const DashPunct = @import("components/DerivedGeneralCategory/DashPunctuation.zig");
-const InitialPunct = @import("components/DerivedGeneralCategory/InitialPunctuation.zig");
-const OpenPunct = @import("components/DerivedGeneralCategory/OpenPunctuation.zig");
-const OtherPunct = @import("components/DerivedGeneralCategory/OtherPunctuation.zig");
-const WhiteSpace = @import("ziglyph.zig").WhiteSpace;
-const MathSymbol = @import("components/DerivedGeneralCategory/MathSymbol.zig");
-const ModSymbol = @import("components/DerivedGeneralCategory/ModifierSymbol.zig");
-const CurrencySymbol = @import("components/DerivedGeneralCategory/CurrencySymbol.zig");
-const OtherSymbol = @import("components/DerivedGeneralCategory/OtherSymbol.zig");
+const Lower = @import("components/autogen/DerivedGeneralCategory/LowercaseLetter.zig");
+const ModLetter = @import("components/autogen/DerivedGeneralCategory/ModifierLetter.zig");
+const OtherLetter = @import("components/autogen/DerivedGeneralCategory/OtherLetter.zig");
+const Title = @import("components/autogen/DerivedGeneralCategory/TitlecaseLetter.zig");
+const Upper = @import("components/autogen/DerivedGeneralCategory/UppercaseLetter.zig");
+const SpacingMark = @import("components/autogen/DerivedGeneralCategory/SpacingMark.zig");
+const NonSpacingMark = @import("components/autogen/DerivedGeneralCategory/NonspacingMark.zig");
+const EnclosingMark = @import("components/autogen/DerivedGeneralCategory/EnclosingMark.zig");
+const Decimal = @import("components/autogen/DerivedGeneralCategory/DecimalNumber.zig");
+const LetterNumber = @import("components/autogen/DerivedGeneralCategory/LetterNumber.zig");
+const OtherNumber = @import("components/autogen/DerivedGeneralCategory/OtherNumber.zig");
+const ClosePunct = @import("components/autogen/DerivedGeneralCategory/ClosePunctuation.zig");
+const ConnectPunct = @import("components/autogen/DerivedGeneralCategory/ConnectorPunctuation.zig");
+const DashPunct = @import("components/autogen/DerivedGeneralCategory/DashPunctuation.zig");
+const FinalPunct = @import("components/autogen/UnicodeData/FinalPunctuation.zig");
+const InitialPunct = @import("components/autogen/DerivedGeneralCategory/InitialPunctuation.zig");
+const OpenPunct = @import("components/autogen/DerivedGeneralCategory/OpenPunctuation.zig");
+const OtherPunct = @import("components/autogen/DerivedGeneralCategory/OtherPunctuation.zig");
+const WhiteSpace = @import("ziglyph.zig").Space.WhiteSpace;
+const MathSymbol = @import("components/autogen/DerivedGeneralCategory/MathSymbol.zig");
+const ModSymbol = @import("components/autogen/DerivedGeneralCategory/ModifierSymbol.zig");
+const CurrencySymbol = @import("components/autogen/DerivedGeneralCategory/CurrencySymbol.zig");
+const OtherSymbol = @import("components/autogen/DerivedGeneralCategory/OtherSymbol.zig");
 
-const LowerMap = @import("ziglyph.zig").LowerMap;
-const TitleMap = @import("ziglyph.zig").TitleMap;
-const UpperMap = @import("ziglyph.zig").UpperMap;
+const LowerMap = @import("ziglyph.zig").Letter.LowerMap;
+const TitleMap = @import("ziglyph.zig").Letter.TitleMap;
+const UpperMap = @import("ziglyph.zig").Letter.UpperMap;
 
 pub fn main() !void {
     const corpus = "src/data/lang_mix.txt";
@@ -63,6 +64,8 @@ pub fn main() !void {
     defer connect_punct.deinit();
     var dash_punct = try DashPunct.init(allocator);
     defer dash_punct.deinit();
+    var final_punct = try FinalPunct.init(allocator);
+    defer final_punct.deinit();
     var initial_punct = try InitialPunct.init(allocator);
     defer initial_punct.deinit();
     var open_punct = try OpenPunct.init(allocator);
@@ -139,6 +142,7 @@ pub fn main() !void {
             } else if (close_punct.isClosePunctuation(cp) or
                 connect_punct.isConnectorPunctuation(cp) or
                 dash_punct.isDashPunctuation(cp) or
+                final_punct.isFinalPunctuation(cp) or
                 initial_punct.isInitialPunctuation(cp) or
                 open_punct.isOpenPunctuation(cp) or
                 other_punct.isOtherPunctuation(cp))

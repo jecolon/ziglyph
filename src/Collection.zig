@@ -6,7 +6,7 @@ const Range = @import("record.zig").Range;
 const Record = @import("record.zig").Record;
 const Collection = @This();
 
-const comp_path = "components";
+const comp_path = "components/autogen";
 
 allocator: *mem.Allocator,
 kind: []const u8,

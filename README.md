@@ -16,10 +16,11 @@ structs for more fine grained control over memory usage and binary size. The Zig
 the convenience of having all the methods in one place, with lazy initialization of the underlying
 structs to only use the resources necessary. However this comes at the cost of more error handling,
 given that when calling a method such as `isUpper`, Ziglyph may need to lazily initialize underlying
-structs, which may fail. The same method directly on the `Upper` struct doesn't allocate and thus cannot
-fail. On the other hand, methods that consolidate Unicode General Categories such as `isLetter`, can
-only be found on the `Ziglyph` struct itself. View the source for such methods to see which component
-structs are involved to comply with the Unicode spec's rules.
+structs, which will allocate memory, which may fail. There is a sub-level of component structs in the
+`src/components/aggregate` drectory (also re-exported in the Ziglyph struct,) that expose this same 
+kind of interface; i.e. `Letter`, `Punct`, and `Symbol`. The component structs in the `src/components/autogen` 
+are the lowest level and their methods usually don't require the extra error handling. These structs
+are also auto-generated code from the Unicode Character Database (UCD) files.
 
 ### Using the Ziglyph Struct
 ```zig
@@ -35,7 +36,7 @@ test "Ziglyph struct" {
     defer ziglyph.deinit();
 
     const z = 'z';
-    // Lazy init requires 'try'
+    // Lazy init requires may fail, use 'try'.
     expect(try ziglyph.isLetter(z));
     expect(try ziglyph.isAlphaNum(z));
     expect(try ziglyph.isPrint(z));
@@ -46,44 +47,57 @@ test "Ziglyph struct" {
 }
 ```
 
-### Using Individual Components
+### Using the aggregate Structs
+```zig
+const std = @import("std");
+const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
+
+// Import the struct.
+const Letter = @import("ziglyph.zig").Letter;
+const Punct = @import("ziglyph.zig").Punct;
+
+test "Ziglyph struct" {
+    var letter = try Letter.init(std.testing.allocator);
+    defer letter.deinit();
+    var punct = try Punct.init(std.testing.allocator);
+    defer punct.deinit();
+
+    const z = 'z';
+    // Aggregate structs also use lezy init, use `try`.
+    expect(try letter.isLetter(z));
+    expect(!try letter.isUpper(z));
+    expect(!try punct.isPunct(z));
+    expect(try punct.isPunct('!'));
+    const uz = try letter.toUpper(z);
+    expect(try letter.isUpper(uz));
+    expectEqual(uz, 'Z');
+}
+```
+
+### Using individual low-level component structs
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 
 // Import the components.
-// A letter in Unicode is not a trivial thing!
-const Lower = @import("ziglyph.zig").Lower;
-const Title = @import("ziglyph.zig").Title;
-const Upper = @import("ziglyph.zig").Upper;
-const ModLetter = @import("components/DerivedGeneralCategory/ModifierLetter.zig");
-const OtherLetter = @import("components/DerivedGeneralCategory/OtherLetter.zig");
+const Lower = @import("ziglyph.zig").Letter.Lower;
+const Upper = @import("ziglyph.zig").Letter.Upper;
 // Case mapping.
-const UpperMap = @import("ziglyph.zig").UpperMap;
+const UpperMap = @import("ziglyph.zig").Letter.UpperMap;
 
 test "Component structs" {
-    var mod_letter = try ModLetter.init(allocator);
-    defer mod_letter.deinit();
-    var other_letter = try OtherLetter.init(allocator);
-    defer other_letter.deinit();
     var lower = try Lower.init(allocator);
     defer lower.deinit();
-    var title = try Title.init(allocator);
-    defer title.deinit();
     var upper = try Upper.init(std.testing.allocator);
     defer upper.deinit();
     var upper_map = try UpperMap.init(std.testing.allocator);
     defer upper_map.deinit();
 
     const z = 'z';
-    // No lazy init, no 'try' here.
-    // The Ziglyph.isLetter method does this internally to detect a letter.
-    expect(lower.isLowercaseLetter(z) or
-        mod_letter.isModifierLetter(z) or
-        other_letter.isOtherLetter(z) or
-        title.isTitlecaseLetter(z) or
-        upper.isUppercaseLetter(z));
+    // No lazy init, no `try` here.
+    expect(lower.isLowercaseLetter(z));
     expect(!upper.isUppercaseLetter(z));
     const uz = upper_map.toUpper(z);
     expect(upper.isUppercaseLetter(uz));
@@ -91,9 +105,10 @@ test "Component structs" {
 }
 ```
 
-## Code Point Decomposition
+## Code point decomposition
 In addition to the basic functions to detect and convert code point case, the `DecomposeMap` struct provides
-code point and `[]const u8` decomposition methods.
+code point and `[]const u8` (string) decomposition methods. Work is in progress to extend this to full
+Unicode Normalization functionality.
 
 ```zig
 const std = @import("std");
@@ -106,7 +121,7 @@ test "decomposeCodePoint" {
     var decomp_map = try DecomposeMap.init(std.testing.allocator);
     defer decomp_map.deinit();
 
-    var result = z.decomposeCodePoint('\u{00E9}');
+    var result = decomp_map.decomposeCodePoint('\u{00E9}');
     switch (result) {
         .same => @panic("Expected .seq, got .same for \\u{00E9}"),
         .seq => |seq| expectEqualSlices(u21, seq, &[_]u21{ '\u{0065}', '\u{0301}' }),

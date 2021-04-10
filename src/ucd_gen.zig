@@ -224,11 +224,11 @@ const UcdGenerator = struct {
         const header_tpl = @embedFile("parts/fold_map_header_tpl.txt");
         const trailer_tpl = @embedFile("parts/fold_map_trailer_tpl.txt");
         var cwd = std.fs.cwd();
-        cwd.makeDir("components/CaseFolding") catch |err| switch (err) {
+        cwd.makeDir("components/autogen/CaseFolding") catch |err| switch (err) {
             error.PathAlreadyExists => {},
             else => return err,
         };
-        var out_file = try cwd.createFile("components/CaseFolding/CaseFoldMap.zig", .{});
+        var out_file = try cwd.createFile("components/autogen/CaseFolding/CaseFoldMap.zig", .{});
         defer out_file.close();
         var buf_writer = io.bufferedWriter(out_file.writer());
         const writer = buf_writer.writer();
@@ -282,7 +282,7 @@ const UcdGenerator = struct {
         var input_stream = buf_reader.reader();
         // Output directory.
         var cwd = std.fs.cwd();
-        cwd.makeDir("components/UnicodeData") catch |err| switch (err) {
+        cwd.makeDir("components/autogen/UnicodeData") catch |err| switch (err) {
             error.PathAlreadyExists => {},
             else => return err,
         };
@@ -292,19 +292,19 @@ const UcdGenerator = struct {
         const map_header_tpl = @embedFile("parts/map_header_tpl.txt");
         const map_trailer_tpl = @embedFile("parts/map_trailer_tpl.txt");
         // Setup output.
-        var d_file = try cwd.createFile("components/UnicodeData/DecomposeMap.zig", .{});
+        var d_file = try cwd.createFile("components/autogen/UnicodeData/DecomposeMap.zig", .{});
         defer d_file.close();
         var d_buf = io.bufferedWriter(d_file.writer());
         const d_writer = d_buf.writer();
-        var l_file = try cwd.createFile("components/UnicodeData/LowerMap.zig", .{});
+        var l_file = try cwd.createFile("components/autogen/UnicodeData/LowerMap.zig", .{});
         defer l_file.close();
         var l_buf = io.bufferedWriter(l_file.writer());
         const l_writer = l_buf.writer();
-        var t_file = try cwd.createFile("components/UnicodeData/TitleMap.zig", .{});
+        var t_file = try cwd.createFile("components/autogen/UnicodeData/TitleMap.zig", .{});
         defer t_file.close();
         var t_buf = io.bufferedWriter(t_file.writer());
         const t_writer = t_buf.writer();
-        var u_file = try cwd.createFile("components/UnicodeData/UpperMap.zig", .{});
+        var u_file = try cwd.createFile("components/autogen/UnicodeData/UpperMap.zig", .{});
         defer u_file.close();
         var u_buf = io.bufferedWriter(u_file.writer());
         const u_writer = u_buf.writer();
@@ -316,6 +316,8 @@ const UcdGenerator = struct {
         _ = try u_writer.print(map_header_tpl, .{"UpperMap"});
 
         // Iterate over lines.
+        var pf_records = ArrayList(Record).init(self.allocator);
+        defer pf_records.deinit();
         var buf: [640]u8 = undefined;
         while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
             // Iterate over fields.
@@ -326,6 +328,10 @@ const UcdGenerator = struct {
                 if (field_index == 0) {
                     // Code point.
                     code_point = raw;
+                } else if (field_index == 2 and mem.eql(u8, raw, "Pf")) {
+                    // Final Punctuation.
+                    const cp = try fmt.parseInt(u21, code_point, 16);
+                    try pf_records.append(.{ .single = cp });
                 } else if (field_index == 5 and raw.len != 0) {
                     // Decomposition.
                     var cp_iter = mem.split(raw, " ");
@@ -359,6 +365,24 @@ const UcdGenerator = struct {
         try l_buf.flush();
         try t_buf.flush();
         try u_buf.flush();
+
+        // Final Punctuation collection.
+        if (pf_records.items.len != 0) {
+            var pf_lo: u21 = 0x10FFFF;
+            var pf_hi: u21 = 0;
+            for (pf_records.items) |pfr| {
+                switch (pfr) {
+                    .single => |cp| {
+                        if (cp < pf_lo) pf_lo = cp;
+                        if (cp > pf_hi) pf_hi = cp;
+                    },
+                    else => unreachable,
+                }
+            }
+            std.debug.assert(pf_lo < pf_hi);
+            var pf_collection = try Collection.init(self.allocator, "Final_Punctuation", pf_lo, pf_hi, pf_records.toOwnedSlice());
+            try pf_collection.writeFile("UnicodeData");
+        }
     }
 
     // data/ucd/SpecialCassing.txt
@@ -372,11 +396,11 @@ const UcdGenerator = struct {
         const header_tpl = @embedFile("parts/special_case_header_tpl.txt");
         const trailer_tpl = @embedFile("parts/special_case_trailer_tpl.txt");
         var cwd = std.fs.cwd();
-        cwd.makeDir("components/SpecialCasing") catch |err| switch (err) {
+        cwd.makeDir("components/autogen/SpecialCasing") catch |err| switch (err) {
             error.PathAlreadyExists => {},
             else => return err,
         };
-        var out_file = try cwd.createFile("components/SpecialCasing/SpecialCaseMap.zig", .{});
+        var out_file = try cwd.createFile("components/autogen/SpecialCasing/SpecialCaseMap.zig", .{});
         defer out_file.close();
         var buf_writer = io.bufferedWriter(out_file.writer());
         const writer = buf_writer.writer();
