@@ -10,7 +10,7 @@ const Number = @import("ziglyph.zig").Number;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
 
 pub fn main() !void {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
     var letter = try Letter.init(std.testing.allocator);
     defer letter.deinit();
@@ -113,7 +113,7 @@ pub fn main() !void {
 }
 
 test "ASCII methods" {
-    var ziglyph = try Ziglyph.init(std.testing.allocator);
+    var ziglyph = Ziglyph.init(std.testing.allocator);
     defer ziglyph.deinit();
 
     const z = 'F';
@@ -133,7 +133,7 @@ test "ASCII methods" {
 
 test "Ziglyph struct" {
     // init and defer deinit.
-    var ziglyph = try Ziglyph.init(std.testing.allocator);
+    var ziglyph = Ziglyph.init(std.testing.allocator);
     defer ziglyph.deinit();
 
     const z = 'z';
@@ -178,7 +178,7 @@ test "Component struct" {
 }
 
 test "basics" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
     const mixed = [_]u21{ '5', 'o', '9', '!', ' ', '℃', 'ᾭ', 'G' };
@@ -425,7 +425,7 @@ test "isHexDigit" {
 }
 
 test "isGraphic" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
     expect(try z.isGraphic('A'));
@@ -438,7 +438,7 @@ test "isGraphic" {
 }
 
 test "isHexDigit" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
     var cp: u21 = '0';
@@ -458,7 +458,7 @@ test "isHexDigit" {
 }
 
 test "isPrint" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
     expect(try z.isPrint('A'));
@@ -489,7 +489,7 @@ test "isLetter" {
 }
 
 test "isMark" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
     expect(try z.isMark('\u{20E4}'));
@@ -497,7 +497,7 @@ test "isMark" {
 }
 
 test "isNumber" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
     var cp: u21 = '0';
@@ -509,7 +509,7 @@ test "isNumber" {
 }
 
 test "isPunct" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
     expect(try z.isPunct('!'));
@@ -541,7 +541,7 @@ test "isPunct" {
 }
 
 test "isWhiteSpace" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
     expect(try z.isWhiteSpace(' '));
@@ -550,7 +550,7 @@ test "isWhiteSpace" {
 }
 
 test "isSymbol" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
     expect(try z.isSymbol('<'));
@@ -565,7 +565,7 @@ test "isSymbol" {
 }
 
 test "isAlphaNum" {
-    var z = try Ziglyph.init(std.testing.allocator);
+    var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
     var cp: u21 = '0';
@@ -608,4 +608,12 @@ test "decomposeString" {
     const got = try z.decomposeString(input);
     defer std.testing.allocator.free(got);
     expectEqualSlices(u8, want, got);
+}
+
+test "isAsciiStr" {
+    var z = Ziglyph.init(std.testing.allocator);
+    defer z.deinit();
+
+    expect(z.isAsciiStr("Hello!"));
+    expect(!z.isAsciiStr("Héllo!"));
 }

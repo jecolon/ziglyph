@@ -11,7 +11,7 @@ pub fn main() !void {
 
     //var allocator = std.testing.allocator;
     var allocator = std.heap.page_allocator;
-    var ziglyph = try Ziglyph.init(allocator);
+    var ziglyph = Ziglyph.init(allocator);
     defer ziglyph.deinit();
 
     var c_count: usize = 0;

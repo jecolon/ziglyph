@@ -40,7 +40,7 @@ pub const Ziglyph = struct {
     symbol: ?Symbol = null,
     space: ?Space = null,
 
-    pub fn init(allocator: *mem.Allocator) !Ziglyph {
+    pub fn init(allocator: *mem.Allocator) Ziglyph {
         return Ziglyph{ .allocator = allocator };
     }
 
@@ -299,5 +299,13 @@ pub const Ziglyph = struct {
     /// toAsciiUpper converts an ASCII letter to uppercase.
     pub fn toAsciiUpper(self: Self, cp: u21) u21 {
         return if (cp < 128) ascii.toUpper(@intCast(u8, cp)) else false;
+    }
+
+    /// isAsciiStr checks if a string (`[]const uu`) is composed solely of ASCII characters.
+    pub fn isAsciiStr(self: Self, str: []const u8) bool {
+        for (str) |b| {
+            if (b & 128 == 128) return false;
+        }
+        return true;
     }
 };
