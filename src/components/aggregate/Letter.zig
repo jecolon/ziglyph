@@ -2,6 +2,9 @@ const std = @import("std");
 const mem = std.mem;
 const ascii = @import("../../ascii.zig");
 
+/// Case fold mappings.
+pub const CaseFoldMap = @import("../autogen/CaseFolding/CaseFoldMap.zig");
+const CaseFold = @import("../autogen/CaseFolding/CaseFoldMap.zig").CaseFold;
 /// Cased code points are either lower, upper, or title cased, but not all three.
 pub const Cased = @import("../autogen/DerivedCoreProperties/Cased.zig");
 /// Lowercase
@@ -22,6 +25,7 @@ const Self = @This();
 
 allocator: *mem.Allocator,
 cased: ?Cased = null,
+fold_map: ?CaseFoldMap = null,
 lower: ?Lower = null,
 lower_map: ?LowerMap = null,
 modifier: ?Modifier = null,
@@ -37,10 +41,11 @@ pub fn init(allocator: *mem.Allocator) !Self {
 
 pub fn deinit(self: *Self) void {
     if (self.cased) |*cased| cased.deinit();
-    if (self.modifier) |*modifier| modifier.deinit();
-    if (self.other) |*other| other.deinit();
+    if (self.fold_map) |*fold_map| fold_map.deinit();
     if (self.lower) |*lower| lower.deinit();
     if (self.lower_map) |*lower_map| lower_map.deinit();
+    if (self.modifier) |*modifier| modifier.deinit();
+    if (self.other) |*other| other.deinit();
     if (self.title) |*title| title.deinit();
     if (self.title_map) |*title_map| title_map.deinit();
     if (self.upper) |*upper| upper.deinit();
@@ -138,4 +143,11 @@ pub fn toUpper(self: *Self, cp: u21) !u21 {
 /// toAsciiUpper converts an ASCII letter to uppercase.
 pub fn toAsciiUpper(self: Self, cp: u21) u21 {
     return if (cp < 128) ascii.toUpper(@intCast(u8, cp)) else false;
+}
+
+/// toCaseFold will convert a code point into its case folded equivalent. Note that this can result
+/// in a mapping to more than one code point, known as the full case fold.
+pub fn toCaseFold(self: *Self, cp: u21) !CaseFold {
+    if (self.fold_map == null) self.fold_map = try CaseFoldMap.init(self.allocator);
+    return self.fold_map.?.toCaseFold(cp);
 }

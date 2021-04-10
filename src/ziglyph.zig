@@ -27,13 +27,7 @@ const EnclosingMark = @import("components/autogen/DerivedGeneralCategory/Enclosi
 const LetterNumber = @import("components/autogen/DerivedGeneralCategory/LetterNumber.zig");
 const OtherNumber = @import("components/autogen/DerivedGeneralCategory/OtherNumber.zig");
 // Punctuation.
-const ClosePunct = @import("components/autogen/DerivedGeneralCategory/ClosePunctuation.zig");
-const ConnectPunct = @import("components/autogen/DerivedGeneralCategory/ConnectorPunctuation.zig");
-const DashPunct = @import("components/autogen/DerivedGeneralCategory/DashPunctuation.zig");
-const FinalPunct = @import("components/autogen/UnicodeData/FinalPunctuation.zig");
-const InitialPunct = @import("components/autogen/DerivedGeneralCategory/InitialPunctuation.zig");
-const OpenPunct = @import("components/autogen/DerivedGeneralCategory/OpenPunctuation.zig");
-const OtherPunct = @import("components/autogen/DerivedGeneralCategory/OtherPunctuation.zig");
+pub const Punct = @import("components/aggregate/Punct.zig");
 // Symbols
 /// Mathematical symbols.
 pub const MathSymbol = @import("components/autogen/DerivedGeneralCategory/MathSymbol.zig");
@@ -45,8 +39,6 @@ const OtherSymbol = @import("components/autogen/DerivedGeneralCategory/OtherSymb
 pub const WhiteSpace = @import("components/autogen/PropList/WhiteSpace.zig");
 pub const Space = @import("components/autogen/DerivedGeneralCategory/SpaceSeparator.zig");
 
-/// Case fold mappings.
-pub const CaseFoldMap = @import("components/autogen/CaseFolding/CaseFoldMap.zig");
 /// Code point decomposition.
 pub const DecomposeMap = @import("components/autogen/UnicodeData/DecomposeMap.zig");
 
@@ -66,13 +58,7 @@ pub const Ziglyph = struct {
     enclosing_mark: ?EnclosingMark = null,
     letter_number: ?LetterNumber = null,
     other_number: ?OtherNumber = null,
-    close_punct: ?ClosePunct = null,
-    connect_punct: ?ConnectPunct = null,
-    dash_punct: ?DashPunct = null,
-    final_punct: ?FinalPunct = null,
-    initial_punct: ?InitialPunct = null,
-    open_punct: ?OpenPunct = null,
-    other_punct: ?OtherPunct = null,
+    punct: ?Punct = null,
     math_symbol: ?MathSymbol = null,
     mod_symbol: ?ModSymbol = null,
     currency_symbol: ?CurrencySymbol = null,
@@ -98,13 +84,7 @@ pub const Ziglyph = struct {
         if (self.enclosing_mark) |*enclosing_mark| enclosing_mark.deinit();
         if (self.letter_number) |*letter_number| letter_number.deinit();
         if (self.other_number) |*other_number| other_number.deinit();
-        if (self.close_punct) |*close_punct| close_punct.deinit();
-        if (self.connect_punct) |*connect_punct| connect_punct.deinit();
-        if (self.dash_punct) |*dash_punct| dash_punct.deinit();
-        if (self.final_punct) |*final_punct| final_punct.deinit();
-        if (self.initial_punct) |*initial_punct| initial_punct.deinit();
-        if (self.open_punct) |*open_punct| open_punct.deinit();
-        if (self.other_punct) |*other_punct| other_punct.deinit();
+        if (self.punct) |*punct| punct.deinit();
         if (self.space) |*space| space.deinit();
         if (self.whitespace) |*whitespace| whitespace.deinit();
         if (self.math_symbol) |*math_symbol| math_symbol.deinit();
@@ -272,18 +252,8 @@ pub const Ziglyph = struct {
     /// isPunct detects punctuation characters. Note some punctuation maybe considered symbols by Unicode.
     pub fn isPunct(self: *Self, cp: u21) !bool {
         // Lazy init.
-        if (self.close_punct == null) self.close_punct = try ClosePunct.init(self.allocator);
-        if (self.connect_punct == null) self.connect_punct = try ConnectPunct.init(self.allocator);
-        if (self.dash_punct == null) self.dash_punct = try DashPunct.init(self.allocator);
-        if (self.final_punct == null) self.final_punct = try FinalPunct.init(self.allocator);
-        if (self.initial_punct == null) self.initial_punct = try InitialPunct.init(self.allocator);
-        if (self.open_punct == null) self.open_punct = try OpenPunct.init(self.allocator);
-        if (self.other_punct == null) self.other_punct = try OtherPunct.init(self.allocator);
-
-        return self.close_punct.?.isClosePunctuation(cp) or self.connect_punct.?.isConnectorPunctuation(cp) or
-            self.dash_punct.?.isDashPunctuation(cp) or self.final_punct.?.isFinalPunctuation(cp) or
-            self.initial_punct.?.isInitialPunctuation(cp) or self.open_punct.?.isOpenPunctuation(cp) or
-            self.other_punct.?.isOtherPunctuation(cp);
+        if (self.punct == null) self.punct = try Punct.init(self.allocator);
+        return (try self.punct.?.isPunct(cp));
     }
 
     /// isAsciiPunct detects ASCII only punctuation.
