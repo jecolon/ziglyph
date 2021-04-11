@@ -9,6 +9,7 @@ const Letter = @import("ziglyph.zig").Letter;
 const Number = @import("ziglyph.zig").Number;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
 
+// UTF-8 BOM = EFBBBF
 pub fn main() !void {
     var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
@@ -595,7 +596,17 @@ test "decomposeCodePoint" {
     result = z.decomposeCodePoint('A');
     switch (result) {
         .same => |cp| expectEqual(cp, 'A'),
-        .seq => @panic("Expected .seq, got .same for \\u{00E9}"),
+        .seq => @panic("Expected .same, got .seq for A"),
+    }
+    result = z.decomposeCodePoint('\u{03D3}');
+    switch (result) {
+        .same => @panic("Expected .seq, got .same for \\u{03D3}"),
+        .seq => |seq| expectEqualSlices(u21, seq, &[_]u21{ '\u{03D2}', '\u{0301}' }),
+    }
+    result = z.decomposeCodePoint('\u{03D2}');
+    switch (result) {
+        .same => @panic("Expected .seq, got .same for \\u{03D2}"),
+        .seq => |seq| expectEqualSlices(u21, seq, &[_]u21{'\u{03A5}'}),
     }
 }
 
@@ -614,6 +625,16 @@ test "isAsciiStr" {
     var z = Ziglyph.init(std.testing.allocator);
     defer z.deinit();
 
-    expect(z.isAsciiStr("Hello!"));
-    expect(!z.isAsciiStr("Héllo!"));
+    expect(try z.isAsciiStr("Hello!"));
+    expect(!try z.isAsciiStr("Héllo!"));
+}
+
+test "isLatin1Str" {
+    var z = Ziglyph.init(std.testing.allocator);
+    defer z.deinit();
+
+    expect(try z.isLatin1Str("Hello!"));
+    expect(try z.isLatin1Str("Héllo!"));
+    expect(!try z.isLatin1Str("H\u{0065}\u{0301}llo!"));
+    expect(!try z.isLatin1Str("H😀llo!"));
 }

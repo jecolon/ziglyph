@@ -5,6 +5,7 @@
 
 const std = @import("std");
 const mem = std.mem;
+const unicode = std.unicode;
 const ascii = @import("ascii.zig");
 
 /// Alphabeticbetic code points.
@@ -301,10 +302,30 @@ pub const Ziglyph = struct {
         return if (cp < 128) ascii.toUpper(@intCast(u8, cp)) else false;
     }
 
+    /// isAscii checks a code point to see if it's an ASCII character.
+    pub fn isAscii(self: Self, cp: u21) bool {
+        return cp < 128;
+    }
+
     /// isAsciiStr checks if a string (`[]const uu`) is composed solely of ASCII characters.
-    pub fn isAsciiStr(self: Self, str: []const u8) bool {
-        for (str) |b| {
-            if (b & 128 == 128) return false;
+    pub fn isAsciiStr(self: Self, str: []const u8) !bool {
+        var cp_iter = (try unicode.Utf8View.init(str)).iterator();
+        while (cp_iter.nextCodepoint()) |cp| {
+            if (!self.isAscii(cp)) return false;
+        }
+        return true;
+    }
+
+    /// isLatin1 checks a code point to see if it's a Latin-1 character.
+    pub fn isLatin1(self: Self, cp: u21) bool {
+        return cp < 256;
+    }
+
+    /// isLatin1Str checks if a string (`[]const uu`) is composed solely of Latin-1 characters.
+    pub fn isLatin1Str(self: Self, str: []const u8) !bool {
+        var cp_iter = (try unicode.Utf8View.init(str)).iterator();
+        while (cp_iter.nextCodepoint()) |cp| {
+            if (!self.isLatin1(cp)) return false;
         }
         return true;
     }
