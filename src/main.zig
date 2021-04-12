@@ -5,6 +5,7 @@ const expectEqualSlices = std.testing.expectEqualSlices;
 
 const Control = @import("ziglyph.zig").Control;
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
+const Decomposed = DecomposeMap.Decomposed;
 const Letter = @import("ziglyph.zig").Letter;
 const Number = @import("ziglyph.zig").Number;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
@@ -584,41 +585,84 @@ test "isAlphaNum" {
     expect(!try z.isAlphaNum('='));
 }
 
-test "decomposeCodePoint" {
-    var z = try DecomposeMap.init(std.testing.allocator);
+test "decompose" {
+    var allocator = std.testing.allocator;
+    var z = try DecomposeMap.init(allocator);
     defer z.deinit();
 
-    var result = z.decomposeCodePoint('\u{00E9}');
-    switch (result) {
-        .same => @panic("Expected .seq, got .same for \\u{00E9}"),
-        .seq => |seq| expectEqualSlices(u21, seq, &[_]u21{ '\u{0065}', '\u{0301}' }),
-    }
-    result = z.decomposeCodePoint('A');
-    switch (result) {
-        .same => |cp| expectEqual(cp, 'A'),
-        .seq => @panic("Expected .same, got .seq for A"),
-    }
-    result = z.decomposeCodePoint('\u{03D3}');
-    switch (result) {
-        .same => @panic("Expected .seq, got .same for \\u{03D3}"),
-        .seq => |seq| expectEqualSlices(u21, seq, &[_]u21{ '\u{03D2}', '\u{0301}' }),
-    }
-    result = z.decomposeCodePoint('\u{03D2}');
-    switch (result) {
-        .same => @panic("Expected .seq, got .same for \\u{03D2}"),
-        .seq => |seq| expectEqualSlices(u21, seq, &[_]u21{'\u{03A5}'}),
-    }
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    var arena_allocator = &arena.allocator;
+
+    var result = try z.decompose(arena_allocator, '\u{00E9}');
+    expectEqualSlices(u21, result, &[2]u21{ 0x0065, 0x0301 });
+
+    result = try z.decompose(arena_allocator, '\u{03D3}');
+    expectEqualSlices(u21, result, &[2]u21{ 0x03A5, 0x0301 });
 }
 
-test "decomposeString" {
-    var z = try DecomposeMap.init(std.testing.allocator);
+test "decompose_full" {
+    var allocator = std.testing.allocator;
+    var z = try DecomposeMap.init(allocator);
     defer z.deinit();
+
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    var arena_allocator = &arena.allocator;
+    var src = [1]Decomposed{.{ .single = '\u{00E9}' }};
+    var result = try z.decompose_full(arena_allocator, &src);
+    expectEqual(result.len, 2);
+    expect(result[0] == .same);
+    expectEqual(result[0].same, 0x0065);
+    expect(result[1] == .same);
+    expectEqual(result[1].same, 0x0301);
+
+    src = [1]Decomposed{.{ .single = 'A' }};
+    result = try z.decompose_full(arena_allocator, &src);
+    expectEqual(result.len, 1);
+    expect(result[0] == .same);
+    expectEqual(result[0].same, 'A');
+
+    // ox03D3 -> 0x03D2, 0x0301 -> 0x03A5, 0x0301
+    src = [1]Decomposed{.{ .single = '\u{03D3}' }};
+    result = try z.decompose_full(arena_allocator, &src);
+    expectEqual(result.len, 2);
+    expect(result[0] == .same);
+    expectEqual(result[0].same, 0x03A5);
+    expect(result[1] == .same);
+    expectEqual(result[1].same, 0x0301);
+}
+
+test "normalize" {
+    var allocator = std.testing.allocator;
+    var z = try DecomposeMap.init(allocator);
+    defer z.deinit();
+
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    var arena_allocator = &arena.allocator;
 
     const input = "H\u{00E9}llo";
     const want = "H\u{0065}\u{0301}llo";
-    const got = try z.decomposeString(input);
-    defer std.testing.allocator.free(got);
+    const got = try z.normalize(arena_allocator, input);
     expectEqualSlices(u8, want, got);
+
+    const input2 = "H\u{03D3}llo";
+    const want2 = "H\u{03A5}\u{0301}llo";
+    const got2 = try z.normalize(arena_allocator, input2);
+    expectEqualSlices(u8, want2, got2);
+
+    const input3 = "\u{1E0A}\u{0323}";
+    //const want3 = "\u{0044}\u{0323}\u{0307}";
+    const want3 = "\u{0044}\u{0307}\u{0323}";
+    const got3 = try z.normalize(arena_allocator, input3);
+    for (want) |c| {
+        std.debug.print("w: {x}\n", .{c});
+    }
+    for (got3) |c| {
+        std.debug.print("g: {x}\n", .{c});
+    }
+    expectEqualSlices(u8, want3, got3);
 }
 
 test "isAsciiStr" {

@@ -1,58 +1,85 @@
 
     return instance;
-}}
+}
 
-const Self = @This();
-pub fn deinit(self: *Self) void {{
+pub fn deinit(self: *Self) void {
     self.map.deinit();
-}}
+}
 
-pub const Decomposed = union(enum) {{
-    same: u21,
-    seq: []const u21,
-}};
+/// mapping retrieves the decomposition mapping for a code point as per the UCD.
+pub fn mapping(self: Self, cp: u21) Decomposed {
+    return if (self.map.get(cp)) |dc| dc else .{ .same = cp };
+}
 
-/// decomposeCodePoint will convert a code point into its component code points if applicable.
-/// Returns null if the code point cannot be decomposed.
-pub fn decomposeCodePoint(self: Self, cp: u21) Decomposed {{
-    if (self.map.get(cp)) |seq| {{
-        return .{{ .seq = seq }};
-    }} else {{
-        return .{{ .same = cp }};
-    }}
-}}
+/// decompose takes a code point and returns a sequence of code points that represent its full decomposition.
+/// Note that the sequence could be just a single code point, and in that case it can even be the same
+/// code point that was passed in. Given the recursive nature of this method, an std.heap.ArenaAllocator 
+/// is the recommeded type of allocator to pass in. The caller can then easily free all memory with just
+/// a call to the arena's deinit method.
+pub fn decompose(self: Self, allocator: *mem.Allocator, cp: u21) anyerror![]u21 {
+    const src = [1]Decomposed{ .{ .single = cp } };
+    const dcs = try self.decompose_full(allocator, &src);
+    var result = try allocator.alloc(u21, dcs.len);
+    for (dcs) |dc, index| {
+        result[index] = dc.same;
+    }
+    return result;
+}
 
-/// decomposeString converts a string into a string where complex code points are decomposed into
-/// their component code points. This method may return an error because of allocation. Caller must 
-/// free returned memory.
-pub fn decomposeString(self: *Self, str: []const u8) ![]const u8 {{
-    var buf = std.ArrayList(u8).init(self.allocator);
-    defer buf.deinit();
-    var cp_iter = (try unicode.Utf8View.init(str)).iterator();
-    while (cp_iter.nextCodepoint()) |cp| {{
-        switch (self.decomposeCodePoint(cp)) {{
-            .same => |dcp| {{
-                const s = try self.toUtf8Bytes(dcp);
-                defer self.allocator.free(s);
-                try buf.appendSlice(s);
-            }},
-            .seq => |seq|  {{
-                for (seq) |dcp| {{
-                    const s = try self.toUtf8Bytes(dcp);
-                    defer self.allocator.free(s);
-                    try buf.appendSlice(s);
-                }}
-            }},
-        }}
-    }}
-    return buf.toOwnedSlice();
-}}
+/// decompose_full recursively performs decomposition until full decomposition is obtained. Given the 
+/// recursive nature of this method, a std.heap.ArenaAllocator is the recommeded type of allocator to
+/// pass in. The caller can then easily free all memory with just a call to the arena's deinit method.
+pub fn decompose_full(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anyerror![]const Decomposed {
+    // Base case;
+    if (allDone(dcs)) return dcs;
 
-fn toUtf8Bytes(self: *Self, cp: u21) ![]const u8 {{
-    var buf = std.ArrayList(u8).init(self.allocator);
-    defer buf.deinit();
-    var buf2: [4]u8 = undefined;
-    var len = try unicode.utf8Encode(cp, &buf2);
-    try buf.appendSlice(buf2[0..len]);
-    return buf.toOwnedSlice();
-}}
+    var rdcs = std.ArrayList(Decomposed).init(allocator);
+    defer rdcs.deinit();
+    for (dcs) |dc| {
+        switch (dc) {
+            .same => try rdcs.append(dc),
+            .single => |cp| {
+                const m = [1]Decomposed{ self.mapping(cp) };
+                try rdcs.appendSlice(try self.decompose_full(allocator, &m));
+            },
+            .canon => |seq| {
+                for (seq) |cp| {
+                    const m = [1]Decomposed{ self.mapping(cp) };
+                    try rdcs.appendSlice(try self.decompose_full(allocator, &m));
+                }
+            },
+            .compat => |seq| {
+                for (seq) |cp| {
+                    const m = [1]Decomposed{ self.mapping(cp) };
+                    try rdcs.appendSlice(try self.decompose_full(allocator, &m));
+                }
+            },
+        }
+    }
+    return rdcs.toOwnedSlice();
+}
+
+/// normalize will decompose the code points in str, producing a slice of u8 with the new bytes.
+/// This method produces a normalization of type NFKD as per Unicode. Given the recursive nature of 
+/// this method, a std.heap.ArenaAllocator is the recommeded type of allocator to pass in. The 
+/// caller can then easily free all memory with just a call to the arena's deinit method.
+pub fn normalize(self: *Self, allocator: *mem.Allocator, str: []const u8) anyerror![]u8 {
+    var result = std.ArrayList(u8).init(allocator);
+    var iter = (try unicode.Utf8View.init(str)).iterator();
+    while (iter.nextCodepoint()) |cp| {
+        const cp_list = try self.decompose(allocator, cp);
+        var buf: [4]u8 = undefined;
+        for (cp_list) |dcp| {
+            const len = try unicode.utf8Encode(dcp, &buf);
+            try result.appendSlice(buf[0..len]);
+        }
+    }
+    return result.toOwnedSlice();
+}
+
+fn allDone(dcs: []const Decomposed) bool {
+    for (dcs) |dc| {
+        if (dc != .same) return false;
+    }
+    return true;
+}

@@ -2,15 +2,28 @@
 //! Unicode decomposition map.
 
 const std = @import("std");
+const mem = std.mem;
 const unicode = std.unicode;
-const DecomposeMap = @This();
+
+/// Decomposed is the result of a code point full decomposition. It can be one of:
+/// * `.same` : Default canonical decomposition to the code point itself.
+/// * `.single` : Singleton canonical decomposition to a different single code point.
+/// * `.canon` : Canonical decomposition, which always results in two code points.
+/// * `.compat` : Compatibility decomposition, which can results in at most 18 code points.
+pub const Decomposed = union(enum) {{
+    same: u21,
+    single: u21,
+    canon: [2]u21,
+    compat: []const u21,
+}};
 
 allocator: *std.mem.Allocator,
-map: std.AutoHashMap(u21, []const u21),
+map: std.AutoHashMap(u21, Decomposed),
 
-pub fn init(allocator: *std.mem.Allocator) !DecomposeMap {{
-    var instance = DecomposeMap{{
+const Self = @This();
+pub fn init(allocator: *std.mem.Allocator) !Self {{
+    var instance = Self{{
         .allocator = allocator,
-        .map = std.AutoHashMap(u21, []const u21).init(allocator),
+        .map = std.AutoHashMap(u21, Decomposed).init(allocator),
     }};
 

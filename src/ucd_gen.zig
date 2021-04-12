@@ -316,6 +316,7 @@ const UcdGenerator = struct {
         _ = try u_writer.print(map_header_tpl, .{"UpperMap"});
 
         // Iterate over lines.
+        // pf == Final_Punctuation
         var pf_records = ArrayList(Record).init(self.allocator);
         defer pf_records.deinit();
         var buf: [640]u8 = undefined;
@@ -334,13 +335,37 @@ const UcdGenerator = struct {
                     try pf_records.append(.{ .single = cp });
                 } else if (field_index == 5 and raw.len != 0) {
                     // Decomposition.
+                    var is_compat = false;
+                    var cp_list = ArrayList([]const u8).init(self.allocator);
+                    defer cp_list.deinit();
                     var cp_iter = mem.split(raw, " ");
-                    _ = try d_writer.print("    try instance.map.put(0x{s}, &[_]u21{{\n", .{code_point});
                     while (cp_iter.next()) |cp| {
-                        if (mem.startsWith(u8, cp, "<")) continue;
-                        _ = try d_writer.print("        0x{s},\n", .{cp});
+                        if (mem.startsWith(u8, cp, "<")) {
+                            is_compat = true;
+                            continue;
+                        }
+                        try cp_list.append(cp);
                     }
-                    _ = try d_writer.write("    });\n");
+                    if (!is_compat and cp_list.items.len == 1) {
+                        // Singleton
+                        _ = try d_writer.print("    try instance.map.put(0x{s}, .{{ .single = 0x{s} }});\n", .{ code_point, cp_list.items[0] });
+                    } else if (!is_compat) {
+                        // Canonical
+                        std.debug.assert(cp_list.items.len != 0);
+                        _ = try d_writer.print("    try instance.map.put(0x{s}, .{{ .canon = [2]u21{{\n", .{code_point});
+                        for (cp_list.items) |cp| {
+                            _ = try d_writer.print("        0x{s},\n", .{cp});
+                        }
+                        _ = try d_writer.write("    } });\n");
+                    } else {
+                        // Compatibility
+                        std.debug.assert(cp_list.items.len != 0);
+                        _ = try d_writer.print("    try instance.map.put(0x{s}, .{{ .compat = &[_]u21{{\n", .{code_point});
+                        for (cp_list.items) |cp| {
+                            _ = try d_writer.print("        0x{s},\n", .{cp});
+                        }
+                        _ = try d_writer.write("    } });\n");
+                    }
                 } else if (field_index == 12 and raw.len != 0) {
                     // Uppercase mapping.
                     _ = try u_writer.print("    try instance.map.put(0x{s}, 0x{s});\n", .{ code_point, raw });
@@ -357,7 +382,7 @@ const UcdGenerator = struct {
         }
 
         // Finish writing.
-        _ = try d_writer.print(decomp_trailer_tpl, .{});
+        _ = try d_writer.write(decomp_trailer_tpl);
         _ = try l_writer.print(map_trailer_tpl, .{ "Lower", "LowerMap" });
         _ = try t_writer.print(map_trailer_tpl, .{ "Title", "TitleMap" });
         _ = try u_writer.print(map_trailer_tpl, .{ "Upper", "UpperMap" });
