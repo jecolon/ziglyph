@@ -3,7 +3,9 @@
 
 const std = @import("std");
 const mem = std.mem;
+const sort = std.sort.sort;
 const unicode = std.unicode;
+const CccMap = @import("../DerivedCombiningClass/CccMap.zig");
 
 /// Decomposed is the result of a code point full decomposition. It can be one of:
 /// * `.same` : Default canonical decomposition to the code point itself.
@@ -18,12 +20,14 @@ pub const Decomposed = union(enum) {
 };
 
 allocator: *std.mem.Allocator,
+ccc_map: CccMap,
 map: std.AutoHashMap(u21, Decomposed),
 
 const Self = @This();
 pub fn init(allocator: *std.mem.Allocator) !Self {
     var instance = Self{
         .allocator = allocator,
+        .ccc_map = try CccMap.init(allocator),
         .map = std.AutoHashMap(u21, Decomposed).init(allocator),
     };
 
@@ -17976,6 +17980,7 @@ pub fn init(allocator: *std.mem.Allocator) !Self {
 }
 
 pub fn deinit(self: *Self) void {
+    self.ccc_map.deinit();
     self.map.deinit();
 }
 
@@ -18037,17 +18042,45 @@ pub fn decompose_full(self: Self, allocator: *mem.Allocator, dcs: []const Decomp
 /// this method, a std.heap.ArenaAllocator is the recommeded type of allocator to pass in. The 
 /// caller can then easily free all memory with just a call to the arena's deinit method.
 pub fn normalize(self: *Self, allocator: *mem.Allocator, str: []const u8) anyerror![]u8 {
+    // No deinit here, to be freed by caller.
     var result = std.ArrayList(u8).init(allocator);
+    // This we can deinit.
+    var code_points = std.ArrayList(u21).init(self.allocator);
+    defer code_points.deinit();
+    // Gather decomposed code points.
     var iter = (try unicode.Utf8View.init(str)).iterator();
     while (iter.nextCodepoint()) |cp| {
-        const cp_list = try self.decompose(allocator, cp);
-        var buf: [4]u8 = undefined;
-        for (cp_list) |dcp| {
-            const len = try unicode.utf8Encode(dcp, &buf);
-            try result.appendSlice(buf[0..len]);
+        try code_points.appendSlice(try self.decompose(allocator, cp));
+    }
+    // Apply canonical sort algorithm.
+    self.canonicalSort(code_points.items);
+    // Encode as UTF-8 code units.
+    var buf: [4]u8 = undefined;
+    for (code_points.items) |dcp| {
+        const len = try unicode.utf8Encode(dcp, &buf);
+        try result.appendSlice(buf[0..len]);
+    }
+    // NFKD result.
+    return result.toOwnedSlice();
+}
+
+fn cccLess(self: Self, lhs: u21, rhs: u21) bool {
+    return self.ccc_map.combiningClass(lhs) < self.ccc_map.combiningClass(rhs);
+}
+
+fn canonicalSort(self: Self, cp_list: []u21) void {
+    var i: usize = 0;
+    var start: usize = 0;
+    while (i < cp_list.len) {
+        if (self.ccc_map.combiningClass(cp_list[i]) == 0) {
+            i += 1;
+            start = i;
+            while (i < cp_list.len and self.ccc_map.combiningClass(cp_list[i]) != 0) : (i += 1) {}
+            sort(u21, cp_list[start..i], self, cccLess);
+        } else {
+            i += 1;
         }
     }
-    return result.toOwnedSlice();
 }
 
 fn allDone(dcs: []const Decomposed) bool {
@@ -18056,3 +18089,4 @@ fn allDone(dcs: []const Decomposed) bool {
     }
     return true;
 }
+

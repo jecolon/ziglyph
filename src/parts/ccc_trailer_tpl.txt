@@ -1,0 +1,13 @@
+
+    return instance;
+}
+
+const Self = @This();
+pub fn deinit(self: *Self) void {
+    self.map.deinit();
+}
+
+/// combiningClass maps the code point to its combining class value.
+pub fn combiningClass(self: Self, cp: u21) u8 {
+    return if (self.map.get(cp)) |cc| cc else 0;
+}

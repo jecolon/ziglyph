@@ -653,16 +653,14 @@ test "normalize" {
     expectEqualSlices(u8, want2, got2);
 
     const input3 = "\u{1E0A}\u{0323}";
-    //const want3 = "\u{0044}\u{0323}\u{0307}";
-    const want3 = "\u{0044}\u{0307}\u{0323}";
+    const want3 = "\u{0044}\u{0323}\u{0307}";
     const got3 = try z.normalize(arena_allocator, input3);
-    for (want) |c| {
-        std.debug.print("w: {x}\n", .{c});
-    }
-    for (got3) |c| {
-        std.debug.print("g: {x}\n", .{c});
-    }
     expectEqualSlices(u8, want3, got3);
+
+    const input4 = "\u{3200}";
+    const want4 = "\u{0028}\u{1100}\u{0029}";
+    const got4 = try z.normalize(arena_allocator, input4);
+    expectEqualSlices(u8, want4, got4);
 }
 
 test "isAsciiStr" {
