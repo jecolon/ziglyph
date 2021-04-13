@@ -6,6 +6,7 @@ const mem = std.mem;
 const sort = std.sort.sort;
 const unicode = std.unicode;
 const CccMap = @import("../DerivedCombiningClass/CccMap.zig");
+const HangulMap = @import("../HangulSyllableType/HangulMap.zig");
 
 /// Decomposed is the result of a code point full decomposition. It can be one of:
 /// * `.same` : Default canonical decomposition to the code point itself.
@@ -21,6 +22,7 @@ pub const Decomposed = union(enum) {{
 
 allocator: *std.mem.Allocator,
 ccc_map: CccMap,
+han_map: HangulMap,
 map: std.AutoHashMap(u21, Decomposed),
 
 const Self = @This();
@@ -28,6 +30,7 @@ pub fn init(allocator: *std.mem.Allocator) !Self {{
     var instance = Self{{
         .allocator = allocator,
         .ccc_map = try CccMap.init(allocator),
+        .han_map = try HangulMap.init(allocator),
         .map = std.AutoHashMap(u21, Decomposed).init(allocator),
     }};
 

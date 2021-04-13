@@ -666,7 +666,6 @@ test "normalize" {
         var input: []u8 = undefined;
         while (fields.next()) |field| : (field_index += 1) {
             if (field_index == 0) {
-                std.debug.print("cp {s}\n", .{field});
                 var i_buf = ArrayList(u8).init(arena_allocator);
                 var i_fields = mem.split(field, " ");
                 while (i_fields.next()) |s| {
@@ -677,7 +676,6 @@ test "normalize" {
                 }
                 input = i_buf.toOwnedSlice();
             } else if (field_index == 4) {
-                std.debug.print("nfkd {s}\n", .{field});
                 // NFKD, time to test.
                 var w_buf = ArrayList(u8).init(arena_allocator);
                 var w_fields = mem.split(field, " ");

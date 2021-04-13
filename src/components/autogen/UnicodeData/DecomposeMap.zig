@@ -6,6 +6,7 @@ const mem = std.mem;
 const sort = std.sort.sort;
 const unicode = std.unicode;
 const CccMap = @import("../DerivedCombiningClass/CccMap.zig");
+const HangulMap = @import("../HangulSyllableType/HangulMap.zig");
 
 /// Decomposed is the result of a code point full decomposition. It can be one of:
 /// * `.same` : Default canonical decomposition to the code point itself.
@@ -21,6 +22,7 @@ pub const Decomposed = union(enum) {
 
 allocator: *std.mem.Allocator,
 ccc_map: CccMap,
+han_map: HangulMap,
 map: std.AutoHashMap(u21, Decomposed),
 
 const Self = @This();
@@ -28,6 +30,7 @@ pub fn init(allocator: *std.mem.Allocator) !Self {
     var instance = Self{
         .allocator = allocator,
         .ccc_map = try CccMap.init(allocator),
+        .han_map = try HangulMap.init(allocator),
         .map = std.AutoHashMap(u21, Decomposed).init(allocator),
     };
 
@@ -17981,6 +17984,7 @@ pub fn init(allocator: *std.mem.Allocator) !Self {
 
 pub fn deinit(self: *Self) void {
     self.ccc_map.deinit();
+    self.han_map.deinit();
     self.map.deinit();
 }
 
@@ -17995,13 +17999,23 @@ pub fn mapping(self: Self, cp: u21) Decomposed {
 /// is the recommeded type of allocator to pass in. The caller can then easily free all memory with just
 /// a call to the arena's deinit method.
 pub fn decompose(self: Self, allocator: *mem.Allocator, cp: u21) anyerror![]u21 {
-    const src = [1]Decomposed{ .{ .single = cp } };
-    const dcs = try self.decompose_full(allocator, &src);
-    var result = try allocator.alloc(u21, dcs.len);
-    for (dcs) |dc, index| {
-        result[index] = dc.same;
+    if (self.isHangulPrecomposed(cp)) {
+        // Hangul precomposed syllable full decomposition.
+        const dcs = self.decomposeHangul(cp);
+        const len: usize = if (dcs[2] == 0) 2 else 3;
+        var result = try allocator.alloc(u21, len);
+        mem.copy(u21, result, dcs[0..len]);
+        return result;
+    } else {
+        // Other code point decomposition.
+        const src = [1]Decomposed{ .{ .single = cp } };
+        const dcs = try self.decompose_full(allocator, &src);
+        var result = try allocator.alloc(u21, dcs.len);
+        for (dcs) |dc, index| {
+            result[index] = dc.same;
+        }
+        return result;
     }
-    return result;
 }
 
 /// decompose_full recursively performs decomposition until full decomposition is obtained. Given the 
@@ -18057,7 +18071,6 @@ pub fn normalize(self: *Self, allocator: *mem.Allocator, str: []const u8) anyerr
     // Encode as UTF-8 code units.
     var buf: [4]u8 = undefined;
     for (code_points.items) |dcp| {
-        std.debug.print("{x}\n", .{dcp});
         const len = try unicode.utf8Encode(dcp, &buf);
         try result.appendSlice(buf[0..len]);
     }
@@ -18080,10 +18093,43 @@ fn canonicalSort(self: Self, cp_list: []u21) void {
     }
 }
 
+fn decomposeHangul(self: Self, cp: u21) [3]u21 {
+    const SBase: u21 = 0xAC00;
+    const LBase: u21 = 0x1100;
+    const VBase: u21 = 0x1161;
+    const TBase: u21 = 0x11A7;
+    const LCount: u21  = 19;
+    const VCount: u21  = 21;
+    const TCount: u21  = 28;
+    const NCount: u21  = 588; // VCount * TCount
+    const SCount: u21  = 11172; // LCount * NCount
+
+    const SIndex: u21 = cp - SBase;
+    const LIndex: u21 = SIndex / NCount;
+    const VIndex: u21 = (SIndex % NCount) / TCount;
+    const TIndex: u21 = SIndex % TCount;
+    const LPart: u21 = LBase + LIndex;
+    const VPart: u21 = VBase + VIndex;
+    var TPart: u21 = 0;
+    if (TIndex != 0) TPart = TBase + TIndex;
+
+    return [3]u21{LPart, VPart, TPart};
+}
+
+fn isHangulPrecomposed(self: Self, cp: u21) bool {
+    if (self.han_map.syllableType(cp)) |kind| {
+        return switch (kind) {
+            .LV, .LVT => true,
+            else => false,
+        };
+    } else {
+        return false;
+    }
+}
+
 fn allDone(dcs: []const Decomposed) bool {
     for (dcs) |dc| {
         if (dc != .same) return false;
     }
     return true;
 }
-

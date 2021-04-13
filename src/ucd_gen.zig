@@ -619,6 +619,80 @@ const UcdGenerator = struct {
         _ = try writer.write(trailer_tpl);
         try buf_writer.flush();
     }
+
+    // data/ucd/HangulSyllableType.txt
+    fn processHangul(self: *Self) !void {
+        // Setup input.
+        var file = try std.fs.cwd().openFile("data/ucd/HangulSyllableType.txt", .{});
+        defer file.close();
+        var buf_reader = io.bufferedReader(file.reader());
+        var input_stream = buf_reader.reader();
+        // Setup output.
+        const header_tpl = @embedFile("parts/hangul_header_tpl.txt");
+        const trailer_tpl = @embedFile("parts/hangul_trailer_tpl.txt");
+        var cwd = std.fs.cwd();
+        cwd.makeDir("components/autogen/HangulSyllableType") catch |err| switch (err) {
+            error.PathAlreadyExists => {},
+            else => return err,
+        };
+        var out_file = try cwd.createFile("components/autogen/HangulSyllableType/HangulMap.zig", .{});
+        defer out_file.close();
+        var buf_writer = io.bufferedWriter(out_file.writer());
+        const writer = buf_writer.writer();
+        _ = try writer.write(header_tpl);
+
+        // Iterate over lines.
+        var buf: [640]u8 = undefined;
+        while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+            // Skip comments or empty lines.
+            if (line.len == 0 or line[0] == '#') continue;
+            // Iterate over fields.
+            var fields = mem.split(line, ";");
+            var field_index: usize = 0;
+            var r_lo: ?[]const u8 = null;
+            var r_hi: ?[]const u8 = null;
+            var code_point: ?[]const u8 = null;
+            while (fields.next()) |raw| : (field_index += 1) {
+                var field = mem.trim(u8, raw, " ");
+                if (field_index == 0) {
+                    if (mem.indexOf(u8, field, "..")) |dots| {
+                        // Ranges.
+                        r_lo = field[0..dots];
+                        r_hi = field[dots + 2 ..];
+                    } else {
+                        code_point = field;
+                    }
+                } else if (field_index == 1) {
+                    // Syllable type.
+                    // Possible comment at end.
+                    if (mem.indexOf(u8, field, "#")) |octo| {
+                        field = mem.trimRight(u8, field[0..octo], " ");
+                    }
+                    if (code_point) |cp| {
+                        _ = try writer.print("    try instance.map.put(0x{s}, .{s});\n", .{ code_point, field });
+                    } else {
+                        _ = try writer.print("    index = 0x{s};\n", .{r_lo.?});
+                        _ = try writer.print("    while (index <= 0x{s}) : (index += 1) {{\n", .{r_hi.?});
+                        _ = try writer.print("        try instance.map.put(index, .{s});\n", .{field});
+                        _ = try writer.write("    }\n");
+                    }
+                    r_lo = null;
+                    r_hi = null;
+                    code_point = null;
+                    continue;
+                } else {
+                    r_lo = null;
+                    r_hi = null;
+                    code_point = null;
+                    continue;
+                }
+            }
+        }
+
+        // Finish writing.
+        _ = try writer.write(trailer_tpl);
+        try buf_writer.flush();
+    }
 };
 
 pub fn main() !void {
@@ -639,4 +713,5 @@ pub fn main() !void {
     try ugen.processUcd();
     try ugen.processSpecialCasing();
     try ugen.processCccMap();
+    try ugen.processHangul();
 }

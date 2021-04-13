@@ -1,0 +1,13 @@
+
+    return instance;
+}
+
+const Self = @This();
+pub fn deinit(self: *Self) void {
+    self.map.deinit();
+}
+
+/// syllableType maps the code point to its Hangul Syllable Type.
+pub fn syllableType(self: Self, cp: u21) ?Kind {
+    return self.map.get(cp);
+}
