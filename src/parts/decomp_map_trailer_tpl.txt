@@ -80,6 +80,7 @@ pub fn normalize(self: *Self, allocator: *mem.Allocator, str: []const u8) anyerr
     // Encode as UTF-8 code units.
     var buf: [4]u8 = undefined;
     for (code_points.items) |dcp| {
+        std.debug.print("{x}\n", .{dcp});
         const len = try unicode.utf8Encode(dcp, &buf);
         try result.appendSlice(buf[0..len]);
     }
@@ -93,16 +94,12 @@ fn cccLess(self: Self, lhs: u21, rhs: u21) bool {
 
 fn canonicalSort(self: Self, cp_list: []u21) void {
     var i: usize = 0;
-    var start: usize = 0;
-    while (i < cp_list.len) {
-        if (self.ccc_map.combiningClass(cp_list[i]) == 0) {
-            i += 1;
-            start = i;
-            while (i < cp_list.len and self.ccc_map.combiningClass(cp_list[i]) != 0) : (i += 1) {}
-            sort(u21, cp_list[start..i], self, cccLess);
-        } else {
-            i += 1;
-        }
+    while (true) {
+        if (i >= cp_list.len) break;
+        var start: usize = i;
+        while (i < cp_list.len and self.ccc_map.combiningClass(cp_list[i]) != 0) : (i += 1) {}
+        sort(u21, cp_list[start..i], self, cccLess);
+        i += 1;
     }
 }
 

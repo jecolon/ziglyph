@@ -1,7 +1,12 @@
 const std = @import("std");
+const ArrayList = std.ArrayList;
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
+const io = std.io;
+const fmt = std.fmt;
+const mem = std.mem;
+const unicode = std.unicode;
 
 const Control = @import("ziglyph.zig").Control;
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
@@ -642,25 +647,55 @@ test "normalize" {
     defer arena.deinit();
     var arena_allocator = &arena.allocator;
 
-    const input = "H\u{00E9}llo";
-    const want = "H\u{0065}\u{0301}llo";
-    const got = try z.normalize(arena_allocator, input);
-    expectEqualSlices(u8, want, got);
+    //const input = "H\u{03D3}llo";
+    //const want = "H\u{03A5}\u{0301}llo";
+    //const got = try z.normalize(arena_allocator, input);
+    //expectEqualSlices(u8, want, got);
 
-    const input2 = "H\u{03D3}llo";
-    const want2 = "H\u{03A5}\u{0301}llo";
-    const got2 = try z.normalize(arena_allocator, input2);
-    expectEqualSlices(u8, want2, got2);
-
-    const input3 = "\u{1E0A}\u{0323}";
-    const want3 = "\u{0044}\u{0323}\u{0307}";
-    const got3 = try z.normalize(arena_allocator, input3);
-    expectEqualSlices(u8, want3, got3);
-
-    const input4 = "\u{3200}";
-    const want4 = "\u{0028}\u{1100}\u{0029}";
-    const got4 = try z.normalize(arena_allocator, input4);
-    expectEqualSlices(u8, want4, got4);
+    var file = try std.fs.cwd().openFile("data/ucd/NormalizationTest.txt", .{});
+    defer file.close();
+    var buf_reader = io.bufferedReader(file.reader());
+    var input_stream = buf_reader.reader();
+    var buf: [640]u8 = undefined;
+    while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+        // Skip comments or empty lines.
+        if (line.len == 0 or line[0] == '#' or line[0] == '@') continue;
+        // Iterate over fields.
+        var fields = mem.split(line, ";");
+        var field_index: usize = 0;
+        var input: []u8 = undefined;
+        while (fields.next()) |field| : (field_index += 1) {
+            if (field_index == 0) {
+                std.debug.print("cp {s}\n", .{field});
+                var i_buf = ArrayList(u8).init(arena_allocator);
+                var i_fields = mem.split(field, " ");
+                while (i_fields.next()) |s| {
+                    const icp = try fmt.parseInt(u21, s, 16);
+                    var cp_buf: [4]u8 = undefined;
+                    const len = try unicode.utf8Encode(icp, &cp_buf);
+                    try i_buf.appendSlice(cp_buf[0..len]);
+                }
+                input = i_buf.toOwnedSlice();
+            } else if (field_index == 4) {
+                std.debug.print("nfkd {s}\n", .{field});
+                // NFKD, time to test.
+                var w_buf = ArrayList(u8).init(arena_allocator);
+                var w_fields = mem.split(field, " ");
+                while (w_fields.next()) |s| {
+                    const wcp = try fmt.parseInt(u21, s, 16);
+                    var cp_buf: [4]u8 = undefined;
+                    const len = try unicode.utf8Encode(wcp, &cp_buf);
+                    try w_buf.appendSlice(cp_buf[0..len]);
+                }
+                const want = w_buf.toOwnedSlice();
+                const got = try z.normalize(arena_allocator, input);
+                expectEqualSlices(u8, want, got);
+                continue;
+            } else {
+                continue;
+            }
+        }
+    }
 }
 
 test "isAsciiStr" {
