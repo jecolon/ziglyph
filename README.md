@@ -105,10 +105,11 @@ test "Component structs" {
 }
 ```
 
-## Code point decomposition
-In addition to the basic functions to detect and convert code point case, the `DecomposeMap` struct provides
-code point and `[]const u8` (string) decomposition methods. Work is in progress to extend this to full
-Unicode Normalization functionality.
+## Decomposition and Normalization
+In addition to the basic functions to detect and convert code point case, the `DecomposeMap` struct 
+provides code point decomposition and string normalization methods. This library currently only 
+performs full compatibility decomposition and normalization (NFKD). Future versions may add more
+normalization forms.
 
 ```zig
 const std = @import("std");
@@ -118,26 +119,38 @@ const expectEqualSlices = std.testing.expectEqualSlices;
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
 
 test "decomposeCodePoint" {
-    var decomp_map = try DecomposeMap.init(std.testing.allocator);
-    defer decomp_map.deinit();
+    var allocator = std.testing.allocator;
+    var z = try DecomposeMap.init(allocator);
+    defer z.deinit();
 
-    var result = decomp_map.decomposeCodePoint('\u{00E9}');
-    switch (result) {
-        .same => @panic("Expected .seq, got .same for \\u{00E9}"),
-        .seq => |seq| expectEqualSlices(u21, seq, &[_]u21{ '\u{0065}', '\u{0301}' }),
-    }
+    // Given the recursive nature of the decomposition / normalization process,
+    // an arena allocator is strongly recommended for easy memory management.
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    var arena_allocator = &arena.allocator;
+
+    var result = try z.decompose(arena_allocator, '\u{00E9}');
+    expectEqualSlices(u21, result, &[2]u21{ 0x0065, 0x0301 });
+
+    result = try z.decompose(arena_allocator, '\u{03D3}');
+    expectEqualSlices(u21, result, &[2]u21{ 0x03A5, 0x0301 });
 }
 
-test "decomposeString" {
-    var decomp_map = try DecomposeMap.init(std.testing.allocator);
-    defer decomp_map.deinit();
+test "normalize" {
+    var allocator = std.testing.allocator;
+    var z = try DecomposeMap.init(allocator);
+    defer z.deinit();
 
-    const input = "H\u{00E9}llo";
-    const want = "H\u{0065}\u{0301}llo";
-    // decomposeString allocates memory for the returned slice, so it can fail.
-    const got = try decomp_map.decomposeString(input);
-    // We must free the returned slice when done.
-    defer std.testing.allocator.free(got);
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    var arena_allocator = &arena.allocator;
+
+    // Note that this performs a full, recursive, compatibility normalization.
+    // Source -> Canonical (NFD) -> Compatibility (NFKD)
+    // 0x03D3 -> 0x03D2, 0x0301  -> 0x03A5, 0x0301
+    const input = "H\u{03D3}llo";
+    const want = "H\u{03A5}\u{0301}llo";
+    const got = try z.normalize(arena_allocator, input);
     expectEqualSlices(u8, want, got);
 }
 ```
