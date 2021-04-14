@@ -9,11 +9,13 @@ const CccMap = @import("../DerivedCombiningClass/CccMap.zig");
 const HangulMap = @import("../HangulSyllableType/HangulMap.zig");
 
 /// Decomposed is the result of a code point full decomposition. It can be one of:
-/// * `.same` : Default canonical decomposition to the code point itself.
-/// * `.single` : Singleton canonical decomposition to a different single code point.
-/// * `.canon` : Canonical decomposition, which always results in two code points.
-/// * `.compat` : Compatibility decomposition, which can results in at most 18 code points.
+/// * .src: Sorce code point.
+/// * .same : Default canonical decomposition to the code point itself.
+/// * .single : Singleton canonical decomposition to a different single code point.
+/// * .canon : Canonical decomposition, which always results in two code points.
+/// * .compat : Compatibility decomposition, which can results in at most 18 code points.
 pub const Decomposed = union(enum) {{
+    src: u21,
     same: u21,
     single: u21,
     canon: [2]u21,

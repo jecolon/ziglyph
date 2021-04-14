@@ -9,11 +9,13 @@ const CccMap = @import("../DerivedCombiningClass/CccMap.zig");
 const HangulMap = @import("../HangulSyllableType/HangulMap.zig");
 
 /// Decomposed is the result of a code point full decomposition. It can be one of:
-/// * `.same` : Default canonical decomposition to the code point itself.
-/// * `.single` : Singleton canonical decomposition to a different single code point.
-/// * `.canon` : Canonical decomposition, which always results in two code points.
-/// * `.compat` : Compatibility decomposition, which can results in at most 18 code points.
+/// * .src: Sorce code point.
+/// * .same : Default canonical decomposition to the code point itself.
+/// * .single : Singleton canonical decomposition to a different single code point.
+/// * .canon : Canonical decomposition, which always results in two code points.
+/// * .compat : Compatibility decomposition, which can results in at most 18 code points.
 pub const Decomposed = union(enum) {
+    src: u21,
     same: u21,
     single: u21,
     canon: [2]u21,
@@ -17993,12 +17995,12 @@ pub fn mapping(self: Self, cp: u21) Decomposed {
     return if (self.map.get(cp)) |dc| dc else .{ .same = cp };
 }
 
-/// decompose takes a code point and returns a sequence of code points that represent its full decomposition.
-/// Note that the sequence could be just a single code point, and in that case it can even be the same
-/// code point that was passed in. Given the recursive nature of this method, an std.heap.ArenaAllocator 
-/// is the recommeded type of allocator to pass in. The caller can then easily free all memory with just
+/// codePointCD takes a code point and returns a sequence of code points that represent its compatibility 
+/// decomposition (CD). Note that the sequence could be just a single code point, and in that case it 
+/// can even be the same code point that was passed in. Given the recursive nature of this method, 
+/// an std.heap.ArenaAllocator is recommeded. The caller can then easily free all memory with just
 /// a call to the arena's deinit method.
-pub fn decompose(self: Self, allocator: *mem.Allocator, cp: u21) anyerror![]u21 {
+pub fn codePointCD(self: Self, allocator: *mem.Allocator, cp: u21) anyerror![]u21 {
     if (self.isHangulPrecomposed(cp)) {
         // Hangul precomposed syllable full decomposition.
         const dcs = self.decomposeHangul(cp);
@@ -18008,8 +18010,8 @@ pub fn decompose(self: Self, allocator: *mem.Allocator, cp: u21) anyerror![]u21 
         return result;
     } else {
         // Other code point decomposition.
-        const src = [1]Decomposed{ .{ .single = cp } };
-        const dcs = try self.decompose_full(allocator, &src);
+        const src = [1]Decomposed{ .{ .src = cp } };
+        const dcs = try self.decomposeCD(allocator, &src);
         var result = try allocator.alloc(u21, dcs.len);
         for (dcs) |dc, index| {
             result[index] = dc.same;
@@ -18018,10 +18020,36 @@ pub fn decompose(self: Self, allocator: *mem.Allocator, cp: u21) anyerror![]u21 
     }
 }
 
-/// decompose_full recursively performs decomposition until full decomposition is obtained. Given the 
-/// recursive nature of this method, a std.heap.ArenaAllocator is the recommeded type of allocator to
-/// pass in. The caller can then easily free all memory with just a call to the arena's deinit method.
-pub fn decompose_full(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anyerror![]const Decomposed {
+/// codePointKD takes a code point and returns a sequence of code points that represent its compatibility 
+/// decomposition (KD). Note that the sequence could be just a single code point, and in that case it 
+/// can even be the same code point that was passed in. Given the recursive nature of this method, 
+/// an std.heap.ArenaAllocator is recommeded. The caller can then easily free all memory with just
+/// a call to the arena's deinit method.
+pub fn codePointKD(self: Self, allocator: *mem.Allocator, cp: u21) anyerror![]u21 {
+    if (self.isHangulPrecomposed(cp)) {
+        // Hangul precomposed syllable full decomposition.
+        const dcs = self.decomposeHangul(cp);
+        const len: usize = if (dcs[2] == 0) 2 else 3;
+        var result = try allocator.alloc(u21, len);
+        mem.copy(u21, result, dcs[0..len]);
+        return result;
+    } else {
+        // Other code point decomposition.
+        const src = [1]Decomposed{ .{ .src = cp } };
+        const dcs = try self.decomposeKD(allocator, &src);
+        var result = try allocator.alloc(u21, dcs.len);
+        for (dcs) |dc, index| {
+            result[index] = dc.same;
+        }
+        return result;
+    }
+}
+
+/// decomposeCD recursively performs decomposition until full canonical decomposition (CD) is obtained. 
+/// Given the recursive nature of this method, a std.heap.ArenaAllocator is the recommeded type of 
+/// allocator to pass in. The caller can then easily free all memory with just a call to the arena's 
+/// deinit method.
+pub fn decomposeCD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anyerror![]const Decomposed {
     // Base case;
     if (allDone(dcs)) return dcs;
 
@@ -18029,21 +18057,77 @@ pub fn decompose_full(self: Self, allocator: *mem.Allocator, dcs: []const Decomp
     defer rdcs.deinit();
     for (dcs) |dc| {
         switch (dc) {
+            .src => |cp| {
+                const next_map = self.mapping(cp);
+                if (next_map == .same) {
+                    try rdcs.append(next_map);
+                    return rdcs.toOwnedSlice();
+                } else if (next_map == .compat) {
+                    try rdcs.append(.{ .same = cp });
+                    return rdcs.toOwnedSlice();
+                } else {
+                    const m = [1]Decomposed{ self.mapping(cp) };
+                    try rdcs.appendSlice(try self.decomposeCD(allocator, &m));
+                }
+            },
+            .same => try rdcs.append(dc),
+            .single => |cp| {
+                const next_map = self.mapping(cp);
+                if (next_map == .same or next_map == .compat) {
+                    try rdcs.append(.{ .same = cp });
+                } else {
+                    const m = [1]Decomposed{ self.mapping(cp) };
+                    try rdcs.appendSlice(try self.decomposeCD(allocator, &m));
+                }
+            },
+            .canon => |seq| {
+                for (seq) |cp| {
+                    const next_map = self.mapping(cp);
+                    if (next_map == .same or next_map == .compat) {
+                        try rdcs.append(.{ .same = cp });
+                    } else {
+                        const m = [1]Decomposed{ next_map };
+                        try rdcs.appendSlice(try self.decomposeCD(allocator, &m));
+                    }
+                }
+            },
+            .compat => {},
+        }
+    }
+    return rdcs.toOwnedSlice();
+}
+
+/// decomposeKD recursively performs decomposition until full compatibility decomposition (KD) is obtained. 
+/// Given the recursive nature of this method, a std.heap.ArenaAllocator is the recommeded type of 
+/// allocator to pass in. The caller can then easily free all memory with just a call to the arena's 
+/// deinit method.
+pub fn decomposeKD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anyerror![]const Decomposed {
+    // Base case;
+    if (allDone(dcs)) return dcs;
+
+    var rdcs = std.ArrayList(Decomposed).init(allocator);
+    defer rdcs.deinit();
+    for (dcs) |dc| {
+        switch (dc) {
+            .src => |cp| {
+                const m = [1]Decomposed{ self.mapping(cp) };
+                try rdcs.appendSlice(try self.decomposeKD(allocator, &m));
+            },
             .same => try rdcs.append(dc),
             .single => |cp| {
                 const m = [1]Decomposed{ self.mapping(cp) };
-                try rdcs.appendSlice(try self.decompose_full(allocator, &m));
+                try rdcs.appendSlice(try self.decomposeKD(allocator, &m));
             },
             .canon => |seq| {
                 for (seq) |cp| {
                     const m = [1]Decomposed{ self.mapping(cp) };
-                    try rdcs.appendSlice(try self.decompose_full(allocator, &m));
+                    try rdcs.appendSlice(try self.decomposeKD(allocator, &m));
                 }
             },
             .compat => |seq| {
                 for (seq) |cp| {
                     const m = [1]Decomposed{ self.mapping(cp) };
-                    try rdcs.appendSlice(try self.decompose_full(allocator, &m));
+                    try rdcs.appendSlice(try self.decomposeKD(allocator, &m));
                 }
             },
         }
@@ -18051,11 +18135,11 @@ pub fn decompose_full(self: Self, allocator: *mem.Allocator, dcs: []const Decomp
     return rdcs.toOwnedSlice();
 }
 
-/// normalize will decompose the code points in str, producing a slice of u8 with the new bytes.
-/// This method produces a normalization of type NFKD as per Unicode. Given the recursive nature of 
+/// toNFD will decompose the code points in str, producing a slice of u8 with the new bytes.
+/// This method produces a normalization of type NFD as per Unicode. Given the recursive nature of 
 /// this method, a std.heap.ArenaAllocator is the recommeded type of allocator to pass in. The 
 /// caller can then easily free all memory with just a call to the arena's deinit method.
-pub fn normalize(self: *Self, allocator: *mem.Allocator, str: []const u8) anyerror![]u8 {
+pub fn toNFD(self: *Self, allocator: *mem.Allocator, str: []const u8) anyerror![]u8 {
     // No deinit here, to be freed by caller.
     var result = std.ArrayList(u8).init(allocator);
     // This we can deinit.
@@ -18064,7 +18148,34 @@ pub fn normalize(self: *Self, allocator: *mem.Allocator, str: []const u8) anyerr
     // Gather decomposed code points.
     var iter = (try unicode.Utf8View.init(str)).iterator();
     while (iter.nextCodepoint()) |cp| {
-        try code_points.appendSlice(try self.decompose(allocator, cp));
+        try code_points.appendSlice(try self.codePointCD(allocator, cp));
+    }
+    // Apply canonical sort algorithm.
+    self.canonicalSort(code_points.items);
+    // Encode as UTF-8 code units.
+    var buf: [4]u8 = undefined;
+    for (code_points.items) |dcp| {
+        const len = try unicode.utf8Encode(dcp, &buf);
+        try result.appendSlice(buf[0..len]);
+    }
+    // NFKD result.
+    return result.toOwnedSlice();
+}
+
+/// toNFKD will decompose the code points in str, producing a slice of u8 with the new bytes.
+/// This method produces a normalization of type NFKD as per Unicode. Given the recursive nature of 
+/// this method, a std.heap.ArenaAllocator is the recommeded type of allocator to pass in. The 
+/// caller can then easily free all memory with just a call to the arena's deinit method.
+pub fn toNFKD(self: *Self, allocator: *mem.Allocator, str: []const u8) anyerror![]u8 {
+    // No deinit here, to be freed by caller.
+    var result = std.ArrayList(u8).init(allocator);
+    // This we can deinit.
+    var code_points = std.ArrayList(u21).init(self.allocator);
+    defer code_points.deinit();
+    // Gather decomposed code points.
+    var iter = (try unicode.Utf8View.init(str)).iterator();
+    while (iter.nextCodepoint()) |cp| {
+        try code_points.appendSlice(try self.codePointKD(allocator, cp));
     }
     // Apply canonical sort algorithm.
     self.canonicalSort(code_points.items);
