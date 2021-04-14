@@ -300,6 +300,8 @@ test "isLower" {
     expect(!try z.isLower('A'));
     expect(!try z.isLower('É'));
     expect(!try z.isLower('İ'));
+    // Numbers are lower, upper, and title all at once.
+    expect(try z.isLower('1'));
 }
 
 test "toCaseFold" {
@@ -346,6 +348,7 @@ test "toLower" {
     expectEqual(try z.toLower('Å'), 'å');
     expectEqual(try z.toLower('å'), 'å');
     expectEqual(try z.toLower('\u{212A}'), 'k');
+    expectEqual(try z.toLower('1'), '1');
 }
 
 test "isUpper" {
@@ -358,6 +361,8 @@ test "isUpper" {
     expect(try z.isUpper('A'));
     expect(try z.isUpper('É'));
     expect(try z.isUpper('İ'));
+    // Numbers are lower, upper, and title all at once.
+    expect(try z.isUpper('1'));
 }
 
 test "toUpper" {
@@ -371,6 +376,7 @@ test "toUpper" {
     expectEqual(try z.toUpper(0x80), 0x80);
     expectEqual(try z.toUpper('Å'), 'Å');
     expectEqual(try z.toUpper('å'), 'Å');
+    expectEqual(try z.toUpper('1'), '1');
 }
 
 test "isTitle" {
@@ -383,6 +389,8 @@ test "isTitle" {
     expect(try z.isTitle('\u{1FBC}'));
     expect(try z.isTitle('\u{1FCC}'));
     expect(try z.isTitle('ǈ'));
+    // Numbers are lower, upper, and title all at once.
+    expect(try z.isTitle('1'));
 }
 
 test "toTitle" {
@@ -393,6 +401,7 @@ test "toTitle" {
     expectEqual(try z.toTitle('A'), 'A');
     expectEqual(try z.toTitle('i'), 'I');
     expectEqual(try z.toTitle('é'), 'É');
+    expectEqual(try z.toTitle('1'), '1');
 }
 
 test "isControl" {

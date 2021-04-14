@@ -84,7 +84,7 @@ pub fn isAscii(self: Self, cp: u21) bool {
 pub fn isLower(self: *Self, cp: u21) !bool {
     // Lazy init.
     if (self.lower == null) self.lower = try Lower.init(self.allocator);
-    return (try self.isCased(cp)) and self.lower.?.isLowercaseLetter(cp);
+    return self.lower.?.isLowercaseLetter(cp) or !(try self.isCased(cp));
 }
 
 /// isAsciiLower detects ASCII only lowercase letters.
@@ -96,14 +96,14 @@ pub fn isAsciiLower(self: Self, cp: u21) bool {
 pub fn isTitle(self: *Self, cp: u21) !bool {
     // Lazy init.
     if (self.title == null) self.title = try Title.init(self.allocator);
-    return (try self.isCased(cp)) and self.title.?.isTitlecaseLetter(cp);
+    return self.title.?.isTitlecaseLetter(cp) or !(try self.isCased(cp));
 }
 
 /// isUpper detects code points in uppercase.
 pub fn isUpper(self: *Self, cp: u21) !bool {
     // Lazy init.
     if (self.upper == null) self.upper = try Upper.init(self.allocator);
-    return (try self.isCased(cp)) and self.upper.?.isUppercaseLetter(cp);
+    return self.upper.?.isUppercaseLetter(cp) or !(try self.isCased(cp));
 }
 
 /// isAsciiUpper detects ASCII only uppercase letters.
@@ -114,6 +114,8 @@ pub fn isAsciiUpper(self: Self, cp: u21) bool {
 /// toLower returns the lowercase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
 pub fn toLower(self: *Self, cp: u21) !u21 {
+    // Only cased letters.
+    if (!try self.isCased(cp)) return cp;
     // Lazy init.
     if (self.lower_map == null) self.lower_map = try LowerMap.init(self.allocator);
     return self.lower_map.?.toLower(cp);
@@ -127,6 +129,8 @@ pub fn toAsciiLower(self: Self, cp: u21) u21 {
 /// toTitle returns the titlecase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
 pub fn toTitle(self: *Self, cp: u21) !u21 {
+    // Only cased letters.
+    if (!try self.isCased(cp)) return cp;
     // Lazy init.
     if (self.title_map == null) self.title_map = try TitleMap.init(self.allocator);
     return self.title_map.?.toTitle(cp);
@@ -135,6 +139,8 @@ pub fn toTitle(self: *Self, cp: u21) !u21 {
 /// toUpper returns the uppercase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
 pub fn toUpper(self: *Self, cp: u21) !u21 {
+    // Only cased letters.
+    if (!try self.isCased(cp)) return cp;
     // Lazy init.
     if (self.upper_map == null) self.upper_map = try UpperMap.init(self.allocator);
     return self.upper_map.?.toUpper(cp);
