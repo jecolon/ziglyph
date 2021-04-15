@@ -22,6 +22,11 @@ pub const Decomposed = union(enum) {{
     compat: []const u21,
 }};
 
+pub const Form = enum {{
+    D, // Canonical Decomposition
+    KD, // Compatibility Decomposition
+}};
+
 allocator: *std.mem.Allocator,
 ccc_map: CccMap,
 han_map: HangulMap,

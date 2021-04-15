@@ -11,6 +11,7 @@ const unicode = std.unicode;
 const Control = @import("ziglyph.zig").Control;
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
 const Decomposed = DecomposeMap.Decomposed;
+const Form = DecomposeMap.Form;
 const Letter = @import("ziglyph.zig").Letter;
 const Number = @import("ziglyph.zig").Number;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
@@ -599,7 +600,7 @@ test "isAlphaNum" {
     expect(!try z.isAlphaNum('='));
 }
 
-test "codePointCD" {
+test "codePointTo D" {
     var allocator = std.testing.allocator;
     var z = try DecomposeMap.init(allocator);
     defer z.deinit();
@@ -608,14 +609,14 @@ test "codePointCD" {
     defer arena.deinit();
     var arena_allocator = &arena.allocator;
 
-    var result = try z.codePointCD(arena_allocator, '\u{00E9}');
+    var result = try z.codePointTo(arena_allocator, Form.D, '\u{00E9}');
     expectEqualSlices(u21, result, &[2]u21{ 0x0065, 0x0301 });
 
-    result = try z.codePointCD(arena_allocator, '\u{03D3}');
+    result = try z.codePointTo(arena_allocator, Form.D, '\u{03D3}');
     expectEqualSlices(u21, result, &[2]u21{ 0x03D2, 0x0301 });
 }
 
-test "codePointKD" {
+test "codePointTo KD" {
     var allocator = std.testing.allocator;
     var z = try DecomposeMap.init(allocator);
     defer z.deinit();
@@ -624,83 +625,14 @@ test "codePointKD" {
     defer arena.deinit();
     var arena_allocator = &arena.allocator;
 
-    var result = try z.codePointKD(arena_allocator, '\u{00E9}');
+    var result = try z.codePointTo(arena_allocator, Form.KD, '\u{00E9}');
     expectEqualSlices(u21, result, &[2]u21{ 0x0065, 0x0301 });
 
-    result = try z.codePointKD(arena_allocator, '\u{03D3}');
+    result = try z.codePointTo(arena_allocator, Form.KD, '\u{03D3}');
     expectEqualSlices(u21, result, &[2]u21{ 0x03A5, 0x0301 });
 }
 
-test "decomposeCD" {
-    var allocator = std.testing.allocator;
-    var z = try DecomposeMap.init(allocator);
-    defer z.deinit();
-
-    var arena = std.heap.ArenaAllocator.init(allocator);
-    defer arena.deinit();
-    var arena_allocator = &arena.allocator;
-
-    var src = [1]Decomposed{.{ .src = '\u{00E9}' }};
-    var result = try z.decomposeCD(arena_allocator, &src);
-    expectEqual(result.len, 2);
-    expect(result[0] == .same);
-    expectEqual(result[0].same, 0x0065);
-    expect(result[1] == .same);
-    expectEqual(result[1].same, 0x0301);
-
-    src = [1]Decomposed{.{ .src = 'A' }};
-    result = try z.decomposeCD(arena_allocator, &src);
-    expectEqual(result.len, 1);
-    expect(result[0] == .same);
-    expectEqual(result[0].same, 'A');
-
-    // CD: ox03D3 -> 0x03D2, 0x0301
-    src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    result = try z.decomposeCD(arena_allocator, &src);
-    expectEqual(result.len, 2);
-    expectEqual(result[0].same, 0x03D2);
-    expectEqual(result[1].same, 0x0301);
-
-    src = [1]Decomposed{.{ .src = '\u{212A}' }};
-    result = try z.decomposeCD(arena_allocator, &src);
-    expectEqual(result.len, 1);
-    expectEqual(result[0].same, 0x004B);
-}
-
-test "decomposeKD" {
-    var allocator = std.testing.allocator;
-    var z = try DecomposeMap.init(allocator);
-    defer z.deinit();
-
-    var arena = std.heap.ArenaAllocator.init(allocator);
-    defer arena.deinit();
-    var arena_allocator = &arena.allocator;
-
-    var src = [1]Decomposed{.{ .src = '\u{00E9}' }};
-    var result = try z.decomposeKD(arena_allocator, &src);
-    expectEqual(result.len, 2);
-    expect(result[0] == .same);
-    expectEqual(result[0].same, 0x0065);
-    expect(result[1] == .same);
-    expectEqual(result[1].same, 0x0301);
-
-    src = [1]Decomposed{.{ .src = 'A' }};
-    result = try z.decomposeKD(arena_allocator, &src);
-    expectEqual(result.len, 1);
-    expect(result[0] == .same);
-    expectEqual(result[0].same, 'A');
-
-    // KD: ox03D3 -> 0x03D2, 0x0301 -> 0x03A5, 0x0301
-    src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    result = try z.decomposeKD(arena_allocator, &src);
-    expectEqual(result.len, 2);
-    expect(result[0] == .same);
-    expectEqual(result[0].same, 0x03A5);
-    expect(result[1] == .same);
-    expectEqual(result[1].same, 0x0301);
-}
-
-test "normalize" {
+test "normalizeTo" {
     var allocator = std.testing.allocator;
     var z = try DecomposeMap.init(allocator);
     defer z.deinit();
@@ -743,7 +675,7 @@ test "normalize" {
                     try w_buf.appendSlice(cp_buf[0..len]);
                 }
                 const want = w_buf.toOwnedSlice();
-                const got = try z.toNFD(arena_allocator, input);
+                const got = try z.normalizeTo(arena_allocator, Form.D, input);
                 expectEqualSlices(u8, want, got);
                 continue;
             } else if (field_index == 4) {
@@ -757,7 +689,7 @@ test "normalize" {
                     try w_buf.appendSlice(cp_buf[0..len]);
                 }
                 const want = w_buf.toOwnedSlice();
-                const got = try z.toNFKD(arena_allocator, input);
+                const got = try z.normalizeTo(arena_allocator, Form.KD, input);
                 expectEqualSlices(u8, want, got);
                 continue;
             } else {

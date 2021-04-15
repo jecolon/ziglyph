@@ -119,9 +119,11 @@ const expectEqualSlices = std.testing.expectEqualSlices;
 
 // Import struct.
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
-const Decomposed = DecomposedMap.Decomposed;
+const Decomposed = DecomposeMap.Decomposed;
+// Normalization Forms: D == Canonical, KD == Compatibility
+const Form = DecomposeMap.Form;
 
-test "decomposeCD" {
+test "decomposeTo D" {
     var allocator = std.testing.allocator;
     var z = try DecomposeMap.init(allocator);
     defer z.deinit();
@@ -132,13 +134,13 @@ test "decomposeCD" {
 
     // CD: ox03D3 -> 0x03D2, 0x0301
     var src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    var result = try z.decomposeCD(arena_allocator, &src);
+    var result = try z.decomposeTo(arena_allocator, Form.D, &src);
     expectEqual(result.len, 2);
     expectEqual(result[0].same, 0x03D2);
     expectEqual(result[1].same, 0x0301);
 }
 
-test "decomposeKD" {
+test "decomposeTo KD" {
     var allocator = std.testing.allocator;
     var z = try DecomposeMap.init(allocator);
     defer z.deinit();
@@ -149,7 +151,7 @@ test "decomposeKD" {
 
     // KD: ox03D3 -> 0x03D2, 0x0301 -> 0x03A5, 0x0301
     var src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    var result = try z.decomposeKD(arena_allocator, &src);
+    var result = try z.decomposeTo(arena_allocator, Form.KD, &src);
     expectEqual(result.len, 2);
     expect(result[0] == .same);
     expectEqual(result[0].same, 0x03A5);
@@ -157,7 +159,7 @@ test "decomposeKD" {
     expectEqual(result[1].same, 0x0301);
 }
 
-test "normalize" {
+test "normalizeTo" {
     var allocator = std.testing.allocator;
     var z = try DecomposeMap.init(allocator);
     defer z.deinit();
@@ -169,13 +171,13 @@ test "normalize" {
     // Canonical (NFD)
     var input = "Complex char: \u{03D3}";
     var want = "Complex char: \u{03D2}\u{0301}";
-    var got = try z.toNFD(arena_allocator, input);
+    var got = try z.normalizeTo(arena_allocator, Form.D, input);
     expectEqualSlices(u8, want, got);
 
     // Compatibility (NFKD)
     input = "Complex char: \u{03D3}";
     want = "Complex char: \u{03A5}\u{0301}";
-    got = try z.toNFKD(arena_allocator, input);
+    got = try z.normalizeTo(arena_allocator, Form.KD, input);
     expectEqualSlices(u8, want, got);
 }
 ```
