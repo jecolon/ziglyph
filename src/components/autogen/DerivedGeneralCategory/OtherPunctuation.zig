@@ -3,8 +3,8 @@
 //    0. Code point type
 //    1. Struct name
 //    2. Array length
-//    3. Highest code point
-//    4. Lowest code point
+//    3. Lowest code point
+//    4. Highest code point
 //! Unicode Other_Punctuation code points.
 
 const std = @import("std");
@@ -550,7 +550,7 @@ pub fn init(allocator: *mem.Allocator) !OtherPunctuation {
         instance.array[index] = true;
     }
 
-    // Placeholder: 0. Struct name
+    // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 

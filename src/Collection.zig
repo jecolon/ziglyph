@@ -17,7 +17,11 @@ records: []Record,
 pub fn init(allocator: *mem.Allocator, kind: []const u8, lo: u21, hi: u21, records: []Record) !Collection {
     return Collection{
         .allocator = allocator,
-        .kind = kind,
+        .kind = blk: {
+            var b = try allocator.alloc(u8, kind.len);
+            mem.copy(u8, b, kind);
+            break :blk b;
+        },
         .lo = lo,
         .hi = hi,
         .records = records,
@@ -26,6 +30,7 @@ pub fn init(allocator: *mem.Allocator, kind: []const u8, lo: u21, hi: u21, recor
 
 pub fn deinit(self: *Collection) void {
     self.allocator.free(self.kind);
+    self.allocator.free(self.records);
 }
 
 pub fn writeFile(self: *Collection, dir: []const u8) !void {

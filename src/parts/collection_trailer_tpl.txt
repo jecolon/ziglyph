@@ -1,5 +1,5 @@
 
-    // Placeholder: 0. Struct name
+    // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }}
 

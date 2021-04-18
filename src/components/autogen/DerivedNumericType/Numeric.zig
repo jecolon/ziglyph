@@ -3,8 +3,8 @@
 //    0. Code point type
 //    1. Struct name
 //    2. Array length
-//    3. Highest code point
-//    4. Lowest code point
+//    3. Lowest code point
+//    4. Highest code point
 //! Unicode Numeric code points.
 
 const std = @import("std");
@@ -415,7 +415,7 @@ pub fn init(allocator: *mem.Allocator) !Numeric {
     instance.array[156081] = true;
     instance.array[194516] = true;
 
-    // Placeholder: 0. Struct name
+    // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 

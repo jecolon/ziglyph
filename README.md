@@ -120,9 +120,8 @@ const expectEqualSlices = std.testing.expectEqualSlices;
 // Import struct.
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
 const Decomposed = DecomposeMap.Decomposed;
-// Normalization Forms: D == Canonical, KD == Compatibility
-const Form = DecomposeMap.Form;
 
+// Normalization Forms: D == Canonical, KD == Compatibility
 test "decomposeTo D" {
     var allocator = std.testing.allocator;
     var z = try DecomposeMap.init(allocator);
@@ -134,7 +133,7 @@ test "decomposeTo D" {
 
     // CD: ox03D3 -> 0x03D2, 0x0301
     var src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    var result = try z.decomposeTo(arena_allocator, Form.D, &src);
+    var result = try z.decomposeTo(arena_allocator, .D, &src);
     expectEqual(result.len, 2);
     expectEqual(result[0].same, 0x03D2);
     expectEqual(result[1].same, 0x0301);
@@ -151,7 +150,7 @@ test "decomposeTo KD" {
 
     // KD: ox03D3 -> 0x03D2, 0x0301 -> 0x03A5, 0x0301
     var src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    var result = try z.decomposeTo(arena_allocator, Form.KD, &src);
+    var result = try z.decomposeTo(arena_allocator, .KD, &src);
     expectEqual(result.len, 2);
     expect(result[0] == .same);
     expectEqual(result[0].same, 0x03A5);
@@ -171,13 +170,13 @@ test "normalizeTo" {
     // Canonical (NFD)
     var input = "Complex char: \u{03D3}";
     var want = "Complex char: \u{03D2}\u{0301}";
-    var got = try z.normalizeTo(arena_allocator, Form.D, input);
+    var got = try z.normalizeTo(arena_allocator, .D, input);
     expectEqualSlices(u8, want, got);
 
     // Compatibility (NFKD)
     input = "Complex char: \u{03D3}";
     want = "Complex char: \u{03A5}\u{0301}";
-    got = try z.normalizeTo(arena_allocator, Form.KD, input);
+    got = try z.normalizeTo(arena_allocator, .KD, input);
     expectEqualSlices(u8, want, got);
 }
 ```

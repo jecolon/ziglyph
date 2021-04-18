@@ -3,8 +3,8 @@
 //    0. Code point type
 //    1. Struct name
 //    2. Array length
-//    3. Highest code point
-//    4. Lowest code point
+//    3. Lowest code point
+//    4. Highest code point
 //! Unicode Titlecase_Letter code points.
 
 const std = @import("std");
@@ -46,7 +46,7 @@ pub fn init(allocator: *mem.Allocator) !TitlecaseLetter {
     instance.array[7687] = true;
     instance.array[7735] = true;
 
-    // Placeholder: 0. Struct name
+    // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 

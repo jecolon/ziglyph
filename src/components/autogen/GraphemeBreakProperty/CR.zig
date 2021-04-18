@@ -3,8 +3,8 @@
 //    0. Code point type
 //    1. Struct name
 //    2. Array length
-//    3. Highest code point
-//    4. Lowest code point
+//    3. Lowest code point
+//    4. Highest code point
 //! Unicode CR code points.
 
 const std = @import("std");
@@ -28,7 +28,7 @@ pub fn init(allocator: *mem.Allocator) !CR {
     var index: u21 = 0;
     instance.array[0] = true;
 
-    // Placeholder: 0. Struct name
+    // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 

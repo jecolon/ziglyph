@@ -11,7 +11,6 @@ const unicode = std.unicode;
 const Control = @import("ziglyph.zig").Control;
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
 const Decomposed = DecomposeMap.Decomposed;
-const Form = DecomposeMap.Form;
 const Letter = @import("ziglyph.zig").Letter;
 const Number = @import("ziglyph.zig").Number;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
@@ -609,10 +608,10 @@ test "codePointTo D" {
     defer arena.deinit();
     var arena_allocator = &arena.allocator;
 
-    var result = try z.codePointTo(arena_allocator, Form.D, '\u{00E9}');
+    var result = try z.codePointTo(arena_allocator, .D, '\u{00E9}');
     expectEqualSlices(u21, result, &[2]u21{ 0x0065, 0x0301 });
 
-    result = try z.codePointTo(arena_allocator, Form.D, '\u{03D3}');
+    result = try z.codePointTo(arena_allocator, .D, '\u{03D3}');
     expectEqualSlices(u21, result, &[2]u21{ 0x03D2, 0x0301 });
 }
 
@@ -625,10 +624,10 @@ test "codePointTo KD" {
     defer arena.deinit();
     var arena_allocator = &arena.allocator;
 
-    var result = try z.codePointTo(arena_allocator, Form.KD, '\u{00E9}');
+    var result = try z.codePointTo(arena_allocator, .KD, '\u{00E9}');
     expectEqualSlices(u21, result, &[2]u21{ 0x0065, 0x0301 });
 
-    result = try z.codePointTo(arena_allocator, Form.KD, '\u{03D3}');
+    result = try z.codePointTo(arena_allocator, .KD, '\u{03D3}');
     expectEqualSlices(u21, result, &[2]u21{ 0x03A5, 0x0301 });
 }
 
@@ -675,7 +674,7 @@ test "normalizeTo" {
                     try w_buf.appendSlice(cp_buf[0..len]);
                 }
                 const want = w_buf.toOwnedSlice();
-                const got = try z.normalizeTo(arena_allocator, Form.D, input);
+                const got = try z.normalizeTo(arena_allocator, .D, input);
                 expectEqualSlices(u8, want, got);
                 continue;
             } else if (field_index == 4) {
@@ -689,7 +688,7 @@ test "normalizeTo" {
                     try w_buf.appendSlice(cp_buf[0..len]);
                 }
                 const want = w_buf.toOwnedSlice();
-                const got = try z.normalizeTo(arena_allocator, Form.KD, input);
+                const got = try z.normalizeTo(arena_allocator, .KD, input);
                 expectEqualSlices(u8, want, got);
                 continue;
             } else {

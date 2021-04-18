@@ -28,8 +28,6 @@ const UcdGenerator = struct {
         var buf_reader = io.bufferedReader(file.reader());
         var input_stream = buf_reader.reader();
 
-        // Iterate over lines.
-        var buf: [640]u8 = undefined;
         var collections = ArrayList(Collection).init(self.allocator);
         defer {
             for (collections.items) |*collection| {
@@ -39,21 +37,23 @@ const UcdGenerator = struct {
         }
         var records = ArrayList(Record).init(self.allocator);
         defer records.deinit();
-        var kind = ArrayList(u8).init(self.allocator);
-        defer kind.deinit();
+        var al = std.heap.ArenaAllocator.init(self.allocator);
+        defer al.deinit();
+        var arena_allocator = &al.allocator;
+        var kind: ?[]const u8 = null;
+        // Iterate over lines.
+        var buf: [640]u8 = undefined;
         while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
             // Skip comments or empty lines.
             if (line.len == 0 or line[0] == '#') continue;
             // Iterate over fields.
             var fields = mem.split(line, ";");
             var field_index: usize = 0;
-            var record: Record = undefined;
             while (fields.next()) |raw| : (field_index += 1) {
                 var field = mem.trim(u8, raw, " ");
-                // Skip empty or comment fields.
-                if (field.len == 0 or field[0] == '#') continue;
-                // Construct record.
                 if (field_index == 0) {
+                    // Construct record.
+                    var record: Record = undefined;
                     if (mem.indexOf(u8, field, "..")) |dots| {
                         // Ranges.
                         const r_lo = try fmt.parseInt(u21, field[0..dots], 16);
@@ -68,12 +68,13 @@ const UcdGenerator = struct {
                 } else if (field_index == 1) {
                     // Record kind.
                     // Possible comment at end.
-                    if (mem.indexOf(u8, field, "#")) |octo| {
-                        field = mem.trimRight(u8, field[0..octo], " ");
-                    }
+                    var clean_field = if (mem.indexOf(u8, field, "#")) |octo| blk: {
+                        var tmp = field[0..octo];
+                        break :blk mem.trimRight(u8, tmp, " ");
+                    } else field;
                     // Check if new collection started.
-                    if (kind.items.len != 0) {
-                        if (!mem.eql(u8, kind.items, field)) {
+                    if (kind) |k| {
+                        if (!mem.eql(u8, k, clean_field)) {
                             // New collection for new record kind.
                             // Last record belongs to next collection.
                             const one_past = records.pop();
@@ -92,26 +93,54 @@ const UcdGenerator = struct {
                                     },
                                 }
                             }
+                            // Add new collection.
                             try collections.append(try Collection.init(
                                 self.allocator,
-                                kind.toOwnedSlice(),
+                                k,
                                 lo,
                                 hi,
                                 records.toOwnedSlice(),
                             ));
                             // Update kind.
-                            try kind.appendSlice(field);
+                            kind = try arena_allocator.dupe(u8, clean_field);
                             // Add first record of new collection.
                             try records.append(one_past);
                         }
                     } else {
-                        // Initialize kind.
-                        try kind.appendSlice(field);
+                        // kind is null, initialize it.
+                        kind = try arena_allocator.dupe(u8, clean_field);
                     }
                 } else {
+                    // Ignore other fields.
                     continue;
                 }
             }
+        }
+
+        // Last collection.
+        if (kind) |k| {
+            // Calculate lo/hi.
+            var lo: u21 = 0x10FFFF;
+            var hi: u21 = 0;
+            for (records.items) |rec| {
+                switch (rec) {
+                    .single => |cp| {
+                        if (cp < lo) lo = cp;
+                        if (cp > hi) hi = cp;
+                    },
+                    .range => |range| {
+                        if (range.lo < lo) lo = range.lo;
+                        if (range.hi > hi) hi = range.hi;
+                    },
+                }
+            }
+            try collections.append(try Collection.init(
+                self.allocator,
+                k,
+                lo,
+                hi,
+                records.toOwnedSlice(),
+            ));
         }
 
         // Write out files.
@@ -131,8 +160,6 @@ const UcdGenerator = struct {
         var buf_reader = io.bufferedReader(file.reader());
         var input_stream = buf_reader.reader();
 
-        // Iterate over lines.
-        var buf: [640]u8 = undefined;
         var collections = ArrayList(Collection).init(self.allocator);
         defer {
             for (collections.items) |*collection| {
@@ -142,10 +169,12 @@ const UcdGenerator = struct {
         }
         var records = ArrayList(Record).init(self.allocator);
         defer records.deinit();
-        var kind = ArrayList(u8).init(self.allocator);
-        defer kind.deinit();
-        var lo: u21 = 0x10FFFF;
-        var hi: u21 = 0;
+        var al = std.heap.ArenaAllocator.init(self.allocator);
+        defer al.deinit();
+        var arena_allocator = &al.allocator;
+        var kind: ?[]const u8 = null;
+        // Iterate over lines.
+        var buf: [640]u8 = undefined;
         while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
             // Skip empty lines.
             if (line.len == 0) continue;
@@ -155,48 +184,59 @@ const UcdGenerator = struct {
                 const equals = mem.indexOf(u8, line, "=").?;
                 const current_kind = mem.trim(u8, line[equals + 1 ..], " ");
                 // Check if new collection started.
-                if (kind.items.len != 0) {
+                if (kind) |k| {
                     // New collection for new record kind.
-                    if (!mem.eql(u8, kind.items, current_kind)) {
+                    if (!mem.eql(u8, k, current_kind)) {
+                        // Calculate lo/hi.
+                        var lo: u21 = 0x10FFFF;
+                        var hi: u21 = 0;
+                        for (records.items) |rec| {
+                            switch (rec) {
+                                .single => |cp| {
+                                    if (cp < lo) lo = cp;
+                                    if (cp > hi) hi = cp;
+                                },
+                                .range => |range| {
+                                    if (range.lo < lo) lo = range.lo;
+                                    if (range.hi > hi) hi = range.hi;
+                                },
+                            }
+                        }
                         try collections.append(try Collection.init(
                             self.allocator,
-                            kind.toOwnedSlice(),
+                            k,
                             lo,
                             hi,
                             records.toOwnedSlice(),
                         ));
-                        // Reset extremes.
-                        lo = 0x10FFFF;
-                        hi = 0;
                         // Update kind.
-                        try kind.appendSlice(current_kind);
+                        kind = try arena_allocator.dupe(u8, current_kind);
                     }
                 } else {
-                    // Initialize kind.
-                    try kind.appendSlice(current_kind);
+                    // kind is null, initialize it.
+                    kind = try arena_allocator.dupe(u8, current_kind);
                 }
+                continue;
+            } else if (line[0] == '#') {
+                // Skip comments.
+                continue;
             }
+
             // Iterate over fields.
             var fields = mem.split(line, ";");
             var field_index: usize = 0;
-            var record: Record = undefined;
             while (fields.next()) |raw| : (field_index += 1) {
                 var field = mem.trim(u8, raw, " ");
-                // Skip empty or comment fields.
-                if (field.len == 0 or field[0] == '#') continue;
-                // Construct record.
                 if (field_index == 0) {
+                    // Construct record.
+                    var record: Record = undefined;
                     // Ranges.
                     if (mem.indexOf(u8, field, "..")) |dots| {
                         const r_lo = try fmt.parseInt(u21, field[0..dots], 16);
-                        if (r_lo < lo) lo = r_lo;
                         const r_hi = try fmt.parseInt(u21, field[dots + 2 ..], 16);
-                        if (r_hi > hi) hi = r_hi;
                         record = .{ .range = .{ .lo = r_lo, .hi = r_hi } };
                     } else {
                         const code_point = try fmt.parseInt(u21, field, 16);
-                        if (code_point < lo) lo = code_point;
-                        if (code_point > hi) hi = code_point;
                         record = .{ .single = code_point };
                     }
                     // Add this record.
@@ -205,6 +245,32 @@ const UcdGenerator = struct {
                     continue;
                 }
             }
+        }
+
+        // Last collection.
+        if (kind) |k| {
+            // Calculate lo/hi.
+            var lo: u21 = 0x10FFFF;
+            var hi: u21 = 0;
+            for (records.items) |rec| {
+                switch (rec) {
+                    .single => |cp| {
+                        if (cp < lo) lo = cp;
+                        if (cp > hi) hi = cp;
+                    },
+                    .range => |range| {
+                        if (range.lo < lo) lo = range.lo;
+                        if (range.hi > hi) hi = range.hi;
+                    },
+                }
+            }
+            try collections.append(try Collection.init(
+                self.allocator,
+                k,
+                lo,
+                hi,
+                records.toOwnedSlice(),
+            ));
         }
 
         // Write out files.
@@ -695,23 +761,36 @@ const UcdGenerator = struct {
     }
 };
 
+fn clean_name(allocator: *mem.Allocator, str: []const u8) ![]u8 {
+    var name1 = try allocator.alloc(u8, mem.replacementSize(u8, str, "_", ""));
+    defer allocator.free(name1);
+    _ = mem.replace(u8, str, "_", "", name1);
+    var name2 = try allocator.alloc(u8, mem.replacementSize(u8, name1, "-", ""));
+    defer allocator.free(name2);
+    _ = mem.replace(u8, name1, "-", "", name2);
+    var name = try allocator.alloc(u8, mem.replacementSize(u8, name1, " ", ""));
+    _ = mem.replace(u8, name2, " ", "", name);
+    return name;
+}
+
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     var allocator = &arena.allocator;
-    // var allocator = std.testing.allocator;
+    //var allocator = std.testing.allocator;
     var ugen = UcdGenerator.new(allocator);
-    try ugen.processF1("data/ucd/Blocks.txt");
+    //try ugen.processF1("data/ucd/Blocks.txt");
     try ugen.processF1("data/ucd/PropList.txt");
-    try ugen.processF1("data/ucd/Scripts.txt");
+    //try ugen.processF1("data/ucd/Scripts.txt");
     try ugen.processF1("data/ucd/auxiliary/GraphemeBreakProperty.txt");
     try ugen.processF1("data/ucd/DerivedCoreProperties.txt");
-    try ugen.processF1("data/ucd/extracted/DerivedDecompositionType.txt");
+    //try ugen.processF1("data/ucd/extracted/DerivedDecompositionType.txt");
     try ugen.processF1("data/ucd/extracted/DerivedNumericType.txt");
+    try ugen.processF1("data/ucd/emoji/emoji-data.txt");
     try ugen.processGenCat();
     try ugen.processCaseFold();
     try ugen.processUcd();
-    try ugen.processSpecialCasing();
+    //try ugen.processSpecialCasing();
     try ugen.processCccMap();
     try ugen.processHangul();
 }
