@@ -5,6 +5,8 @@ Unicode processing with Zig.
 This is pre-release software. Breaking changes and rough edges abound!
 * 2021-04-09: Unicode database ETL and analysis phase. Working out the best way to split the data
 and apply the spec rules.
+* 2021-04-18: ETL working well, now on to API design and implementation. Initial basic code point
+type detection, case conversion, case folding, and grapheme cluster breaks passing tests.
 
 ## Background
 This library has been built from scratch in Zig. Although initially inspired by the Go `unicode`
