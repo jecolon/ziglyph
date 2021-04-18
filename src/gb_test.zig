@@ -8,7 +8,6 @@ const fmt = std.fmt;
 const mem = std.mem;
 const unicode = std.unicode;
 
-const CccMap = @import("/components/autogen/DerivedCombiningClass/CccMap.zig");
 const Control = @import("components/autogen/GraphemeBreakProperty/Control.zig");
 const Extend = @import("components/autogen/GraphemeBreakProperty/Extend.zig");
 const ExtPic = @import("components/autogen/emoji-data/ExtendedPictographic.zig");
@@ -28,8 +27,6 @@ test "grapheme break" {
 
     var control = try Control.init(allocator);
     defer control.deinit();
-    var ccc_map = try CccMap.init(allocator);
-    defer ccc_map.deinit();
     var extend = try Extend.init(allocator);
     defer extend.deinit();
     var extpic = try ExtPic.init(allocator);

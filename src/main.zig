@@ -14,6 +14,26 @@ const Decomposed = DecomposeMap.Decomposed;
 const Letter = @import("ziglyph.zig").Letter;
 const Number = @import("ziglyph.zig").Number;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
+const Zigstr = @import("zigstr/Zigstr.zig");
+
+test "Zigstr" {
+    var str1 = try Zigstr.init(std.testing.allocator, "Hello");
+    defer str1.deinit();
+
+    expectEqual(str1.bytes.len, 5);
+    expectEqual(str1.code_points.len, 5);
+    expectEqual(str1.chars.len, 5);
+
+    var str2 = try Zigstr.init(std.testing.allocator, "H\u{0065}\u{0301}llo");
+    defer str2.deinit();
+
+    expectEqual(str2.bytes.len, 7);
+    expectEqual(str2.code_points.len, 6);
+    expectEqual(str2.chars.len, 5);
+    //for (str2.chars) |char| {
+    //    std.debug.print("char ({s})\n", .{char.bytes});
+    //}
+}
 
 // UTF-8 BOM = EFBBBF
 pub fn main() !void {
