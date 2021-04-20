@@ -14,26 +14,7 @@ const Decomposed = DecomposeMap.Decomposed;
 const Letter = @import("ziglyph.zig").Letter;
 const Number = @import("ziglyph.zig").Number;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
-const Zigstr = @import("zigstr/Zigstr.zig");
-
-test "Zigstr" {
-    var str1 = try Zigstr.init(std.testing.allocator, "Hello");
-    defer str1.deinit();
-
-    expectEqual(str1.bytes.len, 5);
-    expectEqual(str1.code_points.len, 5);
-    expectEqual(str1.chars.len, 5);
-
-    var str2 = try Zigstr.init(std.testing.allocator, "H\u{0065}\u{0301}llo");
-    defer str2.deinit();
-
-    expectEqual(str2.bytes.len, 7);
-    expectEqual(str2.code_points.len, 6);
-    expectEqual(str2.chars.len, 5);
-    //for (str2.chars) |char| {
-    //    std.debug.print("char ({s})\n", .{char.bytes});
-    //}
-}
+const GraphemeIterator = @import("zigstr/Zigstr.zig").GraphemeIterator;
 
 // UTF-8 BOM = EFBBBF
 pub fn main() !void {
@@ -734,4 +715,63 @@ test "isLatin1Str" {
     expect(try z.isLatin1Str("Héllo!"));
     expect(!try z.isLatin1Str("H\u{0065}\u{0301}llo!"));
     expect(!try z.isLatin1Str("H😀llo!"));
+}
+
+test "grapheme iterator" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var allocator = &arena.allocator;
+
+    var file = try std.fs.cwd().openFile("src/data/ucd/auxiliary/GraphemeBreakTest.txt", .{});
+    defer file.close();
+    var buf_reader = io.bufferedReader(file.reader());
+    var input_stream = buf_reader.reader();
+
+    var buf: [640]u8 = undefined;
+    var line_no: usize = 1;
+    var giter: ?GraphemeIterator = null;
+
+    while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |raw| : (line_no += 1) {
+        // Skip comments or empty lines.
+        if (raw.len == 0 or raw[0] == '#' or raw[0] == '@') continue;
+
+        // Clean up.
+        var line = mem.trimLeft(u8, raw, "÷ ");
+        if (mem.indexOf(u8, line, " ÷\t#")) |octo| {
+            line = line[0..octo];
+        }
+
+        // Iterate over fields.
+        var want = ArrayList([]const u8).init(allocator);
+        var all_bytes = ArrayList(u8).init(allocator);
+        var fields = mem.split(line, " ÷ ");
+
+        while (fields.next()) |field| {
+            var bytes = ArrayList(u8).init(allocator);
+            var sub_fields = mem.split(field, " ");
+            var cp_buf: [4]u8 = undefined;
+
+            while (sub_fields.next()) |sub_field| {
+                if (mem.eql(u8, sub_field, "×")) continue;
+                const cp: u21 = try fmt.parseInt(u21, sub_field, 16);
+                const len = try unicode.utf8Encode(cp, &cp_buf);
+                try all_bytes.appendSlice(cp_buf[0..len]);
+                try bytes.appendSlice(cp_buf[0..len]);
+            }
+            try want.append(bytes.toOwnedSlice());
+        }
+
+        if (giter) |*gi| {
+            try gi.reinit(all_bytes.items);
+        } else {
+            giter = try GraphemeIterator.init(allocator, all_bytes.items);
+        }
+
+        // Chaeck.
+        for (want.items) |w| {
+            const g = giter.?.next().?;
+            //std.debug.print("line {d}: w:{s}, g:{s}\n", .{ line_no, w, g });
+            expectEqualSlices(u8, w, g);
+        }
+    }
 }
