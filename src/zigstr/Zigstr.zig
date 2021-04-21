@@ -10,6 +10,7 @@ const Regional = @import("../components/autogen/GraphemeBreakProperty/RegionalIn
 const SpacingMark = @import("../components/autogen/GraphemeBreakProperty/SpacingMark.zig");
 const HangulMap = @import("../components/autogen/HangulSyllableType/HangulMap.zig");
 
+/// CodePointIterator retrieves the code points of a string.
 pub const CodePointIterator = struct {
     bytes: []const u8,
     current: ?u21,
@@ -31,62 +32,76 @@ pub const CodePointIterator = struct {
         };
     }
 
-    pub fn nextCodepointSlice(it: *CodePointIterator) ?[]const u8 {
-        if (it.i >= it.bytes.len) {
+    const Self = @This();
+
+    // nexCodePointSlice retrieves the next code point's bytes.
+    pub fn nextCodePointSlice(self: *Self) ?[]const u8 {
+        if (self.i >= self.bytes.len) {
             return null;
         }
 
-        const cp_len = unicode.utf8ByteSequenceLength(it.bytes[it.i]) catch unreachable;
-        it.prev_i = it.i;
-        it.i += cp_len;
-        return it.bytes[it.i - cp_len .. it.i];
+        const cp_len = unicode.utf8ByteSequenceLength(self.bytes[self.i]) catch unreachable;
+        self.prev_i = self.i;
+        self.i += cp_len;
+        return self.bytes[self.i - cp_len .. self.i];
     }
 
-    pub fn nextCodepoint(it: *CodePointIterator) ?u21 {
-        const slice = it.nextCodepointSlice() orelse return null;
-        it.prev = it.current;
+    /// nextCodePoint retrieves the next code point as a single u21.
+    pub fn nextCodePoint(self: *Self) ?u21 {
+        const slice = self.nextCodePointSlice() orelse return null;
+        self.prev = self.current;
 
         switch (slice.len) {
-            1 => it.current = @as(u21, slice[0]),
-            2 => it.current = unicode.utf8Decode2(slice) catch unreachable,
-            3 => it.current = unicode.utf8Decode3(slice) catch unreachable,
-            4 => it.current = unicode.utf8Decode4(slice) catch unreachable,
+            1 => self.current = @as(u21, slice[0]),
+            2 => self.current = unicode.utf8Decode2(slice) catch unreachable,
+            3 => self.current = unicode.utf8Decode3(slice) catch unreachable,
+            4 => self.current = unicode.utf8Decode4(slice) catch unreachable,
             else => unreachable,
         }
 
-        return it.current;
+        return self.current;
     }
 
-    /// Look ahead at the next n codepoints without advancing the iterator.
+    /// peekN looks ahead at the next n codepoints without advancing the iterator.
     /// If fewer than n codepoints are available, then return the remainder of the string.
-    pub fn peekN(it: *CodePointIterator, n: usize) []const u8 {
-        const original_i = it.i;
-        defer it.i = original_i;
+    pub fn peekN(self: *Self) []const u8 {
+        const original_i = self.i;
+        defer self.i = original_i;
 
         var end_ix = original_i;
         var found: usize = 0;
         while (found < n) : (found += 1) {
-            const next_codepoint = it.nextCodepointSlice() orelse return it.bytes[original_i..];
+            const next_codepoint = self.nextCodePointSlice() orelse return self.bytes[original_i..];
             end_ix += next_codepoint.len;
         }
 
-        return it.bytes[original_i..end_ix];
+        return self.bytes[original_i..end_ix];
     }
 
-    /// Look ahead at the next codepoint without advancing the iterator.
-    pub fn peek(it: *CodePointIterator) ?u21 {
-        const original_i = it.i;
-        const original_prev_i = it.prev_i;
-        const original_prev = it.prev;
+    /// peek looks ahead at the next codepoint without advancing the iterator.
+    pub fn peek(self: *Self) ?u21 {
+        const original_i = self.i;
+        const original_prev_i = self.prev_i;
+        const original_prev = self.prev;
         defer {
-            it.i = original_i;
-            it.prev_i = original_prev_i;
-            it.prev = original_prev;
+            self.i = original_i;
+            self.prev_i = original_prev_i;
+            self.prev = original_prev;
         }
-        return it.nextCodepoint();
+        return self.nextCodePoint();
+    }
+
+    /// reset prepares the iterator to start over iteration.
+    pub fn reset(self: *Self) void {
+        self.current = null;
+        self.i = 0;
+        self.prev = null;
+        self.prev_i = 0;
     }
 };
 
+/// GraphemeIterator retrieves the grapheme clusters of a string, which may be composed of several 
+/// code points each.
 pub const GraphemeIterator = struct {
     allocator: *mem.Allocator,
     control: Control,
@@ -112,18 +127,21 @@ pub const GraphemeIterator = struct {
         };
     }
 
-    pub fn deinit(it: *GraphemeIterator) void {
-        it.control.deinit();
-        it.extend.deinit();
-        it.extpic.deinit();
-        it.han_map.deinit();
-        it.prepend.deinit();
-        it.regional.deinit();
-        it.spacing.deinit();
+    const Self = @This();
+
+    pub fn deinit(self: *Self) void {
+        self.control.deinit();
+        self.extend.deinit();
+        self.extpic.deinit();
+        self.han_map.deinit();
+        self.prepend.deinit();
+        self.regional.deinit();
+        self.spacing.deinit();
     }
 
-    pub fn reinit(it: *GraphemeIterator, str: []const u8) !void {
-        it.cp_iter = try CodePointIterator.init(str);
+    /// reinit resets the iterator with a new string.
+    pub fn reinit(self: *Self, str: []const u8) !void {
+        self.cp_iter = try CodePointIterator.init(str);
     }
 
     // Special code points.
@@ -136,38 +154,39 @@ pub const GraphemeIterator = struct {
         end: usize,
     };
 
-    pub fn next(it: *GraphemeIterator) ?[]const u8 {
-        var cpo = it.cp_iter.nextCodepoint();
+    /// next retrieves the next grapheme cluster.
+    pub fn next(self: *Self) ?[]const u8 {
+        var cpo = self.cp_iter.nextCodePoint();
         if (cpo == null) return null;
         const cp = cpo.?;
-        const cp_end = it.cp_iter.i;
-        const cp_start = it.cp_iter.prev_i;
-        const next_cp = it.cp_iter.peek();
+        const cp_end = self.cp_iter.i;
+        const cp_start = self.cp_iter.prev_i;
+        const next_cp = self.cp_iter.peek();
 
         // GB9.2
-        if (it.prepend.isPrepend(cp)) {
+        if (self.prepend.isPrepend(cp)) {
             if (next_cp) |ncp| {
-                if (ncp == CR or ncp == LF or it.control.isControl(ncp)) {
-                    return it.cp_iter.bytes[cp_start..cp_end];
+                if (ncp == CR or ncp == LF or self.control.isControl(ncp)) {
+                    return self.cp_iter.bytes[cp_start..cp_end];
                 }
 
-                const pncp = it.cp_iter.nextCodepoint().?; // We know there's a next.
-                const pncp_end = it.cp_iter.i;
-                const pncp_start = it.cp_iter.prev_i;
-                const pncp_next_cp = it.cp_iter.peek();
-                const s = it.processNonPrepend(pncp, pncp_start, pncp_end, pncp_next_cp);
-                return it.cp_iter.bytes[cp_start..s.end];
+                const pncp = self.cp_iter.nextCodePoint().?; // We know there's a next.
+                const pncp_end = self.cp_iter.i;
+                const pncp_start = self.cp_iter.prev_i;
+                const pncp_next_cp = self.cp_iter.peek();
+                const s = self.processNonPrepend(pncp, pncp_start, pncp_end, pncp_next_cp);
+                return self.cp_iter.bytes[cp_start..s.end];
             }
 
-            return it.cp_iter.bytes[cp_start..cp_end];
+            return self.cp_iter.bytes[cp_start..cp_end];
         }
 
-        const s = it.processNonPrepend(cp, cp_start, cp_end, next_cp);
-        return it.cp_iter.bytes[s.start..s.end];
+        const s = self.processNonPrepend(cp, cp_start, cp_end, next_cp);
+        return self.cp_iter.bytes[s.start..s.end];
     }
 
     fn processNonPrepend(
-        it: *GraphemeIterator,
+        self: *Self,
         cp: u21,
         cp_start: usize,
         cp_end: usize,
@@ -177,8 +196,8 @@ pub const GraphemeIterator = struct {
         if (cp == CR) {
             if (next_cp) |ncp| {
                 if (ncp == LF) {
-                    _ = it.cp_iter.nextCodepoint(); // Advance past LF.
-                    return .{ .start = cp_start, .end = it.cp_iter.i };
+                    _ = self.cp_iter.nextCodePoint(); // Advance past LF.
+                    return .{ .start = cp_start, .end = self.cp_iter.i };
                 }
             }
             return .{ .start = cp_start, .end = cp_end };
@@ -188,30 +207,30 @@ pub const GraphemeIterator = struct {
             return .{ .start = cp_start, .end = cp_end };
         }
 
-        if (it.control.isControl(cp)) {
+        if (self.control.isControl(cp)) {
             return .{ .start = cp_start, .end = cp_end };
         }
 
         // GB6, GB7, GB8
-        if (it.han_map.syllableType(cp)) |hst| {
+        if (self.han_map.syllableType(cp)) |hst| {
             if (next_cp) |ncp| {
-                const ncp_hst = it.han_map.syllableType(ncp);
+                const ncp_hst = self.han_map.syllableType(ncp);
 
                 if (ncp_hst) |nhst| {
                     switch (hst) {
                         .L => {
                             if (nhst == .L or nhst == .V or nhst == .LV or nhst == .LVT) {
-                                _ = it.cp_iter.nextCodepoint(); // Advance past next syllable.
+                                _ = self.cp_iter.nextCodePoint(); // Advance past next syllable.
                             }
                         },
                         .LV, .V => {
                             if (nhst == .V or nhst == .T) {
-                                _ = it.cp_iter.nextCodepoint(); // Advance past next syllable.
+                                _ = self.cp_iter.nextCodePoint(); // Advance past next syllable.
                             }
                         },
                         .LVT, .T => {
                             if (nhst == .T) {
-                                _ = it.cp_iter.nextCodepoint(); // Advance past next syllable.
+                                _ = self.cp_iter.nextCodePoint(); // Advance past next syllable.
                             }
                         },
                     }
@@ -219,61 +238,61 @@ pub const GraphemeIterator = struct {
             }
 
             // GB9
-            it.fullAdvance();
-            return .{ .start = cp_start, .end = it.cp_iter.i };
+            self.fullAdvance();
+            return .{ .start = cp_start, .end = self.cp_iter.i };
         }
 
         // GB11
-        if (it.extpic.isExtendedPictographic(cp)) {
-            it.fullAdvance();
-            if (it.cp_iter.prev) |pcp| {
+        if (self.extpic.isExtendedPictographic(cp)) {
+            self.fullAdvance();
+            if (self.cp_iter.prev) |pcp| {
                 if (pcp == ZWJ) {
-                    if (it.cp_iter.peek()) |ncp| {
-                        if (it.extpic.isExtendedPictographic(ncp)) {
-                            _ = it.cp_iter.nextCodepoint(); // Advance past end emoji.
+                    if (self.cp_iter.peek()) |ncp| {
+                        if (self.extpic.isExtendedPictographic(ncp)) {
+                            _ = self.cp_iter.nextCodePoint(); // Advance past end emoji.
                             // GB9
-                            it.fullAdvance();
+                            self.fullAdvance();
                         }
                     }
                 }
             }
 
-            return .{ .start = cp_start, .end = it.cp_iter.i };
+            return .{ .start = cp_start, .end = self.cp_iter.i };
         }
 
         // GB12
-        if (it.regional.isRegionalIndicator(cp)) {
+        if (self.regional.isRegionalIndicator(cp)) {
             if (next_cp) |ncp| {
-                if (it.regional.isRegionalIndicator(ncp)) {
-                    _ = it.cp_iter.nextCodepoint(); // Advance past 2nd RI.
+                if (self.regional.isRegionalIndicator(ncp)) {
+                    _ = self.cp_iter.nextCodePoint(); // Advance past 2nd RI.
                 }
             }
 
-            it.fullAdvance();
-            return .{ .start = cp_start, .end = it.cp_iter.i };
+            self.fullAdvance();
+            return .{ .start = cp_start, .end = self.cp_iter.i };
         }
 
         // GB999
-        it.fullAdvance();
-        return .{ .start = cp_start, .end = it.cp_iter.i };
+        self.fullAdvance();
+        return .{ .start = cp_start, .end = self.cp_iter.i };
     }
 
     fn lexRun(
-        it: *GraphemeIterator,
+        self: *Self,
         ctx: anytype,
         comptime predicate: fn (ctx: @TypeOf(ctx), cp: u21) bool,
     ) void {
-        while (it.cp_iter.peek()) |ncp| {
+        while (self.cp_iter.peek()) |ncp| {
             if (!predicate(ctx, ncp)) break;
-            _ = it.cp_iter.nextCodepoint();
+            _ = self.cp_iter.nextCodePoint();
         }
     }
 
-    fn fullAdvance(it: *GraphemeIterator) void {
-        const next_cp = it.cp_iter.peek();
+    fn fullAdvance(self: *Self) void {
+        const next_cp = self.cp_iter.peek();
         // Base case.
         if (next_cp) |ncp| {
-            if (ncp != ZWJ and !it.extend.isExtend(ncp) and !it.spacing.isSpacingMark(ncp)) return;
+            if (ncp != ZWJ and !self.extend.isExtend(ncp) and !self.spacing.isSpacingMark(ncp)) return;
         } else {
             return;
         }
@@ -282,14 +301,14 @@ pub const GraphemeIterator = struct {
         const ncp = next_cp.?; // We now we have next.
 
         if (ncp == ZWJ) {
-            _ = it.cp_iter.nextCodepoint();
-            it.fullAdvance();
-        } else if (it.extend.isExtend(ncp)) {
-            it.lexRun(it.extend, Extend.isExtend);
-            it.fullAdvance();
-        } else if (it.spacing.isSpacingMark(ncp)) {
-            it.lexRun(it.spacing, SpacingMark.isSpacingMark);
-            it.fullAdvance();
+            _ = self.cp_iter.nextCodePoint();
+            self.fullAdvance();
+        } else if (self.extend.isExtend(ncp)) {
+            self.lexRun(self.extend, Extend.isExtend);
+            self.fullAdvance();
+        } else if (self.spacing.isSpacingMark(ncp)) {
+            self.lexRun(self.spacing, SpacingMark.isSpacingMark);
+            self.fullAdvance();
         }
     }
 };
