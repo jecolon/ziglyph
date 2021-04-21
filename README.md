@@ -35,7 +35,7 @@ const expectEqual = std.testing.expectEqual;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
 
 test "Ziglyph struct" {
-    var ziglyph = try Ziglyph.init(std.testing.allocator);
+    var ziglyph = Ziglyph.init(std.testing.allocator);
     defer ziglyph.deinit();
 
     const z = 'z';
@@ -56,11 +56,11 @@ const std = @import("std");
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 
-// Import the struct.
+// Import the structs.
 const Letter = @import("ziglyph.zig").Letter;
 const Punct = @import("ziglyph.zig").Punct;
 
-test "Ziglyph struct" {
+test "Aggregate struct" {
     var letter = try Letter.init(std.testing.allocator);
     defer letter.deinit();
     var punct = try Punct.init(std.testing.allocator);
@@ -91,7 +91,7 @@ const Upper = @import("ziglyph.zig").Letter.Upper;
 const UpperMap = @import("ziglyph.zig").Letter.UpperMap;
 
 test "Component structs" {
-    var lower = try Lower.init(allocator);
+    var lower = try Lower.init(std.testing.allocator);
     defer lower.deinit();
     var upper = try Upper.init(std.testing.allocator);
     defer upper.deinit();
@@ -120,7 +120,7 @@ const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
-// Import struct.
+// Import structs.
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
 const Decomposed = DecomposeMap.Decomposed;
 
@@ -181,6 +181,36 @@ test "normalizeTo" {
     want = "Complex char: \u{03A5}\u{0301}";
     got = try z.normalizeTo(arena_allocator, .KD, input);
     expectEqualSlices(u8, want, got);
+}
+```
+
+## Grapheme Clusters
+Many programming languages and libraries provide a basic `Character` or `char` type to represent what
+we normally consider to be the characters that we see printed out composing strings of text. Unfortunately,
+these implementations map these types to what Unicode calls a *code point*, which is only correct if 
+you're working with basic latin letters and numbers, mostly in the ASCII character set space. When 
+dealing with the vast majority of other languages, code points do not map directly to what we would 
+consider *characters* of a string, but rather a single visible character can be composed of many code points,
+combined to form a single human-readable character. In Unicode, these combinations of code points are
+called *Grapheme Clusters* and Ziglyph provides the `GraphemeIterator` to extract individual *characters* 
+(not just single code points) from a string.
+
+```
+const std = @import("std");
+const expectEqualSlices = std.testing.expectEqualSlices;
+
+// Import struct.
+const GraphemeIterator = @import("ziglyph.zig").GraphemeIterator;
+
+test "GraphemeIterator" {
+    var iter = try GraphemeIterator.init(std.testing.allocator, "H\u{0065}\u{0301}llo"); // Héllo
+    defer iter.deinit();
+
+    const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
+
+    for (want) |w| {
+        expectEqualSlices(u8, w, iter.next().?);
+    }
 }
 ```
 

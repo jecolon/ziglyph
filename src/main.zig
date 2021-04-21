@@ -11,10 +11,10 @@ const unicode = std.unicode;
 const Control = @import("ziglyph.zig").Control;
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
 const Decomposed = DecomposeMap.Decomposed;
+const GraphemeIterator = @import("ziglyph.zig").GraphemeIterator;
 const Letter = @import("ziglyph.zig").Letter;
 const Number = @import("ziglyph.zig").Number;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
-const GraphemeIterator = @import("zigstr/Zigstr.zig").GraphemeIterator;
 
 // UTF-8 BOM = EFBBBF
 pub fn main() !void {

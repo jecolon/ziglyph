@@ -14,6 +14,8 @@ pub const Alphabetic = @import("components/autogen/DerivedCoreProperties/Alphabe
 pub const Control = @import("components/autogen/DerivedGeneralCategory/Control.zig");
 /// Code point decomposition.
 pub const DecomposeMap = @import("components/autogen/UnicodeData/DecomposeMap.zig");
+/// Grapheme Clusters.
+pub const GraphemeIterator = @import("zigstr/Zigstr.zig").GraphemeIterator;
 /// Unicode letters.
 pub const Letter = @import("components/aggregate/Letter.zig");
 // Marks.
