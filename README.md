@@ -16,19 +16,45 @@ package, Ziglyph is now completely independent and unique in and of itself.
 ## Usage
 There are two modes of usage: via the consolidated Ziglyph struct or using the individual component
 structs for more fine grained control over memory usage and binary size. The Ziglyph struct provides
-the convenience of having all the methods in one place. There is a sub-level of component structs in the
-`src/components/aggregate` drectory (also re-exported in the Ziglyph struct,) that expose this same 
-kind of interface; i.e. `Letter`, `Punct`, and `Symbol`. The component structs in the `src/components/autogen` 
-are the lowest level. These structs are also auto-generated code from the Unicode Character Database (UCD) files.
+the convenience of having all the most frequently used methods in one place. There is a sub-level of
+component structs that expose this same consolidated interface but with more specific scope; i.e. 
+`Letter`, `Punct`, and `Symbol`. The component structs like `Lower` and `Upper` are the lowest level.
+These structs are also auto-generated code from the Unicode Character Database (UCD) files.
+
+In a `libs` subdirectory under the root of your project, clone this repository via
+
+```sh
+$  git clone https://github.com/jecolon/ziglyph.git
+```
+
+Now in your build.zig, you can add:
+
+```zig
+exe.addPackagePath("Ziglyph", "libs/ziglyph/src/ziglyph.zig");
+```
+
+to the `exe` section for the executable where you wish to have Ziglyph available. Now in the code, you
+can import components like this:
+
+```zig
+const Ziglyph = @import("Ziglyph").Ziglyph;
+const Letter = @import("Ziglyph").Letter;
+const Number = @import("Ziglyph").Number;
+```
+
+Finally, you can build the project with:
+
+```sh
+$ zig build
+```
+
+Note that to build in relase modes, either specify them in the `build.zig` file or on the command line
+via the `-Drealease-fast=true`, `-Drealease-small=true`, `-Drealease-safe=true` options to `zig build`.
 
 ### Using the Ziglyph Struct
 ```zig
-const std = @import("std");
-const expect = std.testing.expect;
-const expectEqual = std.testing.expectEqual;
-
 // Import the struct.
-const Ziglyph = @import("ziglyph.zig").Ziglyph;
+const Ziglyph = @import("Ziglyph").Ziglyph;
 
 test "Ziglyph struct" {
     var ziglyph = try Ziglyph.init(std.testing.allocator);
@@ -47,13 +73,9 @@ test "Ziglyph struct" {
 
 ### Using the aggregate Structs
 ```zig
-const std = @import("std");
-const expect = std.testing.expect;
-const expectEqual = std.testing.expectEqual;
-
 // Import the structs.
-const Letter = @import("ziglyph.zig").Letter;
-const Punct = @import("ziglyph.zig").Punct;
+const Letter = @import("Ziglyph").Letter;
+const Punct = @import("Ziglyph").Punct;
 
 test "Aggregate structs" {
     var letter = try Letter.init(std.testing.allocator);
@@ -65,7 +87,7 @@ test "Aggregate structs" {
     expect(letter.isLetter(z));
     expect(!letter.isUpper(z));
     expect(!punct.isPunct(z));
-    expect(tpunct.isPunct('!'));
+    expect(punct.isPunct('!'));
     const uz = letter.toUpper(z);
     expect(letter.isUpper(uz));
     expectEqual(uz, 'Z');
@@ -74,14 +96,10 @@ test "Aggregate structs" {
 
 ### Using individual low-level component structs
 ```zig
-const std = @import("std");
-const expect = std.testing.expect;
-const expectEqual = std.testing.expectEqual;
-
 // Import the components.
-const Lower = @import("ziglyph.zig").Letter.Lower;
-const Upper = @import("ziglyph.zig").Letter.Upper;
-const UpperMap = @import("ziglyph.zig").Letter.UpperMap;
+const Lower = @import("Ziglyph").Letter.Lower;
+const Upper = @import("Ziglyph").Letter.Upper;
+const UpperMap = @import("Ziglyph").Letter.UpperMap;
 
 test "Component structs" {
     var lower = try Lower.init(std.testing.allocator);
@@ -107,13 +125,8 @@ performs full canonical and compatibility decomposition and normalization (NFD a
 versions may add more normalization forms.
 
 ```zig
-const std = @import("std");
-const expect = std.testing.expect;
-const expectEqual = std.testing.expectEqual;
-const expectEqualSlices = std.testing.expectEqualSlices;
-
-// Import structs.
-const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
+// Import the structs.
+const DecomposeMap = @import("Ziglyph").DecomposeMap;
 const Decomposed = DecomposeMap.Decomposed;
 
 // Normalization Forms: D == Canonical, KD == Compatibility
@@ -178,11 +191,8 @@ called *Grapheme Clusters* and Ziglyph provides the `GraphemeIterator` to extrac
 (not just single code points) from a string.
 
 ```
-const std = @import("std");
-const expectEqualSlices = std.testing.expectEqualSlices;
-
-// Import struct.
-const GraphemeIterator = @import("ziglyph.zig").GraphemeIterator;
+// Import the struct.
+const GraphemeIterator = @import("Ziglyph").GraphemeIterator;
 
 test "GraphemeIterator" {
     var iter = try GraphemeIterator.init(std.testing.allocator, "H\u{0065}\u{0301}llo"); // Héllo
@@ -206,9 +216,8 @@ the src directory too. To refresh the data, you only have to run `ucd_gen.sh` in
 which will in turn run `src/ucd_gen` automatically for you.
 
 ## Speed Test?
-You can build [src/corpus__test.zig](src/corpus_test.zig), in `ReleaseFast` mode and use the `time`
-utility (Linux or Mac) to gauge the execution speed of Ziglyph. This program reads 
-[src/data/lang_mix.txt](src/data/lang_mix.txt), which is about 3.9MiB of text in Chinese, English, 
-French, and Spanish from the full texts of "Alice in Wonderland", "Don Quijote", "The Three Musketeers",
-and a Chinese book I don't have the title of. All from the [Project Gutenberg](https://www.gutenberg.org/)
-website, so all Public Domain. On my Linux, Ryzen 5 2600X, 16GiB RAM machine, it takes roughly 59ms.
+In a corpus test whith about 3.9MiB of text in Chinese, English, French, and Spanish from the full 
+texts of "Alice in Wonderland", "Don Quijote", "The Three Musketeers", and a Chinese book I don't have 
+the title of, detectiong code point types and converting cases, it takes roughly 47ms. On a Linux, 
+Ryzen 5 2600X CPU, 16GiB RAM, SSD storage machine, All texts are courtesy of the 
+[Project Gutenberg](https://www.gutenberg.org/) website, so all Public Domain.
