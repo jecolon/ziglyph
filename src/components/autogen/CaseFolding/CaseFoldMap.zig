@@ -2,6 +2,7 @@
 //! Unicode case folding map.
 
 const std = @import("std");
+const mem = std.mem;
 const unicode = std.unicode;
 const CaseFoldMap = @This();
 
@@ -4631,4 +4632,32 @@ pub fn toCaseFold(self: Self, cp: u21) CaseFold {
     } else {
         return .{ .simple = cp };
     }
+}
+
+/// caseFoldStr will caseFold the code points in str, producing a slice of u8 with the new bytes.
+/// Caller must free returned bytes.
+pub fn caseFoldStr(self: *Self, allocator: *mem.Allocator, str: []const u8) ![]u8 {
+    var result = std.ArrayList(u8).init(allocator);
+    defer result.deinit();
+    var code_points = std.ArrayList(u21).init(self.allocator);
+    defer code_points.deinit();
+
+    // Gather decomposed code points.
+    var iter = (try unicode.Utf8View.init(str)).iterator();
+    while (iter.nextCodepoint()) |cp| {
+        const cf = self.toCaseFold(cp);
+        switch (cf) {
+            .simple => |scp| try code_points.append(scp),
+            .full => |seq| try code_points.appendSlice(seq),
+        }
+    }
+
+    // Encode as UTF-8 code units.
+    var buf: [4]u8 = undefined;
+    for (code_points.items) |dcp| {
+        const len = try unicode.utf8Encode(dcp, &buf);
+        try result.appendSlice(buf[0..len]);
+    }
+
+    return result.toOwnedSlice();
 }

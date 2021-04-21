@@ -2,9 +2,12 @@ const std = @import("std");
 const mem = std.mem;
 const unicode = std.unicode;
 
+const ascii = @import("../ascii.zig");
 const Control = @import("../components/autogen/GraphemeBreakProperty/Control.zig");
+const DecomposeMap = @import("../ziglyph.zig").DecomposeMap;
 const Extend = @import("../components/autogen/GraphemeBreakProperty/Extend.zig");
 const ExtPic = @import("../components/autogen/emoji-data/ExtendedPictographic.zig");
+const CaseFoldMap = @import("../components/autogen/CaseFolding/CaseFoldMap.zig");
 const Prepend = @import("../components/autogen/GraphemeBreakProperty/Prepend.zig");
 const Regional = @import("../components/autogen/GraphemeBreakProperty/RegionalIndicator.zig");
 const SpacingMark = @import("../components/autogen/GraphemeBreakProperty/SpacingMark.zig");
@@ -339,4 +342,101 @@ pub fn isLatin1Str(str: []const u8) !bool {
         if (!isLatin1(cp)) return false;
     }
     return true;
+}
+
+pub const StrOpts = enum {
+    exact,
+    ignore_case,
+    normalize,
+    norm_ignore,
+};
+
+pub fn eql(allocator: *mem.Allocator, a: []const u8, b: []const u8, opts: StrOpts) !bool {
+    var ascii_only = true;
+    var bytes_eql = true;
+    var inner: []const u8 = undefined;
+    const len_a = a.len;
+    const len_b = b.len;
+    var len_eql = len_a == len_b;
+    var outer: []const u8 = undefined;
+
+    if (len_a <= len_b) {
+        outer = a;
+        inner = b;
+    } else {
+        outer = b;
+        inner = a;
+    }
+
+    for (outer) |c, i| {
+        if (c != inner[i]) bytes_eql = false;
+        if (!isAscii(c) and !isAscii(inner[i])) ascii_only = false;
+    }
+
+    // Exact bytes match.
+    if (opts == .exact and len_eql and bytes_eql) return true;
+
+    if (opts == .ignore_case and len_eql) {
+        if (ascii_only) {
+            // ASCII case insensitive.
+            for (a) |c, i| {
+                if (ascii.toLower(c) != ascii.toLower(b[i])) return false;
+            }
+            return true;
+        }
+
+        // Non-ASCII case insensitive.
+        return try ignoreCaseEql(allocator, a, b);
+    }
+
+    if (opts == .normalize) return try normalizeEql(allocator, a, b);
+
+    if (opts == .norm_ignore) return try normIgnoreEql(allocator, a, b);
+
+    return false;
+}
+
+fn ignoreCaseEql(allocator: *mem.Allocator, a: []const u8, b: []const u8) !bool {
+    var fold_map = try CaseFoldMap.init(allocator);
+    defer fold_map.deinit();
+
+    const cf_a = try fold_map.caseFoldStr(allocator, a);
+    const cf_b = try fold_map.caseFoldStr(allocator, b);
+
+    return mem.eql(u8, cf_a, cf_b);
+}
+
+fn normalizeEql(allocator: *mem.Allocator, a: []const u8, b: []const u8) !bool {
+    var dm = try DecomposeMap.init(allocator);
+    defer dm.deinit();
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    var arena_allocator = &arena.allocator;
+
+    const norm_a = try dm.normalizeTo(arena_allocator, .KD, a);
+    const norm_b = try dm.normalizeTo(arena_allocator, .KD, b);
+    return mem.eql(u8, norm_a, norm_b);
+}
+
+fn normIgnoreEql(allocator: *mem.Allocator, a: []const u8, b: []const u8) !bool {
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    var arena_allocator = &arena.allocator;
+
+    var dm = try DecomposeMap.init(arena_allocator);
+    var fold_map = try CaseFoldMap.init(arena_allocator);
+
+    // The long winding road of normalized caseless matching...
+    var norm_a = try dm.normalizeTo(arena_allocator, .D, a);
+    var cf_a = try fold_map.caseFoldStr(arena_allocator, norm_a);
+    norm_a = try dm.normalizeTo(arena_allocator, .KD, cf_a);
+    cf_a = try fold_map.caseFoldStr(arena_allocator, norm_a);
+    norm_a = try dm.normalizeTo(arena_allocator, .KD, cf_a);
+    var norm_b = try dm.normalizeTo(arena_allocator, .D, b);
+    var cf_b = try fold_map.caseFoldStr(arena_allocator, norm_b);
+    norm_b = try dm.normalizeTo(arena_allocator, .KD, cf_b);
+    cf_b = try fold_map.caseFoldStr(arena_allocator, norm_b);
+    norm_b = try dm.normalizeTo(arena_allocator, .KD, cf_b);
+
+    return mem.eql(u8, norm_a, norm_b);
 }

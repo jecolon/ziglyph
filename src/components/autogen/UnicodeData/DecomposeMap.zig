@@ -18129,6 +18129,7 @@ pub fn normalizeTo(self: *Self, allocator: *mem.Allocator, form: Form, str: []co
 
     // No deinit here, to be freed by caller.
     var result = std.ArrayList(u8).init(allocator);
+    defer result.deinit();
     // This we can deinit.
     var code_points = std.ArrayList(u21).init(self.allocator);
     defer code_points.deinit();

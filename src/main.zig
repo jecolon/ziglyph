@@ -767,3 +767,20 @@ test "grapheme iterator" {
         }
     }
 }
+
+test "Zigstr eql" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var allocator = &arena.allocator;
+
+    expect(try Zigstr.eql(allocator, "foo", "foo", .exact));
+    expect(!try Zigstr.eql(allocator, "fooo", "foo", .exact));
+    expect(!try Zigstr.eql(allocator, "foó", "foo", .exact));
+    expect(try Zigstr.eql(allocator, "foó", "foó", .exact));
+    expect(!try Zigstr.eql(allocator, "Foo", "foo", .exact));
+    expect(try Zigstr.eql(allocator, "Foo", "foo", .ignore_case));
+    expect(try Zigstr.eql(allocator, "Fo\u{0065}\u{0301}", "fo\u{0065}\u{0301}", .ignore_case));
+    expect(try Zigstr.eql(allocator, "fo\u{00E9}", "fo\u{0065}\u{0301}", .normalize));
+    expect(try Zigstr.eql(allocator, "fo\u{03D3}", "fo\u{03A5}\u{0301}", .normalize));
+    expect(try Zigstr.eql(allocator, "Fo\u{03D3}", "fo\u{03A5}\u{0301}", .norm_ignore));
+}

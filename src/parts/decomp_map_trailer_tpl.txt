@@ -140,24 +140,27 @@ fn decompKD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anye
 pub fn normalizeTo(self: *Self, allocator: *mem.Allocator, form: Form, str: []const u8) anyerror![]u8 {
     if (form != .D and form != .KD) return error.FormUnimplemented;
 
-    // No deinit here, to be freed by caller.
     var result = std.ArrayList(u8).init(allocator);
-    // This we can deinit.
+    defer result.deinit();
     var code_points = std.ArrayList(u21).init(self.allocator);
     defer code_points.deinit();
+
     // Gather decomposed code points.
     var iter = (try unicode.Utf8View.init(str)).iterator();
     while (iter.nextCodepoint()) |cp| {
         try code_points.appendSlice(try self.codePointTo(allocator, form, cp));
     }
+
     // Apply canonical sort algorithm.
     self.canonicalSort(code_points.items);
+
     // Encode as UTF-8 code units.
     var buf: [4]u8 = undefined;
     for (code_points.items) |dcp| {
         const len = try unicode.utf8Encode(dcp, &buf);
         try result.appendSlice(buf[0..len]);
     }
+
     // NFKD result.
     return result.toOwnedSlice();
 }
