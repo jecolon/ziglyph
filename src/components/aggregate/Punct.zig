@@ -13,43 +13,43 @@ const Other = @import("../autogen/DerivedGeneralCategory/OtherPunctuation.zig");
 const Self = @This();
 
 allocator: *mem.Allocator,
-close: ?Close = null,
-connector: ?Connector = null,
-dash: ?Dash = null,
-final: ?Final = null,
-initial: ?Initial = null,
-open: ?Open = null,
-other: ?Other = null,
+close: Close,
+connector: Connector,
+dash: Dash,
+final: Final,
+initial: Initial,
+open: Open,
+other: Other,
 
 pub fn init(allocator: *mem.Allocator) !Self {
-    return Self{ .allocator = allocator };
+    return Self{
+        .allocator = allocator,
+        .close = try Close.init(allocator),
+        .connector = try Connector.init(allocator),
+        .dash = try Dash.init(allocator),
+        .final = try Final.init(allocator),
+        .initial = try Initial.init(allocator),
+        .open = try Open.init(allocator),
+        .other = try Other.init(allocator),
+    };
 }
 
 pub fn deinit(self: *Self) void {
-    if (self.close) |*close| close.deinit();
-    if (self.connector) |*connector| connector.deinit();
-    if (self.dash) |*dash| dash.deinit();
-    if (self.final) |*final| final.deinit();
-    if (self.initial) |*initial| initial.deinit();
-    if (self.open) |*open| open.deinit();
-    if (self.other) |*other| other.deinit();
+    self.close.deinit();
+    self.connector.deinit();
+    self.dash.deinit();
+    self.final.deinit();
+    self.initial.deinit();
+    self.open.deinit();
+    self.other.deinit();
 }
 
 /// isPunct detects punctuation characters. Note some punctuation maybe considered symbols by Unicode.
-pub fn isPunct(self: *Self, cp: u21) !bool {
-    // Lazy init.
-    if (self.close == null) self.close = try Close.init(self.allocator);
-    if (self.connector == null) self.connector = try Connector.init(self.allocator);
-    if (self.dash == null) self.dash = try Dash.init(self.allocator);
-    if (self.final == null) self.final = try Final.init(self.allocator);
-    if (self.initial == null) self.initial = try Initial.init(self.allocator);
-    if (self.open == null) self.open = try Open.init(self.allocator);
-    if (self.other == null) self.other = try Other.init(self.allocator);
-
-    return self.close.?.isClosePunctuation(cp) or self.connector.?.isConnectorPunctuation(cp) or
-        self.dash.?.isDashPunctuation(cp) or self.final.?.isFinalPunctuation(cp) or
-        self.initial.?.isInitialPunctuation(cp) or self.open.?.isOpenPunctuation(cp) or
-        self.other.?.isOtherPunctuation(cp);
+pub fn isPunct(self: *Self, cp: u21) bool {
+    return self.close.isClosePunctuation(cp) or self.connector.isConnectorPunctuation(cp) or
+        self.dash.isDashPunctuation(cp) or self.final.isFinalPunctuation(cp) or
+        self.initial.isInitialPunctuation(cp) or self.open.isOpenPunctuation(cp) or
+        self.other.isOtherPunctuation(cp);
 }
 
 /// isAsciiPunct detects ASCII only punctuation.

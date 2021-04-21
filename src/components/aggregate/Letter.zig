@@ -24,55 +24,58 @@ pub const UpperMap = @import("../autogen/UnicodeData/UpperMap.zig");
 const Self = @This();
 
 allocator: *mem.Allocator,
-cased: ?Cased = null,
-fold_map: ?CaseFoldMap = null,
-lower: ?Lower = null,
-lower_map: ?LowerMap = null,
-modifier: ?Modifier = null,
-other: ?Other = null,
-title: ?Title = null,
-title_map: ?TitleMap = null,
-upper: ?Upper = null,
-upper_map: ?UpperMap = null,
+cased: Cased,
+fold_map: CaseFoldMap,
+lower: Lower,
+lower_map: LowerMap,
+modifier: Modifier,
+other: Other,
+title: Title,
+title_map: TitleMap,
+upper: Upper,
+upper_map: UpperMap,
 
 pub fn init(allocator: *mem.Allocator) !Self {
-    return Self{ .allocator = allocator };
+    return Self{
+        .allocator = allocator,
+        .cased = try Cased.init(allocator),
+        .fold_map = try CaseFoldMap.init(allocator),
+        .lower = try Lower.init(allocator),
+        .lower_map = try LowerMap.init(allocator),
+        .modifier = try Modifier.init(allocator),
+        .other = try Other.init(allocator),
+        .title = try Title.init(allocator),
+        .title_map = try TitleMap.init(allocator),
+        .upper = try Upper.init(allocator),
+        .upper_map = try UpperMap.init(allocator),
+    };
 }
 
 pub fn deinit(self: *Self) void {
-    if (self.cased) |*cased| cased.deinit();
-    if (self.fold_map) |*fold_map| fold_map.deinit();
-    if (self.lower) |*lower| lower.deinit();
-    if (self.lower_map) |*lower_map| lower_map.deinit();
-    if (self.modifier) |*modifier| modifier.deinit();
-    if (self.other) |*other| other.deinit();
-    if (self.title) |*title| title.deinit();
-    if (self.title_map) |*title_map| title_map.deinit();
-    if (self.upper) |*upper| upper.deinit();
-    if (self.upper_map) |*upper_map| upper_map.deinit();
+    self.cased.deinit();
+    self.fold_map.deinit();
+    self.lower.deinit();
+    self.lower_map.deinit();
+    self.modifier.deinit();
+    self.other.deinit();
+    self.title.deinit();
+    self.title_map.deinit();
+    self.upper.deinit();
+    self.upper_map.deinit();
 }
 
 /// isCased detects cased letters.
-pub fn isCased(self: *Self, cp: u21) !bool {
-    // Lazy init.
-    if (self.cased == null) self.cased = try Cased.init(self.allocator);
-    return self.cased.?.isCased(cp);
+pub fn isCased(self: *Self, cp: u21) bool {
+    return self.cased.isCased(cp);
 }
 
 /// isLetter covers all letters in Unicode, not just ASCII.
-pub fn isLetter(self: *Self, cp: u21) !bool {
-    // Lazy init.
-    if (self.lower == null) self.lower = try Lower.init(self.allocator);
-    if (self.modifier == null) self.modifier = try Modifier.init(self.allocator);
-    if (self.other == null) self.other = try Other.init(self.allocator);
-    if (self.title == null) self.title = try Title.init(self.allocator);
-    if (self.upper == null) self.upper = try Upper.init(self.allocator);
-
-    return self.lower.?.isLowercaseLetter(cp) or
-        self.modifier.?.isModifierLetter(cp) or
-        self.other.?.isOtherLetter(cp) or
-        self.title.?.isTitlecaseLetter(cp) or
-        self.upper.?.isUppercaseLetter(cp);
+pub fn isLetter(self: *Self, cp: u21) bool {
+    return self.lower.isLowercaseLetter(cp) or
+        self.modifier.isModifierLetter(cp) or
+        self.other.isOtherLetter(cp) or
+        self.title.isTitlecaseLetter(cp) or
+        self.upper.isUppercaseLetter(cp);
 }
 
 /// isAscii detects ASCII only letters.
@@ -81,10 +84,8 @@ pub fn isAscii(self: Self, cp: u21) bool {
 }
 
 /// isLower detects code points that are lowercase.
-pub fn isLower(self: *Self, cp: u21) !bool {
-    // Lazy init.
-    if (self.lower == null) self.lower = try Lower.init(self.allocator);
-    return self.lower.?.isLowercaseLetter(cp) or !(try self.isCased(cp));
+pub fn isLower(self: *Self, cp: u21) bool {
+    return self.lower.isLowercaseLetter(cp) or !self.isCased(cp);
 }
 
 /// isAsciiLower detects ASCII only lowercase letters.
@@ -93,17 +94,13 @@ pub fn isAsciiLower(self: Self, cp: u21) bool {
 }
 
 /// isTitle detects code points in titlecase.
-pub fn isTitle(self: *Self, cp: u21) !bool {
-    // Lazy init.
-    if (self.title == null) self.title = try Title.init(self.allocator);
-    return self.title.?.isTitlecaseLetter(cp) or !(try self.isCased(cp));
+pub fn isTitle(self: *Self, cp: u21) bool {
+    return self.title.isTitlecaseLetter(cp) or !self.isCased(cp);
 }
 
 /// isUpper detects code points in uppercase.
-pub fn isUpper(self: *Self, cp: u21) !bool {
-    // Lazy init.
-    if (self.upper == null) self.upper = try Upper.init(self.allocator);
-    return self.upper.?.isUppercaseLetter(cp) or !(try self.isCased(cp));
+pub fn isUpper(self: *Self, cp: u21) bool {
+    return self.upper.isUppercaseLetter(cp) or !self.isCased(cp);
 }
 
 /// isAsciiUpper detects ASCII only uppercase letters.
@@ -113,12 +110,10 @@ pub fn isAsciiUpper(self: Self, cp: u21) bool {
 
 /// toLower returns the lowercase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
-pub fn toLower(self: *Self, cp: u21) !u21 {
+pub fn toLower(self: *Self, cp: u21) u21 {
     // Only cased letters.
-    if (!try self.isCased(cp)) return cp;
-    // Lazy init.
-    if (self.lower_map == null) self.lower_map = try LowerMap.init(self.allocator);
-    return self.lower_map.?.toLower(cp);
+    if (!self.isCased(cp)) return cp;
+    return self.lower_map.toLower(cp);
 }
 
 /// toAsciiLower converts an ASCII letter to lowercase.
@@ -128,22 +123,18 @@ pub fn toAsciiLower(self: Self, cp: u21) u21 {
 
 /// toTitle returns the titlecase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
-pub fn toTitle(self: *Self, cp: u21) !u21 {
+pub fn toTitle(self: *Self, cp: u21) u21 {
     // Only cased letters.
-    if (!try self.isCased(cp)) return cp;
-    // Lazy init.
-    if (self.title_map == null) self.title_map = try TitleMap.init(self.allocator);
-    return self.title_map.?.toTitle(cp);
+    if (!self.isCased(cp)) return cp;
+    return self.title_map.toTitle(cp);
 }
 
 /// toUpper returns the uppercase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
-pub fn toUpper(self: *Self, cp: u21) !u21 {
+pub fn toUpper(self: *Self, cp: u21) u21 {
     // Only cased letters.
-    if (!try self.isCased(cp)) return cp;
-    // Lazy init.
-    if (self.upper_map == null) self.upper_map = try UpperMap.init(self.allocator);
-    return self.upper_map.?.toUpper(cp);
+    if (!self.isCased(cp)) return cp;
+    return self.upper_map.toUpper(cp);
 }
 
 /// toAsciiUpper converts an ASCII letter to uppercase.
@@ -153,7 +144,6 @@ pub fn toAsciiUpper(self: Self, cp: u21) u21 {
 
 /// toCaseFold will convert a code point into its case folded equivalent. Note that this can result
 /// in a mapping to more than one code point, known as the full case fold.
-pub fn toCaseFold(self: *Self, cp: u21) !CaseFold {
-    if (self.fold_map == null) self.fold_map = try CaseFoldMap.init(self.allocator);
-    return self.fold_map.?.toCaseFold(cp);
+pub fn toCaseFold(self: *Self, cp: u21) CaseFold {
+    return self.fold_map.toCaseFold(cp);
 }

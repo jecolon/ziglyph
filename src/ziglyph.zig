@@ -34,37 +34,45 @@ pub const Symbol = @import("components/aggregate/Symbol.zig");
 /// to only consume memory when needed.
 pub const Ziglyph = struct {
     allocator: *mem.Allocator,
-    alpha: ?Alphabetic = null,
-    control: ?Control = null,
-    letter: ?Letter = null,
-    mark: ?Mark = null,
-    number: ?Number = null,
-    punct: ?Punct = null,
-    symbol: ?Symbol = null,
-    space: ?Space = null,
+    alpha: Alphabetic,
+    control: Control,
+    letter: Letter,
+    mark: Mark,
+    number: Number,
+    punct: Punct,
+    symbol: Symbol,
+    space: Space,
 
-    pub fn init(allocator: *mem.Allocator) Ziglyph {
-        return Ziglyph{ .allocator = allocator };
+    pub fn init(allocator: *mem.Allocator) !Ziglyph {
+        return Ziglyph{
+            .allocator = allocator,
+            .alpha = try Alphabetic.init(allocator),
+            .control = try Control.init(allocator),
+            .letter = try Letter.init(allocator),
+            .mark = try Mark.init(allocator),
+            .number = try Number.init(allocator),
+            .punct = try Punct.init(allocator),
+            .symbol = try Symbol.init(allocator),
+            .space = try Space.init(allocator),
+        };
     }
 
     const Self = @This();
 
     pub fn deinit(self: *Self) void {
-        if (self.alpha) |*alpha| alpha.deinit();
-        if (self.control) |*control| control.deinit();
-        if (self.letter) |*letter| letter.deinit();
-        if (self.mark) |*mark| mark.deinit();
-        if (self.number) |*number| number.deinit();
-        if (self.punct) |*punct| punct.deinit();
-        if (self.space) |*space| space.deinit();
-        if (self.symbol) |*symbol| symbol.deinit();
+        self.alpha.deinit();
+        self.control.deinit();
+        self.letter.deinit();
+        self.mark.deinit();
+        self.number.deinit();
+        self.punct.deinit();
+        self.space.deinit();
+        self.symbol.deinit();
     }
 
     /// isAlphabetic detects if a code point is alphabetic.
-    pub fn isAlphabetic(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.alpha == null) self.alpha = try Alphabetic.init(self.allocator);
-        return self.alpha.?.isAlphabetic(cp);
+    pub fn isAlphabetic(self: *Self, cp: u21) bool {
+        return self.alpha.isAlphabetic(cp);
     }
 
     /// isAsciiAlphabetic detects ASCII only letters.
@@ -73,8 +81,8 @@ pub const Ziglyph = struct {
     }
 
     /// isAlphaNum covers all the Unicode alphabetic and number space, not just ASCII.
-    pub fn isAlphaNum(self: *Self, cp: u21) !bool {
-        return (try self.isAlphabetic(cp)) or (try self.isNumber(cp));
+    pub fn isAlphaNum(self: *Self, cp: u21) bool {
+        return (self.isAlphabetic(cp) or self.isNumber(cp));
     }
 
     /// isAsciiAlphaNum detects ASCII only letters or numbers.
@@ -83,35 +91,29 @@ pub const Ziglyph = struct {
     }
 
     /// isBase detects Unicode base code points.
-    pub fn isBase(self: *Self, cp: u21) !bool {
-        return (try self.isLetter(cp)) or (try self.isNumber(cp)) or (try self.isPunct(cp)) or
-            (try self.isSymbol(cp)) or (try self.isSpace(cp));
+    pub fn isBase(self: *Self, cp: u21) bool {
+        return self.isLetter(cp) or self.isNumber(cp) or self.isPunct(cp) or
+            self.isSymbol(cp) or self.isSpace(cp);
     }
 
     /// isCombining detects Unicode base characters.
-    pub fn isCombining(self: *Self, cp: u21) !bool {
-        return (try self.isMark(cp));
+    pub fn isCombining(self: *Self, cp: u21) bool {
+        return self.isMark(cp);
     }
 
     /// isCased detects cased letters.
-    pub fn isCased(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.letter == null) self.letter = try Letter.init(self.allocator);
-        return self.letter.?.isCased(cp);
+    pub fn isCased(self: *Self, cp: u21) bool {
+        return self.letter.isCased(cp);
     }
 
     // isDecimal detects all Unicode digits.
-    pub fn isDecimal(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.number == null) self.number = try Number.init(self.allocator);
-        return (try self.number.?.isDecimal(cp));
+    pub fn isDecimal(self: *Self, cp: u21) bool {
+        return self.number.isDecimal(cp);
     }
 
     // isDigit detects all Unicode digits, which don't include the ASCII digits..
-    pub fn isDigit(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.number == null) self.number = try Number.init(self.allocator);
-        return (try self.number.?.isDigit(cp));
+    pub fn isDigit(self: *Self, cp: u21) bool {
+        return self.number.isDigit(cp);
     }
 
     /// isAsciiAlphabetic detects ASCII only letters.
@@ -120,8 +122,8 @@ pub const Ziglyph = struct {
     }
 
     /// isGraphic detects any code point that can be represented graphically, including spaces.
-    pub fn isGraphic(self: *Self, cp: u21) !bool {
-        return (try self.isPrint(cp)) or (try self.isSpace(cp));
+    pub fn isGraphic(self: *Self, cp: u21) bool {
+        return self.isPrint(cp) or self.isSpace(cp);
     }
 
     /// isAsciiGraphic detects ASCII only graphic code points.
@@ -130,9 +132,8 @@ pub const Ziglyph = struct {
     }
 
     // isHex detects the 16 ASCII characters 0-9 A-F, and a-f.
-    pub fn isHexDigit(self: *Self, cp: u21) !bool {
-        if (self.number == null) self.number = try Number.init(self.allocator);
-        return (try self.number.?.isHexDigit(cp));
+    pub fn isHexDigit(self: *Self, cp: u21) bool {
+        return self.number.isHexDigit(cp);
     }
 
     /// isAsciiHexDigit detects ASCII only hexadecimal digits.
@@ -141,9 +142,9 @@ pub const Ziglyph = struct {
     }
 
     /// isPrint detects any code point that can be printed, but not spaces.
-    pub fn isPrint(self: *Self, cp: u21) !bool {
-        return (try self.isAlphaNum(cp)) or (try self.isMark(cp)) or (try self.isPunct(cp)) or
-            (try self.isSymbol(cp)) or (try self.isWhiteSpace(cp));
+    pub fn isPrint(self: *Self, cp: u21) bool {
+        return self.isAlphaNum(cp) or self.isMark(cp) or self.isPunct(cp) or
+            self.isSymbol(cp) or self.isWhiteSpace(cp);
     }
 
     /// isAsciiPrint detects ASCII printable code points.
@@ -152,10 +153,8 @@ pub const Ziglyph = struct {
     }
 
     /// isControl detects control code points such as form feeds.
-    pub fn isControl(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.control == null) self.control = try Control.init(self.allocator);
-        return self.control.?.isControl(cp);
+    pub fn isControl(self: *Self, cp: u21) bool {
+        return self.control.isControl(cp);
     }
 
     /// isAsciiControl detects ASCII only control code points.
@@ -164,10 +163,8 @@ pub const Ziglyph = struct {
     }
 
     /// isLetter covers all letters in Unicode, not just ASCII.
-    pub fn isLetter(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.letter == null) self.letter = try Letter.init(self.allocator);
-        return (try self.letter.?.isLetter(cp));
+    pub fn isLetter(self: *Self, cp: u21) bool {
+        return self.letter.isLetter(cp);
     }
 
     /// isAsciiLetter detects ASCII only letters.
@@ -176,10 +173,8 @@ pub const Ziglyph = struct {
     }
 
     /// isLower detects code points that are lowercase.
-    pub fn isLower(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.letter == null) self.letter = try Letter.init(self.allocator);
-        return (try self.letter.?.isLower(cp));
+    pub fn isLower(self: *Self, cp: u21) bool {
+        return (self.letter.isLower(cp));
     }
 
     /// isAsciiLower detects ASCII only lowercase letters.
@@ -188,17 +183,13 @@ pub const Ziglyph = struct {
     }
 
     /// isMark detects special code points that serve as marks in different alphabets.
-    pub fn isMark(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.mark == null) self.mark = try Mark.init(self.allocator);
-        return (try self.mark.?.isMark(cp));
+    pub fn isMark(self: *Self, cp: u21) bool {
+        return (self.mark.isMark(cp));
     }
 
     /// isNumber covers all Unicode numbers, not just ASII.
-    pub fn isNumber(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.number == null) self.number = try Number.init(self.allocator);
-        return (try self.number.?.isNumber(cp));
+    pub fn isNumber(self: *Self, cp: u21) bool {
+        return (self.number.isNumber(cp));
     }
 
     /// isAsciiNumber detects ASCII only numbers.
@@ -207,10 +198,8 @@ pub const Ziglyph = struct {
     }
 
     /// isPunct detects punctuation characters. Note some punctuation maybe considered symbols by Unicode.
-    pub fn isPunct(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.punct == null) self.punct = try Punct.init(self.allocator);
-        return (try self.punct.?.isPunct(cp));
+    pub fn isPunct(self: *Self, cp: u21) bool {
+        return (self.punct.isPunct(cp));
     }
 
     /// isAsciiPunct detects ASCII only punctuation.
@@ -219,17 +208,13 @@ pub const Ziglyph = struct {
     }
 
     /// isSpace detects code points that are Unicode space separators.
-    pub fn isSpace(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.space == null) self.space = try Space.init(self.allocator);
-        return self.space.?.isSpace(cp);
+    pub fn isSpace(self: *Self, cp: u21) bool {
+        return self.space.isSpace(cp);
     }
 
     /// isWhiteSpace checks for spaces.
-    pub fn isWhiteSpace(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.space == null) self.space = try Space.init(self.allocator);
-        return (try self.space.?.isWhiteSpace(cp));
+    pub fn isWhiteSpace(self: *Self, cp: u21) bool {
+        return (self.space.isWhiteSpace(cp));
     }
 
     /// isAsciiWhiteSpace detects ASCII only whitespace.
@@ -239,11 +224,8 @@ pub const Ziglyph = struct {
 
     // isSymbol detects symbols which curiosly may include some code points commonly thought of as
     // punctuation.
-    pub fn isSymbol(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.symbol == null) self.symbol = try Symbol.init(self.allocator);
-
-        return (try self.symbol.?.isSymbol(cp));
+    pub fn isSymbol(self: *Self, cp: u21) bool {
+        return (self.symbol.isSymbol(cp));
     }
 
     /// isAsciiSymbol detects ASCII only symbols.
@@ -252,17 +234,13 @@ pub const Ziglyph = struct {
     }
 
     /// isTitle detects code points in titlecase.
-    pub fn isTitle(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.letter == null) self.letter = try Letter.init(self.allocator);
-        return (try self.letter.?.isTitle(cp));
+    pub fn isTitle(self: *Self, cp: u21) bool {
+        return (self.letter.isTitle(cp));
     }
 
     /// isUpper detects code points in uppercase.
-    pub fn isUpper(self: *Self, cp: u21) !bool {
-        // Lazy init.
-        if (self.letter == null) self.letter = try Letter.init(self.allocator);
-        return (try self.letter.?.isUpper(cp));
+    pub fn isUpper(self: *Self, cp: u21) bool {
+        return (self.letter.isUpper(cp));
     }
 
     /// isAsciiUpper detects ASCII only uppercase letters.
@@ -272,10 +250,8 @@ pub const Ziglyph = struct {
 
     /// toLower returns the lowercase code point for the given code point. It returns the same 
     /// code point given if no mapping exists.
-    pub fn toLower(self: *Self, cp: u21) !u21 {
-        // Lazy init.
-        if (self.letter == null) self.letter = try Letter.init(self.allocator);
-        return (try self.letter.?.toLower(cp));
+    pub fn toLower(self: *Self, cp: u21) u21 {
+        return self.letter.toLower(cp);
     }
 
     /// toAsciiLower converts an ASCII letter to lowercase.
@@ -285,18 +261,14 @@ pub const Ziglyph = struct {
 
     /// toTitle returns the titlecase code point for the given code point. It returns the same 
     /// code point given if no mapping exists.
-    pub fn toTitle(self: *Self, cp: u21) !u21 {
-        // Lazy init.
-        if (self.letter == null) self.letter = try Letter.init(self.allocator);
-        return (try self.letter.?.toTitle(cp));
+    pub fn toTitle(self: *Self, cp: u21) u21 {
+        return self.letter.toTitle(cp);
     }
 
     /// toUpper returns the uppercase code point for the given code point. It returns the same 
     /// code point given if no mapping exists.
-    pub fn toUpper(self: *Self, cp: u21) !u21 {
-        // Lazy init.
-        if (self.letter == null) self.letter = try Letter.init(self.allocator);
-        return (try self.letter.?.toUpper(cp));
+    pub fn toUpper(self: *Self, cp: u21) u21 {
+        return self.letter.toUpper(cp);
     }
 
     /// toAsciiUpper converts an ASCII letter to uppercase.

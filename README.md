@@ -16,14 +16,10 @@ package, Ziglyph is now completely independent and unique in and of itself.
 ## Usage
 There are two modes of usage: via the consolidated Ziglyph struct or using the individual component
 structs for more fine grained control over memory usage and binary size. The Ziglyph struct provides
-the convenience of having all the methods in one place, with lazy initialization of the underlying
-structs to only use the resources necessary. However this comes at the cost of more error handling,
-given that when calling a method such as `isUpper`, Ziglyph may need to lazily initialize underlying
-structs, which will allocate memory, which may fail. There is a sub-level of component structs in the
+the convenience of having all the methods in one place. There is a sub-level of component structs in the
 `src/components/aggregate` drectory (also re-exported in the Ziglyph struct,) that expose this same 
 kind of interface; i.e. `Letter`, `Punct`, and `Symbol`. The component structs in the `src/components/autogen` 
-are the lowest level and their methods usually don't require the extra error handling. These structs
-are also auto-generated code from the Unicode Character Database (UCD) files.
+are the lowest level. These structs are also auto-generated code from the Unicode Character Database (UCD) files.
 
 ### Using the Ziglyph Struct
 ```zig
@@ -35,17 +31,16 @@ const expectEqual = std.testing.expectEqual;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
 
 test "Ziglyph struct" {
-    var ziglyph = Ziglyph.init(std.testing.allocator);
+    var ziglyph = try Ziglyph.init(std.testing.allocator);
     defer ziglyph.deinit();
 
     const z = 'z';
-    // Lazy init requires may fail, use 'try'.
-    expect(try ziglyph.isLetter(z));
-    expect(try ziglyph.isAlphaNum(z));
-    expect(try ziglyph.isPrint(z));
-    expect(!try ziglyph.isUpper(z));
-    const uz = try ziglyph.toUpper(z);
-    expect(try ziglyph.isUpper(uz));
+    expect(ziglyph.isLetter(z));
+    expect(ziglyph.isAlphaNum(z));
+    expect(ziglyph.isPrint(z));
+    expect(!ziglyph.isUpper(z));
+    const uz = ziglyph.toUpper(z);
+    expect(ziglyph.isUpper(uz));
     expectEqual(uz, 'Z');
 }
 ```
@@ -67,13 +62,12 @@ test "Aggregate structs" {
     defer punct.deinit();
 
     const z = 'z';
-    // Aggregate structs also use lezy init, use `try`.
-    expect(try letter.isLetter(z));
-    expect(!try letter.isUpper(z));
-    expect(!try punct.isPunct(z));
-    expect(try punct.isPunct('!'));
-    const uz = try letter.toUpper(z);
-    expect(try letter.isUpper(uz));
+    expect(letter.isLetter(z));
+    expect(!letter.isUpper(z));
+    expect(!punct.isPunct(z));
+    expect(tpunct.isPunct('!'));
+    const uz = letter.toUpper(z);
+    expect(letter.isUpper(uz));
     expectEqual(uz, 'Z');
 }
 ```
@@ -87,7 +81,6 @@ const expectEqual = std.testing.expectEqual;
 // Import the components.
 const Lower = @import("ziglyph.zig").Letter.Lower;
 const Upper = @import("ziglyph.zig").Letter.Upper;
-// Case mapping.
 const UpperMap = @import("ziglyph.zig").Letter.UpperMap;
 
 test "Component structs" {
@@ -99,7 +92,6 @@ test "Component structs" {
     defer upper_map.deinit();
 
     const z = 'z';
-    // No lazy init, no `try` here.
     expect(lower.isLowercaseLetter(z));
     expect(!upper.isUppercaseLetter(z));
     const uz = upper_map.toUpper(z);

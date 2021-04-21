@@ -15,17 +15,16 @@ const UpperMap = @import("ziglyph.zig").Letter.UpperMap;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
 
 test "Ziglyph struct" {
-    var ziglyph = Ziglyph.init(std.testing.allocator);
+    var ziglyph = try Ziglyph.init(std.testing.allocator);
     defer ziglyph.deinit();
 
     const z = 'z';
-    // Lazy init requires may fail, use 'try'.
-    expect(try ziglyph.isLetter(z));
-    expect(try ziglyph.isAlphaNum(z));
-    expect(try ziglyph.isPrint(z));
-    expect(!try ziglyph.isUpper(z));
-    const uz = try ziglyph.toUpper(z);
-    expect(try ziglyph.isUpper(uz));
+    expect(ziglyph.isLetter(z));
+    expect(ziglyph.isAlphaNum(z));
+    expect(ziglyph.isPrint(z));
+    expect(!ziglyph.isUpper(z));
+    const uz = ziglyph.toUpper(z);
+    expect(ziglyph.isUpper(uz));
     expectEqual(uz, 'Z');
 }
 
@@ -36,13 +35,12 @@ test "Aggregate struct" {
     defer punct.deinit();
 
     const z = 'z';
-    // Aggregate structs also use lezy init, use `try`.
-    expect(try letter.isLetter(z));
-    expect(!try letter.isUpper(z));
-    expect(!try punct.isPunct(z));
-    expect(try punct.isPunct('!'));
-    const uz = try letter.toUpper(z);
-    expect(try letter.isUpper(uz));
+    expect(letter.isLetter(z));
+    expect(!letter.isUpper(z));
+    expect(!punct.isPunct(z));
+    expect(punct.isPunct('!'));
+    const uz = letter.toUpper(z);
+    expect(letter.isUpper(uz));
     expectEqual(uz, 'Z');
 }
 
@@ -55,7 +53,6 @@ test "Component structs" {
     defer upper_map.deinit();
 
     const z = 'z';
-    // No lazy init, no `try` here.
     expect(lower.isLowercaseLetter(z));
     expect(!upper.isUppercaseLetter(z));
     const uz = upper_map.toUpper(z);

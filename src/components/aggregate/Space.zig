@@ -8,30 +8,30 @@ pub const Space = @import("../autogen/DerivedGeneralCategory/SpaceSeparator.zig"
 const Self = @This();
 
 allocator: *mem.Allocator,
-space: ?Space = null,
-whitespace: ?WhiteSpace = null,
+space: Space,
+whitespace: WhiteSpace,
 
 pub fn init(allocator: *mem.Allocator) !Self {
-    return Self{ .allocator = allocator };
+    return Self{
+        .allocator = allocator,
+        .space = try Space.init(allocator),
+        .whitespace = try WhiteSpace.init(allocator),
+    };
 }
 
 pub fn deinit(self: *Self) void {
-    if (self.space) |*space| space.deinit();
-    if (self.whitespace) |*whitespace| whitespace.deinit();
+    self.space.deinit();
+    self.whitespace.deinit();
 }
 
 /// isSpace detects code points that are Unicode space separators.
-pub fn isSpace(self: *Self, cp: u21) !bool {
-    // Lazy init.
-    if (self.space == null) self.space = try Space.init(self.allocator);
-    return self.space.?.isSpaceSeparator(cp);
+pub fn isSpace(self: *Self, cp: u21) bool {
+    return self.space.isSpaceSeparator(cp);
 }
 
 /// isWhiteSpace checks for spaces.
-pub fn isWhiteSpace(self: *Self, cp: u21) !bool {
-    // Lazy init.
-    if (self.whitespace == null) self.whitespace = try WhiteSpace.init(self.allocator);
-    return self.whitespace.?.isWhiteSpace(cp);
+pub fn isWhiteSpace(self: *Self, cp: u21) bool {
+    return self.whitespace.isWhiteSpace(cp);
 }
 
 /// isAsciiWhiteSpace detects ASCII only whitespace.
