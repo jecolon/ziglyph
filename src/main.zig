@@ -783,4 +783,5 @@ test "Zigstr eql" {
     expect(try Zigstr.eql(allocator, "fo\u{00E9}", "fo\u{0065}\u{0301}", .normalize));
     expect(try Zigstr.eql(allocator, "fo\u{03D3}", "fo\u{03A5}\u{0301}", .normalize));
     expect(try Zigstr.eql(allocator, "Fo\u{03D3}", "fo\u{03A5}\u{0301}", .norm_ignore));
+    expect(try Zigstr.eql(allocator, "fo\u{00C9}", "fo\u{0065}\u{0301}", .norm_ignore)); // foÉ == foé
 }
