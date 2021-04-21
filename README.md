@@ -60,7 +60,7 @@ const expectEqual = std.testing.expectEqual;
 const Letter = @import("ziglyph.zig").Letter;
 const Punct = @import("ziglyph.zig").Punct;
 
-test "Aggregate struct" {
+test "Aggregate structs" {
     var letter = try Letter.init(std.testing.allocator);
     defer letter.deinit();
     var punct = try Punct.init(std.testing.allocator);
@@ -125,7 +125,7 @@ const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
 const Decomposed = DecomposeMap.Decomposed;
 
 // Normalization Forms: D == Canonical, KD == Compatibility
-test "decomposeTo D" {
+test "decomposeTo" {
     var allocator = std.testing.allocator;
     var z = try DecomposeMap.init(allocator);
     defer z.deinit();
@@ -140,20 +140,10 @@ test "decomposeTo D" {
     expectEqual(result.len, 2);
     expectEqual(result[0].same, 0x03D2);
     expectEqual(result[1].same, 0x0301);
-}
-
-test "decomposeTo KD" {
-    var allocator = std.testing.allocator;
-    var z = try DecomposeMap.init(allocator);
-    defer z.deinit();
-
-    var arena = std.heap.ArenaAllocator.init(allocator);
-    defer arena.deinit();
-    var arena_allocator = &arena.allocator;
 
     // KD: ox03D3 -> 0x03D2, 0x0301 -> 0x03A5, 0x0301
-    var src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    var result = try z.decomposeTo(arena_allocator, .KD, &src);
+    src = [1]Decomposed{.{ .src = '\u{03D3}' }};
+    result = try z.decomposeTo(arena_allocator, .KD, &src);
     expectEqual(result.len, 2);
     expect(result[0] == .same);
     expectEqual(result[0].same, 0x03A5);
