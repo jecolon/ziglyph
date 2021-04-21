@@ -14,8 +14,6 @@ pub const Alphabetic = @import("components/autogen/DerivedCoreProperties/Alphabe
 pub const Control = @import("components/autogen/DerivedGeneralCategory/Control.zig");
 /// Code point decomposition.
 pub const DecomposeMap = @import("components/autogen/UnicodeData/DecomposeMap.zig");
-/// Grapheme Clusters.
-pub const GraphemeIterator = @import("zigstr/Zigstr.zig").GraphemeIterator;
 /// Unicode letters.
 pub const Letter = @import("components/aggregate/Letter.zig");
 // Marks.
@@ -28,6 +26,10 @@ pub const Punct = @import("components/aggregate/Punct.zig");
 pub const Space = @import("components/aggregate/Space.zig");
 // Symbols
 pub const Symbol = @import("components/aggregate/Symbol.zig");
+/// String functions
+pub const Zigstr = @import("zigstr/Zigstr.zig");
+/// Grapheme Clusters.
+pub const GraphemeIterator = Zigstr.GraphemeIterator;
 
 /// Ziglyph consolidates all the major Unicode utility functions in one place. Because these functions
 /// each consume memory for their respective code point data, this struct performs lazy initialization
@@ -274,33 +276,5 @@ pub const Ziglyph = struct {
     /// toAsciiUpper converts an ASCII letter to uppercase.
     pub fn toAsciiUpper(self: Self, cp: u21) u21 {
         return if (cp < 128) ascii.toUpper(@intCast(u8, cp)) else false;
-    }
-
-    /// isAscii checks a code point to see if it's an ASCII character.
-    pub fn isAscii(self: Self, cp: u21) bool {
-        return cp < 128;
-    }
-
-    /// isAsciiStr checks if a string (`[]const uu`) is composed solely of ASCII characters.
-    pub fn isAsciiStr(self: Self, str: []const u8) !bool {
-        var cp_iter = (try unicode.Utf8View.init(str)).iterator();
-        while (cp_iter.nextCodepoint()) |cp| {
-            if (!self.isAscii(cp)) return false;
-        }
-        return true;
-    }
-
-    /// isLatin1 checks a code point to see if it's a Latin-1 character.
-    pub fn isLatin1(self: Self, cp: u21) bool {
-        return cp < 256;
-    }
-
-    /// isLatin1Str checks if a string (`[]const uu`) is composed solely of Latin-1 characters.
-    pub fn isLatin1Str(self: Self, str: []const u8) !bool {
-        var cp_iter = (try unicode.Utf8View.init(str)).iterator();
-        while (cp_iter.nextCodepoint()) |cp| {
-            if (!self.isLatin1(cp)) return false;
-        }
-        return true;
     }
 };

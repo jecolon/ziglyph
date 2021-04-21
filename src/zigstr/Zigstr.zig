@@ -312,3 +312,31 @@ pub const GraphemeIterator = struct {
         }
     }
 };
+
+/// isAscii checks a code point to see if it's an ASCII character.
+pub fn isAscii(cp: u21) bool {
+    return cp < 128;
+}
+
+/// isAsciiStr checks if a string (`[]const uu`) is composed solely of ASCII characters.
+pub fn isAsciiStr(str: []const u8) !bool {
+    var cp_iter = (try unicode.Utf8View.init(str)).iterator();
+    while (cp_iter.nextCodepoint()) |cp| {
+        if (!isAscii(cp)) return false;
+    }
+    return true;
+}
+
+/// isLatin1 checks a code point to see if it's a Latin-1 character.
+pub fn isLatin1(cp: u21) bool {
+    return cp < 256;
+}
+
+/// isLatin1Str checks if a string (`[]const uu`) is composed solely of Latin-1 characters.
+pub fn isLatin1Str(str: []const u8) !bool {
+    var cp_iter = (try unicode.Utf8View.init(str)).iterator();
+    while (cp_iter.nextCodepoint()) |cp| {
+        if (!isLatin1(cp)) return false;
+    }
+    return true;
+}

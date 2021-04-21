@@ -11,10 +11,11 @@ const unicode = std.unicode;
 const Control = @import("ziglyph.zig").Control;
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
 const Decomposed = DecomposeMap.Decomposed;
-const GraphemeIterator = @import("ziglyph.zig").GraphemeIterator;
 const Letter = @import("ziglyph.zig").Letter;
 const Number = @import("ziglyph.zig").Number;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
+const Zigstr = @import("ziglyph.zig").Zigstr;
+const GraphemeIterator = Zigstr.GraphemeIterator;
 
 // UTF-8 BOM = EFBBBF
 pub fn main() !void {
@@ -697,21 +698,15 @@ test "normalizeTo" {
 }
 
 test "isAsciiStr" {
-    var z = try Ziglyph.init(std.testing.allocator);
-    defer z.deinit();
-
-    expect(try z.isAsciiStr("Hello!"));
-    expect(!try z.isAsciiStr("Héllo!"));
+    expect(try Zigstr.isAsciiStr("Hello!"));
+    expect(!try Zigstr.isAsciiStr("Héllo!"));
 }
 
 test "isLatin1Str" {
-    var z = try Ziglyph.init(std.testing.allocator);
-    defer z.deinit();
-
-    expect(try z.isLatin1Str("Hello!"));
-    expect(try z.isLatin1Str("Héllo!"));
-    expect(!try z.isLatin1Str("H\u{0065}\u{0301}llo!"));
-    expect(!try z.isLatin1Str("H😀llo!"));
+    expect(try Zigstr.isLatin1Str("Hello!"));
+    expect(try Zigstr.isLatin1Str("Héllo!"));
+    expect(!try Zigstr.isLatin1Str("H\u{0065}\u{0301}llo!"));
+    expect(!try Zigstr.isLatin1Str("H😀llo!"));
 }
 
 test "grapheme iterator" {
