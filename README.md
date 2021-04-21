@@ -134,7 +134,7 @@ test "decomposeTo" {
     defer arena.deinit();
     var arena_allocator = &arena.allocator;
 
-    // CD: ox03D3 -> 0x03D2, 0x0301
+    // D: ox03D3 -> 0x03D2, 0x0301
     var src = [1]Decomposed{.{ .src = '\u{03D3}' }};
     var result = try z.decomposeTo(arena_allocator, .D, &src);
     expectEqual(result.len, 2);
