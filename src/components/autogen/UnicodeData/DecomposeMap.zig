@@ -18001,8 +18001,7 @@ pub fn mapping(self: Self, cp: u21) Decomposed {
 }
 
 /// codePointTo takes a code point and returns a sequence of code points that represent its conversion 
-/// to the specified Form. Given the recursive nature of this method, a std.heap.ArenaAllocator is 
-/// recommeded.
+/// to the specified Form. Caller must free returned bytes.
 pub fn codePointTo(self: Self, allocator: *mem.Allocator, form: Form, cp: u21) anyerror![]u21 {
     if (form == .D or form == .KD) {
         // Decomposition.
@@ -18017,6 +18016,7 @@ pub fn codePointTo(self: Self, allocator: *mem.Allocator, form: Form, cp: u21) a
             // Non-Hangul code points.
             const src = [1]Decomposed{.{ .src = cp }};
             const dcs = try self.decomposeTo(allocator, form, &src);
+            defer allocator.free(dcs);
             var result = try allocator.alloc(u21, dcs.len);
             for (dcs) |dc, index| {
                 result[index] = dc.same;
@@ -18029,14 +18029,25 @@ pub fn codePointTo(self: Self, allocator: *mem.Allocator, form: Form, cp: u21) a
 }
 
 /// decomposeTo recursively performs decomposition until the specified form is obtained.
-/// Given the recursive nature of this method, a std.heap.ArenaAllocator is the recommeded type of 
-/// allocator to pass in. The caller can then easily free all memory with just a call to the arena's 
-/// deinit method.
+/// Caller must free returned bytes.
 pub fn decomposeTo(self: Self, allocator: *mem.Allocator, form: Form, dcs: []const Decomposed) anyerror![]const Decomposed {
-    return switch (form) {
-        .D => try self.decompD(allocator, dcs),
-        .KD => try self.decompKD(allocator, dcs),
+    // Avoid recursive allocation hell with arena.
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+
+    // Freed by arena.
+    const rdcs = switch (form) {
+        .D => try self.decompD(&arena.allocator, dcs),
+        .KD => try self.decompKD(&arena.allocator, dcs),
     };
+
+    // Freed by caller.
+    var result = try allocator.alloc(Decomposed, rdcs.len);
+    for (rdcs) |dc, i| {
+        result[i] = dc;
+    }
+
+    return result;
 }
 
 fn decompD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anyerror![]const Decomposed {
@@ -18045,6 +18056,7 @@ fn decompD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anyer
 
     var rdcs = std.ArrayList(Decomposed).init(allocator);
     defer rdcs.deinit();
+
     for (dcs) |dc| {
         switch (dc) {
             .src => |cp| {
@@ -18084,6 +18096,7 @@ fn decompD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anyer
             .compat => {},
         }
     }
+
     return rdcs.toOwnedSlice();
 }
 
@@ -18093,6 +18106,7 @@ fn decompKD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anye
 
     var rdcs = std.ArrayList(Decomposed).init(allocator);
     defer rdcs.deinit();
+
     for (dcs) |dc| {
         switch (dc) {
             .src => |cp| {
@@ -18118,12 +18132,12 @@ fn decompKD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anye
             },
         }
     }
+
     return rdcs.toOwnedSlice();
 }
 
 /// normalizeTo will normalize the code points in str, producing a slice of u8 with the new bytes
-/// corresponding to the specified Normalization Form. Given the recursive nature of this method, a 
-/// std.heap.ArenaAllocator is recommeded.
+/// corresponding to the specified Normalization Form. Caller must free returned bytes.
 pub fn normalizeTo(self: *Self, allocator: *mem.Allocator, form: Form, str: []const u8) anyerror![]u8 {
     if (form != .D and form != .KD) return error.FormUnimplemented;
 
@@ -18135,7 +18149,9 @@ pub fn normalizeTo(self: *Self, allocator: *mem.Allocator, form: Form, str: []co
     // Gather decomposed code points.
     var iter = (try unicode.Utf8View.init(str)).iterator();
     while (iter.nextCodepoint()) |cp| {
-        try code_points.appendSlice(try self.codePointTo(allocator, form, cp));
+        const cp_slice = try self.codePointTo(allocator, form, cp);
+        defer allocator.free(cp_slice);
+        try code_points.appendSlice(cp_slice);
     }
 
     // Apply canonical sort algorithm.

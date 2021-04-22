@@ -401,20 +401,22 @@ fn ignoreCaseEql(allocator: *mem.Allocator, a: []const u8, b: []const u8) !bool 
     defer fold_map.deinit();
 
     const cf_a = try fold_map.caseFoldStr(allocator, a);
+    defer allocator.free(cf_a);
     const cf_b = try fold_map.caseFoldStr(allocator, b);
+    defer allocator.free(cf_b);
 
     return mem.eql(u8, cf_a, cf_b);
 }
 
 fn normalizeEql(allocator: *mem.Allocator, a: []const u8, b: []const u8) !bool {
-    var dm = try DecomposeMap.init(allocator);
-    defer dm.deinit();
+    var decomp_map = try DecomposeMap.init(allocator);
+    defer decomp_map.deinit();
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     var arena_allocator = &arena.allocator;
 
-    const norm_a = try dm.normalizeTo(arena_allocator, .KD, a);
-    const norm_b = try dm.normalizeTo(arena_allocator, .KD, b);
+    const norm_a = try decomp_map.normalizeTo(arena_allocator, .KD, a);
+    const norm_b = try decomp_map.normalizeTo(arena_allocator, .KD, b);
     return mem.eql(u8, norm_a, norm_b);
 }
 
@@ -423,20 +425,21 @@ fn normIgnoreEql(allocator: *mem.Allocator, a: []const u8, b: []const u8) !bool 
     defer arena.deinit();
     var arena_allocator = &arena.allocator;
 
-    var dm = try DecomposeMap.init(arena_allocator);
+    var decomp_map = try DecomposeMap.init(arena_allocator);
     var fold_map = try CaseFoldMap.init(arena_allocator);
 
     // The long winding road of normalized caseless matching...
-    var norm_a = try dm.normalizeTo(arena_allocator, .D, a);
+    // NFKD(CaseFold(NFKD(CaseFold(NFD(str)))))
+    var norm_a = try decomp_map.normalizeTo(arena_allocator, .D, a);
     var cf_a = try fold_map.caseFoldStr(arena_allocator, norm_a);
-    norm_a = try dm.normalizeTo(arena_allocator, .KD, cf_a);
+    norm_a = try decomp_map.normalizeTo(arena_allocator, .KD, cf_a);
     cf_a = try fold_map.caseFoldStr(arena_allocator, norm_a);
-    norm_a = try dm.normalizeTo(arena_allocator, .KD, cf_a);
-    var norm_b = try dm.normalizeTo(arena_allocator, .D, b);
+    norm_a = try decomp_map.normalizeTo(arena_allocator, .KD, cf_a);
+    var norm_b = try decomp_map.normalizeTo(arena_allocator, .D, b);
     var cf_b = try fold_map.caseFoldStr(arena_allocator, norm_b);
-    norm_b = try dm.normalizeTo(arena_allocator, .KD, cf_b);
+    norm_b = try decomp_map.normalizeTo(arena_allocator, .KD, cf_b);
     cf_b = try fold_map.caseFoldStr(arena_allocator, norm_b);
-    norm_b = try dm.normalizeTo(arena_allocator, .KD, cf_b);
+    norm_b = try decomp_map.normalizeTo(arena_allocator, .KD, cf_b);
 
     return mem.eql(u8, norm_a, norm_b);
 }

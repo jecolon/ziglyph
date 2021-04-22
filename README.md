@@ -135,20 +135,18 @@ test "decomposeTo" {
     var z = try DecomposeMap.init(allocator);
     defer z.deinit();
 
-    var arena = std.heap.ArenaAllocator.init(allocator);
-    defer arena.deinit();
-    var arena_allocator = &arena.allocator;
-
     // D: ox03D3 -> 0x03D2, 0x0301
     var src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    var result = try z.decomposeTo(arena_allocator, .D, &src);
+    var result = try z.decomposeTo(allocator, .D, &src);
+    defer allocator.free(result);
     expectEqual(result.len, 2);
     expectEqual(result[0].same, 0x03D2);
     expectEqual(result[1].same, 0x0301);
+    allocator.free(result);
 
     // KD: ox03D3 -> 0x03D2, 0x0301 -> 0x03A5, 0x0301
     src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    result = try z.decomposeTo(arena_allocator, .KD, &src);
+    result = try z.decomposeTo(allocator, .KD, &src);
     expectEqual(result.len, 2);
     expect(result[0] == .same);
     expectEqual(result[0].same, 0x03A5);
@@ -161,20 +159,18 @@ test "normalizeTo" {
     var z = try DecomposeMap.init(allocator);
     defer z.deinit();
 
-    var arena = std.heap.ArenaAllocator.init(allocator);
-    defer arena.deinit();
-    var arena_allocator = &arena.allocator;
-
     // Canonical (NFD)
     var input = "Complex char: \u{03D3}";
     var want = "Complex char: \u{03D2}\u{0301}";
-    var got = try z.normalizeTo(arena_allocator, .D, input);
+    var got = try z.normalizeTo(allocator, .D, input);
+    defer allocator.free(got);
     expectEqualSlices(u8, want, got);
+    allocator.free(got);
 
     // Compatibility (NFKD)
     input = "Complex char: \u{03D3}";
     want = "Complex char: \u{03A5}\u{0301}";
-    got = try z.normalizeTo(arena_allocator, .KD, input);
+    got = try z.normalizeTo(allocator, .KD, input);
     expectEqualSlices(u8, want, got);
 }
 ```

@@ -603,14 +603,12 @@ test "codePointTo D" {
     var z = try DecomposeMap.init(allocator);
     defer z.deinit();
 
-    var arena = std.heap.ArenaAllocator.init(allocator);
-    defer arena.deinit();
-    var arena_allocator = &arena.allocator;
-
-    var result = try z.codePointTo(arena_allocator, .D, '\u{00E9}');
+    var result = try z.codePointTo(allocator, .D, '\u{00E9}');
+    defer allocator.free(result);
     expectEqualSlices(u21, result, &[2]u21{ 0x0065, 0x0301 });
+    allocator.free(result);
 
-    result = try z.codePointTo(arena_allocator, .D, '\u{03D3}');
+    result = try z.codePointTo(allocator, .D, '\u{03D3}');
     expectEqualSlices(u21, result, &[2]u21{ 0x03D2, 0x0301 });
 }
 
@@ -619,14 +617,12 @@ test "codePointTo KD" {
     var z = try DecomposeMap.init(allocator);
     defer z.deinit();
 
-    var arena = std.heap.ArenaAllocator.init(allocator);
-    defer arena.deinit();
-    var arena_allocator = &arena.allocator;
-
-    var result = try z.codePointTo(arena_allocator, .KD, '\u{00E9}');
+    var result = try z.codePointTo(allocator, .KD, '\u{00E9}');
+    defer allocator.free(result);
     expectEqualSlices(u21, result, &[2]u21{ 0x0065, 0x0301 });
+    allocator.free(result);
 
-    result = try z.codePointTo(arena_allocator, .KD, '\u{03D3}');
+    result = try z.codePointTo(allocator, .KD, '\u{03D3}');
     expectEqualSlices(u21, result, &[2]u21{ 0x03A5, 0x0301 });
 }
 
@@ -634,10 +630,6 @@ test "normalizeTo" {
     var allocator = std.testing.allocator;
     var z = try DecomposeMap.init(allocator);
     defer z.deinit();
-
-    var arena = std.heap.ArenaAllocator.init(allocator);
-    defer arena.deinit();
-    var arena_allocator = &arena.allocator;
 
     var file = try std.fs.cwd().openFile("src/data/ucd/NormalizationTest.txt", .{});
     defer file.close();
@@ -651,9 +643,11 @@ test "normalizeTo" {
         var fields = mem.split(line, ";");
         var field_index: usize = 0;
         var input: []u8 = undefined;
+        defer allocator.free(input);
         while (fields.next()) |field| : (field_index += 1) {
             if (field_index == 0) {
-                var i_buf = ArrayList(u8).init(arena_allocator);
+                var i_buf = ArrayList(u8).init(allocator);
+                defer i_buf.deinit();
                 var i_fields = mem.split(field, " ");
                 while (i_fields.next()) |s| {
                     const icp = try fmt.parseInt(u21, s, 16);
@@ -664,7 +658,8 @@ test "normalizeTo" {
                 input = i_buf.toOwnedSlice();
             } else if (field_index == 2) {
                 // NFD, time to test.
-                var w_buf = ArrayList(u8).init(arena_allocator);
+                var w_buf = ArrayList(u8).init(allocator);
+                defer w_buf.deinit();
                 var w_fields = mem.split(field, " ");
                 while (w_fields.next()) |s| {
                     const wcp = try fmt.parseInt(u21, s, 16);
@@ -673,12 +668,15 @@ test "normalizeTo" {
                     try w_buf.appendSlice(cp_buf[0..len]);
                 }
                 const want = w_buf.toOwnedSlice();
-                const got = try z.normalizeTo(arena_allocator, .D, input);
+                defer allocator.free(want);
+                const got = try z.normalizeTo(allocator, .D, input);
+                defer allocator.free(got);
                 expectEqualSlices(u8, want, got);
                 continue;
             } else if (field_index == 4) {
                 // NFKD, time to test.
-                var w_buf = ArrayList(u8).init(arena_allocator);
+                var w_buf = ArrayList(u8).init(allocator);
+                defer w_buf.deinit();
                 var w_fields = mem.split(field, " ");
                 while (w_fields.next()) |s| {
                     const wcp = try fmt.parseInt(u21, s, 16);
@@ -687,7 +685,9 @@ test "normalizeTo" {
                     try w_buf.appendSlice(cp_buf[0..len]);
                 }
                 const want = w_buf.toOwnedSlice();
-                const got = try z.normalizeTo(arena_allocator, .KD, input);
+                defer allocator.free(want);
+                const got = try z.normalizeTo(allocator, .KD, input);
+                defer allocator.free(got);
                 expectEqualSlices(u8, want, got);
                 continue;
             } else {
@@ -769,9 +769,10 @@ test "grapheme iterator" {
 }
 
 test "Zigstr eql" {
-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
-    defer arena.deinit();
-    var allocator = &arena.allocator;
+    //var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    //defer arena.deinit();
+    //var allocator = &arena.allocator;
+    var allocator = std.testing.allocator;
 
     expect(try Zigstr.eql(allocator, "foo", "foo", .exact));
     expect(!try Zigstr.eql(allocator, "fooo", "foo", .exact));
