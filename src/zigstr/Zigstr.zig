@@ -443,3 +443,100 @@ fn normIgnoreEql(allocator: *mem.Allocator, a: []const u8, b: []const u8) !bool 
 
     return mem.eql(u8, norm_a, norm_b);
 }
+
+test "isAsciiStr" {
+    std.testing.expect(try isAsciiStr("Hello!"));
+    std.testing.expect(!try isAsciiStr("Héllo!"));
+}
+
+test "isLatin1Str" {
+    std.testing.expect(try isLatin1Str("Hello!"));
+    std.testing.expect(try isLatin1Str("Héllo!"));
+    std.testing.expect(!try isLatin1Str("H\u{0065}\u{0301}llo!"));
+    std.testing.expect(!try isLatin1Str("H😀llo!"));
+}
+
+test "grapheme iterator" {
+    var allocator = std.testing.allocator;
+    var file = try std.fs.cwd().openFile("src/data/ucd/auxiliary/GraphemeBreakTest.txt", .{});
+    defer file.close();
+    var buf_reader = std.io.bufferedReader(file.reader());
+    var input_stream = buf_reader.reader();
+
+    var buf: [640]u8 = undefined;
+    var line_no: usize = 1;
+    var giter: ?GraphemeIterator = null;
+    defer {
+        if (giter) |*gi| {
+            gi.deinit();
+        }
+    }
+
+    while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |raw| : (line_no += 1) {
+        // Skip comments or empty lines.
+        if (raw.len == 0 or raw[0] == '#' or raw[0] == '@') continue;
+
+        // Clean up.
+        var line = mem.trimLeft(u8, raw, "÷ ");
+        if (mem.indexOf(u8, line, " ÷\t#")) |octo| {
+            line = line[0..octo];
+        }
+
+        // Iterate over fields.
+        var want = std.ArrayList([]const u8).init(allocator);
+        defer {
+            for (want.items) |s| {
+                allocator.free(s);
+            }
+            want.deinit();
+        }
+        var all_bytes = std.ArrayList(u8).init(allocator);
+        defer all_bytes.deinit();
+        var fields = mem.split(line, " ÷ ");
+
+        while (fields.next()) |field| {
+            var bytes = std.ArrayList(u8).init(allocator);
+            defer bytes.deinit();
+            var sub_fields = mem.split(field, " ");
+            var cp_buf: [4]u8 = undefined;
+
+            while (sub_fields.next()) |sub_field| {
+                if (mem.eql(u8, sub_field, "×")) continue;
+                const cp: u21 = try std.fmt.parseInt(u21, sub_field, 16);
+                const len = try unicode.utf8Encode(cp, &cp_buf);
+                try all_bytes.appendSlice(cp_buf[0..len]);
+                try bytes.appendSlice(cp_buf[0..len]);
+            }
+            try want.append(bytes.toOwnedSlice());
+        }
+
+        if (giter) |*gi| {
+            try gi.reinit(all_bytes.items);
+        } else {
+            giter = try GraphemeIterator.init(allocator, all_bytes.items);
+        }
+
+        // Chaeck.
+        for (want.items) |w| {
+            const g = giter.?.next().?;
+            //std.debug.print("line {d}: w:{s}, g:{s}\n", .{ line_no, w, g });
+            std.testing.expectEqualSlices(u8, w, g);
+        }
+    }
+}
+
+test "Zigstr eql" {
+    var allocator = std.testing.allocator;
+
+    std.testing.expect(try eql(allocator, "foo", "foo", .exact));
+    std.testing.expect(!try eql(allocator, "fooo", "foo", .exact));
+    std.testing.expect(!try eql(allocator, "foó", "foo", .exact));
+    std.testing.expect(try eql(allocator, "foó", "foó", .exact));
+    std.testing.expect(!try eql(allocator, "Foo", "foo", .exact));
+    std.testing.expect(try eql(allocator, "Foo", "foo", .ignore_case));
+    std.testing.expect(try eql(allocator, "Fo\u{0065}\u{0301}", "fo\u{0065}\u{0301}", .ignore_case));
+    std.testing.expect(try eql(allocator, "fo\u{00E9}", "fo\u{0065}\u{0301}", .normalize));
+    std.testing.expect(try eql(allocator, "fo\u{03D3}", "fo\u{03A5}\u{0301}", .normalize));
+    std.testing.expect(try eql(allocator, "Fo\u{03D3}", "fo\u{03A5}\u{0301}", .norm_ignore));
+    std.testing.expect(try eql(allocator, "fo\u{00C9}", "fo\u{0065}\u{0301}", .norm_ignore)); // foÉ == foé
+}

@@ -18223,3 +18223,102 @@ fn allDone(dcs: []const Decomposed) bool {
     }
     return true;
 }
+
+test "codePointTo D" {
+    var allocator = std.testing.allocator;
+    var decomp_map = try init(allocator);
+    defer decomp_map.deinit();
+
+    var result = try decomp_map.codePointTo(allocator, .D, '\u{00E9}');
+    defer allocator.free(result);
+    std.testing.expectEqualSlices(u21, result, &[2]u21{ 0x0065, 0x0301 });
+    allocator.free(result);
+
+    result = try decomp_map.codePointTo(allocator, .D, '\u{03D3}');
+    std.testing.expectEqualSlices(u21, result, &[2]u21{ 0x03D2, 0x0301 });
+}
+
+test "codePointTo KD" {
+    var allocator = std.testing.allocator;
+    var decomp_map = try init(allocator);
+    defer decomp_map.deinit();
+
+    var result = try decomp_map.codePointTo(allocator, .KD, '\u{00E9}');
+    defer allocator.free(result);
+    std.testing.expectEqualSlices(u21, result, &[2]u21{ 0x0065, 0x0301 });
+    allocator.free(result);
+
+    result = try decomp_map.codePointTo(allocator, .KD, '\u{03D3}');
+    std.testing.expectEqualSlices(u21, result, &[2]u21{ 0x03A5, 0x0301 });
+}
+
+test "normalizeTo" {
+    var allocator = std.testing.allocator;
+    var decomp_map = try init(allocator);
+    defer decomp_map.deinit();
+
+    var file = try std.fs.cwd().openFile("src/data/ucd/NormalizationTest.txt", .{});
+    defer file.close();
+    var buf_reader = std.io.bufferedReader(file.reader());
+    var input_stream = buf_reader.reader();
+    var buf: [640]u8 = undefined;
+    while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+        // Skip comments or empty lines.
+        if (line.len == 0 or line[0] == '#' or line[0] == '@') continue;
+        // Iterate over fields.
+        var fields = mem.split(line, ";");
+        var field_index: usize = 0;
+        var input: []u8 = undefined;
+        defer allocator.free(input);
+        while (fields.next()) |field| : (field_index += 1) {
+            if (field_index == 0) {
+                var i_buf = std.ArrayList(u8).init(allocator);
+                defer i_buf.deinit();
+                var i_fields = mem.split(field, " ");
+                while (i_fields.next()) |s| {
+                    const icp = try std.fmt.parseInt(u21, s, 16);
+                    var cp_buf: [4]u8 = undefined;
+                    const len = try unicode.utf8Encode(icp, &cp_buf);
+                    try i_buf.appendSlice(cp_buf[0..len]);
+                }
+                input = i_buf.toOwnedSlice();
+            } else if (field_index == 2) {
+                // NFD, time to test.
+                var w_buf = std.ArrayList(u8).init(allocator);
+                defer w_buf.deinit();
+                var w_fields = mem.split(field, " ");
+                while (w_fields.next()) |s| {
+                    const wcp = try std.fmt.parseInt(u21, s, 16);
+                    var cp_buf: [4]u8 = undefined;
+                    const len = try unicode.utf8Encode(wcp, &cp_buf);
+                    try w_buf.appendSlice(cp_buf[0..len]);
+                }
+                const want = w_buf.toOwnedSlice();
+                defer allocator.free(want);
+                const got = try decomp_map.normalizeTo(allocator, .D, input);
+                defer allocator.free(got);
+                std.testing.expectEqualSlices(u8, want, got);
+                continue;
+            } else if (field_index == 4) {
+                // NFKD, time to test.
+                var w_buf = std.ArrayList(u8).init(allocator);
+                defer w_buf.deinit();
+                var w_fields = mem.split(field, " ");
+                while (w_fields.next()) |s| {
+                    const wcp = try std.fmt.parseInt(u21, s, 16);
+                    var cp_buf: [4]u8 = undefined;
+                    const len = try unicode.utf8Encode(wcp, &cp_buf);
+                    try w_buf.appendSlice(cp_buf[0..len]);
+                }
+                const want = w_buf.toOwnedSlice();
+                defer allocator.free(want);
+                const got = try decomp_map.normalizeTo(allocator, .KD, input);
+                defer allocator.free(got);
+                std.testing.expectEqualSlices(u8, want, got);
+                continue;
+            } else {
+                continue;
+            }
+        }
+    }
+}

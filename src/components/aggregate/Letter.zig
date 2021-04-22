@@ -147,3 +147,156 @@ pub fn toAsciiUpper(self: Self, cp: u21) u21 {
 pub fn toCaseFold(self: *Self, cp: u21) CaseFold {
     return self.fold_map.toCaseFold(cp);
 }
+
+test "Component struct" {
+    // Simple structs don't require init / deinit.
+    var letter = try init(std.testing.allocator);
+    defer letter.deinit();
+
+    const z = 'z';
+    std.testing.expect(letter.isLetter(z));
+    std.testing.expect(!letter.isUpper(z));
+    const uz = letter.toUpper(z);
+    std.testing.expect(letter.isUpper(uz));
+    std.testing.expectEqual(uz, 'Z');
+}
+
+test "isCased" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expect(z.isCased('a'));
+    std.testing.expect(z.isCased('A'));
+    std.testing.expect(!z.isCased('1'));
+}
+
+test "isLower" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expect(z.isLower('a'));
+    std.testing.expect(z.isLower('é'));
+    std.testing.expect(z.isLower('i'));
+    std.testing.expect(!z.isLower('A'));
+    std.testing.expect(!z.isLower('É'));
+    std.testing.expect(!z.isLower('İ'));
+    // Numbers are lower, upper, and title all at once.
+    std.testing.expect(z.isLower('1'));
+}
+
+test "toCaseFold" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    var result = z.toCaseFold('A');
+    switch (result) {
+        .simple => |cp| std.testing.expectEqual(cp, 'a'),
+        .full => @panic("Got .full, wanted .simple for A"),
+    }
+    result = z.toCaseFold('a');
+    switch (result) {
+        .simple => |cp| std.testing.expectEqual(cp, 'a'),
+        .full => @panic("Got .full, wanted .simple for a"),
+    }
+    result = z.toCaseFold('1');
+    switch (result) {
+        .simple => |cp| std.testing.expectEqual(cp, '1'),
+        .full => @panic("Got .full, wanted .simple for 1"),
+    }
+    result = z.toCaseFold('\u{00DF}');
+    switch (result) {
+        .simple => @panic("Got .simple, wanted .full for 0x00DF"),
+        .full => |s| std.testing.expectEqualSlices(u21, s, &[_]u21{ 0x0073, 0x0073 }),
+    }
+    result = z.toCaseFold('\u{0390}');
+    switch (result) {
+        .simple => @panic("Got .simple, wanted .full for 0x0390"),
+        .full => |s| std.testing.expectEqualSlices(u21, s, &[_]u21{ 0x03B9, 0x0308, 0x0301 }),
+    }
+}
+
+test "toLower" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expectEqual(z.toLower('a'), 'a');
+    std.testing.expectEqual(z.toLower('A'), 'a');
+    std.testing.expectEqual(z.toLower('İ'), 'i');
+    std.testing.expectEqual(z.toLower('É'), 'é');
+    std.testing.expectEqual(z.toLower(0x80), 0x80);
+    std.testing.expectEqual(z.toLower(0x80), 0x80);
+    std.testing.expectEqual(z.toLower('Å'), 'å');
+    std.testing.expectEqual(z.toLower('å'), 'å');
+    std.testing.expectEqual(z.toLower('\u{212A}'), 'k');
+    std.testing.expectEqual(z.toLower('1'), '1');
+}
+
+test "isUpper" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expect(!z.isUpper('a'));
+    std.testing.expect(!z.isUpper('é'));
+    std.testing.expect(!z.isUpper('i'));
+    std.testing.expect(z.isUpper('A'));
+    std.testing.expect(z.isUpper('É'));
+    std.testing.expect(z.isUpper('İ'));
+    // Numbers are lower, upper, and title all at once.
+    std.testing.expect(z.isUpper('1'));
+}
+
+test "toUpper" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expectEqual(z.toUpper('a'), 'A');
+    std.testing.expectEqual(z.toUpper('A'), 'A');
+    std.testing.expectEqual(z.toUpper('i'), 'I');
+    std.testing.expectEqual(z.toUpper('é'), 'É');
+    std.testing.expectEqual(z.toUpper(0x80), 0x80);
+    std.testing.expectEqual(z.toUpper('Å'), 'Å');
+    std.testing.expectEqual(z.toUpper('å'), 'Å');
+    std.testing.expectEqual(z.toUpper('1'), '1');
+}
+
+test "isTitle" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expect(!z.isTitle('a'));
+    std.testing.expect(!z.isTitle('é'));
+    std.testing.expect(!z.isTitle('i'));
+    std.testing.expect(z.isTitle('\u{1FBC}'));
+    std.testing.expect(z.isTitle('\u{1FCC}'));
+    std.testing.expect(z.isTitle('ǈ'));
+    // Numbers are lower, upper, and title all at once.
+    std.testing.expect(z.isTitle('1'));
+}
+
+test "toTitle" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expectEqual(z.toTitle('a'), 'A');
+    std.testing.expectEqual(z.toTitle('A'), 'A');
+    std.testing.expectEqual(z.toTitle('i'), 'I');
+    std.testing.expectEqual(z.toTitle('é'), 'É');
+    std.testing.expectEqual(z.toTitle('1'), '1');
+}
+
+test "isLetter" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    var cp: u21 = 'a';
+    while (cp <= 'z') : (cp += 1) {
+        std.testing.expect(z.isLetter(cp));
+    }
+    cp = 'A';
+    while (cp <= 'Z') : (cp += 1) {
+        std.testing.expect(z.isLetter(cp));
+    }
+    std.testing.expect(z.isLetter('É'));
+    std.testing.expect(z.isLetter('\u{2CEB3}'));
+    std.testing.expect(!z.isLetter('\u{0003}'));
+}

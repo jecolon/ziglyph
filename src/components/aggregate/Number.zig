@@ -76,3 +76,39 @@ pub fn isNumber(self: *Self, cp: u21) bool {
 pub fn isAsciiNumber(self: Self, cp: u21) bool {
     return if (cp < 128) ascii.isDigit(@intCast(u8, cp)) else false;
 }
+
+test "isDecimal" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    var cp: u21 = '0';
+    while (cp <= '9') : (cp += 1) {
+        std.testing.expect(z.isDecimal(cp));
+    }
+    std.testing.expect(!z.isDecimal('\u{0003}'));
+    std.testing.expect(!z.isDecimal('A'));
+}
+
+test "isHexDigit" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    var cp: u21 = '0';
+    while (cp <= '9') : (cp += 1) {
+        std.testing.expect(z.isHexDigit(cp));
+    }
+    std.testing.expect(!z.isHexDigit('\u{0003}'));
+    std.testing.expect(!z.isHexDigit('Z'));
+}
+
+test "isNumber" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    var cp: u21 = '0';
+    while (cp <= '9') : (cp += 1) {
+        std.testing.expect(z.isNumber(cp));
+    }
+    std.testing.expect(!z.isNumber('\u{0003}'));
+    std.testing.expect(!z.isNumber('A'));
+}

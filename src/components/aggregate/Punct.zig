@@ -56,3 +56,35 @@ pub fn isPunct(self: *Self, cp: u21) bool {
 pub fn isAsciiPunct(self: Self, cp: u21) bool {
     return if (cp < 128) ascii.isPunct(@intCast(u8, cp)) else false;
 }
+
+test "isPunct" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expect(z.isPunct('!'));
+    std.testing.expect(z.isPunct('?'));
+    std.testing.expect(z.isPunct(','));
+    std.testing.expect(z.isPunct('.'));
+    std.testing.expect(z.isPunct(':'));
+    std.testing.expect(z.isPunct(';'));
+    std.testing.expect(z.isPunct('\''));
+    std.testing.expect(z.isPunct('"'));
+    std.testing.expect(z.isPunct('¿'));
+    std.testing.expect(z.isPunct('¡'));
+    std.testing.expect(z.isPunct('-'));
+    std.testing.expect(z.isPunct('('));
+    std.testing.expect(z.isPunct(')'));
+    std.testing.expect(z.isPunct('{'));
+    std.testing.expect(z.isPunct('}'));
+    std.testing.expect(z.isPunct('–'));
+    // Punct? in Unicode.
+    std.testing.expect(z.isPunct('@'));
+    std.testing.expect(z.isPunct('#'));
+    std.testing.expect(z.isPunct('%'));
+    std.testing.expect(z.isPunct('&'));
+    std.testing.expect(z.isPunct('*'));
+    std.testing.expect(z.isPunct('_'));
+    std.testing.expect(z.isPunct('/'));
+    std.testing.expect(z.isPunct('\\'));
+    std.testing.expect(!z.isPunct('\u{0003}'));
+}

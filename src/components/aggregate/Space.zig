@@ -38,3 +38,30 @@ pub fn isWhiteSpace(self: *Self, cp: u21) bool {
 pub fn isAsciiWhiteSpace(self: Self, cp: u21) bool {
     return if (cp < 128) ascii.isSpace(@intCast(u8, cp)) else false;
 }
+
+test "isSpace" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expect(z.isSpace(' '));
+    std.testing.expect(!z.isSpace('\t'));
+    std.testing.expect(!z.isSpace('\u{0003}'));
+}
+
+test "isWhiteSpace" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expect(z.isWhiteSpace(' '));
+    std.testing.expect(z.isWhiteSpace('\t'));
+    std.testing.expect(!z.isWhiteSpace('\u{0003}'));
+}
+
+test "isAsciiWhiteSpace" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expect(z.isAsciiWhiteSpace(' '));
+    std.testing.expect(z.isAsciiWhiteSpace('\t'));
+    std.testing.expect(!z.isAsciiWhiteSpace('\u{0003}'));
+}

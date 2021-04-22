@@ -32,3 +32,11 @@ pub fn isMark(self: *Self, cp: u21) bool {
     return self.spacing.isSpacingMark(cp) or self.nonspacing.isNonspacingMark(cp) or
         self.enclosing.isEnclosingMark(cp);
 }
+
+test "isMark" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expect(z.isMark('\u{20E4}'));
+    std.testing.expect(!z.isMark('='));
+}

@@ -278,3 +278,132 @@ pub const Ziglyph = struct {
         return if (cp < 128) ascii.toUpper(@intCast(u8, cp)) else false;
     }
 };
+
+test "ASCII methods" {
+    var ziglyph = try Ziglyph.init(std.testing.allocator);
+    defer ziglyph.deinit();
+
+    const z = 'F';
+    std.testing.expect(ziglyph.isAsciiAlphabetic(z));
+    std.testing.expect(ziglyph.isAsciiAlphaNum(z));
+    std.testing.expect(ziglyph.isAsciiHexDigit(z));
+    std.testing.expect(ziglyph.isAsciiGraphic(z));
+    std.testing.expect(ziglyph.isAsciiPrint(z));
+    std.testing.expect(ziglyph.isAsciiUpper(z));
+    std.testing.expect(!ziglyph.isAsciiControl(z));
+    std.testing.expect(!ziglyph.isAsciiDigit(z));
+    std.testing.expect(!ziglyph.isAsciiNumber(z));
+    std.testing.expect(!ziglyph.isAsciiLower(z));
+    std.testing.expectEqual(ziglyph.toAsciiLower(z), 'f');
+    std.testing.expect(ziglyph.isAsciiLower(ziglyph.toAsciiLower(z)));
+}
+
+test "Ziglyph struct" {
+    var ziglyph = try Ziglyph.init(std.testing.allocator);
+    defer ziglyph.deinit();
+
+    const z = 'z';
+    std.testing.expect(ziglyph.isAlphaNum(z));
+    std.testing.expect(!ziglyph.isControl(z));
+    std.testing.expect(!ziglyph.isDecimal(z));
+    std.testing.expect(!ziglyph.isDigit(z));
+    std.testing.expect(!ziglyph.isHexDigit(z));
+    std.testing.expect(ziglyph.isGraphic(z));
+    std.testing.expect(ziglyph.isLetter(z));
+    std.testing.expect(ziglyph.isLower(z));
+    std.testing.expect(!ziglyph.isMark(z));
+    std.testing.expect(!ziglyph.isNumber(z));
+    std.testing.expect(ziglyph.isPrint(z));
+    std.testing.expect(!ziglyph.isPunct(z));
+    std.testing.expect(!ziglyph.isWhiteSpace(z));
+    std.testing.expect(!ziglyph.isSymbol(z));
+    std.testing.expect(!ziglyph.isTitle(z));
+    std.testing.expect(!ziglyph.isUpper(z));
+    const uz = ziglyph.toUpper(z);
+    std.testing.expect(ziglyph.isUpper(uz));
+    std.testing.expectEqual(uz, 'Z');
+    const lz = ziglyph.toLower(uz);
+    std.testing.expect(ziglyph.isLower(lz));
+    std.testing.expectEqual(lz, 'z');
+    const tz = ziglyph.toTitle(lz);
+    std.testing.expect(ziglyph.isUpper(tz));
+    std.testing.expectEqual(tz, 'Z');
+}
+
+test "isGraphic" {
+    var z = try Ziglyph.init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expect(z.isGraphic('A'));
+    std.testing.expect(z.isGraphic('\u{20E4}'));
+    std.testing.expect(z.isGraphic('1'));
+    std.testing.expect(z.isGraphic('?'));
+    std.testing.expect(z.isGraphic(' '));
+    std.testing.expect(z.isGraphic('='));
+    std.testing.expect(!z.isGraphic('\u{0003}'));
+}
+
+test "isHexDigit" {
+    var z = try Ziglyph.init(std.testing.allocator);
+    defer z.deinit();
+
+    var cp: u21 = '0';
+    while (cp <= '9') : (cp += 1) {
+        std.testing.expect(z.isHexDigit(cp));
+    }
+    cp = 'A';
+    while (cp <= 'F') : (cp += 1) {
+        std.testing.expect(z.isHexDigit(cp));
+    }
+    cp = 'a';
+    while (cp <= 'f') : (cp += 1) {
+        std.testing.expect(z.isHexDigit(cp));
+    }
+    std.testing.expect(!z.isHexDigit('\u{0003}'));
+    std.testing.expect(!z.isHexDigit('Z'));
+}
+
+test "isPrint" {
+    var z = try Ziglyph.init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expect(z.isPrint('A'));
+    std.testing.expect(z.isPrint('\u{20E4}'));
+    std.testing.expect(z.isPrint('1'));
+    std.testing.expect(z.isPrint('?'));
+    std.testing.expect(z.isPrint('='));
+    std.testing.expect(z.isPrint(' '));
+    std.testing.expect(z.isPrint('\t'));
+    std.testing.expect(!z.isPrint('\u{0003}'));
+}
+
+test "isAlphaNum" {
+    var z = try Ziglyph.init(std.testing.allocator);
+    defer z.deinit();
+
+    var cp: u21 = '0';
+    while (cp <= '9') : (cp += 1) {
+        std.testing.expect(z.isAlphaNum(cp));
+    }
+    cp = 'a';
+    while (cp <= 'z') : (cp += 1) {
+        std.testing.expect(z.isAlphaNum(cp));
+    }
+    cp = 'A';
+    while (cp <= 'Z') : (cp += 1) {
+        std.testing.expect(z.isAlphaNum(cp));
+    }
+    std.testing.expect(!z.isAlphaNum('='));
+}
+
+test "isControl" {
+    var z = try Control.init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expect(z.isControl('\n'));
+    std.testing.expect(z.isControl('\r'));
+    std.testing.expect(z.isControl('\t'));
+    std.testing.expect(z.isControl('\u{0003}'));
+    std.testing.expect(z.isControl('\u{0012}'));
+    std.testing.expect(!z.isControl('A'));
+}

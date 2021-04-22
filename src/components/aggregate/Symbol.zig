@@ -47,3 +47,18 @@ pub fn isSymbol(self: *Self, cp: u21) bool {
 pub fn isAsciiSymbol(self: Self, cp: u21) bool {
     return if (cp < 128) ascii.isSymbol(@intCast(u8, cp)) else false;
 }
+
+test "isSymbol" {
+    var z = try init(std.testing.allocator);
+    defer z.deinit();
+
+    std.testing.expect(z.isSymbol('<'));
+    std.testing.expect(z.isSymbol('>'));
+    std.testing.expect(z.isSymbol('='));
+    std.testing.expect(z.isSymbol('$'));
+    std.testing.expect(z.isSymbol('^'));
+    std.testing.expect(z.isSymbol('+'));
+    std.testing.expect(z.isSymbol('|'));
+    std.testing.expect(!z.isSymbol('A'));
+    std.testing.expect(!z.isSymbol('?'));
+}
