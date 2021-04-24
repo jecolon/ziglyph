@@ -142,8 +142,6 @@ test "README tests" {
     try str.reinit("Hello World");
     expect(str.startsWith("Hell"));
     expect(!str.startsWith("Zig"));
-
-    try str.reinit("Hello World");
     expect(str.endsWith("World"));
     expect(!str.endsWith("Zig"));
 
@@ -187,7 +185,7 @@ test "README tests" {
     expectEqual(@as(usize, 5), str.bytes.len);
     expect(str.eql("Hello"));
 
-    try str.reinit("Hello\n\r");
+    try str.reinit("Hello\r\n");
     try str.chomp();
     expectEqual(@as(usize, 5), str.bytes.len);
     expect(str.eql("Hello"));

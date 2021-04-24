@@ -689,7 +689,7 @@ pub fn chomp(self: *Self) !void {
     if (last == '\r' or last == '\n') {
         // CR
         var chomp_size: usize = 1;
-        if (len > 1 and last == '\r' and self.bytes[len - 2] == '\n') chomp_size = 2; // CR+LF
+        if (len > 1 and last == '\n' and self.bytes[len - 2] == '\r') chomp_size = 2; // CR+LF
         try self.reinit(self.bytes[0 .. len - chomp_size]);
     }
 }
@@ -707,7 +707,7 @@ test "Zigstr chomp" {
     std.testing.expectEqual(@as(usize, 5), str.bytes.len);
     std.testing.expect(str.eql("Hello"));
 
-    try str.reinit("Hello\n\r");
+    try str.reinit("Hello\r\n");
     try str.chomp();
     std.testing.expectEqual(@as(usize, 5), str.bytes.len);
     std.testing.expect(str.eql("Hello"));
