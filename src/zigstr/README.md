@@ -15,11 +15,11 @@ const expectEqual = std.testing.expectEqual;
 const expectEqualStrings = std.testing.expectEqualStrings;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
-usingnamespace @import("zigstr/Zigstr.zig");
+const Zigstr = @import("Ziglyph").Zigstr;
 
 test "README tests" {
     var allocator = std.testing.allocator;
-    var str = try init(allocator, "Héllo");
+    var str = try Zigstr.init(allocator, "Héllo");
     defer str.deinit();
 
     // Byte count.

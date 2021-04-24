@@ -26,7 +26,7 @@ pub const Punct = @import("components/aggregate/Punct.zig");
 pub const Space = @import("components/aggregate/Space.zig");
 // Symbols
 pub const Symbol = @import("components/aggregate/Symbol.zig");
-/// String functions
+/// Zigstr is a UTF-8 string type.
 pub const Zigstr = @import("zigstr/Zigstr.zig");
 /// Grapheme Clusters.
 pub const GraphemeIterator = Zigstr.GraphemeIterator;
