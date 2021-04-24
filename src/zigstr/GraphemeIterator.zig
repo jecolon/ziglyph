@@ -26,11 +26,11 @@ spacing: SpacingMark,
 
 const Self = @This();
 
-pub fn init(allocator: *mem.Allocator, str: []const u8) !Self {
+pub fn init(allocator: *mem.Allocator, cp_iter: CodePointIterator) !Self {
     return Self{
         .allocator = allocator,
         .control = try Control.init(allocator),
-        .cp_iter = try CodePointIterator.init(str),
+        .cp_iter = cp_iter,
         .extend = try Extend.init(allocator),
         .extpic = try ExtPic.init(allocator),
         .han_map = try HangulMap.init(allocator),
@@ -51,8 +51,8 @@ pub fn deinit(self: *Self) void {
 }
 
 /// reinit resets the iterator with a new string.
-pub fn reinit(self: *Self, str: []const u8) !void {
-    self.cp_iter = try CodePointIterator.init(str);
+pub fn reinit(self: *Self, cp_iter: CodePointIterator) !void {
+    self.cp_iter = cp_iter;
 }
 
 // Special code points.
@@ -67,7 +67,7 @@ const Slice = struct {
 
 /// next retrieves the next grapheme cluster.
 pub fn next(self: *Self) ?[]const u8 {
-    var cpo = self.cp_iter.nextCodePoint();
+    var cpo = self.cp_iter.next();
     if (cpo == null) return null;
     const cp = cpo.?;
     const cp_end = self.cp_iter.i;
@@ -81,7 +81,7 @@ pub fn next(self: *Self) ?[]const u8 {
                 return self.cp_iter.bytes[cp_start..cp_end];
             }
 
-            const pncp = self.cp_iter.nextCodePoint().?; // We know there's a next.
+            const pncp = self.cp_iter.next().?; // We know there's a next.
             const pncp_end = self.cp_iter.i;
             const pncp_start = self.cp_iter.prev_i;
             const pncp_next_cp = self.cp_iter.peek();
@@ -107,7 +107,7 @@ fn processNonPrepend(
     if (cp == CR) {
         if (next_cp) |ncp| {
             if (ncp == LF) {
-                _ = self.cp_iter.nextCodePoint(); // Advance past LF.
+                _ = self.cp_iter.next(); // Advance past LF.
                 return .{ .start = cp_start, .end = self.cp_iter.i };
             }
         }
@@ -131,17 +131,17 @@ fn processNonPrepend(
                 switch (hst) {
                     .L => {
                         if (nhst == .L or nhst == .V or nhst == .LV or nhst == .LVT) {
-                            _ = self.cp_iter.nextCodePoint(); // Advance past next syllable.
+                            _ = self.cp_iter.next(); // Advance past next syllable.
                         }
                     },
                     .LV, .V => {
                         if (nhst == .V or nhst == .T) {
-                            _ = self.cp_iter.nextCodePoint(); // Advance past next syllable.
+                            _ = self.cp_iter.next(); // Advance past next syllable.
                         }
                     },
                     .LVT, .T => {
                         if (nhst == .T) {
-                            _ = self.cp_iter.nextCodePoint(); // Advance past next syllable.
+                            _ = self.cp_iter.next(); // Advance past next syllable.
                         }
                     },
                 }
@@ -160,7 +160,7 @@ fn processNonPrepend(
             if (pcp == ZWJ) {
                 if (self.cp_iter.peek()) |ncp| {
                     if (self.extpic.isExtendedPictographic(ncp)) {
-                        _ = self.cp_iter.nextCodePoint(); // Advance past end emoji.
+                        _ = self.cp_iter.next(); // Advance past end emoji.
                         // GB9
                         self.fullAdvance();
                     }
@@ -175,7 +175,7 @@ fn processNonPrepend(
     if (self.regional.isRegionalIndicator(cp)) {
         if (next_cp) |ncp| {
             if (self.regional.isRegionalIndicator(ncp)) {
-                _ = self.cp_iter.nextCodePoint(); // Advance past 2nd RI.
+                _ = self.cp_iter.next(); // Advance past 2nd RI.
             }
         }
 
@@ -195,7 +195,7 @@ fn lexRun(
 ) void {
     while (self.cp_iter.peek()) |ncp| {
         if (!predicate(ctx, ncp)) break;
-        _ = self.cp_iter.nextCodePoint();
+        _ = self.cp_iter.next();
     }
 }
 
@@ -212,7 +212,7 @@ fn fullAdvance(self: *Self) void {
     const ncp = next_cp.?; // We now we have next.
 
     if (ncp == ZWJ) {
-        _ = self.cp_iter.nextCodePoint();
+        _ = self.cp_iter.next();
         self.fullAdvance();
     } else if (self.extend.isExtend(ncp)) {
         self.lexRun(self.extend, Extend.isExtend);
@@ -223,7 +223,7 @@ fn fullAdvance(self: *Self) void {
     }
 }
 
-test "grapheme iterator" {
+test "Grapheme iterator" {
     var allocator = std.testing.allocator;
     var file = try std.fs.cwd().openFile("src/data/ucd/auxiliary/GraphemeBreakTest.txt", .{});
     defer file.close();
@@ -277,10 +277,11 @@ test "grapheme iterator" {
             try want.append(bytes.toOwnedSlice());
         }
 
+        var cp_iter = try CodePointIterator.init(all_bytes.items);
         if (giter) |*gi| {
-            try gi.reinit(all_bytes.items);
+            try gi.reinit(cp_iter);
         } else {
-            giter = try init(allocator, all_bytes.items);
+            giter = try init(allocator, cp_iter);
         }
 
         // Chaeck.

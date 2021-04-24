@@ -37,7 +37,7 @@ pub fn nextCodePointSlice(self: *Self) ?[]const u8 {
 }
 
 /// nextCodePoint retrieves the next code point as a single u21.
-pub fn nextCodePoint(self: *Self) ?u21 {
+pub fn next(self: *Self) ?u21 {
     const slice = self.nextCodePointSlice() orelse return null;
     self.prev = self.current;
 
@@ -78,7 +78,7 @@ pub fn peek(self: *Self) ?u21 {
         self.prev_i = original_prev_i;
         self.prev = original_prev;
     }
-    return self.nextCodePoint();
+    return self.next();
 }
 
 /// reset prepares the iterator to start over iteration.
