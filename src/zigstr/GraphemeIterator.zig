@@ -26,11 +26,11 @@ spacing: SpacingMark,
 
 const Self = @This();
 
-pub fn init(allocator: *mem.Allocator, cp_iter: CodePointIterator) !Self {
+pub fn init(allocator: *mem.Allocator, str: []const u8) !Self {
     return Self{
         .allocator = allocator,
         .control = try Control.init(allocator),
-        .cp_iter = cp_iter,
+        .cp_iter = try CodePointIterator.init(str),
         .extend = try Extend.init(allocator),
         .extpic = try ExtPic.init(allocator),
         .han_map = try HangulMap.init(allocator),
@@ -51,8 +51,8 @@ pub fn deinit(self: *Self) void {
 }
 
 /// reinit resets the iterator with a new string.
-pub fn reinit(self: *Self, cp_iter: CodePointIterator) !void {
-    self.cp_iter = cp_iter;
+pub fn reinit(self: *Self, str: []const u8) !void {
+    self.cp_iter = try CodePointIterator.init(str);
 }
 
 // Special code points.
@@ -277,11 +277,10 @@ test "Grapheme iterator" {
             try want.append(bytes.toOwnedSlice());
         }
 
-        var cp_iter = try CodePointIterator.init(all_bytes.items);
         if (giter) |*gi| {
-            try gi.reinit(cp_iter);
+            try gi.reinit(all_bytes.items);
         } else {
-            giter = try init(allocator, cp_iter);
+            giter = try init(allocator, all_bytes.items);
         }
 
         // Chaeck.

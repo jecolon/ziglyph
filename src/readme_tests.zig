@@ -4,6 +4,7 @@ const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
 // Import structs.
+const CodePointIterator = @import("zigstr/Zigstr.zig").CodePointIterator;
 const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
 const Decomposed = DecomposeMap.Decomposed;
 const GraphemeIterator = @import("ziglyph.zig").GraphemeIterator;

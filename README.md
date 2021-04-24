@@ -8,6 +8,7 @@ and apply the spec rules.
 * 2021-04-18: ETL working well, now on to API design and implementation. Initial basic code point
 type detection, case conversion, case folding, decomposition, normalization, and grapheme cluster 
 breaks passing Unicode supplied tests.
+* 2021-04-24: Work on Zigstr, a UTF-8 string type, has begun; basic functionality working.
 
 ## Background
 This library has been built from scratch in Zig. Although initially inspired by the Go `unicode`
@@ -21,6 +22,11 @@ component structs that expose this same consolidated interface but with more spe
 `Letter`, `Punct`, and `Symbol`. The component structs like `Lower` and `Upper` are the lowest level.
 These structs are also auto-generated code from the Unicode Character Database (UCD) files.
 
+### The Zigstr String Type
+`Zigstr` is a UTF-8 string type that incorporates many of Ziglyph's Unicode processing tools. You can
+learn more in the [Zigstr subdirectory](src/zigstr).
+
+## Integrating Ziglyph in your Project
 In a `libs` subdirectory under the root of your project, clone this repository via
 
 ```sh

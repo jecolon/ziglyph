@@ -126,7 +126,7 @@ test "Zigstr code points" {
 /// graphemeIter returns a grapheme cluster iterator based on the bytes of this Zigstr. Each grapheme
 /// can be composed of multiple code points, so the next method returns a slice of bytes.
 pub fn graphemeIter(self: Self) !GraphemeIterator {
-    return GraphemeIterator.init(self.allocator, try CodePointIterator.init(self.bytes));
+    return GraphemeIterator.init(self.allocator, self.bytes);
 }
 
 /// graphemes returns the grapheme clusters that make up this Zigstr.
@@ -396,7 +396,7 @@ pub fn trim(self: *Self, str: []const u8) !void {
     try self.reinit(trimmed);
 }
 
-test "Zigstr trimRight" {
+test "Zigstr trim" {
     var str = try init(std.testing.allocator, "   Hello   ");
     defer str.deinit();
 
@@ -642,20 +642,37 @@ test "Zigstr replace" {
     std.testing.expect(str.eql("Heo"));
 }
 
-/// appendCodePoint adds `cp` to the end of this Zigstr, mutating it.
-pub fn appendCodePoint(self: *Self, cp: u21) !void {
+/// append adds `cp` to the end of this Zigstr, mutating it.
+pub fn append(self: *Self, cp: u21) !void {
     var buf: [4]u8 = undefined;
     const len = try unicode.utf8Encode(cp, &buf);
     try self.concat(buf[0..len]);
 }
 
-test "Zigstr appendCodePoint" {
+/// append adds `cp` to the end of this Zigstr, mutating it.
+pub fn appendAll(self: *Self, cp_list: []const u21) !void {
+    var cp_bytes = std.ArrayList(u8).init(self.allocator);
+    defer cp_bytes.deinit();
+
+    for (cp_list) |cp| {
+        var buf: [4]u8 = undefined;
+        const len = try unicode.utf8Encode(cp, &buf);
+        try cp_bytes.appendSlice(buf[0..len]);
+    }
+
+    try self.concat(cp_bytes.items);
+}
+
+test "Zigstr append" {
     var str = try init(std.testing.allocator, "Hell");
     defer str.deinit();
 
-    try str.appendCodePoint('o');
+    try str.append('o');
     std.testing.expectEqual(@as(usize, 5), str.bytes.len);
     std.testing.expect(str.eql("Hello"));
+    try str.appendAll(&[_]u21{ ' ', 'W', 'o', 'r', 'l', 'd' });
+    std.testing.expectEqual(@as(usize, 11), str.bytes.len);
+    std.testing.expect(str.eql("Hello World"));
 }
 
 /// empty returns true if this Zigstr has no bytes.
