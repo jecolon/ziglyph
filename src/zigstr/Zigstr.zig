@@ -5,6 +5,7 @@ const unicode = std.unicode;
 const ascii = @import("../ascii.zig");
 const DecomposeMap = @import("../ziglyph.zig").DecomposeMap;
 const CaseFoldMap = @import("../components/autogen/CaseFolding/CaseFoldMap.zig");
+const Letter = @import("../ziglyph.zig").Letter;
 pub const CodePointIterator = @import("CodePointIterator.zig");
 pub const GraphemeIterator = @import("GraphemeIterator.zig");
 
@@ -16,6 +17,7 @@ cp_count: usize,
 decomp_map: DecomposeMap,
 fold_map: CaseFoldMap,
 grapheme_clusters: ?[][]const u8,
+letter: Letter,
 
 const Self = @This();
 
@@ -33,6 +35,7 @@ pub fn init(allocator: *mem.Allocator, str: []const u8) !Self {
         .decomp_map = try DecomposeMap.init(allocator),
         .fold_map = try CaseFoldMap.init(allocator),
         .grapheme_clusters = null,
+        .letter = try Letter.init(allocator),
     };
 
     // Validates UTF-8, sets cp_count and ascii_only.
@@ -60,6 +63,7 @@ fn deinitContent(self: *Self) void {
 pub fn deinit(self: *Self) void {
     self.decomp_map.deinit();
     self.fold_map.deinit();
+    self.letter.deinit();
     self.deinitContent();
 }
 
@@ -243,11 +247,11 @@ pub fn eqlBy(self: *Self, other: []const u8, mode: CmpMode) !bool {
         }
 
         // Non-ASCII case insensitive.
-        return try self.eqlIgnoreCase(other);
+        return self.eqlIgnoreCase(other);
     }
 
-    if (mode == .normalize) return try self.eqlNorm(other);
-    if (mode == .norm_ignore) return try self.eqlNormIgnore(other);
+    if (mode == .normalize) return self.eqlNorm(other);
+    if (mode == .norm_ignore) return self.eqlNormIgnore(other);
 
     return false;
 }
@@ -643,8 +647,8 @@ pub fn appendAll(self: *Self, cp_list: []const u21) !void {
     var cp_bytes = std.ArrayList(u8).init(self.allocator);
     defer cp_bytes.deinit();
 
+    var buf: [4]u8 = undefined;
     for (cp_list) |cp| {
-        var buf: [4]u8 = undefined;
         const len = try unicode.utf8Encode(cp, &buf);
         try cp_bytes.appendSlice(buf[0..len]);
     }
@@ -757,7 +761,7 @@ pub fn graphemeSlice(self: *Self, start: usize, end: usize) ![][]const u8 {
 pub fn substr(self: *Self, start: usize, end: usize) !Self {
     if (self.ascii_only) {
         if (start >= self.bytes.len or end > self.bytes.len) return error.IndexOutOfBounds;
-        return try init(self.allocator, self.bytes[start..end]);
+        return init(self.allocator, self.bytes[start..end]);
     }
 
     const gcs = try self.graphemes();
@@ -828,4 +832,78 @@ pub fn processCodePoints(self: *Self) !void {
 
     self.ascii_only = ascii_only;
     self.cp_count = len;
+}
+
+/// isLower detects if all the code points in this Zigstr are lowercase.
+pub fn isLower(self: *Self) !bool {
+    for (try self.codePoints()) |cp| {
+        if (!self.letter.isLower(cp)) return false;
+    }
+
+    return true;
+}
+
+/// toLower converts this Zigstr to lowercase, mutating it.
+pub fn toLower(self: *Self) !void {
+    var bytes = std.ArrayList(u8).init(self.allocator);
+    defer bytes.deinit();
+
+    var buf: [4]u8 = undefined;
+    for (try self.codePoints()) |cp| {
+        const lcp = self.letter.toLower(cp);
+        const len = try unicode.utf8Encode(lcp, &buf);
+        try bytes.appendSlice(buf[0..len]);
+    }
+
+    try self.reinit(bytes.items);
+}
+
+/// isUpper detects if all the code points in this Zigstr are uppercase.
+pub fn isUpper(self: *Self) !bool {
+    for (try self.codePoints()) |cp| {
+        if (!self.letter.isUpper(cp)) return false;
+    }
+
+    return true;
+}
+
+/// toUpper converts this Zigstr to uppercase, mutating it.
+pub fn toUpper(self: *Self) !void {
+    var bytes = std.ArrayList(u8).init(self.allocator);
+    defer bytes.deinit();
+
+    var buf: [4]u8 = undefined;
+    for (try self.codePoints()) |cp| {
+        const lcp = self.letter.toUpper(cp);
+        const len = try unicode.utf8Encode(lcp, &buf);
+        try bytes.appendSlice(buf[0..len]);
+    }
+
+    try self.reinit(bytes.items);
+}
+
+test "Zigstr casing" {
+    var str = try init(std.testing.allocator, "Héllo! 123");
+    defer str.deinit();
+
+    std.testing.expect(!try str.isLower());
+    std.testing.expect(!try str.isUpper());
+    try str.toLower();
+    std.testing.expect(try str.isLower());
+    std.testing.expect(str.eql("héllo! 123"));
+    try str.toUpper();
+    std.testing.expect(try str.isUpper());
+    std.testing.expect(str.eql("HÉLLO! 123"));
+}
+
+/// format implements the `std.fmt` format interface for printing types.
+pub fn format(self: Self, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
+    _ = try writer.print("{s}", .{self.bytes});
+}
+
+test "Zigstr format" {
+    var str = try init(std.testing.allocator, "Hi, I'm a Zigstr! 😊");
+    defer str.deinit();
+
+    std.debug.print("{}\n", .{str});
 }

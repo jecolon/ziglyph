@@ -18275,9 +18275,9 @@ test "normalizeTo" {
                 var i_buf = std.ArrayList(u8).init(allocator);
                 defer i_buf.deinit();
                 var i_fields = mem.split(field, " ");
+                var cp_buf: [4]u8 = undefined;
                 while (i_fields.next()) |s| {
                     const icp = try std.fmt.parseInt(u21, s, 16);
-                    var cp_buf: [4]u8 = undefined;
                     const len = try unicode.utf8Encode(icp, &cp_buf);
                     try i_buf.appendSlice(cp_buf[0..len]);
                 }
@@ -18287,9 +18287,9 @@ test "normalizeTo" {
                 var w_buf = std.ArrayList(u8).init(allocator);
                 defer w_buf.deinit();
                 var w_fields = mem.split(field, " ");
+                var cp_buf: [4]u8 = undefined;
                 while (w_fields.next()) |s| {
                     const wcp = try std.fmt.parseInt(u21, s, 16);
-                    var cp_buf: [4]u8 = undefined;
                     const len = try unicode.utf8Encode(wcp, &cp_buf);
                     try w_buf.appendSlice(cp_buf[0..len]);
                 }
@@ -18304,9 +18304,9 @@ test "normalizeTo" {
                 var w_buf = std.ArrayList(u8).init(allocator);
                 defer w_buf.deinit();
                 var w_fields = mem.split(field, " ");
+                var cp_buf: [4]u8 = undefined;
                 while (w_fields.next()) |s| {
                     const wcp = try std.fmt.parseInt(u21, s, 16);
-                    var cp_buf: [4]u8 = undefined;
                     const len = try unicode.utf8Encode(wcp, &cp_buf);
                     try w_buf.appendSlice(cp_buf[0..len]);
                 }

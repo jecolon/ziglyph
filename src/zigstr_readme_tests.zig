@@ -201,4 +201,19 @@ test "README tests" {
     defer str3.deinit();
     expect(str3.eql("\u{0065}\u{0301}"));
     expect(str3.eql(try str.byteSlice(1, 4)));
+
+    // Letter case detection.
+    try str.reinit("hello! 123");
+    expect(try str.isLower());
+    expect(!try str.isUpper());
+    try str.reinit("HELLO! 123");
+    expect(try str.isUpper());
+    expect(!try str.isLower());
+
+    // Letter case conversion.
+    try str.reinit("Héllo! 123");
+    try str.toLower();
+    expect(str.eql("héllo! 123"));
+    try str.toUpper();
+    expect(str.eql("HÉLLO! 123"));
 }
