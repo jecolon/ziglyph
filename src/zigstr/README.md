@@ -227,5 +227,8 @@ test "README tests" {
     expect(str.eql("héllo! 123"));
     try str.toUpper();
     expect(str.eql("HÉLLO! 123"));
+
+    // std.fmt format implementation for Zigstr.
+    std.debug.print("{}\n", .{str});
 }
 ```
