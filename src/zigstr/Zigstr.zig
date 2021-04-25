@@ -9,6 +9,7 @@ pub const CodePointIterator = @import("CodePointIterator.zig");
 pub const GraphemeIterator = @import("GraphemeIterator.zig");
 
 allocator: *mem.Allocator,
+ascii_only: bool,
 bytes: []const u8,
 code_points: ?[]u21,
 cp_count: usize,
@@ -19,22 +20,25 @@ grapheme_clusters: ?[][]const u8,
 const Self = @This();
 
 pub fn init(allocator: *mem.Allocator, str: []const u8) !Self {
-    // This not only gets the code point count, it validates str as UTF-8.
-    const cp_count = try unicode.utf8CountCodepoints(str);
-
-    return Self{
+    var zstr = Self{
         .allocator = allocator,
+        .ascii_only = false,
         .bytes = blk: {
             var b = try allocator.alloc(u8, str.len);
             mem.copy(u8, b, str);
             break :blk b;
         },
         .code_points = null,
-        .cp_count = cp_count,
+        .cp_count = 0,
         .decomp_map = try DecomposeMap.init(allocator),
         .fold_map = try CaseFoldMap.init(allocator),
         .grapheme_clusters = null,
     };
+
+    // Validates UTF-8, sets cp_count and ascii_only.
+    try zstr.processCodePoints();
+
+    return zstr;
 }
 
 fn deinitContent(self: *Self) void {
@@ -60,13 +64,13 @@ pub fn deinit(self: *Self) void {
 }
 
 pub fn reinit(self: *Self, str: []const u8) !void {
-    // Get code point count and validate UTF-8.
-    self.cp_count = try unicode.utf8CountCodepoints(str);
     // Copy befor deinit becasue maybe str is a slice of self.bytes.
     var bytes = try self.allocator.alloc(u8, str.len);
     mem.copy(u8, bytes, str);
     self.deinitContent();
     self.bytes = bytes;
+    // Validates UTF-8, sets cp_count and ascii_only.
+    try self.processCodePoints();
 }
 
 /// byteCount returns the number of bytes, which can be different from the number of code points and the 
@@ -77,7 +81,7 @@ pub fn byteCount(self: Self) usize {
 
 /// codePointIter returns a code point iterator based on the bytes of this Zigstr.
 pub fn codePointIter(self: Self) !CodePointIterator {
-    return try CodePointIterator.init(self.bytes);
+    return CodePointIterator.init(self.bytes);
 }
 
 /// codePoints returns the code points that make up this Zigstr.
@@ -181,7 +185,7 @@ test "Zigstr graphemes" {
     std.testing.expectEqual(@as(usize, 5), try str.graphemeCount());
 }
 
-/// copy a Zigstr to a new Zigstr.
+/// copy a Zigstr to a new Zigstr. Don't forget to to `deinit` the returned Zigstr!
 pub fn copy(self: Self) !Self {
     return init(self.allocator, self.bytes);
 }
@@ -202,11 +206,6 @@ test "Zigstr copy" {
     std.testing.expect(str1.sameAs(str2));
 }
 
-/// isEmpty returns true if the Zigstr has no bytes.
-pub fn isEmpty(self: Self) bool {
-    return self.bytes.len == 0;
-}
-
 pub const CmpMode = enum {
     ignore_case,
     normalize,
@@ -220,26 +219,19 @@ pub fn eql(self: Self, other: []const u8) bool {
 
 /// eqlBy compares for equality with `other` according to the specified comparison mode.
 pub fn eqlBy(self: *Self, other: []const u8, mode: CmpMode) !bool {
-    var ascii_only = true;
-    var bytes_eql = true;
-    var inner: []const u8 = undefined;
+    // Check for ASCII only comparison.
+    var ascii_only = self.ascii_only;
+
+    if (ascii_only) {
+        ascii_only = try isAsciiStr(other);
+    }
+
+    // If ASCII only, different lengths mean inequality.
     const len_a = self.bytes.len;
     const len_b = other.len;
     var len_eql = len_a == len_b;
-    var outer: []const u8 = undefined;
 
-    if (len_a <= len_b) {
-        outer = self.bytes;
-        inner = other;
-    } else {
-        outer = other;
-        inner = self.bytes;
-    }
-
-    for (outer) |c, i| {
-        if (c != inner[i]) bytes_eql = false;
-        if (!isAscii(c) and !isAscii(inner[i])) ascii_only = false;
-    }
+    if (ascii_only and !len_eql) return false;
 
     if (mode == .ignore_case and len_eql) {
         if (ascii_only) {
@@ -322,44 +314,41 @@ test "Zigstr eql" {
     std.testing.expect(try str.eqlBy("foe\u{0301}", .norm_ignore)); // foÉ == foé
 }
 
-/// isAscii checks a code point to see if it's an ASCII character.
-pub fn isAscii(cp: u21) bool {
-    return cp < 128;
-}
-
 /// isAsciiStr checks if a string (`[]const uu`) is composed solely of ASCII characters.
 pub fn isAsciiStr(str: []const u8) !bool {
-    var cp_iter = (try unicode.Utf8View.init(str)).iterator();
-    while (cp_iter.nextCodepoint()) |cp| {
-        if (!isAscii(cp)) return false;
+    // Shamelessly stolen from std.unicode.
+    const N = @sizeOf(usize);
+    const MASK = 0x80 * (std.math.maxInt(usize) / 0xff);
+
+    var i: usize = 0;
+    while (i < str.len) {
+        // Fast path for ASCII sequences
+        while (i + N <= str.len) : (i += N) {
+            const v = mem.readIntNative(usize, str[i..][0..N]);
+            if (v & MASK != 0) {
+                return false;
+            }
+        }
+
+        if (i < str.len) {
+            const n = try unicode.utf8ByteSequenceLength(str[i]);
+            if (i + n > str.len) return error.TruncatedInput;
+
+            switch (n) {
+                1 => {}, // ASCII
+                else => return false,
+            }
+
+            i += n;
+        }
     }
+
     return true;
 }
 
 test "Zigstr isAsciiStr" {
     std.testing.expect(try isAsciiStr("Hello!"));
     std.testing.expect(!try isAsciiStr("Héllo!"));
-}
-
-/// isLatin1 checks a code point to see if it's a Latin-1 character.
-pub fn isLatin1(cp: u21) bool {
-    return cp < 256;
-}
-
-/// isLatin1Str checks if a string (`[]const uu`) is composed solely of Latin-1 characters.
-pub fn isLatin1Str(str: []const u8) !bool {
-    var cp_iter = (try unicode.Utf8View.init(str)).iterator();
-    while (cp_iter.nextCodepoint()) |cp| {
-        if (!isLatin1(cp)) return false;
-    }
-    return true;
-}
-
-test "Zigstr isLatin1Str" {
-    std.testing.expect(try isLatin1Str("Hello!"));
-    std.testing.expect(try isLatin1Str("Héllo!"));
-    std.testing.expect(!try isLatin1Str("H\u{0065}\u{0301}llo!"));
-    std.testing.expect(!try isLatin1Str("H😀llo!"));
 }
 
 /// trimLeft removes `str` from the left of this Zigstr, mutating it.
@@ -711,4 +700,132 @@ test "Zigstr chomp" {
     try str.chomp();
     std.testing.expectEqual(@as(usize, 5), str.bytes.len);
     std.testing.expect(str.eql("Hello"));
+}
+
+/// byteAt returns the byte at index `i`.
+pub fn byteAt(self: Self, i: usize) !u8 {
+    if (i >= self.bytes.len) return error.IndexOutOfBounds;
+    return self.bytes[i];
+}
+
+/// codePointAt returns the `i`th code point.
+pub fn codePointAt(self: *Self, i: usize) !u21 {
+    if (i >= self.cp_count) return error.IndexOutOfBounds;
+    return (try self.codePoints())[i];
+}
+
+/// graphemeAt returns the `i`th grapheme cluster.
+pub fn graphemeAt(self: *Self, i: usize) ![]const u8 {
+    const gcs = try self.graphemes();
+    if (i >= gcs.len) return error.IndexOutOfBounds;
+    return gcs[i];
+}
+
+test "Zigstr xAt" {
+    var str = try init(std.testing.allocator, "H\u{0065}\u{0301}llo"); // Héllo
+    defer str.deinit();
+
+    std.testing.expectEqual(try str.byteAt(2), 0x00CC);
+    std.testing.expectError(error.IndexOutOfBounds, str.byteAt(7));
+    std.testing.expectEqual(try str.codePointAt(1), 0x0065);
+    std.testing.expectError(error.IndexOutOfBounds, str.codePointAt(6));
+    std.testing.expectEqualStrings(try str.graphemeAt(1), "\u{0065}\u{0301}");
+    std.testing.expectError(error.IndexOutOfBounds, str.graphemeAt(5));
+}
+
+/// byteSlice returnes the bytes from this Zigstr in the specified range from `start` to `end` - 1.
+pub fn byteSlice(self: Self, start: usize, end: usize) ![]const u8 {
+    if (start >= self.bytes.len or end > self.bytes.len) return error.IndexOutOfBounds;
+    return self.bytes[start..end];
+}
+
+/// codePointSlice returnes the code points from this Zigstr in the specified range from `start` to `end` - 1.
+pub fn codePointSlice(self: *Self, start: usize, end: usize) ![]const u21 {
+    if (start >= self.cp_count or end > self.cp_count) return error.IndexOutOfBounds;
+    return (try self.codePoints())[start..end];
+}
+
+/// graphemeSlice returnes the grapheme clusters from this Zigstr in the specified range from `start` to `end` - 1.
+pub fn graphemeSlice(self: *Self, start: usize, end: usize) ![][]const u8 {
+    const gcs = try self.graphemes();
+    if (start >= gcs.len or end > gcs.len) return error.IndexOutOfBounds;
+    return gcs[start..end];
+}
+
+/// substr returns a new Zigstr composed from the grapheme range starting at `start` grapheme index
+/// up to `end` grapheme index - 1. Don't forget to to `deinit` the returned Zigstr!
+pub fn substr(self: *Self, start: usize, end: usize) !Self {
+    if (self.ascii_only) {
+        if (start >= self.bytes.len or end > self.bytes.len) return error.IndexOutOfBounds;
+        return try init(self.allocator, self.bytes[start..end]);
+    }
+
+    const gcs = try self.graphemes();
+    if (start >= gcs.len or end > gcs.len) return error.IndexOutOfBounds;
+    var bytes = std.ArrayList(u8).init(self.allocator);
+    defer bytes.deinit();
+    var i: usize = start;
+    while (i < end) : (i += 1) {
+        try bytes.appendSlice(gcs[i]);
+    }
+
+    return init(self.allocator, bytes.items);
+}
+
+test "Zigstr extractions" {
+    var str = try init(std.testing.allocator, "H\u{0065}\u{0301}llo"); // Héllo
+    defer str.deinit();
+    // Slices
+    std.testing.expectEqualSlices(u8, try str.byteSlice(1, 4), "\u{0065}\u{0301}");
+    std.testing.expectEqualSlices(u21, try str.codePointSlice(1, 3), &[_]u21{ '\u{0065}', '\u{0301}' });
+    const gc1 = try str.graphemeSlice(1, 2);
+    std.testing.expectEqualStrings(gc1[0], "\u{0065}\u{0301}");
+    // Substrings
+    var str2 = try str.substr(1, 2);
+    defer str2.deinit();
+    std.testing.expect(str2.eql("\u{0065}\u{0301}"));
+    std.testing.expect(str2.eql(try str.byteSlice(1, 4)));
+}
+
+/// processCodePoints performs some house-keeping and accounting on the code points that make up this
+/// Zigstr.  Asserts that our bytes are valid UTF-8.
+pub fn processCodePoints(self: *Self) !void {
+    // Shamelessly stolen from std.unicode.
+    var ascii_only = true;
+    var len: usize = 0;
+
+    const N = @sizeOf(usize);
+    const MASK = 0x80 * (std.math.maxInt(usize) / 0xff);
+
+    var i: usize = 0;
+    while (i < self.bytes.len) {
+        // Fast path for ASCII sequences
+        while (i + N <= self.bytes.len) : (i += N) {
+            const v = mem.readIntNative(usize, self.bytes[i..][0..N]);
+            if (v & MASK != 0) {
+                ascii_only = false;
+                break;
+            }
+            len += N;
+        }
+
+        if (i < self.bytes.len) {
+            const n = try unicode.utf8ByteSequenceLength(self.bytes[i]);
+            if (i + n > self.bytes.len) return error.TruncatedInput;
+
+            switch (n) {
+                1 => {}, // ASCII, no validation needed
+                else => {
+                    _ = try unicode.utf8Decode(self.bytes[i .. i + n]);
+                    ascii_only = false;
+                },
+            }
+
+            i += n;
+            len += 1;
+        }
+    }
+
+    self.ascii_only = ascii_only;
+    self.cp_count = len;
 }

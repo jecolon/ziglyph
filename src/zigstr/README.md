@@ -200,5 +200,17 @@ test "README tests" {
     try str.chomp();
     expectEqual(@as(usize, 5), str.bytes.len);
     expect(str.eql("Hello"));
+
+    // byteSlice, codePointSlice, graphemeSlice, substr
+    try str.reinit("H\u{0065}\u{0301}llo"); // Héllo
+    expectEqualSlices(u8, try str.byteSlice(1, 4), "\u{0065}\u{0301}");
+    expectEqualSlices(u21, try str.codePointSlice(1, 3), &[_]u21{ '\u{0065}', '\u{0301}' });
+    const gc1 = try str.graphemeSlice(1, 2);
+    expectEqualStrings(gc1[0], "\u{0065}\u{0301}");
+    // Substrings
+    var str3 = try str.substr(1, 2);
+    defer str3.deinit();
+    expect(str3.eql("\u{0065}\u{0301}"));
+    expect(str3.eql(try str.byteSlice(1, 4)));
 }
 ```
