@@ -1,14 +1,16 @@
 # ziglyph
-Unicode processing with Zig.
+Unicode processing with Zig, and a UTF-8 string type: [Zigstr](src/zigstr).
 
 ## Status
-This is pre-release software. Breaking changes and rough edges abound!
-* 2021-04-09: Unicode database ETL and analysis phase. Working out the best way to split the data
-and apply the spec rules.
-* 2021-04-18: ETL working well, now on to API design and implementation. Initial basic code point
-type detection, case conversion, case folding, decomposition, normalization, and grapheme cluster 
-breaks passing Unicode supplied tests.
-* 2021-04-24: Work on Zigstr, a UTF-8 string type, has begun; basic functionality working.
+This is pre-1.0 software. Althogh breaking changes are less frequent with each minor version release,
+they still will occur until we reach 1.0.
+
+*   2021-04-09: Unicode database ETL and analysis phase. Working out the best way to split the data
+    and apply the spec rules.
+*   2021-04-18: ETL working well, now on to API design and implementation. Initial basic code point
+    type detection, case conversion, case folding, decomposition, normalization, and grapheme cluster 
+    breaks passing Unicode supplied tests.
+*   2021-04-24: Work on Zigstr, a UTF-8 string type, has begun; basic functionality working.
 
 ## Background
 This library has been built from scratch in Zig. Although initially inspired by the Go `unicode`
