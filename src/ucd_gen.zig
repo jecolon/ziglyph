@@ -152,6 +152,133 @@ const UcdGenerator = struct {
         }
     }
 
+    // data/ucd/extracted/DerivedEastAsianWidth.txt
+    fn processAsianWidth(self: *Self) !void {
+        // Setup input.
+        var file = try std.fs.cwd().openFile("data/ucd/extracted/DerivedEastAsianWidth.txt", .{});
+        defer file.close();
+        var buf_reader = io.bufferedReader(file.reader());
+        var input_stream = buf_reader.reader();
+
+        var collections = ArrayList(Collection).init(self.allocator);
+        defer {
+            for (collections.items) |*collection| {
+                collection.deinit();
+            }
+            collections.deinit();
+        }
+        var records = ArrayList(Record).init(self.allocator);
+        defer records.deinit();
+        var al = std.heap.ArenaAllocator.init(self.allocator);
+        defer al.deinit();
+        var arena_allocator = &al.allocator;
+        var kind: ?[]const u8 = null;
+        // Iterate over lines.
+        var buf: [640]u8 = undefined;
+        while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+            // Skip empty lines.
+            if (line.len == 0) continue;
+
+            if (mem.indexOf(u8, line, "East_Asian_Width=")) |_| {
+                // Record kind.
+                const equals = mem.indexOf(u8, line, "=").?;
+                const current_kind = mem.trim(u8, line[equals + 1 ..], " ");
+                // Check if new collection started.
+                if (kind) |k| {
+                    // New collection for new record kind.
+                    if (!mem.eql(u8, k, current_kind)) {
+                        // Calculate lo/hi.
+                        var lo: u21 = 0x10FFFF;
+                        var hi: u21 = 0;
+                        for (records.items) |rec| {
+                            switch (rec) {
+                                .single => |cp| {
+                                    if (cp < lo) lo = cp;
+                                    if (cp > hi) hi = cp;
+                                },
+                                .range => |range| {
+                                    if (range.lo < lo) lo = range.lo;
+                                    if (range.hi > hi) hi = range.hi;
+                                },
+                            }
+                        }
+                        try collections.append(try Collection.init(
+                            self.allocator,
+                            k,
+                            lo,
+                            hi,
+                            records.toOwnedSlice(),
+                        ));
+                        // Update kind.
+                        kind = try arena_allocator.dupe(u8, current_kind);
+                    }
+                } else {
+                    // kind is null, initialize it.
+                    kind = try arena_allocator.dupe(u8, current_kind);
+                }
+                continue;
+            } else if (line[0] == '#') {
+                // Skip comments.
+                continue;
+            }
+
+            // Iterate over fields.
+            var fields = mem.split(line, ";");
+            var field_index: usize = 0;
+            while (fields.next()) |raw| : (field_index += 1) {
+                var field = mem.trim(u8, raw, " ");
+                if (field_index == 0) {
+                    // Construct record.
+                    var record: Record = undefined;
+                    // Ranges.
+                    if (mem.indexOf(u8, field, "..")) |dots| {
+                        const r_lo = try fmt.parseInt(u21, field[0..dots], 16);
+                        const r_hi = try fmt.parseInt(u21, field[dots + 2 ..], 16);
+                        record = .{ .range = .{ .lo = r_lo, .hi = r_hi } };
+                    } else {
+                        const code_point = try fmt.parseInt(u21, field, 16);
+                        record = .{ .single = code_point };
+                    }
+                    // Add this record.
+                    try records.append(record);
+                } else {
+                    continue;
+                }
+            }
+        }
+
+        // Last collection.
+        if (kind) |k| {
+            // Calculate lo/hi.
+            var lo: u21 = 0x10FFFF;
+            var hi: u21 = 0;
+            for (records.items) |rec| {
+                switch (rec) {
+                    .single => |cp| {
+                        if (cp < lo) lo = cp;
+                        if (cp > hi) hi = cp;
+                    },
+                    .range => |range| {
+                        if (range.lo < lo) lo = range.lo;
+                        if (range.hi > hi) hi = range.hi;
+                    },
+                }
+            }
+            try collections.append(try Collection.init(
+                self.allocator,
+                k,
+                lo,
+                hi,
+                records.toOwnedSlice(),
+            ));
+        }
+
+        // Write out files.
+        for (collections.items) |*collection| {
+            try collection.writeFile("DerivedEastAsianWidth");
+        }
+    }
+
     // data/ucd/extracted/DerivedGeneralCategory.txt
     fn processGenCat(self: *Self) !void {
         // Setup input.
@@ -793,4 +920,5 @@ pub fn main() !void {
     //try ugen.processSpecialCasing();
     try ugen.processCccMap();
     try ugen.processHangul();
+    try ugen.processAsianWidth();
 }
