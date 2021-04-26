@@ -114,6 +114,9 @@ pub fn codePointCount(self: *Self) usize {
     return self.cp_count;
 }
 
+const expectEqual = std.testing.expectEqual;
+const expectEqualSlices = std.testing.expectEqualSlices;
+
 test "Zigstr code points" {
     var str = try init(std.testing.allocator, "Héllo");
     defer str.deinit();
@@ -122,13 +125,13 @@ test "Zigstr code points" {
     var want = [_]u21{ 'H', 0x00E9, 'l', 'l', 'o' };
     var i: usize = 0;
     while (cp_iter.next()) |cp| : (i += 1) {
-        std.testing.expectEqual(want[i], cp);
+        expectEqual(want[i], cp);
     }
 
-    std.testing.expectEqual(@as(usize, 5), str.codePointCount());
-    std.testing.expectEqualSlices(u21, &want, try str.codePoints());
-    std.testing.expectEqual(@as(usize, 6), str.byteCount());
-    std.testing.expectEqual(@as(usize, 5), str.codePointCount());
+    expectEqual(@as(usize, 5), str.codePointCount());
+    expectEqualSlices(u21, &want, try str.codePoints());
+    expectEqual(@as(usize, 6), str.byteCount());
+    expectEqual(@as(usize, 5), str.codePointCount());
 }
 
 /// graphemeIter returns a grapheme cluster iterator based on the bytes of this Zigstr. Each grapheme
@@ -168,6 +171,8 @@ pub fn graphemeCount(self: *Self) !usize {
     }
 }
 
+const expectEqualStrings = std.testing.expectEqualStrings;
+
 test "Zigstr graphemes" {
     var str = try init(std.testing.allocator, "Héllo");
     defer str.deinit();
@@ -177,16 +182,16 @@ test "Zigstr graphemes" {
     var want = [_][]const u8{ "H", "é", "l", "l", "o" };
     var i: usize = 0;
     while (giter.next()) |gc| : (i += 1) {
-        std.testing.expectEqualStrings(want[i], gc);
+        expectEqualStrings(want[i], gc);
     }
 
-    std.testing.expectEqual(@as(usize, 5), try str.graphemeCount());
+    expectEqual(@as(usize, 5), try str.graphemeCount());
     const gcs = try str.graphemes();
     for (gcs) |gc, j| {
-        std.testing.expectEqualStrings(want[j], gc);
+        expectEqualStrings(want[j], gc);
     }
-    std.testing.expectEqual(@as(usize, 6), str.byteCount());
-    std.testing.expectEqual(@as(usize, 5), try str.graphemeCount());
+    expectEqual(@as(usize, 6), str.byteCount());
+    expectEqual(@as(usize, 5), try str.graphemeCount());
 }
 
 /// copy a Zigstr to a new Zigstr. Don't forget to to `deinit` the returned Zigstr!
@@ -199,15 +204,17 @@ pub fn sameAs(self: Self, other: Self) bool {
     return self.eql(other.bytes);
 }
 
+const expect = std.testing.expect;
+
 test "Zigstr copy" {
     var str1 = try init(std.testing.allocator, "Zig");
     defer str1.deinit();
     var str2 = try str1.copy();
     defer str2.deinit();
 
-    std.testing.expect(str1.eql(str2.bytes));
-    std.testing.expect(str2.eql("Zig"));
-    std.testing.expect(str1.sameAs(str2));
+    expect(str1.eql(str2.bytes));
+    expect(str2.eql("Zig"));
+    expect(str1.sameAs(str2));
 }
 
 pub const CmpMode = enum {
@@ -299,23 +306,23 @@ test "Zigstr eql" {
     var str = try init(std.testing.allocator, "foo");
     defer str.deinit();
 
-    std.testing.expect(str.eql("foo")); // exact
-    std.testing.expect(!str.eql("fooo")); // lengths
-    std.testing.expect(!str.eql("foó")); // combining
-    std.testing.expect(!str.eql("Foo")); // letter case
-    std.testing.expect(try str.eqlBy("Foo", .ignore_case));
+    expect(str.eql("foo")); // exact
+    expect(!str.eql("fooo")); // lengths
+    expect(!str.eql("foó")); // combining
+    expect(!str.eql("Foo")); // letter case
+    expect(try str.eqlBy("Foo", .ignore_case));
 
     try str.reinit("foé");
-    std.testing.expect(try str.eqlBy("foe\u{0301}", .normalize));
+    expect(try str.eqlBy("foe\u{0301}", .normalize));
 
     try str.reinit("foϓ");
-    std.testing.expect(try str.eqlBy("foΥ\u{0301}", .normalize));
+    expect(try str.eqlBy("foΥ\u{0301}", .normalize));
 
     try str.reinit("Foϓ");
-    std.testing.expect(try str.eqlBy("foΥ\u{0301}", .norm_ignore));
+    expect(try str.eqlBy("foΥ\u{0301}", .norm_ignore));
 
     try str.reinit("FOÉ");
-    std.testing.expect(try str.eqlBy("foe\u{0301}", .norm_ignore)); // foÉ == foé
+    expect(try str.eqlBy("foe\u{0301}", .norm_ignore)); // foÉ == foé
 }
 
 /// isAsciiStr checks if a string (`[]const uu`) is composed solely of ASCII characters.
@@ -351,8 +358,8 @@ pub fn isAsciiStr(str: []const u8) !bool {
 }
 
 test "Zigstr isAsciiStr" {
-    std.testing.expect(try isAsciiStr("Hello!"));
-    std.testing.expect(!try isAsciiStr("Héllo!"));
+    expect(try isAsciiStr("Hello!"));
+    expect(!try isAsciiStr("Héllo!"));
 }
 
 /// trimLeft removes `str` from the left of this Zigstr, mutating it.
@@ -366,7 +373,7 @@ test "Zigstr trimLeft" {
     defer str.deinit();
 
     try str.trimLeft(" ");
-    std.testing.expect(str.eql("Hello"));
+    expect(str.eql("Hello"));
 }
 
 /// trimRight removes `str` from the right of this Zigstr, mutating it.
@@ -380,7 +387,7 @@ test "Zigstr trimRight" {
     defer str.deinit();
 
     try str.trimRight(" ");
-    std.testing.expect(str.eql("Hello"));
+    expect(str.eql("Hello"));
 }
 
 /// trim removes `str` from both the left and right of this Zigstr, mutating it.
@@ -394,7 +401,7 @@ test "Zigstr trim" {
     defer str.deinit();
 
     try str.trim(" ");
-    std.testing.expect(str.eql("Hello"));
+    expect(str.eql("Hello"));
 }
 
 /// indexOf returns the index of `needle` in this Zigstr or null if not found.
@@ -411,10 +418,10 @@ test "Zigstr indexOf" {
     var str = try init(std.testing.allocator, "Hello");
     defer str.deinit();
 
-    std.testing.expectEqual(str.indexOf("l"), 2);
-    std.testing.expectEqual(str.indexOf("z"), null);
-    std.testing.expect(str.contains("l"));
-    std.testing.expect(!str.contains("z"));
+    expectEqual(str.indexOf("l"), 2);
+    expectEqual(str.indexOf("z"), null);
+    expect(str.contains("l"));
+    expect(!str.contains("z"));
 }
 
 /// lastIndexOf returns the index of `needle` in this Zigstr starting from the end, or null if not found.
@@ -426,8 +433,8 @@ test "Zigstr lastIndexOf" {
     var str = try init(std.testing.allocator, "Hello");
     defer str.deinit();
 
-    std.testing.expectEqual(str.lastIndexOf("l"), 3);
-    std.testing.expectEqual(str.lastIndexOf("z"), null);
+    expectEqual(str.lastIndexOf("l"), 3);
+    expectEqual(str.lastIndexOf("z"), null);
 }
 
 /// count returns the number of `needle`s in this Zigstr.
@@ -439,9 +446,9 @@ test "Zigstr count" {
     var str = try init(std.testing.allocator, "Hello");
     defer str.deinit();
 
-    std.testing.expectEqual(str.count("l"), 2);
-    std.testing.expectEqual(str.count("ll"), 1);
-    std.testing.expectEqual(str.count("z"), 0);
+    expectEqual(str.count("l"), 2);
+    expectEqual(str.count("ll"), 1);
+    expectEqual(str.count("z"), 0);
 }
 
 /// tokenIter returns an iterator on tokens resulting from splitting this Zigstr at every `delim`.
@@ -470,15 +477,15 @@ test "Zigstr tokenize" {
     defer str.deinit();
 
     var iter = str.tokenIter(" ");
-    std.testing.expectEqualStrings("Hello", iter.next().?);
-    std.testing.expectEqualStrings("World", iter.next().?);
-    std.testing.expect(iter.next() == null);
+    expectEqualStrings("Hello", iter.next().?);
+    expectEqualStrings("World", iter.next().?);
+    expect(iter.next() == null);
 
     var ts = try str.tokenize(" ");
     defer allocator.free(ts);
-    std.testing.expectEqual(@as(usize, 2), ts.len);
-    std.testing.expectEqualStrings("Hello", ts[0]);
-    std.testing.expectEqualStrings("World", ts[1]);
+    expectEqual(@as(usize, 2), ts.len);
+    expectEqualStrings("Hello", ts[0]);
+    expectEqualStrings("World", ts[1]);
 }
 
 /// splitIter returns an iterator on substrings resulting from splitting this Zigstr at every `delim`.
@@ -507,19 +514,19 @@ test "Zigstr split" {
     defer str.deinit();
 
     var iter = str.splitIter(" ");
-    std.testing.expectEqualStrings("", iter.next().?);
-    std.testing.expectEqualStrings("Hello", iter.next().?);
-    std.testing.expectEqualStrings("World", iter.next().?);
-    std.testing.expectEqualStrings("", iter.next().?);
-    std.testing.expect(iter.next() == null);
+    expectEqualStrings("", iter.next().?);
+    expectEqualStrings("Hello", iter.next().?);
+    expectEqualStrings("World", iter.next().?);
+    expectEqualStrings("", iter.next().?);
+    expect(iter.next() == null);
 
     var ss = try str.split(" ");
     defer allocator.free(ss);
-    std.testing.expectEqual(@as(usize, 4), ss.len);
-    std.testing.expectEqualStrings("", ss[0]);
-    std.testing.expectEqualStrings("Hello", ss[1]);
-    std.testing.expectEqualStrings("World", ss[2]);
-    std.testing.expectEqualStrings("", ss[3]);
+    expectEqual(@as(usize, 4), ss.len);
+    expectEqualStrings("", ss[0]);
+    expectEqualStrings("Hello", ss[1]);
+    expectEqualStrings("World", ss[2]);
+    expectEqualStrings("", ss[3]);
 }
 
 /// startsWith returns true if this Zigstr starts with `str`.
@@ -532,8 +539,8 @@ test "Zigstr startsWith" {
     var str = try init(allocator, "Hello World ");
     defer str.deinit();
 
-    std.testing.expect(str.startsWith("Hell"));
-    std.testing.expect(!str.startsWith("Zig"));
+    expect(str.startsWith("Hell"));
+    expect(!str.startsWith("Zig"));
 }
 
 /// endsWith returns true if this Zigstr ends with `str`.
@@ -546,8 +553,8 @@ test "Zigstr endsWith" {
     var str = try init(allocator, "Hello World");
     defer str.deinit();
 
-    std.testing.expect(str.endsWith("World"));
-    std.testing.expect(!str.endsWith("Zig"));
+    expect(str.endsWith("World"));
+    expect(!str.endsWith("Zig"));
 }
 
 /// Refer to the docs for `std.mem.join`.
@@ -557,7 +564,7 @@ test "Zigstr join" {
     var allocator = std.testing.allocator;
     const result = try join(allocator, "/", &[_][]const u8{ "this", "is", "a", "path" });
     defer allocator.free(result);
-    std.testing.expectEqualSlices(u8, "this/is/a/path", result);
+    expectEqualSlices(u8, "this/is/a/path", result);
 }
 
 /// concatAll appends each string in `others` to this Zigstr, mutating it.
@@ -600,10 +607,10 @@ test "Zigstr concat" {
     defer str.deinit();
 
     try str.concat(" World");
-    std.testing.expectEqualStrings("Hello World", str.bytes);
+    expectEqualStrings("Hello World", str.bytes);
     var others = [_][]const u8{ " is", " the", " tradition!" };
     try str.concatAll(&others);
-    std.testing.expectEqualStrings("Hello World is the tradition!", str.bytes);
+    expectEqualStrings("Hello World is the tradition!", str.bytes);
 }
 
 /// replace all occurrences of `needle` with `replacement`, mutating this Zigstr. Returns the total
@@ -627,12 +634,12 @@ test "Zigstr replace" {
     defer str.deinit();
 
     var replacements = try str.replace("l", "z");
-    std.testing.expectEqual(@as(usize, 2), replacements);
-    std.testing.expect(str.eql("Hezzo"));
+    expectEqual(@as(usize, 2), replacements);
+    expect(str.eql("Hezzo"));
 
     replacements = try str.replace("z", "");
-    std.testing.expectEqual(@as(usize, 2), replacements);
-    std.testing.expect(str.eql("Heo"));
+    expectEqual(@as(usize, 2), replacements);
+    expect(str.eql("Heo"));
 }
 
 /// append adds `cp` to the end of this Zigstr, mutating it.
@@ -661,11 +668,11 @@ test "Zigstr append" {
     defer str.deinit();
 
     try str.append('o');
-    std.testing.expectEqual(@as(usize, 5), str.bytes.len);
-    std.testing.expect(str.eql("Hello"));
+    expectEqual(@as(usize, 5), str.bytes.len);
+    expect(str.eql("Hello"));
     try str.appendAll(&[_]u21{ ' ', 'W', 'o', 'r', 'l', 'd' });
-    std.testing.expectEqual(@as(usize, 11), str.bytes.len);
-    std.testing.expect(str.eql("Hello World"));
+    expectEqual(@as(usize, 11), str.bytes.len);
+    expect(str.eql("Hello World"));
 }
 
 /// empty returns true if this Zigstr has no bytes.
@@ -692,18 +699,18 @@ test "Zigstr chomp" {
     defer str.deinit();
 
     try str.chomp();
-    std.testing.expectEqual(@as(usize, 5), str.bytes.len);
-    std.testing.expect(str.eql("Hello"));
+    expectEqual(@as(usize, 5), str.bytes.len);
+    expect(str.eql("Hello"));
 
     try str.reinit("Hello\r");
     try str.chomp();
-    std.testing.expectEqual(@as(usize, 5), str.bytes.len);
-    std.testing.expect(str.eql("Hello"));
+    expectEqual(@as(usize, 5), str.bytes.len);
+    expect(str.eql("Hello"));
 
     try str.reinit("Hello\r\n");
     try str.chomp();
-    std.testing.expectEqual(@as(usize, 5), str.bytes.len);
-    std.testing.expect(str.eql("Hello"));
+    expectEqual(@as(usize, 5), str.bytes.len);
+    expect(str.eql("Hello"));
 }
 
 /// byteAt returns the byte at index `i`.
@@ -725,16 +732,18 @@ pub fn graphemeAt(self: *Self, i: usize) ![]const u8 {
     return gcs[i];
 }
 
+const expectError = std.testing.expectError;
+
 test "Zigstr xAt" {
     var str = try init(std.testing.allocator, "H\u{0065}\u{0301}llo"); // Héllo
     defer str.deinit();
 
-    std.testing.expectEqual(try str.byteAt(2), 0x00CC);
-    std.testing.expectError(error.IndexOutOfBounds, str.byteAt(7));
-    std.testing.expectEqual(try str.codePointAt(1), 0x0065);
-    std.testing.expectError(error.IndexOutOfBounds, str.codePointAt(6));
-    std.testing.expectEqualStrings(try str.graphemeAt(1), "\u{0065}\u{0301}");
-    std.testing.expectError(error.IndexOutOfBounds, str.graphemeAt(5));
+    expectEqual(try str.byteAt(2), 0x00CC);
+    expectError(error.IndexOutOfBounds, str.byteAt(7));
+    expectEqual(try str.codePointAt(1), 0x0065);
+    expectError(error.IndexOutOfBounds, str.codePointAt(6));
+    expectEqualStrings(try str.graphemeAt(1), "\u{0065}\u{0301}");
+    expectError(error.IndexOutOfBounds, str.graphemeAt(5));
 }
 
 /// byteSlice returnes the bytes from this Zigstr in the specified range from `start` to `end` - 1.
@@ -780,15 +789,15 @@ test "Zigstr extractions" {
     var str = try init(std.testing.allocator, "H\u{0065}\u{0301}llo"); // Héllo
     defer str.deinit();
     // Slices
-    std.testing.expectEqualSlices(u8, try str.byteSlice(1, 4), "\u{0065}\u{0301}");
-    std.testing.expectEqualSlices(u21, try str.codePointSlice(1, 3), &[_]u21{ '\u{0065}', '\u{0301}' });
+    expectEqualSlices(u8, try str.byteSlice(1, 4), "\u{0065}\u{0301}");
+    expectEqualSlices(u21, try str.codePointSlice(1, 3), &[_]u21{ '\u{0065}', '\u{0301}' });
     const gc1 = try str.graphemeSlice(1, 2);
-    std.testing.expectEqualStrings(gc1[0], "\u{0065}\u{0301}");
+    expectEqualStrings(gc1[0], "\u{0065}\u{0301}");
     // Substrings
     var str2 = try str.substr(1, 2);
     defer str2.deinit();
-    std.testing.expect(str2.eql("\u{0065}\u{0301}"));
-    std.testing.expect(str2.eql(try str.byteSlice(1, 4)));
+    expect(str2.eql("\u{0065}\u{0301}"));
+    expect(str2.eql(try str.byteSlice(1, 4)));
 }
 
 /// processCodePoints performs some house-keeping and accounting on the code points that make up this
@@ -886,14 +895,14 @@ test "Zigstr casing" {
     var str = try init(std.testing.allocator, "Héllo! 123");
     defer str.deinit();
 
-    std.testing.expect(!try str.isLower());
-    std.testing.expect(!try str.isUpper());
+    expect(!try str.isLower());
+    expect(!try str.isUpper());
     try str.toLower();
-    std.testing.expect(try str.isLower());
-    std.testing.expect(str.eql("héllo! 123"));
+    expect(try str.isLower());
+    expect(str.eql("héllo! 123"));
     try str.toUpper();
-    std.testing.expect(try str.isUpper());
-    std.testing.expect(str.eql("HÉLLO! 123"));
+    expect(try str.isUpper());
+    expect(str.eql("HÉLLO! 123"));
 }
 
 /// format implements the `std.fmt` format interface for printing types.
