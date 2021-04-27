@@ -112,6 +112,6 @@ test "GraphemeIterator" {
     const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
 
     for (want) |w| {
-        expectEqualSlices(u8, w, iter.next().?);
+        expect(iter.next().?.eql(w));
     }
 }

@@ -65,8 +65,18 @@ const Slice = struct {
     end: usize,
 };
 
+pub const Grapheme = struct {
+    bytes: []const u8,
+    first: u21,
+    index: usize,
+
+    pub fn eql(self: Grapheme, str: []const u8) bool {
+        return mem.eql(u8, self.bytes, str);
+    }
+};
+
 /// next retrieves the next grapheme cluster.
-pub fn next(self: *Self) ?[]const u8 {
+pub fn next(self: *Self) ?Grapheme {
     var cpo = self.cp_iter.next();
     if (cpo == null) return null;
     const cp = cpo.?;
@@ -78,7 +88,11 @@ pub fn next(self: *Self) ?[]const u8 {
     if (self.prepend.isPrepend(cp)) {
         if (next_cp) |ncp| {
             if (ncp == CR or ncp == LF or self.control.isControl(ncp)) {
-                return self.cp_iter.bytes[cp_start..cp_end];
+                return Grapheme{
+                    .bytes = self.cp_iter.bytes[cp_start..cp_end],
+                    .first = cp,
+                    .index = cp_start,
+                };
             }
 
             const pncp = self.cp_iter.next().?; // We know there's a next.
@@ -86,14 +100,26 @@ pub fn next(self: *Self) ?[]const u8 {
             const pncp_start = self.cp_iter.prev_i;
             const pncp_next_cp = self.cp_iter.peek();
             const s = self.processNonPrepend(pncp, pncp_start, pncp_end, pncp_next_cp);
-            return self.cp_iter.bytes[cp_start..s.end];
+            return Grapheme{
+                .bytes = self.cp_iter.bytes[cp_start..s.end],
+                .first = cp,
+                .index = cp_start,
+            };
         }
 
-        return self.cp_iter.bytes[cp_start..cp_end];
+        return Grapheme{
+            .bytes = self.cp_iter.bytes[cp_start..cp_end],
+            .first = cp,
+            .index = cp_start,
+        };
     }
 
     const s = self.processNonPrepend(cp, cp_start, cp_end, next_cp);
-    return self.cp_iter.bytes[s.start..s.end];
+    return Grapheme{
+        .bytes = self.cp_iter.bytes[s.start..s.end],
+        .first = cp,
+        .index = s.start,
+    };
 }
 
 fn processNonPrepend(
@@ -250,31 +276,43 @@ test "Grapheme iterator" {
         }
 
         // Iterate over fields.
-        var want = std.ArrayList([]const u8).init(allocator);
+        var want = std.ArrayList(Grapheme).init(allocator);
         defer {
-            for (want.items) |s| {
-                allocator.free(s);
+            for (want.items) |gc| {
+                allocator.free(gc.bytes);
             }
             want.deinit();
         }
         var all_bytes = std.ArrayList(u8).init(allocator);
         defer all_bytes.deinit();
-        var fields = mem.split(line, " ÷ ");
+        var graphemes = mem.split(line, " ÷ ");
+        var bytes_index: usize = 0;
 
-        while (fields.next()) |field| {
-            var bytes = std.ArrayList(u8).init(allocator);
-            defer bytes.deinit();
-            var sub_fields = mem.split(field, " ");
+        while (graphemes.next()) |field| {
+            var code_points = mem.split(field, " ");
             var cp_buf: [4]u8 = undefined;
+            var cp_index: usize = 0;
+            var first: u21 = undefined;
+            var cp_bytes = std.ArrayList(u8).init(allocator);
+            defer cp_bytes.deinit();
 
-            while (sub_fields.next()) |sub_field| {
-                if (mem.eql(u8, sub_field, "×")) continue;
-                const cp: u21 = try std.fmt.parseInt(u21, sub_field, 16);
+            while (code_points.next()) |code_point| {
+                if (mem.eql(u8, code_point, "×")) continue;
+                const cp: u21 = try std.fmt.parseInt(u21, code_point, 16);
+                if (cp_index == 0) first = cp;
                 const len = try unicode.utf8Encode(cp, &cp_buf);
                 try all_bytes.appendSlice(cp_buf[0..len]);
-                try bytes.appendSlice(cp_buf[0..len]);
+                try cp_bytes.appendSlice(cp_buf[0..len]);
+                cp_index += len;
             }
-            try want.append(bytes.toOwnedSlice());
+
+            try want.append(Grapheme{
+                .bytes = cp_bytes.toOwnedSlice(),
+                .first = first,
+                .index = bytes_index,
+            });
+
+            bytes_index += cp_index;
         }
 
         if (giter) |*gi| {
@@ -286,8 +324,10 @@ test "Grapheme iterator" {
         // Chaeck.
         for (want.items) |w| {
             const g = giter.?.next().?;
-            //std.debug.print("line {d}: w:{s}, g:{s}\n", .{ line_no, w, g });
-            std.testing.expectEqualSlices(u8, w, g);
+            //std.debug.print("line {d}: w:({s}), g:({s})\n", .{ line_no, w.bytes, g.bytes });
+            std.testing.expectEqualStrings(w.bytes, g.bytes);
+            std.testing.expectEqual(w.first, g.first);
+            std.testing.expectEqual(w.index, g.index);
         }
     }
 }

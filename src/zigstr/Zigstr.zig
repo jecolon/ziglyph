@@ -9,6 +9,7 @@ const Letter = @import("../ziglyph.zig").Letter;
 
 pub const CodePointIterator = @import("CodePointIterator.zig");
 pub const GraphemeIterator = @import("GraphemeIterator.zig");
+pub const Grapheme = GraphemeIterator.Grapheme;
 
 const Self = @This();
 
@@ -63,7 +64,7 @@ bytes: []const u8,
 code_points: ?[]u21,
 cp_count: usize,
 context: *Context,
-grapheme_clusters: ?[][]const u8,
+grapheme_clusters: ?[]Grapheme,
 
 /// reset this Zigstr with `str` as its new content.
 pub fn reset(self: *Self, str: []const u8) !void {
@@ -157,14 +158,14 @@ pub fn graphemeIter(self: Self) !GraphemeIterator {
 }
 
 /// graphemes returns the grapheme clusters that make up this Zigstr.
-pub fn graphemes(self: *Self) ![][]const u8 {
+pub fn graphemes(self: *Self) ![]Grapheme {
     // Check for cached code points.
     if (self.grapheme_clusters) |gcs| return gcs;
 
     // Cache miss, generate.
     var giter = try self.graphemeIter();
     defer giter.deinit();
-    var gcs = std.ArrayList([]const u8).init(self.allocator);
+    var gcs = std.ArrayList(Grapheme).init(self.allocator);
     defer gcs.deinit();
 
     while (giter.next()) |gc| {
@@ -200,13 +201,13 @@ test "Zigstr graphemes" {
     var want = [_][]const u8{ "H", "é", "l", "l", "o" };
     var i: usize = 0;
     while (giter.next()) |gc| : (i += 1) {
-        expectEqualStrings(want[i], gc);
+        expect(gc.eql(want[i]));
     }
 
     expectEqual(@as(usize, 5), try str.graphemeCount());
     const gcs = try str.graphemes();
     for (gcs) |gc, j| {
-        expectEqualStrings(want[j], gc);
+        expect(gc.eql(want[j]));
     }
     expectEqual(@as(usize, 6), str.byteCount());
     expectEqual(@as(usize, 5), try str.graphemeCount());
@@ -749,7 +750,7 @@ pub fn codePointAt(self: *Self, i: usize) !u21 {
 }
 
 /// graphemeAt returns the `i`th grapheme cluster.
-pub fn graphemeAt(self: *Self, i: usize) ![]const u8 {
+pub fn graphemeAt(self: *Self, i: usize) !Grapheme {
     const gcs = try self.graphemes();
     if (i >= gcs.len) return error.IndexOutOfBounds;
     return gcs[i];
@@ -766,7 +767,7 @@ test "Zigstr xAt" {
     expectError(error.IndexOutOfBounds, str.byteAt(7));
     expectEqual(try str.codePointAt(1), 0x0065);
     expectError(error.IndexOutOfBounds, str.codePointAt(6));
-    expectEqualStrings(try str.graphemeAt(1), "\u{0065}\u{0301}");
+    expect((try str.graphemeAt(1)).eql("\u{0065}\u{0301}"));
     expectError(error.IndexOutOfBounds, str.graphemeAt(5));
 }
 
@@ -783,7 +784,7 @@ pub fn codePointSlice(self: *Self, start: usize, end: usize) ![]const u21 {
 }
 
 /// graphemeSlice returnes the grapheme clusters from this Zigstr in the specified range from `start` to `end` - 1.
-pub fn graphemeSlice(self: *Self, start: usize, end: usize) ![][]const u8 {
+pub fn graphemeSlice(self: *Self, start: usize, end: usize) ![]Grapheme {
     const gcs = try self.graphemes();
     if (start >= gcs.len or end > gcs.len) return error.IndexOutOfBounds;
     return gcs[start..end];
@@ -803,7 +804,7 @@ pub fn substr(self: *Self, start: usize, end: usize) !Self {
     defer bytes.deinit();
     var i: usize = start;
     while (i < end) : (i += 1) {
-        try bytes.appendSlice(gcs[i]);
+        try bytes.appendSlice(gcs[i].bytes);
     }
 
     return self.context.new(bytes.items);
@@ -818,7 +819,7 @@ test "Zigstr extractions" {
     expectEqualSlices(u8, try str.byteSlice(1, 4), "\u{0065}\u{0301}");
     expectEqualSlices(u21, try str.codePointSlice(1, 3), &[_]u21{ '\u{0065}', '\u{0301}' });
     const gc1 = try str.graphemeSlice(1, 2);
-    expectEqualStrings(gc1[0], "\u{0065}\u{0301}");
+    expect(gc1[0].eql("\u{0065}\u{0301}"));
     // Substrings
     var str2 = try str.substr(1, 2);
     expect(str2.eql("\u{0065}\u{0301}"));

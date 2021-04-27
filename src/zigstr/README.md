@@ -53,14 +53,14 @@ test "README tests" {
 
     i = 0;
     while (giter.next()) |gc| : (i += 1) {
-        expectEqualStrings(gc_want[i], gc);
+        expect(gc.eql(gc_want[i]));
     }
 
     // Collect all grapheme clusters at once.
     expectEqual(@as(usize, 5), try str.graphemeCount());
     const gcs = try str.graphemes();
     for (gcs) |gc, j| {
-        expectEqualStrings(gc_want[j], gc);
+        expect(gc.eql(gc_want[j]));
     }
 
     // Grapheme count.
@@ -208,7 +208,7 @@ test "README tests" {
     expectEqualSlices(u8, try str.byteSlice(1, 4), "\u{0065}\u{0301}");
     expectEqualSlices(u21, try str.codePointSlice(1, 3), &[_]u21{ '\u{0065}', '\u{0301}' });
     const gc1 = try str.graphemeSlice(1, 2);
-    expectEqualStrings(gc1[0], "\u{0065}\u{0301}");
+    expect(gc1[0].eql("\u{0065}\u{0301}"));
     // Substrings
     var str3 = try str.substr(1, 2);
     expect(str3.eql("\u{0065}\u{0301}"));
