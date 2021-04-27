@@ -19,8 +19,13 @@ const Zigstr = @import("Ziglyph").Zigstr;
 
 test "README tests" {
     var allocator = std.testing.allocator;
-    var str = try Zigstr.init(allocator, "Héllo");
-    defer str.deinit();
+
+    // A Zigstr.Context holds global state for all Zigstrs.
+    var ctx = try Zigstr.Context.init(allocator);
+    defer ctx.deinit();
+
+    // Create a new Zigstr. No deinit needed, the Zigstr.Context manages the memory.
+    var str = try ctx.new("Héllo");
 
     // Byte count.
     expectEqual(@as(usize, 6), str.byteCount());
@@ -63,13 +68,12 @@ test "README tests" {
 
     // Copy
     var str2 = try str.copy();
-    defer str2.deinit();
     expect(str.eql(str2.bytes));
     expect(str2.eql("Héllo"));
     expect(str.sameAs(str2));
 
     // Equality
-    try str.reinit("foo"); // re-initialize a Zigstr.
+    try str.reset("foo"); // re-initialize a Zigstr.
 
     expect(str.eql("foo")); // exact
     expect(!str.eql("fooo")); // lengths
@@ -78,28 +82,28 @@ test "README tests" {
 
     expect(try str.eqlBy("Foo", .ignore_case));
 
-    try str.reinit("foé");
+    try str.reset("foé");
     expect(try str.eqlBy("foe\u{0301}", .normalize));
 
-    try str.reinit("foϓ");
+    try str.reset("foϓ");
     expect(try str.eqlBy("foΥ\u{0301}", .normalize));
 
-    try str.reinit("Foϓ");
+    try str.reset("Foϓ");
     expect(try str.eqlBy("foΥ\u{0301}", .norm_ignore));
 
-    try str.reinit("FOÉ");
+    try str.reset("FOÉ");
     expect(try str.eqlBy("foe\u{0301}", .norm_ignore)); // foÉ == foé
 
     // Trimming.
-    try str.reinit("   Hello");
+    try str.reset("   Hello");
     try str.trimLeft(" ");
     expect(str.eql("Hello"));
 
-    try str.reinit("Hello   ");
+    try str.reset("Hello   ");
     try str.trimRight(" ");
     expect(str.eql("Hello"));
 
-    try str.reinit("   Hello   ");
+    try str.reset("   Hello   ");
     try str.trim(" ");
     expect(str.eql("Hello"));
 
@@ -117,7 +121,7 @@ test "README tests" {
     expectEqual(str.count("z"), 0);
 
     // Tokenization
-    try str.reinit(" Hello World ");
+    try str.reset(" Hello World ");
 
     // Token iteration.
     var tok_iter = str.tokenIter(" ");
@@ -127,7 +131,6 @@ test "README tests" {
 
     // Collect all tokens at once.
     var ts = try str.tokenize(" ");
-    defer allocator.free(ts);
     expectEqual(@as(usize, 2), ts.len);
     expectEqualStrings("Hello", ts[0]);
     expectEqualStrings("World", ts[1]);
@@ -142,7 +145,6 @@ test "README tests" {
 
     // Collect all sub-strings at once.
     var ss = try str.split(" ");
-    defer allocator.free(ss);
     expectEqual(@as(usize, 4), ss.len);
     expectEqualStrings("", ss[0]);
     expectEqualStrings("Hello", ss[1]);
@@ -150,14 +152,14 @@ test "README tests" {
     expectEqualStrings("", ss[3]);
 
     // startsWith / endsWith
-    try str.reinit("Hello World");
+    try str.reset("Hello World");
     expect(str.startsWith("Hell"));
     expect(!str.startsWith("Zig"));
     expect(str.endsWith("World"));
     expect(!str.endsWith("Zig"));
 
     // Concatenation
-    try str.reinit("Hello");
+    try str.reset("Hello");
     try str.concat(" World");
     expect(str.eql("Hello World"));
     var others = [_][]const u8{ " is", " the", " tradition!" };
@@ -165,7 +167,7 @@ test "README tests" {
     expect(str.eql("Hello World is the tradition!"));
 
     // replace
-    try str.reinit("Hello");
+    try str.reset("Hello");
     var replacements = try str.replace("l", "z");
     expectEqual(@as(usize, 2), replacements);
     expect(str.eql("Hezzo"));
@@ -175,7 +177,7 @@ test "README tests" {
     expect(str.eql("Heo"));
 
     // Append a code point or many.
-    try str.reinit("Hell");
+    try str.reset("Hell");
     try str.append('o');
     expectEqual(@as(usize, 5), str.bytes.len);
     expect(str.eql("Hello"));
@@ -186,43 +188,42 @@ test "README tests" {
     expect(!str.empty());
 
     // Chomp line breaks.
-    try str.reinit("Hello\n");
+    try str.reset("Hello\n");
     try str.chomp();
     expectEqual(@as(usize, 5), str.bytes.len);
     expect(str.eql("Hello"));
 
-    try str.reinit("Hello\r");
+    try str.reset("Hello\r");
     try str.chomp();
     expectEqual(@as(usize, 5), str.bytes.len);
     expect(str.eql("Hello"));
 
-    try str.reinit("Hello\r\n");
+    try str.reset("Hello\r\n");
     try str.chomp();
     expectEqual(@as(usize, 5), str.bytes.len);
     expect(str.eql("Hello"));
 
     // byteSlice, codePointSlice, graphemeSlice, substr
-    try str.reinit("H\u{0065}\u{0301}llo"); // Héllo
+    try str.reset("H\u{0065}\u{0301}llo"); // Héllo
     expectEqualSlices(u8, try str.byteSlice(1, 4), "\u{0065}\u{0301}");
     expectEqualSlices(u21, try str.codePointSlice(1, 3), &[_]u21{ '\u{0065}', '\u{0301}' });
     const gc1 = try str.graphemeSlice(1, 2);
     expectEqualStrings(gc1[0], "\u{0065}\u{0301}");
     // Substrings
     var str3 = try str.substr(1, 2);
-    defer str3.deinit();
     expect(str3.eql("\u{0065}\u{0301}"));
     expect(str3.eql(try str.byteSlice(1, 4)));
 
     // Letter case detection.
-    try str.reinit("hello! 123");
+    try str.reset("hello! 123");
     expect(try str.isLower());
     expect(!try str.isUpper());
-    try str.reinit("HELLO! 123");
+    try str.reset("HELLO! 123");
     expect(try str.isUpper());
     expect(!try str.isLower());
 
     // Letter case conversion.
-    try str.reinit("Héllo! 123");
+    try str.reset("Héllo! 123");
     try str.toLower();
     expect(str.eql("héllo! 123"));
     try str.toUpper();
