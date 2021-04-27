@@ -25,12 +25,12 @@ pub fn deinit(self: *Self) void {
 }
 
 /// isSpace detects code points that are Unicode space separators.
-pub fn isSpace(self: *Self, cp: u21) bool {
+pub fn isSpace(self: Self, cp: u21) bool {
     return self.space.isSpaceSeparator(cp);
 }
 
 /// isWhiteSpace checks for spaces.
-pub fn isWhiteSpace(self: *Self, cp: u21) bool {
+pub fn isWhiteSpace(self: Self, cp: u21) bool {
     return self.whitespace.isWhiteSpace(cp);
 }
 

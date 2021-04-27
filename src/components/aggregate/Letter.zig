@@ -65,12 +65,12 @@ pub fn deinit(self: *Self) void {
 }
 
 /// isCased detects cased letters.
-pub fn isCased(self: *Self, cp: u21) bool {
+pub fn isCased(self: Self, cp: u21) bool {
     return self.cased.isCased(cp);
 }
 
 /// isLetter covers all letters in Unicode, not just ASCII.
-pub fn isLetter(self: *Self, cp: u21) bool {
+pub fn isLetter(self: Self, cp: u21) bool {
     return self.lower.isLowercaseLetter(cp) or
         self.modifier.isModifierLetter(cp) or
         self.other.isOtherLetter(cp) or
@@ -84,7 +84,7 @@ pub fn isAscii(self: Self, cp: u21) bool {
 }
 
 /// isLower detects code points that are lowercase.
-pub fn isLower(self: *Self, cp: u21) bool {
+pub fn isLower(self: Self, cp: u21) bool {
     return self.lower.isLowercaseLetter(cp) or !self.isCased(cp);
 }
 
@@ -94,12 +94,12 @@ pub fn isAsciiLower(self: Self, cp: u21) bool {
 }
 
 /// isTitle detects code points in titlecase.
-pub fn isTitle(self: *Self, cp: u21) bool {
+pub fn isTitle(self: Self, cp: u21) bool {
     return self.title.isTitlecaseLetter(cp) or !self.isCased(cp);
 }
 
 /// isUpper detects code points in uppercase.
-pub fn isUpper(self: *Self, cp: u21) bool {
+pub fn isUpper(self: Self, cp: u21) bool {
     return self.upper.isUppercaseLetter(cp) or !self.isCased(cp);
 }
 
@@ -110,7 +110,7 @@ pub fn isAsciiUpper(self: Self, cp: u21) bool {
 
 /// toLower returns the lowercase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
-pub fn toLower(self: *Self, cp: u21) u21 {
+pub fn toLower(self: Self, cp: u21) u21 {
     // Only cased letters.
     if (!self.isCased(cp)) return cp;
     return self.lower_map.toLower(cp);
@@ -123,7 +123,7 @@ pub fn toAsciiLower(self: Self, cp: u21) u21 {
 
 /// toTitle returns the titlecase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
-pub fn toTitle(self: *Self, cp: u21) u21 {
+pub fn toTitle(self: Self, cp: u21) u21 {
     // Only cased letters.
     if (!self.isCased(cp)) return cp;
     return self.title_map.toTitle(cp);
@@ -131,7 +131,7 @@ pub fn toTitle(self: *Self, cp: u21) u21 {
 
 /// toUpper returns the uppercase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
-pub fn toUpper(self: *Self, cp: u21) u21 {
+pub fn toUpper(self: Self, cp: u21) u21 {
     // Only cased letters.
     if (!self.isCased(cp)) return cp;
     return self.upper_map.toUpper(cp);
@@ -144,7 +144,7 @@ pub fn toAsciiUpper(self: Self, cp: u21) u21 {
 
 /// toCaseFold will convert a code point into its case folded equivalent. Note that this can result
 /// in a mapping to more than one code point, known as the full case fold.
-pub fn toCaseFold(self: *Self, cp: u21) CaseFold {
+pub fn toCaseFold(self: Self, cp: u21) CaseFold {
     return self.fold_map.toCaseFold(cp);
 }
 

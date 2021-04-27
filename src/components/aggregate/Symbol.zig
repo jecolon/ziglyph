@@ -38,7 +38,7 @@ pub fn deinit(self: *Self) void {
 
 // isSymbol detects symbols which curiosly may include some code points commonly thought of as
 // punctuation.
-pub fn isSymbol(self: *Self, cp: u21) bool {
+pub fn isSymbol(self: Self, cp: u21) bool {
     return self.math.isMathSymbol(cp) or self.modifier.isModifierSymbol(cp) or
         self.currency.isCurrencySymbol(cp) or self.other.isOtherSymbol(cp);
 }

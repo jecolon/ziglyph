@@ -211,6 +211,43 @@ test "GraphemeIterator" {
 }
 ```
 
+## Code Point and String Width
+When working with environments in which text is rendered in a fixed-width font, such as terminal 
+emulators, it's necessary to know how many cells (or columns) a particular code point or string will
+occupy. The `Width` component struct provides methods to do just that.
+
+```
+// Import the struct.
+const Width = @import("Ziglyph").Zigstr.Width;
+
+test "Code point / string widths" {
+    var width = try Width.init(std.testing.allocator);
+    defer width.deinit();
+
+    expectEqual(width.codePointWidth('é'), 1);
+    expectEqual(width.codePointWidth('统'), 2);
+    // Non-printing are width 0.
+    expectEqual(try width.strWidth("Hello\r\n"), 5);
+    // Emoji and emoji presentation sequences are width 2, no matter how many code points compose them.
+    expectEqual(try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}"), 2);
+
+    // To get the width of grapheme clusters:
+    var iter = try GraphemeIterator.init(std.testing.allocator, "H\u{0065}\u{0301}llo"); // Héllo
+    defer iter.deinit();
+
+    const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
+
+    for (want) |w| {
+        // iter.next() returns a Zigstr.Grapheme, which has an eql method to compare it with a []const u8.
+        const grapheme_cluster = iter.next().?;
+        expect(grapheme_cluster.eql(w));
+
+        // Zigstr.Grapheme.bytes is a []const u8.
+        std.debug.print("{d}\n", .{try width.strWidth(grapheme_cluster.bytes)});
+    }
+}
+```
+
 ## Unicode Data
 The Unicode data is the latest available on the Unicode website, and can be refreshed via the 
 `ucd_gen.sh` script in the root directory (must be run in the root directory to generate files in the 

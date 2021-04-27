@@ -42,12 +42,12 @@ pub fn deinit(self: *Self) void {
 }
 
 // isDecimal detects all Unicode digits.
-pub fn isDecimal(self: *Self, cp: u21) bool {
+pub fn isDecimal(self: Self, cp: u21) bool {
     return self.decimal.isDecimalNumber(cp);
 }
 
 // isDigit detects all Unicode digits, which don't include the ASCII digits..
-pub fn isDigit(self: *Self, cp: u21) bool {
+pub fn isDigit(self: Self, cp: u21) bool {
     return self.digit.isDigit(cp) or self.isDecimal(cp);
 }
 
@@ -57,7 +57,7 @@ pub fn isAsciiDigit(self: Self, cp: u21) bool {
 }
 
 // isHex detects the 16 ASCII characters 0-9 A-F, and a-f.
-pub fn isHexDigit(self: *Self, cp: u21) bool {
+pub fn isHexDigit(self: Self, cp: u21) bool {
     return self.hex.isHexDigit(cp);
 }
 
@@ -67,7 +67,7 @@ pub fn isAsciiHexDigit(self: Self, cp: u21) bool {
 }
 
 /// isNumber covers all Unicode numbers, not just ASII.
-pub fn isNumber(self: *Self, cp: u21) bool {
+pub fn isNumber(self: Self, cp: u21) bool {
     return self.decimal.isDecimalNumber(cp) or self.letter.isLetterNumber(cp) or
         self.other.isOtherNumber(cp);
 }

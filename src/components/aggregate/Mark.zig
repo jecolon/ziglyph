@@ -28,7 +28,7 @@ pub fn deinit(self: *Self) void {
 }
 
 /// isMark detects special code points that serve as marks in different alphabets.
-pub fn isMark(self: *Self, cp: u21) bool {
+pub fn isMark(self: Self, cp: u21) bool {
     return self.spacing.isSpacingMark(cp) or self.nonspacing.isNonspacingMark(cp) or
         self.enclosing.isEnclosingMark(cp);
 }

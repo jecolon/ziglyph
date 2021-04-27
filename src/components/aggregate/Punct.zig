@@ -45,7 +45,7 @@ pub fn deinit(self: *Self) void {
 }
 
 /// isPunct detects punctuation characters. Note some punctuation maybe considered symbols by Unicode.
-pub fn isPunct(self: *Self, cp: u21) bool {
+pub fn isPunct(self: Self, cp: u21) bool {
     return self.close.isClosePunctuation(cp) or self.connector.isConnectorPunctuation(cp) or
         self.dash.isDashPunctuation(cp) or self.final.isFinalPunctuation(cp) or
         self.initial.isInitialPunctuation(cp) or self.open.isOpenPunctuation(cp) or

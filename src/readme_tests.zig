@@ -14,6 +14,7 @@ const Punct = @import("ziglyph.zig").Punct;
 const Upper = @import("ziglyph.zig").Letter.Upper;
 const UpperMap = @import("ziglyph.zig").Letter.UpperMap;
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
+const Width = @import("zigstr/Zigstr.zig").Width;
 
 test "Ziglyph struct" {
     var ziglyph = try Ziglyph.init(std.testing.allocator);
@@ -114,4 +115,18 @@ test "GraphemeIterator" {
     for (want) |w| {
         expect(iter.next().?.eql(w));
     }
+}
+
+test "Code point / string widths" {
+    var width = try Width.init(std.testing.allocator);
+    defer width.deinit();
+
+    expectEqual(width.codePointWidth('é'), 1);
+    expectEqual(width.codePointWidth('😊'), 2);
+    expectEqual(width.codePointWidth('统'), 2);
+    expectEqual(try width.strWidth("Hello\r\n"), 5);
+    expectEqual(try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}"), 2);
+    expectEqual(try width.strWidth("Héllo 🇪🇸"), 8);
+    expectEqual(try width.strWidth("\u{26A1}\u{FE0E}"), 1); // Text sequence
+    expectEqual(try width.strWidth("\u{26A1}\u{FE0F}"), 2); // Presentation sequence
 }

@@ -59,7 +59,7 @@ pub const Ziglyph = struct {
         self.symbol.deinit();
     }
 
-    pub fn isAlphabetic(self: *Self, cp: u21) bool {
+    pub fn isAlphabetic(self: Self, cp: u21) bool {
         return self.alpha.isAlphabetic(cp);
     }
 
@@ -67,7 +67,7 @@ pub const Ziglyph = struct {
         return if (cp < 128) ascii.isAlpha(@intCast(u8, cp)) else false;
     }
 
-    pub fn isAlphaNum(self: *Self, cp: u21) bool {
+    pub fn isAlphaNum(self: Self, cp: u21) bool {
         return (self.isAlphabetic(cp) or self.isNumber(cp));
     }
 
@@ -76,28 +76,28 @@ pub const Ziglyph = struct {
     }
 
     /// isBase detects Unicode base code points which frequently are followed by combining code points.
-    pub fn isBase(self: *Self, cp: u21) bool {
+    pub fn isBase(self: Self, cp: u21) bool {
         return self.isLetter(cp) or self.isNumber(cp) or self.isPunct(cp) or
             self.isSymbol(cp) or self.isSpace(cp);
     }
 
     /// isCombining detects combining code points that can interact with base code points.
-    pub fn isCombining(self: *Self, cp: u21) bool {
+    pub fn isCombining(self: Self, cp: u21) bool {
         return self.isMark(cp);
     }
 
     /// isCased detects cased code points, usually letters.
-    pub fn isCased(self: *Self, cp: u21) bool {
+    pub fn isCased(self: Self, cp: u21) bool {
         return self.letter.isCased(cp);
     }
 
     /// isDecimal detects all Unicode decimal numbers.
-    pub fn isDecimal(self: *Self, cp: u21) bool {
+    pub fn isDecimal(self: Self, cp: u21) bool {
         return self.number.isDecimal(cp);
     }
 
     /// isDigit detects all Unicode digits, which curiosly don't include the ASCII digits.
-    pub fn isDigit(self: *Self, cp: u21) bool {
+    pub fn isDigit(self: Self, cp: u21) bool {
         return self.number.isDigit(cp);
     }
 
@@ -106,7 +106,7 @@ pub const Ziglyph = struct {
     }
 
     /// isGraphic detects any code point that can be represented graphically, including spaces.
-    pub fn isGraphic(self: *Self, cp: u21) bool {
+    pub fn isGraphic(self: Self, cp: u21) bool {
         return self.isPrint(cp) or self.isSpace(cp);
     }
 
@@ -115,7 +115,7 @@ pub const Ziglyph = struct {
     }
 
     // isHex detects hexadecimal code points.
-    pub fn isHexDigit(self: *Self, cp: u21) bool {
+    pub fn isHexDigit(self: Self, cp: u21) bool {
         return self.number.isHexDigit(cp);
     }
 
@@ -124,7 +124,7 @@ pub const Ziglyph = struct {
     }
 
     /// isPrint detects any code point that can be printed, excluding spaces.
-    pub fn isPrint(self: *Self, cp: u21) bool {
+    pub fn isPrint(self: Self, cp: u21) bool {
         return self.isAlphaNum(cp) or self.isMark(cp) or self.isPunct(cp) or
             self.isSymbol(cp) or self.isWhiteSpace(cp);
     }
@@ -133,7 +133,7 @@ pub const Ziglyph = struct {
         return if (cp < 128) ascii.isPrint(@intCast(u8, cp)) else false;
     }
 
-    pub fn isControl(self: *Self, cp: u21) bool {
+    pub fn isControl(self: Self, cp: u21) bool {
         return self.control.isControl(cp);
     }
 
@@ -141,7 +141,7 @@ pub const Ziglyph = struct {
         return if (cp < 128) ascii.isCntrl(@intCast(u8, cp)) else false;
     }
 
-    pub fn isLetter(self: *Self, cp: u21) bool {
+    pub fn isLetter(self: Self, cp: u21) bool {
         return self.letter.isLetter(cp);
     }
 
@@ -150,7 +150,7 @@ pub const Ziglyph = struct {
     }
 
     /// isLower detects code points that are lowercase.
-    pub fn isLower(self: *Self, cp: u21) bool {
+    pub fn isLower(self: Self, cp: u21) bool {
         return (self.letter.isLower(cp));
     }
 
@@ -159,11 +159,11 @@ pub const Ziglyph = struct {
     }
 
     /// isMark detects special code points that serve as marks in different alphabets.
-    pub fn isMark(self: *Self, cp: u21) bool {
+    pub fn isMark(self: Self, cp: u21) bool {
         return (self.mark.isMark(cp));
     }
 
-    pub fn isNumber(self: *Self, cp: u21) bool {
+    pub fn isNumber(self: Self, cp: u21) bool {
         return (self.number.isNumber(cp));
     }
 
@@ -172,7 +172,7 @@ pub const Ziglyph = struct {
     }
 
     /// isPunct detects punctuation characters. Note some punctuation may be considered as symbols by Unicode.
-    pub fn isPunct(self: *Self, cp: u21) bool {
+    pub fn isPunct(self: Self, cp: u21) bool {
         return (self.punct.isPunct(cp));
     }
 
@@ -181,12 +181,12 @@ pub const Ziglyph = struct {
     }
 
     /// isSpace detects code points that are Unicode space separators.
-    pub fn isSpace(self: *Self, cp: u21) bool {
+    pub fn isSpace(self: Self, cp: u21) bool {
         return self.space.isSpace(cp);
     }
 
     /// isWhiteSpace detects code points that have the Unicode *WhiteSpace* property.
-    pub fn isWhiteSpace(self: *Self, cp: u21) bool {
+    pub fn isWhiteSpace(self: Self, cp: u21) bool {
         return (self.space.isWhiteSpace(cp));
     }
 
@@ -195,7 +195,7 @@ pub const Ziglyph = struct {
     }
 
     // isSymbol detects symbols which may include code points commonly considered punctuation.
-    pub fn isSymbol(self: *Self, cp: u21) bool {
+    pub fn isSymbol(self: Self, cp: u21) bool {
         return (self.symbol.isSymbol(cp));
     }
 
@@ -204,12 +204,12 @@ pub const Ziglyph = struct {
     }
 
     /// isTitle detects code points in titlecase.
-    pub fn isTitle(self: *Self, cp: u21) bool {
+    pub fn isTitle(self: Self, cp: u21) bool {
         return (self.letter.isTitle(cp));
     }
 
     /// isUpper detects code points in uppercase.
-    pub fn isUpper(self: *Self, cp: u21) bool {
+    pub fn isUpper(self: Self, cp: u21) bool {
         return (self.letter.isUpper(cp));
     }
 
@@ -219,7 +219,7 @@ pub const Ziglyph = struct {
 
     /// toLower returns the lowercase code point for the given code point. It returns the same 
     /// code point given if no mapping exists.
-    pub fn toLower(self: *Self, cp: u21) u21 {
+    pub fn toLower(self: Self, cp: u21) u21 {
         return self.letter.toLower(cp);
     }
 
@@ -229,13 +229,13 @@ pub const Ziglyph = struct {
 
     /// toTitle returns the titlecase code point for the given code point. It returns the same 
     /// code point given if no mapping exists.
-    pub fn toTitle(self: *Self, cp: u21) u21 {
+    pub fn toTitle(self: Self, cp: u21) u21 {
         return self.letter.toTitle(cp);
     }
 
     /// toUpper returns the uppercase code point for the given code point. It returns the same 
     /// code point given if no mapping exists.
-    pub fn toUpper(self: *Self, cp: u21) u21 {
+    pub fn toUpper(self: Self, cp: u21) u21 {
         return self.letter.toUpper(cp);
     }
 

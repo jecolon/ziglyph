@@ -6,6 +6,7 @@ const ascii = @import("../ascii.zig");
 const DecomposeMap = @import("../ziglyph.zig").DecomposeMap;
 const CaseFoldMap = @import("../components/autogen/CaseFolding/CaseFoldMap.zig");
 const Letter = @import("../ziglyph.zig").Letter;
+pub const Width = @import("../components/aggregate/Width.zig");
 
 pub const CodePointIterator = @import("CodePointIterator.zig");
 pub const GraphemeIterator = @import("GraphemeIterator.zig");
@@ -18,6 +19,7 @@ pub const Context = struct {
     decomp_map: DecomposeMap,
     fold_map: CaseFoldMap,
     letter: Letter,
+    width: Width,
 
     pub fn init(allocator: *mem.Allocator) !Context {
         return Context{
@@ -25,6 +27,7 @@ pub const Context = struct {
             .decomp_map = try DecomposeMap.init(allocator),
             .fold_map = try CaseFoldMap.init(allocator),
             .letter = try Letter.init(allocator),
+            .width = try Width.init(allocator),
         };
     }
 
@@ -33,6 +36,7 @@ pub const Context = struct {
         self.fold_map.deinit();
         self.letter.deinit();
         self.arena.deinit();
+        self.width.deinit();
     }
 
     /// new creates a new Zigstr.
@@ -72,6 +76,28 @@ pub fn reset(self: *Self, str: []const u8) !void {
     var bytes = try self.allocator.alloc(u8, str.len);
     mem.copy(u8, bytes, str);
 
+    // Free and reset old content.
+    if (self.code_points) |code_points| {
+        self.allocator.free(code_points);
+    }
+
+    if (self.grapheme_clusters) |gcs| {
+        self.allocator.free(gcs);
+    }
+
+    self.code_points = null;
+    self.cp_count = 0;
+    self.grapheme_clusters = null;
+    self.allocator.free(self.bytes);
+
+    // New content.
+    self.bytes = bytes;
+    // Validates UTF-8, sets cp_count and ascii_only.
+    try self.processCodePoints();
+}
+
+/// resetOwned resets this Zigstr with `bytes` as its new content.
+pub fn resetOwned(self: *Self, bytes: []const u8) !void {
     // Free and reset old content.
     if (self.code_points) |code_points| {
         self.allocator.free(code_points);
@@ -607,7 +633,6 @@ pub fn concatAll(self: *Self, others: [][]const u8) !void {
     };
 
     const buf = try self.allocator.alloc(u8, total_len);
-    defer self.allocator.free(buf);
     mem.copy(u8, buf, self.bytes);
 
     var buf_index: usize = self.bytes.len;
@@ -617,7 +642,7 @@ pub fn concatAll(self: *Self, others: [][]const u8) !void {
     }
 
     // No need for shrink since buf is exactly the correct size.
-    try self.reset(buf);
+    try self.resetOwned(buf);
 }
 
 /// concat appends `other` to this Zigstr, mutating it.
@@ -642,10 +667,9 @@ test "Zigstr concat" {
 pub fn replace(self: *Self, needle: []const u8, replacement: []const u8) !usize {
     const len = mem.replacementSize(u8, self.bytes, needle, replacement);
     var buf = try self.allocator.alloc(u8, len);
-    defer self.allocator.free(buf);
     const replacements = mem.replace(u8, self.bytes, needle, replacement, buf);
     if (replacement.len == 0) buf = self.allocator.shrink(buf, (len + 1) - needle.len * replacements);
-    try self.reset(buf);
+    try self.resetOwned(buf);
 
     return replacements;
 }
@@ -943,4 +967,17 @@ test "Zigstr format" {
 
     var str = try ctx.new("Hi, I'm a Zigstr! 😊");
     std.debug.print("{}\n", .{str});
+}
+
+/// width returns the cells (or columns) this Zigstr would occupy in a fixed-width context.
+pub fn width(self: Self) !usize {
+    return self.context.width.strWidth(self.bytes);
+}
+
+test "Zigstr width" {
+    var ctx = try Context.init(std.testing.allocator);
+    defer ctx.deinit();
+
+    var str = try ctx.new("Héllo 😊");
+    expectEqual(@as(usize, 8), try str.width());
 }

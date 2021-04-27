@@ -67,8 +67,6 @@ const Slice = struct {
 
 pub const Grapheme = struct {
     bytes: []const u8,
-    first: u21,
-    index: usize,
 
     pub fn eql(self: Grapheme, str: []const u8) bool {
         return mem.eql(u8, self.bytes, str);
@@ -90,8 +88,6 @@ pub fn next(self: *Self) ?Grapheme {
             if (ncp == CR or ncp == LF or self.control.isControl(ncp)) {
                 return Grapheme{
                     .bytes = self.cp_iter.bytes[cp_start..cp_end],
-                    .first = cp,
-                    .index = cp_start,
                 };
             }
 
@@ -102,23 +98,17 @@ pub fn next(self: *Self) ?Grapheme {
             const s = self.processNonPrepend(pncp, pncp_start, pncp_end, pncp_next_cp);
             return Grapheme{
                 .bytes = self.cp_iter.bytes[cp_start..s.end],
-                .first = cp,
-                .index = cp_start,
             };
         }
 
         return Grapheme{
             .bytes = self.cp_iter.bytes[cp_start..cp_end],
-            .first = cp,
-            .index = cp_start,
         };
     }
 
     const s = self.processNonPrepend(cp, cp_start, cp_end, next_cp);
     return Grapheme{
         .bytes = self.cp_iter.bytes[s.start..s.end],
-        .first = cp,
-        .index = s.start,
     };
 }
 
@@ -308,8 +298,6 @@ test "Grapheme iterator" {
 
             try want.append(Grapheme{
                 .bytes = cp_bytes.toOwnedSlice(),
-                .first = first,
-                .index = bytes_index,
             });
 
             bytes_index += cp_index;
@@ -326,8 +314,10 @@ test "Grapheme iterator" {
             const g = giter.?.next().?;
             //std.debug.print("line {d}: w:({s}), g:({s})\n", .{ line_no, w.bytes, g.bytes });
             std.testing.expectEqualStrings(w.bytes, g.bytes);
-            std.testing.expectEqual(w.first, g.first);
-            std.testing.expectEqual(w.index, g.index);
         }
     }
+}
+
+test "Grapheme width" {
+    _ = @import("../components/aggregate/Width.zig");
 }
