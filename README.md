@@ -215,15 +215,4 @@ test "Code point / string widths" {
 ## Unicode Data
 The Unicode data is the latest available on the Unicode website, and can be refreshed via the 
 `ucd_gen.sh` script in the root directory (must be run in the root directory to generate files in the 
-proper locations.) The `ucd_gen.sh` script will look for a cached copy of the data, If it finds it, 
-it, the `src/ucd_gen` program will parse those files; otherwise it will download the latest version 
-from the Unicode website. `src/ucd_gen` is also built with Zig. You can find it in `ucd_gen.zig` in 
-the src directory too. To refresh the data, you only have to run `ucd_gen.sh` in the root directory,
-which will in turn run `src/ucd_gen` automatically for you.
-
-## Speed Test?
-In a corpus test whith about 3.9MiB of text in Chinese, English, French, and Spanish from the full 
-texts of "Alice in Wonderland", "Don Quijote", "The Three Musketeers", and a Chinese book I don't have 
-the title of, detectiong code point types and converting cases, it takes roughly 47ms. On a Linux, 
-Ryzen 5 2600X CPU, 16GiB RAM, SSD storage machine, All texts are courtesy of the 
-[Project Gutenberg](https://www.gutenberg.org/) website, so all Public Domain.
+proper locations.) [LICENSE](src/data/ucd/LICENSE-UNICODE)
