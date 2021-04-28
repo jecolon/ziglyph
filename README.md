@@ -64,7 +64,7 @@ provide more granular control over memory usage.
 
 ### Using the Ziglyph Struct
 ```zig
-const Context = @import("Context.zig");
+const Context = @import("Ziglyph").Context;
 const Ziglyph = @import("Ziglyph").Ziglyph;
 
 test "Ziglyph struct" {
@@ -86,6 +86,7 @@ test "Ziglyph struct" {
 
 ### Using the aggregate Structs
 ```zig
+const Context = @import("Ziglyph").Context;
 const Letter = @import("components/aggregate/Letter.zig");
 const Punct = @import("components/aggregate/Punct.zig");
 
@@ -109,6 +110,8 @@ test "Aggregate struct" {
 
 ### Using individual low-level component structs
 ```zig
+const Context = @import("Ziglyph").Context;
+
 test "Component structs" {
     var ctx = Context.init(std.testing.allocator);
     defer ctx.deinit();
@@ -133,6 +136,8 @@ performs full canonical and compatibility decomposition and normalization (NFD a
 versions may add more normalization forms.
 
 ```zig
+const Context = @import("Ziglyph").Context;
+
 test "normalizeTo" {
     var allocator = std.testing.allocator;
     var ctx = Context.init(allocator);
@@ -168,6 +173,7 @@ called *Grapheme Clusters* and Ziglyph provides the `GraphemeIterator` to extrac
 (not just single code points) from a string.
 
 ```
+const Context = @import("Ziglyph").Context;
 const GraphemeIterator = @import("Ziglyph").GraphemeIterator;
 
 test "GraphemeIterator" {
@@ -191,6 +197,7 @@ emulators, it's necessary to know how many cells (or columns) a particular code 
 occupy. The `Width` component struct provides methods to do just that.
 
 ```
+const Context = @import("Ziglyph").Context;
 const Width = @import("Ziglyph").Zigstr.Width;
 
 test "Code point / string widths" {
