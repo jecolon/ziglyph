@@ -51,6 +51,7 @@ pub const Math = @import("components/autogen/DerivedGeneralCategory/MathSymbol.z
 pub const ModifierSymbol = @import("components/autogen/DerivedGeneralCategory/ModifierSymbol.zig");
 pub const OtherSymbol = @import("components/autogen/DerivedGeneralCategory/OtherSymbol.zig");
 // Width
+const Ambiguous = @import("components/autogen/DerivedEastAsianWidth/Ambiguous.zig");
 const Fullwidth = @import("components/autogen/DerivedEastAsianWidth/Fullwidth.zig");
 const Narrow = @import("components/autogen/DerivedEastAsianWidth/Narrow.zig");
 const Wide = @import("components/autogen/DerivedEastAsianWidth/Wide.zig");
@@ -66,6 +67,7 @@ format: ?Format = null,
 hangul_map: ?HangulMap = null,
 prepend: ?Prepend = null,
 regional: ?Regional = null,
+ambiguous: ?Ambiguous = null,
 fullwidth: ?Fullwidth = null,
 narrow: ?Narrow = null,
 wide: ?Wide = null,
@@ -282,6 +284,10 @@ pub fn deinit(self: *Self) void {
 
     if (self.wide) |*wide_| {
         wide_.deinit();
+    }
+
+    if (self.ambiguous) |*ambiguous| {
+        ambiguous.deinit();
     }
 }
 
@@ -678,5 +684,14 @@ pub fn getWide(self: *Self) !*Wide {
     } else {
         self.wide = try Wide.init(self.allocator);
         return &self.wide.?;
+    }
+}
+
+pub fn getAmbiguous(self: *Self) !*Ambiguous {
+    if (self.ambiguous) |*ambiguous| {
+        return ambiguous;
+    } else {
+        self.ambiguous = try Ambiguous.init(self.allocator);
+        return &self.ambiguous.?;
     }
 }

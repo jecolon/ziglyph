@@ -1029,7 +1029,7 @@ test "Zigstr format" {
 
 /// width returns the cells (or columns) this Zigstr would occupy in a fixed-width context.
 pub fn width(self: Self) !usize {
-    return self.factory.width.strWidth(self.bytes);
+    return self.factory.width.strWidth(self.bytes, .half);
 }
 
 test "Zigstr width" {

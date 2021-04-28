@@ -227,7 +227,8 @@ test "README tests" {
     try str.toUpper();
     expect(str.eql("HÉLLO! 123"));
 
-    // Fixed-width cell / columns size.
+    // Fixed-width cell / columns size. This uses halfwidth for ambiguous code points, which is the
+    // most common case. To use fullwidth, use the Zigstr.Width component struct directly.
     try str.reset("Héllo 😊");
     expectEqual(@as(usize, 8), try str.width());
 }

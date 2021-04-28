@@ -129,12 +129,12 @@ test "Code point / string widths" {
 
     var width = try Width.new(&ctx);
 
-    expectEqual(try width.codePointWidth('é'), 1);
-    expectEqual(try width.codePointWidth('😊'), 2);
-    expectEqual(try width.codePointWidth('统'), 2);
-    expectEqual(try width.strWidth("Hello\r\n"), 5);
-    expectEqual(try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}"), 2);
-    expectEqual(try width.strWidth("Héllo 🇪🇸"), 8);
-    expectEqual(try width.strWidth("\u{26A1}\u{FE0E}"), 1); // Text sequence
-    expectEqual(try width.strWidth("\u{26A1}\u{FE0F}"), 2); // Presentation sequence
+    expectEqual(try width.codePointWidth('é', .half), 1);
+    expectEqual(try width.codePointWidth('😊', .half), 2);
+    expectEqual(try width.codePointWidth('统', .half), 2);
+    expectEqual(try width.strWidth("Hello\r\n", .half), 5);
+    expectEqual(try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
+    expectEqual(try width.strWidth("Héllo 🇪🇸", .half), 8);
+    expectEqual(try width.strWidth("\u{26A1}\u{FE0E}", .half), 1); // Text sequence
+    expectEqual(try width.strWidth("\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
 }
