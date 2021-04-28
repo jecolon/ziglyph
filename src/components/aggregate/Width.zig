@@ -25,36 +25,24 @@ pub fn new(ctx: *Context) !Self {
 /// codePointWidth returns how many cells (or columns) wide `cp` should be when rendered in a
 /// fixed-width font.
 pub fn codePointWidth(self: Self, cp: u21) !usize {
+    const ccc_map = try self.context.getCccMap();
     const wide = try self.context.getWide();
     const fullwidth = try self.context.getFullwidth();
     const regional = try self.context.getRegional();
 
-    if (wide.isWide(cp) or fullwidth.isFullwidth(cp)) {
-        return 2;
-    } else if ((try self.ziglyph.isControl(cp)) or (!try self.ziglyph.isPrint(cp))) {
+    if ((cp >= 0x7F and cp <= 0x9F) or cp == 0xAD or cp == '\n' or cp == '\r') {
         return 0;
+    } else if (cp < 0x300) {
+        return 1;
+    } else if (ccc_map.combiningClass(cp) != 0 or (!try self.ziglyph.isPrint(cp))) {
+        return 0;
+    } else if (wide.isWide(cp) or fullwidth.isFullwidth(cp)) {
+        return 2;
     } else if (regional.isRegionalIndicator(cp)) {
         return 2;
     } else {
         return 1;
     }
-    //if (cp > 0x10FFFF) {
-    //    return 0;
-    //} else if ((cp >= 0x7F and cp <= 0x9F) or cp == 0xAD) {
-    //    return 0;
-    //} else if (cp < 0x300) {
-    //    return 1;
-    //} else if (self.narrow.isNarrow(cp)) {
-    //    return 1;
-    //} else if (!self.ziglyph.isPrint(cp) or (self.ccc_map.combiningClass(cp) != 0)) {
-    //    return 0;
-    //} else if (self.regional.isRegionalIndicator(cp)) {
-    //    return 2;
-    //} else if (self.wide.isWide(cp) or self.fullwidth.isFullwidth(cp)) {
-    //    return 2;
-    //} else {
-    //    return 1;
-    //}
 }
 
 /// strWidth returns how many cells (or columns) wide `str` should be when rendered in a
