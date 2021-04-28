@@ -32,7 +32,7 @@ pub const AmbiguousWidth = enum(u2) {
 
 /// codePointWidth returns how many cells (or columns) wide `cp` should be when rendered in a
 /// fixed-width font.
-pub fn codePointWidth(self: Self, cp: u21, am_width: AmbiguousWidth) !isize {
+pub fn codePointWidth(self: Self, cp: u21, am_width: AmbiguousWidth) !i8 {
     const ambiguous = try self.context.getAmbiguous();
     const enclosing = try self.context.getEnclosing();
     const format = try self.context.getFormat();
@@ -128,38 +128,39 @@ test "Grapheme Width" {
 
     var width = try new(&ctx);
 
-    expectEqual(@as(isize, -1), try width.codePointWidth(0x0008, .half)); // \b DEL
-    expectEqual(@as(isize, 0), try width.codePointWidth(0x0000, .half)); // null
-    expectEqual(@as(isize, 0), try width.codePointWidth(0x0005, .half)); // Cf
-    expectEqual(@as(isize, 0), try width.codePointWidth(0x0007, .half)); // \a BEL
-    expectEqual(@as(isize, 0), try width.codePointWidth(0x000A, .half)); // \n LF
-    expectEqual(@as(isize, 0), try width.codePointWidth(0x000B, .half)); // \v VT
-    expectEqual(@as(isize, 0), try width.codePointWidth(0x000C, .half)); // \f FF
-    expectEqual(@as(isize, 0), try width.codePointWidth(0x000D, .half)); // \r CR
-    expectEqual(@as(isize, 0), try width.codePointWidth(0x000E, .half)); // SQ
-    expectEqual(@as(isize, 0), try width.codePointWidth(0x000F, .half)); // SI
+    expectEqual(@as(i8, -1), try width.codePointWidth(0x0008, .half)); // \b DEL
+    expectEqual(@as(i8, 0), try width.codePointWidth(0x0000, .half)); // null
+    expectEqual(@as(i8, 0), try width.codePointWidth(0x0005, .half)); // Cf
+    expectEqual(@as(i8, 0), try width.codePointWidth(0x0007, .half)); // \a BEL
+    expectEqual(@as(i8, 0), try width.codePointWidth(0x000A, .half)); // \n LF
+    expectEqual(@as(i8, 0), try width.codePointWidth(0x000B, .half)); // \v VT
+    expectEqual(@as(i8, 0), try width.codePointWidth(0x000C, .half)); // \f FF
+    expectEqual(@as(i8, 0), try width.codePointWidth(0x000D, .half)); // \r CR
+    expectEqual(@as(i8, 0), try width.codePointWidth(0x000E, .half)); // SQ
+    expectEqual(@as(i8, 0), try width.codePointWidth(0x000F, .half)); // SI
 
-    expectEqual(@as(isize, 0), try width.codePointWidth(0x070F, .half)); // Cf
-    expectEqual(@as(isize, 1), try width.codePointWidth(0x0603, .half)); // Cf Arabic
+    expectEqual(@as(i8, 0), try width.codePointWidth(0x070F, .half)); // Cf
+    expectEqual(@as(i8, 1), try width.codePointWidth(0x0603, .half)); // Cf Arabic
 
-    expectEqual(@as(isize, 1), try width.codePointWidth(0x00AD, .half)); // soft-hyphen
-    expectEqual(@as(isize, 2), try width.codePointWidth(0x2E3A, .half)); // two-em dash
-    expectEqual(@as(isize, 3), try width.codePointWidth(0x2E3B, .half)); // three-em dash
+    expectEqual(@as(i8, 1), try width.codePointWidth(0x00AD, .half)); // soft-hyphen
+    expectEqual(@as(i8, 2), try width.codePointWidth(0x2E3A, .half)); // two-em dash
+    expectEqual(@as(i8, 3), try width.codePointWidth(0x2E3B, .half)); // three-em dash
 
-    expectEqual(@as(isize, 1), try width.codePointWidth(0x00BD, .half)); // ambiguous halfwidth
-    expectEqual(@as(isize, 2), try width.codePointWidth(0x00BD, .full)); // ambiguous fullwidth
+    expectEqual(@as(i8, 1), try width.codePointWidth(0x00BD, .half)); // ambiguous halfwidth
+    expectEqual(@as(i8, 2), try width.codePointWidth(0x00BD, .full)); // ambiguous fullwidth
 
-    expectEqual(try width.codePointWidth('é', .half), 1);
-    expectEqual(try width.codePointWidth('😊', .half), 2);
-    expectEqual(try width.codePointWidth('统', .half), 2);
-    expectEqual(try width.strWidth("Hello\r\n", .half), 5);
-    expectEqual(try width.strWidth("\u{0065}\u{0301}", .half), 1);
-    expectEqual(try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
-    expectEqual(try width.strWidth("Hello 😊", .half), 8);
-    expectEqual(try width.strWidth("Héllo 😊", .half), 8);
-    expectEqual(try width.strWidth("Héllo :)", .half), 8);
-    expectEqual(try width.strWidth("Héllo 🇪🇸", .half), 8);
-    expectEqual(try width.strWidth("\u{26A1}", .half), 2); // Lone emoji
-    expectEqual(try width.strWidth("\u{26A1}\u{FE0E}", .half), 1); // Text sequence
-    expectEqual(try width.strWidth("\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
+    expectEqual(@as(i8, 1), try width.codePointWidth('é', .half));
+    expectEqual(@as(i8, 2), try width.codePointWidth('😊', .half));
+    expectEqual(@as(i8, 2), try width.codePointWidth('统', .half));
+
+    expectEqual(@as(usize, 5), try width.strWidth("Hello\r\n", .half));
+    expectEqual(@as(usize, 1), try width.strWidth("\u{0065}\u{0301}", .half));
+    expectEqual(@as(usize, 2), try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half));
+    expectEqual(@as(usize, 8), try width.strWidth("Hello 😊", .half));
+    expectEqual(@as(usize, 8), try width.strWidth("Héllo 😊", .half));
+    expectEqual(@as(usize, 8), try width.strWidth("Héllo :)", .half));
+    expectEqual(@as(usize, 8), try width.strWidth("Héllo 🇪🇸", .half));
+    expectEqual(@as(usize, 2), try width.strWidth("\u{26A1}", .half)); // Lone emoji
+    expectEqual(@as(usize, 1), try width.strWidth("\u{26A1}\u{FE0E}", .half)); // Text sequence
+    expectEqual(@as(usize, 2), try width.strWidth("\u{26A1}\u{FE0F}", .half)); // Presentation sequence
 }
