@@ -11,18 +11,13 @@ they still will occur until we reach 1.0.
     type detection, case conversion, case folding, decomposition, normalization, and grapheme cluster 
     breaks passing Unicode supplied tests.
 *   2021-04-24: Work on Zigstr, a UTF-8 string type, has begun; basic functionality working.
+*   2021-04-27: Major refactor introducing `Context`, a struct that centralizes the major component 
+    data structures, avoiding repeated allocations of these, which can be very large. Also, initial 
+    support for code point and string width calculation added.
 
 ## Background
 This library has been built from scratch in Zig. Although initially inspired by the Go `unicode`
 package, Ziglyph is now completely independent and unique in and of itself.
-
-## Usage
-There are two modes of usage: via the consolidated Ziglyph struct or using the individual component
-structs for more fine grained control over memory usage and binary size. The Ziglyph struct provides
-the convenience of having all the most frequently used methods in one place. There is a sub-level of
-component structs that expose this same consolidated interface but with more specific scope; i.e. 
-`Letter`, `Punct`, and `Symbol`. The component structs like `Lower` and `Upper` are the lowest level.
-These structs are also auto-generated code from the Unicode Character Database (UCD) files.
 
 ### The Zigstr String Type
 `Zigstr` is a UTF-8 string type that incorporates many of Ziglyph's Unicode processing tools. You can
@@ -59,63 +54,68 @@ $ zig build
 Note that to build in relase modes, either specify them in the `build.zig` file or on the command line
 via the `-Drealease-fast=true`, `-Drealease-small=true`, `-Drealease-safe=true` options to `zig build`.
 
+### Usage Overview
+The basic workflow consists of seting up a global `Context` which will centralize the major data structures
+to reduce memory footprint. This `Context` can then be passed to the `new` and `init` functions of other
+components of the library. The `Ziglyph` struct consolidates many frequently-used functions for Unicode
+code point type and letter case detection, letter case conversion, along with their ASCII counterparts.
+More specific aggregate structs are also available such as `Letter`, `Punct`, `Symbol`, and others to
+provide more granular control over memory usage.
+
 ### Using the Ziglyph Struct
 ```zig
-// Import the struct.
+const Context = @import("Context.zig");
 const Ziglyph = @import("Ziglyph").Ziglyph;
 
 test "Ziglyph struct" {
-    var ziglyph = try Ziglyph.init(std.testing.allocator);
-    defer ziglyph.deinit();
+    var ctx = Context.init(std.testing.allocator);
+    defer ctx.deinit();
+
+    var ziglyph = try Ziglyph.new(&ctx);
 
     const z = 'z';
-    expect(ziglyph.isLetter(z));
-    expect(ziglyph.isAlphaNum(z));
-    expect(ziglyph.isPrint(z));
-    expect(!ziglyph.isUpper(z));
-    const uz = ziglyph.toUpper(z);
-    expect(ziglyph.isUpper(uz));
+    expect(try ziglyph.isLetter(z));
+    expect(try ziglyph.isAlphaNum(z));
+    expect(try ziglyph.isPrint(z));
+    expect(!try ziglyph.isUpper(z));
+    const uz = try ziglyph.toUpper(z);
+    expect(try ziglyph.isUpper(uz));
     expectEqual(uz, 'Z');
 }
 ```
 
 ### Using the aggregate Structs
 ```zig
-// Import the structs.
-const Letter = @import("Ziglyph").Letter;
-const Punct = @import("Ziglyph").Punct;
+const Letter = @import("components/aggregate/Letter.zig");
+const Punct = @import("components/aggregate/Punct.zig");
 
-test "Aggregate structs" {
-    var letter = try Letter.init(std.testing.allocator);
-    defer letter.deinit();
-    var punct = try Punct.init(std.testing.allocator);
-    defer punct.deinit();
+test "Aggregate struct" {
+    var ctx = Context.init(std.testing.allocator);
+    defer ctx.deinit();
+
+    var letter = Letter.new(&ctx);
+    var punct = Punct.new(&ctx);
 
     const z = 'z';
-    expect(letter.isLetter(z));
-    expect(!letter.isUpper(z));
-    expect(!punct.isPunct(z));
-    expect(punct.isPunct('!'));
-    const uz = letter.toUpper(z);
-    expect(letter.isUpper(uz));
+    expect(try letter.isLetter(z));
+    expect(!try letter.isUpper(z));
+    expect(!try punct.isPunct(z));
+    expect(try punct.isPunct('!'));
+    const uz = try letter.toUpper(z);
+    expect(try letter.isUpper(uz));
     expectEqual(uz, 'Z');
 }
 ```
 
 ### Using individual low-level component structs
 ```zig
-// Import the components.
-const Lower = @import("Ziglyph").Letter.Lower;
-const Upper = @import("Ziglyph").Letter.Upper;
-const UpperMap = @import("Ziglyph").Letter.UpperMap;
-
 test "Component structs" {
-    var lower = try Lower.init(std.testing.allocator);
-    defer lower.deinit();
-    var upper = try Upper.init(std.testing.allocator);
-    defer upper.deinit();
-    var upper_map = try UpperMap.init(std.testing.allocator);
-    defer upper_map.deinit();
+    var ctx = Context.init(std.testing.allocator);
+    defer ctx.deinit();
+
+    const lower = try ctx.getLower();
+    const upper = try ctx.getUpper();
+    const upper_map = try ctx.getUpperMap();
 
     const z = 'z';
     expect(lower.isLowercaseLetter(z));
@@ -133,44 +133,17 @@ performs full canonical and compatibility decomposition and normalization (NFD a
 versions may add more normalization forms.
 
 ```zig
-// Import the structs.
-const DecomposeMap = @import("Ziglyph").DecomposeMap;
-const Decomposed = DecomposeMap.Decomposed;
-
-// Normalization Forms: D == Canonical, KD == Compatibility
-test "decomposeTo" {
-    var allocator = std.testing.allocator;
-    var z = try DecomposeMap.init(allocator);
-    defer z.deinit();
-
-    // D: ox03D3 -> 0x03D2, 0x0301
-    var src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    var result = try z.decomposeTo(allocator, .D, &src);
-    defer allocator.free(result);
-    expectEqual(result.len, 2);
-    expectEqual(result[0].same, 0x03D2);
-    expectEqual(result[1].same, 0x0301);
-    allocator.free(result);
-
-    // KD: ox03D3 -> 0x03D2, 0x0301 -> 0x03A5, 0x0301
-    src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    result = try z.decomposeTo(allocator, .KD, &src);
-    expectEqual(result.len, 2);
-    expect(result[0] == .same);
-    expectEqual(result[0].same, 0x03A5);
-    expect(result[1] == .same);
-    expectEqual(result[1].same, 0x0301);
-}
-
 test "normalizeTo" {
     var allocator = std.testing.allocator;
-    var z = try DecomposeMap.init(allocator);
-    defer z.deinit();
+    var ctx = Context.init(allocator);
+    defer ctx.deinit();
+
+    const decomp_map = try ctx.getDecomposeMap();
 
     // Canonical (NFD)
     var input = "Complex char: \u{03D3}";
     var want = "Complex char: \u{03D2}\u{0301}";
-    var got = try z.normalizeTo(allocator, .D, input);
+    var got = try decomp_map.normalizeTo(allocator, .D, input);
     defer allocator.free(got);
     expectEqualSlices(u8, want, got);
     allocator.free(got);
@@ -178,7 +151,7 @@ test "normalizeTo" {
     // Compatibility (NFKD)
     input = "Complex char: \u{03D3}";
     want = "Complex char: \u{03A5}\u{0301}";
-    got = try z.normalizeTo(allocator, .KD, input);
+    got = try decomp_map.normalizeTo(allocator, .KD, input);
     expectEqualSlices(u8, want, got);
 }
 ```
@@ -195,18 +168,19 @@ called *Grapheme Clusters* and Ziglyph provides the `GraphemeIterator` to extrac
 (not just single code points) from a string.
 
 ```
-// Import the struct.
 const GraphemeIterator = @import("Ziglyph").GraphemeIterator;
 
 test "GraphemeIterator" {
-    var iter = try GraphemeIterator.init(std.testing.allocator, "H\u{0065}\u{0301}llo"); // Héllo
-    defer iter.deinit();
+    var ctx = Context.init(std.testing.allocator);
+    defer ctx.deinit();
+
+    var iter = try GraphemeIterator.new(&ctx, "H\u{0065}\u{0301}llo");
 
     const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
 
-    for (want) |w| {
-        // iter.next() returns a Zigstr.Grapheme.
-        expect(iter.next().?.eql(w));
+    var i: usize = 0;
+    while (try iter.next()) |gc| : (i += 1) {
+        expect(gc.eql(want[i]));
     }
 }
 ```
@@ -217,34 +191,22 @@ emulators, it's necessary to know how many cells (or columns) a particular code 
 occupy. The `Width` component struct provides methods to do just that.
 
 ```
-// Import the struct.
 const Width = @import("Ziglyph").Zigstr.Width;
 
 test "Code point / string widths" {
-    var width = try Width.init(std.testing.allocator);
-    defer width.deinit();
+    var ctx = Context.init(std.testing.allocator);
+    defer ctx.deinit();
 
-    expectEqual(width.codePointWidth('é'), 1);
-    expectEqual(width.codePointWidth('统'), 2);
-    // Non-printing are width 0.
+    var width = try Width.new(&ctx);
+
+    expectEqual(try width.codePointWidth('é'), 1);
+    expectEqual(try width.codePointWidth('😊'), 2);
+    expectEqual(try width.codePointWidth('统'), 2);
     expectEqual(try width.strWidth("Hello\r\n"), 5);
-    // Emoji and emoji presentation sequences are width 2, no matter how many code points compose them.
     expectEqual(try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}"), 2);
-
-    // To get the width of grapheme clusters:
-    var iter = try GraphemeIterator.init(std.testing.allocator, "H\u{0065}\u{0301}llo"); // Héllo
-    defer iter.deinit();
-
-    const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
-
-    for (want) |w| {
-        // iter.next() returns a Zigstr.Grapheme, which has an eql method to compare it with a []const u8.
-        const grapheme_cluster = iter.next().?;
-        expect(grapheme_cluster.eql(w));
-
-        // Zigstr.Grapheme.bytes is a []const u8.
-        std.debug.print("{d}\n", .{try width.strWidth(grapheme_cluster.bytes)});
-    }
+    expectEqual(try width.strWidth("Héllo 🇪🇸"), 8);
+    expectEqual(try width.strWidth("\u{26A1}\u{FE0E}"), 1); // Text sequence
+    expectEqual(try width.strWidth("\u{26A1}\u{FE0F}"), 2); // Presentation sequence
 }
 ```
 

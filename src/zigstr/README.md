@@ -9,23 +9,21 @@ missing here, as it tends to produce more confusion than clarity, and in fact Un
 a human-readable *character* is the Grapheme Cluster, which Zigstr handles as sub-slices of bytes.
 
 ```zig
-const std = @import("std");
-const expect = std.testing.expect;
-const expectEqual = std.testing.expectEqual;
-const expectEqualStrings = std.testing.expectEqualStrings;
-const expectEqualSlices = std.testing.expectEqualSlices;
-
 const Zigstr = @import("Ziglyph").Zigstr;
 
 test "README tests" {
     var allocator = std.testing.allocator;
 
-    // A Zigstr.Context holds global state for all Zigstrs.
-    var ctx = try Zigstr.Context.init(allocator);
+    // Prepare the global context.
+    var ctx = Context.init(allocator);
     defer ctx.deinit();
 
-    // Create a new Zigstr. No deinit needed, the Zigstr.Context manages the memory.
-    var str = try ctx.new("Héllo");
+    // Prepare the Zigstr factory.
+    var zigstr = try Zigstr.Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    // Create an instance, or as many as you like!
+    var str = try zigstr.new("Héllo");
 
     // Byte count.
     expectEqual(@as(usize, 6), str.byteCount());
@@ -47,12 +45,11 @@ test "README tests" {
 
     // Grapheme cluster iteration.
     var giter = try str.graphemeIter();
-    defer giter.deinit();
 
     const gc_want = [_][]const u8{ "H", "é", "l", "l", "o" };
 
     i = 0;
-    while (giter.next()) |gc| : (i += 1) {
+    while (try giter.next()) |gc| : (i += 1) {
         expect(gc.eql(gc_want[i]));
     }
 
@@ -209,6 +206,7 @@ test "README tests" {
     expectEqualSlices(u21, try str.codePointSlice(1, 3), &[_]u21{ '\u{0065}', '\u{0301}' });
     const gc1 = try str.graphemeSlice(1, 2);
     expect(gc1[0].eql("\u{0065}\u{0301}"));
+
     // Substrings
     var str3 = try str.substr(1, 2);
     expect(str3.eql("\u{0065}\u{0301}"));
@@ -229,7 +227,8 @@ test "README tests" {
     try str.toUpper();
     expect(str.eql("HÉLLO! 123"));
 
-    // std.fmt format implementation for Zigstr.
-    std.debug.print("{}\n", .{str});
+    // Fixed-width cell / columns size.
+    try str.reset("Héllo 😊");
+    expectEqual(@as(usize, 8), try str.width());
 }
 ```
