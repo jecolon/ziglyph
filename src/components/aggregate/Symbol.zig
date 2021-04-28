@@ -2,63 +2,48 @@ const std = @import("std");
 const mem = std.mem;
 const ascii = @import("../../ascii.zig");
 
-/// Currency symbols.
-pub const Currency = @import("../autogen/DerivedGeneralCategory/CurrencySymbol.zig");
-/// Mathematical symbols.
-pub const Math = @import("../autogen/DerivedGeneralCategory/MathSymbol.zig");
-/// Symbols that modify other code points.
-pub const Modifier = @import("../autogen/DerivedGeneralCategory/ModifierSymbol.zig");
-/// Other symbols.
-pub const Other = @import("../autogen/DerivedGeneralCategory/OtherSymbol.zig");
+const Context = @import("../../Context.zig");
 
 const Self = @This();
 
-allocator: *mem.Allocator,
-currency: Currency,
-math: Math,
-modifier: Modifier,
-other: Other,
+context: *Context,
 
-pub fn init(allocator: *mem.Allocator) !Self {
-    return Self{
-        .allocator = allocator,
-        .currency = try Currency.init(allocator),
-        .math = try Math.init(allocator),
-        .modifier = try Modifier.init(allocator),
-        .other = try Other.init(allocator),
-    };
-}
-
-pub fn deinit(self: *Self) void {
-    self.currency.deinit();
-    self.math.deinit();
-    self.modifier.deinit();
-    self.other.deinit();
+pub fn new(ctx: *Context) Self {
+    return Self{ .context = ctx };
 }
 
 // isSymbol detects symbols which curiosly may include some code points commonly thought of as
 // punctuation.
-pub fn isSymbol(self: Self, cp: u21) bool {
-    return self.math.isMathSymbol(cp) or self.modifier.isModifierSymbol(cp) or
-        self.currency.isCurrencySymbol(cp) or self.other.isOtherSymbol(cp);
+pub fn isSymbol(self: Self, cp: u21) !bool {
+    const math = try self.context.getMath();
+    const modifier_symbol = try self.context.getModifierSymbol();
+    const currency = try self.context.getCurrency();
+    const other_symbol = try self.context.getOtherSymbol();
+
+    return math.isMathSymbol(cp) or modifier_symbol.isModifierSymbol(cp) or
+        currency.isCurrencySymbol(cp) or other_symbol.isOtherSymbol(cp);
 }
 
 /// isAsciiSymbol detects ASCII only symbols.
-pub fn isAsciiSymbol(self: Self, cp: u21) bool {
+pub fn isAsciiSymbol(cp: u21) bool {
     return if (cp < 128) ascii.isSymbol(@intCast(u8, cp)) else false;
 }
 
-test "isSymbol" {
-    var z = try init(std.testing.allocator);
-    defer z.deinit();
+const expect = std.testing.expect;
 
-    std.testing.expect(z.isSymbol('<'));
-    std.testing.expect(z.isSymbol('>'));
-    std.testing.expect(z.isSymbol('='));
-    std.testing.expect(z.isSymbol('$'));
-    std.testing.expect(z.isSymbol('^'));
-    std.testing.expect(z.isSymbol('+'));
-    std.testing.expect(z.isSymbol('|'));
-    std.testing.expect(!z.isSymbol('A'));
-    std.testing.expect(!z.isSymbol('?'));
+test "Component isSymbol" {
+    var ctx = Context.init(std.testing.allocator);
+    defer ctx.deinit();
+
+    var symbol = new(&ctx);
+
+    expect(try symbol.isSymbol('<'));
+    expect(try symbol.isSymbol('>'));
+    expect(try symbol.isSymbol('='));
+    expect(try symbol.isSymbol('$'));
+    expect(try symbol.isSymbol('^'));
+    expect(try symbol.isSymbol('+'));
+    expect(try symbol.isSymbol('|'));
+    expect(!try symbol.isSymbol('A'));
+    expect(!try symbol.isSymbol('?'));
 }

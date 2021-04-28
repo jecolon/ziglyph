@@ -6,48 +6,20 @@ const mem = std.mem;
 const unicode = std.unicode;
 
 const CodePointIterator = @import("CodePointIterator.zig");
-const Control = @import("../components/autogen/GraphemeBreakProperty/Control.zig");
-const Extend = @import("../components/autogen/GraphemeBreakProperty/Extend.zig");
-const ExtPic = @import("../components/autogen/emoji-data/ExtendedPictographic.zig");
-const Prepend = @import("../components/autogen/GraphemeBreakProperty/Prepend.zig");
-const Regional = @import("../components/autogen/GraphemeBreakProperty/RegionalIndicator.zig");
-const SpacingMark = @import("../components/autogen/GraphemeBreakProperty/SpacingMark.zig");
-const HangulMap = @import("../components/autogen/HangulSyllableType/HangulMap.zig");
+const Context = @import("../Context.zig");
 
 allocator: *mem.Allocator,
-control: Control,
+context: *Context,
 cp_iter: CodePointIterator,
-extend: Extend,
-extpic: ExtPic,
-han_map: HangulMap,
-prepend: Prepend,
-regional: Regional,
-spacing: SpacingMark,
 
 const Self = @This();
 
-pub fn init(allocator: *mem.Allocator, str: []const u8) !Self {
+pub fn new(ctx: *Context, str: []const u8) !Self {
     return Self{
-        .allocator = allocator,
-        .control = try Control.init(allocator),
+        .allocator = ctx.allocator,
+        .context = ctx,
         .cp_iter = try CodePointIterator.init(str),
-        .extend = try Extend.init(allocator),
-        .extpic = try ExtPic.init(allocator),
-        .han_map = try HangulMap.init(allocator),
-        .prepend = try Prepend.init(allocator),
-        .regional = try Regional.init(allocator),
-        .spacing = try SpacingMark.init(allocator),
     };
-}
-
-pub fn deinit(self: *Self) void {
-    self.control.deinit();
-    self.extend.deinit();
-    self.extpic.deinit();
-    self.han_map.deinit();
-    self.prepend.deinit();
-    self.regional.deinit();
-    self.spacing.deinit();
 }
 
 /// reinit resets the iterator with a new string.
@@ -74,7 +46,7 @@ pub const Grapheme = struct {
 };
 
 /// next retrieves the next grapheme cluster.
-pub fn next(self: *Self) ?Grapheme {
+pub fn next(self: *Self) !?Grapheme {
     var cpo = self.cp_iter.next();
     if (cpo == null) return null;
     const cp = cpo.?;
@@ -83,9 +55,12 @@ pub fn next(self: *Self) ?Grapheme {
     const next_cp = self.cp_iter.peek();
 
     // GB9.2
-    if (self.prepend.isPrepend(cp)) {
+    const prepend = try self.context.getPrepend();
+    const control = try self.context.getControl();
+
+    if (prepend.isPrepend(cp)) {
         if (next_cp) |ncp| {
-            if (ncp == CR or ncp == LF or self.control.isControl(ncp)) {
+            if (ncp == CR or ncp == LF or control.isControl(ncp)) {
                 return Grapheme{
                     .bytes = self.cp_iter.bytes[cp_start..cp_end],
                 };
@@ -95,7 +70,7 @@ pub fn next(self: *Self) ?Grapheme {
             const pncp_end = self.cp_iter.i;
             const pncp_start = self.cp_iter.prev_i;
             const pncp_next_cp = self.cp_iter.peek();
-            const s = self.processNonPrepend(pncp, pncp_start, pncp_end, pncp_next_cp);
+            const s = try self.processNonPrepend(pncp, pncp_start, pncp_end, pncp_next_cp);
             return Grapheme{
                 .bytes = self.cp_iter.bytes[cp_start..s.end],
             };
@@ -106,7 +81,7 @@ pub fn next(self: *Self) ?Grapheme {
         };
     }
 
-    const s = self.processNonPrepend(cp, cp_start, cp_end, next_cp);
+    const s = try self.processNonPrepend(cp, cp_start, cp_end, next_cp);
     return Grapheme{
         .bytes = self.cp_iter.bytes[s.start..s.end],
     };
@@ -118,30 +93,32 @@ fn processNonPrepend(
     cp_start: usize,
     cp_end: usize,
     next_cp: ?u21,
-) Slice {
+) !Slice {
     // GB3, GB4, GB5
     if (cp == CR) {
         if (next_cp) |ncp| {
             if (ncp == LF) {
                 _ = self.cp_iter.next(); // Advance past LF.
-                return .{ .start = cp_start, .end = self.cp_iter.i };
+                return Slice{ .start = cp_start, .end = self.cp_iter.i };
             }
         }
-        return .{ .start = cp_start, .end = cp_end };
+        return Slice{ .start = cp_start, .end = cp_end };
     }
 
     if (cp == LF) {
-        return .{ .start = cp_start, .end = cp_end };
+        return Slice{ .start = cp_start, .end = cp_end };
     }
 
-    if (self.control.isControl(cp)) {
-        return .{ .start = cp_start, .end = cp_end };
+    const control = try self.context.getControl();
+    if (control.isControl(cp)) {
+        return Slice{ .start = cp_start, .end = cp_end };
     }
 
     // GB6, GB7, GB8
-    if (self.han_map.syllableType(cp)) |hst| {
+    const han_map = try self.context.getHangulMap();
+    if (han_map.syllableType(cp)) |hst| {
         if (next_cp) |ncp| {
-            const ncp_hst = self.han_map.syllableType(ncp);
+            const ncp_hst = han_map.syllableType(ncp);
 
             if (ncp_hst) |nhst| {
                 switch (hst) {
@@ -165,43 +142,45 @@ fn processNonPrepend(
         }
 
         // GB9
-        self.fullAdvance();
-        return .{ .start = cp_start, .end = self.cp_iter.i };
+        try self.fullAdvance();
+        return Slice{ .start = cp_start, .end = self.cp_iter.i };
     }
 
     // GB11
-    if (self.extpic.isExtendedPictographic(cp)) {
-        self.fullAdvance();
+    const extpic = try self.context.getExtPic();
+    if (extpic.isExtendedPictographic(cp)) {
+        try self.fullAdvance();
         if (self.cp_iter.prev) |pcp| {
             if (pcp == ZWJ) {
                 if (self.cp_iter.peek()) |ncp| {
-                    if (self.extpic.isExtendedPictographic(ncp)) {
+                    if (extpic.isExtendedPictographic(ncp)) {
                         _ = self.cp_iter.next(); // Advance past end emoji.
                         // GB9
-                        self.fullAdvance();
+                        try self.fullAdvance();
                     }
                 }
             }
         }
 
-        return .{ .start = cp_start, .end = self.cp_iter.i };
+        return Slice{ .start = cp_start, .end = self.cp_iter.i };
     }
 
     // GB12
-    if (self.regional.isRegionalIndicator(cp)) {
+    const regional = try self.context.getRegional();
+    if (regional.isRegionalIndicator(cp)) {
         if (next_cp) |ncp| {
-            if (self.regional.isRegionalIndicator(ncp)) {
+            if (regional.isRegionalIndicator(ncp)) {
                 _ = self.cp_iter.next(); // Advance past 2nd RI.
             }
         }
 
-        self.fullAdvance();
-        return .{ .start = cp_start, .end = self.cp_iter.i };
+        try self.fullAdvance();
+        return Slice{ .start = cp_start, .end = self.cp_iter.i };
     }
 
     // GB999
-    self.fullAdvance();
-    return .{ .start = cp_start, .end = self.cp_iter.i };
+    try self.fullAdvance();
+    return Slice{ .start = cp_start, .end = self.cp_iter.i };
 }
 
 fn lexRun(
@@ -215,11 +194,14 @@ fn lexRun(
     }
 }
 
-fn fullAdvance(self: *Self) void {
+fn fullAdvance(self: *Self) anyerror!void {
     const next_cp = self.cp_iter.peek();
     // Base case.
+    const extend = try self.context.getExtend();
+    const spacing = try self.context.getSpacing();
+
     if (next_cp) |ncp| {
-        if (ncp != ZWJ and !self.extend.isExtend(ncp) and !self.spacing.isSpacingMark(ncp)) return;
+        if (ncp != ZWJ and !extend.isExtend(ncp) and !spacing.isSpacingMark(ncp)) return;
     } else {
         return;
     }
@@ -229,13 +211,13 @@ fn fullAdvance(self: *Self) void {
 
     if (ncp == ZWJ) {
         _ = self.cp_iter.next();
-        self.fullAdvance();
-    } else if (self.extend.isExtend(ncp)) {
-        self.lexRun(self.extend, Extend.isExtend);
-        self.fullAdvance();
-    } else if (self.spacing.isSpacingMark(ncp)) {
-        self.lexRun(self.spacing, SpacingMark.isSpacingMark);
-        self.fullAdvance();
+        try self.fullAdvance();
+    } else if (extend.isExtend(ncp)) {
+        self.lexRun(extend.*, Context.Extend.isExtend);
+        try self.fullAdvance();
+    } else if (spacing.isSpacingMark(ncp)) {
+        self.lexRun(spacing.*, Context.Spacing.isSpacingMark);
+        try self.fullAdvance();
     }
 }
 
@@ -248,12 +230,10 @@ test "Grapheme iterator" {
 
     var buf: [640]u8 = undefined;
     var line_no: usize = 1;
+
+    var ctx = Context.init(allocator);
+    defer ctx.deinit();
     var giter: ?Self = null;
-    defer {
-        if (giter) |*gi| {
-            gi.deinit();
-        }
-    }
 
     while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |raw| : (line_no += 1) {
         // Skip comments or empty lines.
@@ -306,12 +286,12 @@ test "Grapheme iterator" {
         if (giter) |*gi| {
             try gi.reinit(all_bytes.items);
         } else {
-            giter = try init(allocator, all_bytes.items);
+            giter = try new(&ctx, all_bytes.items);
         }
 
         // Chaeck.
         for (want.items) |w| {
-            const g = giter.?.next().?;
+            const g = (try giter.?.next()).?;
             //std.debug.print("line {d}: w:({s}), g:({s})\n", .{ line_no, w.bytes, g.bytes });
             std.testing.expectEqualStrings(w.bytes, g.bytes);
         }

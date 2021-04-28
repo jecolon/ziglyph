@@ -2,48 +2,38 @@ const std = @import("std");
 const mem = std.mem;
 const unicode = std.unicode;
 
+const Context = @import("../../Context.zig");
 const Ziglyph = @import("../../ziglyph.zig").Ziglyph;
-const Fullwidth = @import("../autogen/DerivedEastAsianWidth/Fullwidth.zig");
 const GraphemeIterator = @import("../../zigstr/GraphemeIterator.zig");
-const Narrow = @import("../autogen/DerivedEastAsianWidth/Narrow.zig");
-const Wide = @import("../autogen/DerivedEastAsianWidth/Wide.zig");
 
 const Self = @This();
 
 allocator: *mem.Allocator,
-fullwidth: Fullwidth,
-giter: GraphemeIterator,
-narrow: Narrow,
-wide: Wide,
+context: *Context,
+giter: ?GraphemeIterator,
 ziglyph: Ziglyph,
 
-pub fn init(allocator: *mem.Allocator) !Self {
+pub fn new(ctx: *Context) !Self {
     return Self{
-        .allocator = allocator,
-        .fullwidth = try Fullwidth.init(allocator),
-        .giter = try GraphemeIterator.init(allocator, ""),
-        .narrow = try Narrow.init(allocator),
-        .wide = try Wide.init(allocator),
-        .ziglyph = try Ziglyph.init(allocator),
+        .allocator = ctx.allocator,
+        .context = ctx,
+        .giter = null,
+        .ziglyph = try Ziglyph.new(ctx),
     };
-}
-
-pub fn deinit(self: *Self) void {
-    self.fullwidth.deinit();
-    self.giter.deinit();
-    self.narrow.deinit();
-    self.wide.deinit();
-    self.ziglyph.deinit();
 }
 
 /// codePointWidth returns how many cells (or columns) wide `cp` should be when rendered in a
 /// fixed-width font.
-pub fn codePointWidth(self: Self, cp: u21) usize {
-    if (self.wide.isWide(cp) or self.fullwidth.isFullwidth(cp)) {
+pub fn codePointWidth(self: Self, cp: u21) !usize {
+    const wide = try self.context.getWide();
+    const fullwidth = try self.context.getFullwidth();
+    const regional = try self.context.getRegional();
+
+    if (wide.isWide(cp) or fullwidth.isFullwidth(cp)) {
         return 2;
-    } else if (self.ziglyph.isControl(cp) or !self.ziglyph.isPrint(cp)) {
+    } else if ((try self.ziglyph.isControl(cp)) or (!try self.ziglyph.isPrint(cp))) {
         return 0;
-    } else if (self.giter.regional.isRegionalIndicator(cp)) {
+    } else if (regional.isRegionalIndicator(cp)) {
         return 2;
     } else {
         return 1;
@@ -71,16 +61,23 @@ pub fn codePointWidth(self: Self, cp: u21) usize {
 /// fixed-width font.
 pub fn strWidth(self: *Self, str: []const u8) !usize {
     var total: usize = 0;
-    try self.giter.reinit(str);
+    if (self.giter == null) {
+        self.giter = try GraphemeIterator.new(self.context, str);
+    } else {
+        try self.giter.?.reinit(str);
+    }
 
-    while (self.giter.next()) |gc| {
+    var giter = self.giter.?;
+    const extpic = try self.context.getExtPic();
+
+    while (try giter.next()) |gc| {
         var cp_iter = (try unicode.Utf8View.init(gc.bytes)).iterator();
 
         while (cp_iter.nextCodepoint()) |cp| {
-            var w = self.codePointWidth(cp);
+            var w = try self.codePointWidth(cp);
 
             if (w != 0) {
-                if (self.giter.extpic.isExtendedPictographic(cp)) {
+                if (extpic.isExtendedPictographic(cp)) {
                     if (cp_iter.nextCodepoint()) |ncp| {
                         if (ncp == 0xFE0E) w = 1; // Emoji text sequence.
                     }
@@ -94,24 +91,27 @@ pub fn strWidth(self: *Self, str: []const u8) !usize {
     return total;
 }
 
-test "Grapheme Width" {
-    const expectEqual = std.testing.expectEqual;
-    var z = try init(std.testing.allocator);
-    defer z.deinit();
+const expectEqual = std.testing.expectEqual;
 
-    expectEqual(z.codePointWidth('\n'), 0);
-    expectEqual(z.codePointWidth('\r'), 0);
-    expectEqual(z.codePointWidth('é'), 1);
-    expectEqual(z.codePointWidth('😊'), 2);
-    expectEqual(z.codePointWidth('统'), 2);
-    expectEqual(try z.strWidth("Hello\r\n"), 5);
-    expectEqual(try z.strWidth("\u{0065}\u{0301}"), 1);
-    expectEqual(try z.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}"), 2);
-    expectEqual(try z.strWidth("Hello 😊"), 8);
-    expectEqual(try z.strWidth("Héllo 😊"), 8);
-    expectEqual(try z.strWidth("Héllo :)"), 8);
-    expectEqual(try z.strWidth("Héllo 🇪🇸"), 8);
-    expectEqual(try z.strWidth("\u{26A1}"), 2); // Lone emoji
-    expectEqual(try z.strWidth("\u{26A1}\u{FE0E}"), 1); // Text sequence
-    expectEqual(try z.strWidth("\u{26A1}\u{FE0F}"), 2); // Presentation sequence
+test "Grapheme Width" {
+    var ctx = Context.init(std.testing.allocator);
+    defer ctx.deinit();
+
+    var width = try new(&ctx);
+
+    expectEqual(try width.codePointWidth('\n'), 0);
+    expectEqual(try width.codePointWidth('\r'), 0);
+    expectEqual(try width.codePointWidth('é'), 1);
+    expectEqual(try width.codePointWidth('😊'), 2);
+    expectEqual(try width.codePointWidth('统'), 2);
+    expectEqual(try width.strWidth("Hello\r\n"), 5);
+    expectEqual(try width.strWidth("\u{0065}\u{0301}"), 1);
+    expectEqual(try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}"), 2);
+    expectEqual(try width.strWidth("Hello 😊"), 8);
+    expectEqual(try width.strWidth("Héllo 😊"), 8);
+    expectEqual(try width.strWidth("Héllo :)"), 8);
+    expectEqual(try width.strWidth("Héllo 🇪🇸"), 8);
+    expectEqual(try width.strWidth("\u{26A1}"), 2); // Lone emoji
+    expectEqual(try width.strWidth("\u{26A1}\u{FE0E}"), 1); // Text sequence
+    expectEqual(try width.strWidth("\u{26A1}\u{FE0F}"), 2); // Presentation sequence
 }

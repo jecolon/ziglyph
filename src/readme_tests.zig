@@ -4,55 +4,54 @@ const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
 // Import structs.
-const CodePointIterator = @import("zigstr/Zigstr.zig").CodePointIterator;
-const DecomposeMap = @import("ziglyph.zig").DecomposeMap;
-const Decomposed = DecomposeMap.Decomposed;
-const GraphemeIterator = @import("ziglyph.zig").GraphemeIterator;
-const Letter = @import("ziglyph.zig").Letter;
-const Lower = @import("ziglyph.zig").Letter.Lower;
-const Punct = @import("ziglyph.zig").Punct;
-const Upper = @import("ziglyph.zig").Letter.Upper;
-const UpperMap = @import("ziglyph.zig").Letter.UpperMap;
+const Context = @import("Context.zig");
+const Letter = @import("components/aggregate/Letter.zig");
+const Punct = @import("components/aggregate/Letter.zig");
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
-const Width = @import("zigstr/Zigstr.zig").Width;
+
+const CodePointIterator = @import("zigstr/Zigstr.zig").CodePointIterator;
+const GraphemeIterator = @import("ziglyph.zig").GraphemeIterator;
 
 test "Ziglyph struct" {
-    var ziglyph = try Ziglyph.init(std.testing.allocator);
-    defer ziglyph.deinit();
+    var ctx = try Context.init(std.testing.allocator);
+    defer ctx.deinit();
+
+    var ziglyph = try Ziglyph.new(&ctx);
 
     const z = 'z';
-    expect(ziglyph.isLetter(z));
-    expect(ziglyph.isAlphaNum(z));
-    expect(ziglyph.isPrint(z));
-    expect(!ziglyph.isUpper(z));
-    const uz = ziglyph.toUpper(z);
-    expect(ziglyph.isUpper(uz));
+    expect(try ziglyph.isLetter(z));
+    expect(try ziglyph.isAlphaNum(z));
+    expect(try ziglyph.isPrint(z));
+    expect(!try ziglyph.isUpper(z));
+    const uz = try ziglyph.toUpper(z);
+    expect(try ziglyph.isUpper(uz));
     expectEqual(uz, 'Z');
 }
 
 test "Aggregate struct" {
-    var letter = try Letter.init(std.testing.allocator);
-    defer letter.deinit();
-    var punct = try Punct.init(std.testing.allocator);
-    defer punct.deinit();
+    var ctx = try Context.init(std.testing.allocator);
+    defer ctx.deinit();
+
+    var letter = try Letter.new(&ctx);
+    var punct = try Punct.new(&ctx);
 
     const z = 'z';
-    expect(letter.isLetter(z));
-    expect(!letter.isUpper(z));
-    expect(!punct.isPunct(z));
-    expect(punct.isPunct('!'));
-    const uz = letter.toUpper(z);
-    expect(letter.isUpper(uz));
+    expect(try letter.isLetter(z));
+    expect(!try letter.isUpper(z));
+    expect(!try punct.isPunct(z));
+    expect(try punct.isPunct('!'));
+    const uz = try letter.toUpper(z);
+    expect(try letter.isUpper(uz));
     expectEqual(uz, 'Z');
 }
 
 test "Component structs" {
-    var lower = try Lower.init(std.testing.allocator);
-    defer lower.deinit();
-    var upper = try Upper.init(std.testing.allocator);
-    defer upper.deinit();
-    var upper_map = try UpperMap.init(std.testing.allocator);
-    defer upper_map.deinit();
+    var ctx = try Context.init(std.testing.allocator);
+    defer ctx.deinit();
+
+    const lower = try ctx.getLower();
+    const upper = try ctx.getUpper();
+    const upper_map = try ctx.getUpperMap();
 
     const z = 'z';
     expect(lower.isLowercaseLetter(z));
@@ -64,12 +63,15 @@ test "Component structs" {
 
 test "decomposeTo" {
     var allocator = std.testing.allocator;
-    var z = try DecomposeMap.init(allocator);
-    defer z.deinit();
+    var ctx = try Context.init(allocator);
+    defer ctx.deinit();
+
+    const Decomposed = Context.DecomposedMap.Decomposed;
+    const decomp_map = try ctx.getDecompMap();
 
     // CD: ox03D3 -> 0x03D2, 0x0301
     var src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    var result = try z.decomposeTo(allocator, .D, &src);
+    var result = try decomp_map.decomposeTo(allocator, .D, &src);
     defer allocator.free(result);
     expectEqual(result.len, 2);
     expectEqual(result[0].same, 0x03D2);
@@ -78,7 +80,7 @@ test "decomposeTo" {
 
     // KD: ox03D3 -> 0x03D2, 0x0301 -> 0x03A5, 0x0301
     src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    result = try z.decomposeTo(allocator, .KD, &src);
+    result = try decomp_map.decomposeTo(allocator, .KD, &src);
     expectEqual(result.len, 2);
     expect(result[0] == .same);
     expectEqual(result[0].same, 0x03A5);
@@ -88,13 +90,15 @@ test "decomposeTo" {
 
 test "normalizeTo" {
     var allocator = std.testing.allocator;
-    var z = try DecomposeMap.init(allocator);
-    defer z.deinit();
+    var ctx = try Context.init(allocator);
+    defer ctx.deinit();
+
+    const decomp_map = try ctx.getDecompMap();
 
     // Canonical (NFD)
     var input = "Complex char: \u{03D3}";
     var want = "Complex char: \u{03D2}\u{0301}";
-    var got = try z.normalizeTo(allocator, .D, input);
+    var got = try decomp_map.normalizeTo(allocator, .D, input);
     defer allocator.free(got);
     expectEqualSlices(u8, want, got);
     allocator.free(got);
@@ -102,7 +106,7 @@ test "normalizeTo" {
     // Compatibility (NFKD)
     input = "Complex char: \u{03D3}";
     want = "Complex char: \u{03A5}\u{0301}";
-    got = try z.normalizeTo(allocator, .KD, input);
+    got = try decomp_map.normalizeTo(allocator, .KD, input);
     expectEqualSlices(u8, want, got);
 }
 
@@ -118,8 +122,10 @@ test "GraphemeIterator" {
 }
 
 test "Code point / string widths" {
-    var width = try Width.init(std.testing.allocator);
-    defer width.deinit();
+    var ctx = try Context.init(std.testing.allocator);
+    defer ctx.deinit();
+
+    const width = try ctx.getWidth();
 
     expectEqual(width.codePointWidth('é'), 1);
     expectEqual(width.codePointWidth('😊'), 2);
