@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Other_Uppercase code points.
 
 const std = @import("std");
@@ -13,38 +12,36 @@ const mem = std.mem;
 const OtherUppercase = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 8544,
 hi: u21 = 127369,
 
 pub fn init(allocator: *mem.Allocator) !OtherUppercase {
     var instance = OtherUppercase{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 118826),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    index = 0;
-    while (index <= 15) : (index += 1) {
-        instance.array[index] = true;
+    index = 8544;
+    while (index <= 8559) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 854;
-    while (index <= 879) : (index += 1) {
-        instance.array[index] = true;
+    index = 9398;
+    while (index <= 9423) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 118736;
-    while (index <= 118761) : (index += 1) {
-        instance.array[index] = true;
+    index = 127280;
+    while (index <= 127305) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 118768;
-    while (index <= 118793) : (index += 1) {
-        instance.array[index] = true;
+    index = 127312;
+    while (index <= 127337) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 118800;
-    while (index <= 118825) : (index += 1) {
-        instance.array[index] = true;
+    index = 127344;
+    while (index <= 127369) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -52,12 +49,11 @@ pub fn init(allocator: *mem.Allocator) !OtherUppercase {
 }
 
 pub fn deinit(self: *OtherUppercase) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isOtherUppercase checks if cp is of the kind Other_Uppercase.
 pub fn isOtherUppercase(self: OtherUppercase, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

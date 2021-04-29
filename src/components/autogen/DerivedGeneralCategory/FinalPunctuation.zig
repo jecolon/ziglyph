@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Final_Punctuation code points.
 
 const std = @import("std");
@@ -13,41 +12,38 @@ const mem = std.mem;
 const FinalPunctuation = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 187,
 hi: u21 = 11809,
 
 pub fn init(allocator: *mem.Allocator) !FinalPunctuation {
     var instance = FinalPunctuation{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 11623),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    instance.array[8030] = true;
-    instance.array[8034] = true;
-    instance.array[8063] = true;
-    instance.array[11592] = true;
-    instance.array[11594] = true;
-    instance.array[11599] = true;
-    instance.array[11602] = true;
-    instance.array[11618] = true;
-    instance.array[11622] = true;
+    try instance.cp_set.put(187, {});
+    try instance.cp_set.put(8217, {});
+    try instance.cp_set.put(8221, {});
+    try instance.cp_set.put(8250, {});
+    try instance.cp_set.put(11779, {});
+    try instance.cp_set.put(11781, {});
+    try instance.cp_set.put(11786, {});
+    try instance.cp_set.put(11789, {});
+    try instance.cp_set.put(11805, {});
+    try instance.cp_set.put(11809, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 
 pub fn deinit(self: *FinalPunctuation) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isFinalPunctuation checks if cp is of the kind Final_Punctuation.
 pub fn isFinalPunctuation(self: FinalPunctuation, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

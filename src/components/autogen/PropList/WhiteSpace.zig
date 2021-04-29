@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode White_Space code points.
 
 const std = @import("std");
@@ -13,48 +12,45 @@ const mem = std.mem;
 const WhiteSpace = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 9,
 hi: u21 = 12288,
 
 pub fn init(allocator: *mem.Allocator) !WhiteSpace {
     var instance = WhiteSpace{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 12280),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    index = 0;
-    while (index <= 4) : (index += 1) {
-        instance.array[index] = true;
+    index = 9;
+    while (index <= 13) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[23] = true;
-    instance.array[124] = true;
-    instance.array[151] = true;
-    instance.array[5751] = true;
-    index = 8183;
-    while (index <= 8193) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(32, {});
+    try instance.cp_set.put(133, {});
+    try instance.cp_set.put(160, {});
+    try instance.cp_set.put(5760, {});
+    index = 8192;
+    while (index <= 8202) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[8223] = true;
-    instance.array[8224] = true;
-    instance.array[8230] = true;
-    instance.array[8278] = true;
-    instance.array[12279] = true;
+    try instance.cp_set.put(8232, {});
+    try instance.cp_set.put(8233, {});
+    try instance.cp_set.put(8239, {});
+    try instance.cp_set.put(8287, {});
+    try instance.cp_set.put(12288, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 
 pub fn deinit(self: *WhiteSpace) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isWhiteSpace checks if cp is of the kind White_Space.
 pub fn isWhiteSpace(self: WhiteSpace, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

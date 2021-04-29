@@ -26,10 +26,8 @@ pub fn isLetter(self: Self, cp: u21) !bool {
     const title = try self.context.getTitle();
     const upper = try self.context.getUpper();
 
-    return lower.isLowercaseLetter(cp) or
-        modifier_letter.isModifierLetter(cp) or
-        other_letter.isOtherLetter(cp) or
-        title.isTitlecaseLetter(cp) or
+    return lower.isLowercaseLetter(cp) or modifier_letter.isModifierLetter(cp) or
+        other_letter.isOtherLetter(cp) or title.isTitlecaseLetter(cp) or
         upper.isUppercaseLetter(cp);
 }
 

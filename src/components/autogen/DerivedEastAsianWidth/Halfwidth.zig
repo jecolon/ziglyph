@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Halfwidth code points.
 
 const std = @import("std");
@@ -13,68 +12,66 @@ const mem = std.mem;
 const Halfwidth = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 8361,
 hi: u21 = 65518,
 
 pub fn init(allocator: *mem.Allocator) !Halfwidth {
     var instance = Halfwidth{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 57158),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    instance.array[57016] = true;
-    instance.array[57017] = true;
-    instance.array[57018] = true;
-    index = 57019;
-    while (index <= 57020) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(8361, {});
+    try instance.cp_set.put(65377, {});
+    try instance.cp_set.put(65378, {});
+    try instance.cp_set.put(65379, {});
+    index = 65380;
+    while (index <= 65381) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 57021;
-    while (index <= 57030) : (index += 1) {
-        instance.array[index] = true;
+    index = 65382;
+    while (index <= 65391) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[57031] = true;
-    index = 57032;
-    while (index <= 57076) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(65392, {});
+    index = 65393;
+    while (index <= 65437) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 57077;
-    while (index <= 57078) : (index += 1) {
-        instance.array[index] = true;
+    index = 65438;
+    while (index <= 65439) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 57079;
-    while (index <= 57109) : (index += 1) {
-        instance.array[index] = true;
+    index = 65440;
+    while (index <= 65470) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 57113;
-    while (index <= 57118) : (index += 1) {
-        instance.array[index] = true;
+    index = 65474;
+    while (index <= 65479) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 57121;
-    while (index <= 57126) : (index += 1) {
-        instance.array[index] = true;
+    index = 65482;
+    while (index <= 65487) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 57129;
-    while (index <= 57134) : (index += 1) {
-        instance.array[index] = true;
+    index = 65490;
+    while (index <= 65495) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 57137;
-    while (index <= 57139) : (index += 1) {
-        instance.array[index] = true;
+    index = 65498;
+    while (index <= 65500) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[57151] = true;
-    index = 57152;
-    while (index <= 57155) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(65512, {});
+    index = 65513;
+    while (index <= 65516) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 57156;
-    while (index <= 57157) : (index += 1) {
-        instance.array[index] = true;
+    index = 65517;
+    while (index <= 65518) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -82,12 +79,11 @@ pub fn init(allocator: *mem.Allocator) !Halfwidth {
 }
 
 pub fn deinit(self: *Halfwidth) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isHalfwidth checks if cp is of the kind Halfwidth.
 pub fn isHalfwidth(self: Halfwidth, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

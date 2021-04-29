@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Pattern_White_Space code points.
 
 const std = @import("std");
@@ -13,43 +12,40 @@ const mem = std.mem;
 const PatternWhiteSpace = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 9,
 hi: u21 = 8233,
 
 pub fn init(allocator: *mem.Allocator) !PatternWhiteSpace {
     var instance = PatternWhiteSpace{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 8225),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    index = 0;
-    while (index <= 4) : (index += 1) {
-        instance.array[index] = true;
+    index = 9;
+    while (index <= 13) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[23] = true;
-    instance.array[124] = true;
-    index = 8197;
-    while (index <= 8198) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(32, {});
+    try instance.cp_set.put(133, {});
+    index = 8206;
+    while (index <= 8207) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[8223] = true;
-    instance.array[8224] = true;
+    try instance.cp_set.put(8232, {});
+    try instance.cp_set.put(8233, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 
 pub fn deinit(self: *PatternWhiteSpace) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isPatternWhiteSpace checks if cp is of the kind Pattern_White_Space.
 pub fn isPatternWhiteSpace(self: PatternWhiteSpace, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

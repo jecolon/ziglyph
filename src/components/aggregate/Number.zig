@@ -46,7 +46,8 @@ pub fn isNumber(self: Self, cp: u21) !bool {
     const letter_number = try self.context.getLetterNumber();
     const other_number = try self.context.getOtherNumber();
 
-    return decimal.isDecimalNumber(cp) or letter_number.isLetterNumber(cp) or other_number.isOtherNumber(cp);
+    return decimal.isDecimalNumber(cp) or letter_number.isLetterNumber(cp) or
+        other_number.isOtherNumber(cp);
 }
 
 /// isAsciiNumber detects ASCII only numbers.

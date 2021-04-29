@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Grapheme_Link code points.
 
 const std = @import("std");
@@ -13,102 +12,99 @@ const mem = std.mem;
 const GraphemeLink = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 2381,
 hi: u21 = 73111,
 
 pub fn init(allocator: *mem.Allocator) !GraphemeLink {
     var instance = GraphemeLink{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 70731),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    instance.array[128] = true;
-    instance.array[256] = true;
-    instance.array[384] = true;
-    instance.array[512] = true;
-    instance.array[640] = true;
-    instance.array[768] = true;
-    instance.array[896] = true;
-    index = 1006;
-    while (index <= 1007) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(2381, {});
+    try instance.cp_set.put(2509, {});
+    try instance.cp_set.put(2637, {});
+    try instance.cp_set.put(2765, {});
+    try instance.cp_set.put(2893, {});
+    try instance.cp_set.put(3021, {});
+    try instance.cp_set.put(3149, {});
+    try instance.cp_set.put(3277, {});
+    index = 3387;
+    while (index <= 3388) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[1024] = true;
-    instance.array[1149] = true;
-    instance.array[1261] = true;
-    instance.array[1389] = true;
-    instance.array[1591] = true;
-    index = 1772;
-    while (index <= 1773) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(3405, {});
+    try instance.cp_set.put(3530, {});
+    try instance.cp_set.put(3642, {});
+    try instance.cp_set.put(3770, {});
+    try instance.cp_set.put(3972, {});
+    index = 4153;
+    while (index <= 4154) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[3527] = true;
-    instance.array[3559] = true;
-    instance.array[3717] = true;
-    instance.array[4371] = true;
-    instance.array[4599] = true;
-    instance.array[4701] = true;
-    instance.array[4702] = true;
-    index = 4773;
-    while (index <= 4774) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(5908, {});
+    try instance.cp_set.put(5940, {});
+    try instance.cp_set.put(6098, {});
+    try instance.cp_set.put(6752, {});
+    try instance.cp_set.put(6980, {});
+    try instance.cp_set.put(7082, {});
+    try instance.cp_set.put(7083, {});
+    index = 7154;
+    while (index <= 7155) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[9266] = true;
-    instance.array[40633] = true;
-    instance.array[40671] = true;
-    instance.array[40823] = true;
-    instance.array[40966] = true;
-    instance.array[41075] = true;
-    instance.array[41385] = true;
-    instance.array[41632] = true;
-    instance.array[65778] = true;
-    instance.array[67321] = true;
-    instance.array[67378] = true;
-    instance.array[67436] = true;
-    index = 67558;
-    while (index <= 67559) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(11647, {});
+    try instance.cp_set.put(43014, {});
+    try instance.cp_set.put(43052, {});
+    try instance.cp_set.put(43204, {});
+    try instance.cp_set.put(43347, {});
+    try instance.cp_set.put(43456, {});
+    try instance.cp_set.put(43766, {});
+    try instance.cp_set.put(44013, {});
+    try instance.cp_set.put(68159, {});
+    try instance.cp_set.put(69702, {});
+    try instance.cp_set.put(69759, {});
+    try instance.cp_set.put(69817, {});
+    index = 69939;
+    while (index <= 69940) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[67699] = true;
-    instance.array[67816] = true;
-    instance.array[67997] = true;
-    instance.array[68096] = true;
-    instance.array[68341] = true;
-    instance.array[68469] = true;
-    instance.array[68722] = true;
-    instance.array[68850] = true;
-    instance.array[68969] = true;
-    instance.array[69086] = true;
-    instance.array[69356] = true;
-    instance.array[69616] = true;
-    instance.array[69617] = true;
-    instance.array[69779] = true;
-    instance.array[69863] = true;
-    instance.array[69882] = true;
-    instance.array[69964] = true;
-    instance.array[70386] = true;
-    index = 70647;
-    while (index <= 70648) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(70080, {});
+    try instance.cp_set.put(70197, {});
+    try instance.cp_set.put(70378, {});
+    try instance.cp_set.put(70477, {});
+    try instance.cp_set.put(70722, {});
+    try instance.cp_set.put(70850, {});
+    try instance.cp_set.put(71103, {});
+    try instance.cp_set.put(71231, {});
+    try instance.cp_set.put(71350, {});
+    try instance.cp_set.put(71467, {});
+    try instance.cp_set.put(71737, {});
+    try instance.cp_set.put(71997, {});
+    try instance.cp_set.put(71998, {});
+    try instance.cp_set.put(72160, {});
+    try instance.cp_set.put(72244, {});
+    try instance.cp_set.put(72263, {});
+    try instance.cp_set.put(72345, {});
+    try instance.cp_set.put(72767, {});
+    index = 73028;
+    while (index <= 73029) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[70730] = true;
+    try instance.cp_set.put(73111, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 
 pub fn deinit(self: *GraphemeLink) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isGraphemeLink checks if cp is of the kind Grapheme_Link.
 pub fn isGraphemeLink(self: GraphemeLink, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

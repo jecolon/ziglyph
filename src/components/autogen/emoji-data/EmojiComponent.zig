@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Emoji_Component code points.
 
 const std = @import("std");
@@ -13,43 +12,41 @@ const mem = std.mem;
 const EmojiComponent = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 35,
 hi: u21 = 917631,
 
 pub fn init(allocator: *mem.Allocator) !EmojiComponent {
     var instance = EmojiComponent{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 917597),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    instance.array[7] = true;
-    index = 13;
-    while (index <= 22) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(35, {});
+    try instance.cp_set.put(42, {});
+    index = 48;
+    while (index <= 57) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[8170] = true;
-    instance.array[8384] = true;
-    instance.array[65004] = true;
-    index = 127427;
-    while (index <= 127452) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(8205, {});
+    try instance.cp_set.put(8419, {});
+    try instance.cp_set.put(65039, {});
+    index = 127462;
+    while (index <= 127487) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 127960;
-    while (index <= 127964) : (index += 1) {
-        instance.array[index] = true;
+    index = 127995;
+    while (index <= 127999) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 129421;
-    while (index <= 129424) : (index += 1) {
-        instance.array[index] = true;
+    index = 129456;
+    while (index <= 129459) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 917501;
-    while (index <= 917596) : (index += 1) {
-        instance.array[index] = true;
+    index = 917536;
+    while (index <= 917631) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -57,12 +54,11 @@ pub fn init(allocator: *mem.Allocator) !EmojiComponent {
 }
 
 pub fn deinit(self: *EmojiComponent) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isEmojiComponent checks if cp is of the kind Emoji_Component.
 pub fn isEmojiComponent(self: EmojiComponent, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

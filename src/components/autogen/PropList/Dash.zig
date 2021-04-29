@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Dash code points.
 
 const std = @import("std");
@@ -13,62 +12,59 @@ const mem = std.mem;
 const Dash = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 45,
 hi: u21 = 69293,
 
 pub fn init(allocator: *mem.Allocator) !Dash {
     var instance = Dash{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 69249),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    instance.array[1373] = true;
-    instance.array[1425] = true;
-    instance.array[5075] = true;
-    instance.array[6105] = true;
-    index = 8163;
-    while (index <= 8168) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(45, {});
+    try instance.cp_set.put(1418, {});
+    try instance.cp_set.put(1470, {});
+    try instance.cp_set.put(5120, {});
+    try instance.cp_set.put(6150, {});
+    index = 8208;
+    while (index <= 8213) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[8230] = true;
-    instance.array[8270] = true;
-    instance.array[8286] = true;
-    instance.array[8677] = true;
-    instance.array[11754] = true;
-    instance.array[11757] = true;
-    index = 11789;
-    while (index <= 11790) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(8275, {});
+    try instance.cp_set.put(8315, {});
+    try instance.cp_set.put(8331, {});
+    try instance.cp_set.put(8722, {});
+    try instance.cp_set.put(11799, {});
+    try instance.cp_set.put(11802, {});
+    index = 11834;
+    while (index <= 11835) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[11795] = true;
-    instance.array[12271] = true;
-    instance.array[12291] = true;
-    instance.array[12403] = true;
-    index = 65028;
-    while (index <= 65029) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(11840, {});
+    try instance.cp_set.put(12316, {});
+    try instance.cp_set.put(12336, {});
+    try instance.cp_set.put(12448, {});
+    index = 65073;
+    while (index <= 65074) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[65067] = true;
-    instance.array[65078] = true;
-    instance.array[65248] = true;
-    instance.array[69248] = true;
+    try instance.cp_set.put(65112, {});
+    try instance.cp_set.put(65123, {});
+    try instance.cp_set.put(65293, {});
+    try instance.cp_set.put(69293, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 
 pub fn deinit(self: *Dash) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isDash checks if cp is of the kind Dash.
 pub fn isDash(self: Dash, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

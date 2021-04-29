@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Emoji_Modifier code points.
 
 const std = @import("std");
@@ -13,22 +12,20 @@ const mem = std.mem;
 const EmojiModifier = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 127995,
 hi: u21 = 127999,
 
 pub fn init(allocator: *mem.Allocator) !EmojiModifier {
     var instance = EmojiModifier{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 5),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    index = 0;
-    while (index <= 4) : (index += 1) {
-        instance.array[index] = true;
+    index = 127995;
+    while (index <= 127999) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -36,12 +33,11 @@ pub fn init(allocator: *mem.Allocator) !EmojiModifier {
 }
 
 pub fn deinit(self: *EmojiModifier) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isEmojiModifier checks if cp is of the kind Emoji_Modifier.
 pub fn isEmojiModifier(self: EmojiModifier, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

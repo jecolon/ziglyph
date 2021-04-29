@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Open_Punctuation code points.
 
 const std = @import("std");
@@ -13,106 +12,103 @@ const mem = std.mem;
 const OpenPunctuation = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 40,
 hi: u21 = 65378,
 
 pub fn init(allocator: *mem.Allocator) !OpenPunctuation {
     var instance = OpenPunctuation{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 65339),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    instance.array[51] = true;
-    instance.array[83] = true;
-    instance.array[3858] = true;
-    instance.array[3860] = true;
-    instance.array[5747] = true;
-    instance.array[8178] = true;
-    instance.array[8182] = true;
-    instance.array[8221] = true;
-    instance.array[8277] = true;
-    instance.array[8293] = true;
-    instance.array[8928] = true;
-    instance.array[8930] = true;
-    instance.array[8961] = true;
-    instance.array[10048] = true;
-    instance.array[10050] = true;
-    instance.array[10052] = true;
-    instance.array[10054] = true;
-    instance.array[10056] = true;
-    instance.array[10058] = true;
-    instance.array[10060] = true;
-    instance.array[10141] = true;
-    instance.array[10174] = true;
-    instance.array[10176] = true;
-    instance.array[10178] = true;
-    instance.array[10180] = true;
-    instance.array[10182] = true;
-    instance.array[10587] = true;
-    instance.array[10589] = true;
-    instance.array[10591] = true;
-    instance.array[10593] = true;
-    instance.array[10595] = true;
-    instance.array[10597] = true;
-    instance.array[10599] = true;
-    instance.array[10601] = true;
-    instance.array[10603] = true;
-    instance.array[10605] = true;
-    instance.array[10607] = true;
-    instance.array[10672] = true;
-    instance.array[10674] = true;
-    instance.array[10708] = true;
-    instance.array[11770] = true;
-    instance.array[11772] = true;
-    instance.array[11774] = true;
-    instance.array[11776] = true;
-    instance.array[11802] = true;
-    instance.array[12256] = true;
-    instance.array[12258] = true;
-    instance.array[12260] = true;
-    instance.array[12262] = true;
-    instance.array[12264] = true;
-    instance.array[12268] = true;
-    instance.array[12270] = true;
-    instance.array[12272] = true;
-    instance.array[12274] = true;
-    instance.array[12277] = true;
-    instance.array[64791] = true;
-    instance.array[65007] = true;
-    instance.array[65037] = true;
-    instance.array[65039] = true;
-    instance.array[65041] = true;
-    instance.array[65043] = true;
-    instance.array[65045] = true;
-    instance.array[65047] = true;
-    instance.array[65049] = true;
-    instance.array[65051] = true;
-    instance.array[65055] = true;
-    instance.array[65073] = true;
-    instance.array[65075] = true;
-    instance.array[65077] = true;
-    instance.array[65248] = true;
-    instance.array[65299] = true;
-    instance.array[65331] = true;
-    instance.array[65335] = true;
-    instance.array[65338] = true;
+    try instance.cp_set.put(40, {});
+    try instance.cp_set.put(91, {});
+    try instance.cp_set.put(123, {});
+    try instance.cp_set.put(3898, {});
+    try instance.cp_set.put(3900, {});
+    try instance.cp_set.put(5787, {});
+    try instance.cp_set.put(8218, {});
+    try instance.cp_set.put(8222, {});
+    try instance.cp_set.put(8261, {});
+    try instance.cp_set.put(8317, {});
+    try instance.cp_set.put(8333, {});
+    try instance.cp_set.put(8968, {});
+    try instance.cp_set.put(8970, {});
+    try instance.cp_set.put(9001, {});
+    try instance.cp_set.put(10088, {});
+    try instance.cp_set.put(10090, {});
+    try instance.cp_set.put(10092, {});
+    try instance.cp_set.put(10094, {});
+    try instance.cp_set.put(10096, {});
+    try instance.cp_set.put(10098, {});
+    try instance.cp_set.put(10100, {});
+    try instance.cp_set.put(10181, {});
+    try instance.cp_set.put(10214, {});
+    try instance.cp_set.put(10216, {});
+    try instance.cp_set.put(10218, {});
+    try instance.cp_set.put(10220, {});
+    try instance.cp_set.put(10222, {});
+    try instance.cp_set.put(10627, {});
+    try instance.cp_set.put(10629, {});
+    try instance.cp_set.put(10631, {});
+    try instance.cp_set.put(10633, {});
+    try instance.cp_set.put(10635, {});
+    try instance.cp_set.put(10637, {});
+    try instance.cp_set.put(10639, {});
+    try instance.cp_set.put(10641, {});
+    try instance.cp_set.put(10643, {});
+    try instance.cp_set.put(10645, {});
+    try instance.cp_set.put(10647, {});
+    try instance.cp_set.put(10712, {});
+    try instance.cp_set.put(10714, {});
+    try instance.cp_set.put(10748, {});
+    try instance.cp_set.put(11810, {});
+    try instance.cp_set.put(11812, {});
+    try instance.cp_set.put(11814, {});
+    try instance.cp_set.put(11816, {});
+    try instance.cp_set.put(11842, {});
+    try instance.cp_set.put(12296, {});
+    try instance.cp_set.put(12298, {});
+    try instance.cp_set.put(12300, {});
+    try instance.cp_set.put(12302, {});
+    try instance.cp_set.put(12304, {});
+    try instance.cp_set.put(12308, {});
+    try instance.cp_set.put(12310, {});
+    try instance.cp_set.put(12312, {});
+    try instance.cp_set.put(12314, {});
+    try instance.cp_set.put(12317, {});
+    try instance.cp_set.put(64831, {});
+    try instance.cp_set.put(65047, {});
+    try instance.cp_set.put(65077, {});
+    try instance.cp_set.put(65079, {});
+    try instance.cp_set.put(65081, {});
+    try instance.cp_set.put(65083, {});
+    try instance.cp_set.put(65085, {});
+    try instance.cp_set.put(65087, {});
+    try instance.cp_set.put(65089, {});
+    try instance.cp_set.put(65091, {});
+    try instance.cp_set.put(65095, {});
+    try instance.cp_set.put(65113, {});
+    try instance.cp_set.put(65115, {});
+    try instance.cp_set.put(65117, {});
+    try instance.cp_set.put(65288, {});
+    try instance.cp_set.put(65339, {});
+    try instance.cp_set.put(65371, {});
+    try instance.cp_set.put(65375, {});
+    try instance.cp_set.put(65378, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 
 pub fn deinit(self: *OpenPunctuation) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isOpenPunctuation checks if cp is of the kind Open_Punctuation.
 pub fn isOpenPunctuation(self: OpenPunctuation, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

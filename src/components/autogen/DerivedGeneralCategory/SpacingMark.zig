@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Spacing_Mark code points.
 
 const std = @import("std");
@@ -13,517 +12,515 @@ const mem = std.mem;
 const SpacingMark = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 2307,
 hi: u21 = 119154,
 
 pub fn init(allocator: *mem.Allocator) !SpacingMark {
     var instance = SpacingMark{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 116848),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    instance.array[56] = true;
-    index = 59;
-    while (index <= 61) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 70;
-    while (index <= 73) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 75;
-    while (index <= 76) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 127;
-    while (index <= 128) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 187;
-    while (index <= 189) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 196;
-    while (index <= 197) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 200;
-    while (index <= 201) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[212] = true;
-    instance.array[256] = true;
-    index = 315;
-    while (index <= 317) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[384] = true;
-    index = 443;
-    while (index <= 445) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[454] = true;
-    index = 456;
-    while (index <= 457) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 511;
-    while (index <= 512) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[571] = true;
-    instance.array[573] = true;
-    index = 580;
-    while (index <= 581) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 584;
-    while (index <= 585) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[596] = true;
-    index = 699;
-    while (index <= 700) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 702;
-    while (index <= 703) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 707;
-    while (index <= 709) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 711;
-    while (index <= 713) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[724] = true;
-    index = 766;
-    while (index <= 768) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 830;
-    while (index <= 833) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 895;
-    while (index <= 896) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[955] = true;
-    index = 957;
-    while (index <= 961) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 964;
-    while (index <= 965) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 967;
-    while (index <= 968) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 978;
-    while (index <= 979) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 1023;
-    while (index <= 1024) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 1083;
-    while (index <= 1085) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 1091;
-    while (index <= 1093) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 1095;
-    while (index <= 1097) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[1108] = true;
-    index = 1151;
-    while (index <= 1152) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 1228;
-    while (index <= 1230) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 1237;
-    while (index <= 1244) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 1263;
-    while (index <= 1264) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 1595;
-    while (index <= 1596) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[1660] = true;
-    index = 1832;
-    while (index <= 1833) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[1838] = true;
-    instance.array[1845] = true;
-    index = 1848;
-    while (index <= 1849) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 1875;
-    while (index <= 1876) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 1887;
-    while (index <= 1889) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 1892;
-    while (index <= 1898) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 1920;
-    while (index <= 1921) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 1924;
-    while (index <= 1929) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[1932] = true;
-    index = 1943;
-    while (index <= 1945) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[3763] = true;
-    index = 3771;
-    while (index <= 3778) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 3780;
-    while (index <= 3781) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 4128;
-    while (index <= 4131) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 4134;
-    while (index <= 4136) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 4141;
-    while (index <= 4142) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 4144;
-    while (index <= 4149) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 4374;
-    while (index <= 4375) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[4434] = true;
-    instance.array[4436] = true;
-    instance.array[4446] = true;
-    index = 4448;
-    while (index <= 4449) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 4458;
-    while (index <= 4463) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[4609] = true;
-    instance.array[4658] = true;
-    instance.array[4664] = true;
-    index = 4666;
-    while (index <= 4670) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 4672;
-    while (index <= 4673) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[4735] = true;
-    instance.array[4766] = true;
-    index = 4771;
-    while (index <= 4772) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[4775] = true;
-    instance.array[4836] = true;
-    index = 4839;
-    while (index <= 4841) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[4843] = true;
-    index = 4847;
-    while (index <= 4848) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 4897;
-    while (index <= 4904) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 4913;
-    while (index <= 4914) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[5086] = true;
-    instance.array[5108] = true;
-    index = 10027;
-    while (index <= 10028) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 40736;
-    while (index <= 40737) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[40740] = true;
-    index = 40829;
-    while (index <= 40830) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 40881;
-    while (index <= 40896) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 41039;
-    while (index <= 41040) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[41088] = true;
-    index = 41137;
-    while (index <= 41138) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 41143;
-    while (index <= 41144) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 41147;
-    while (index <= 41149) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 41260;
-    while (index <= 41261) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 41264;
-    while (index <= 41265) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[41290] = true;
-    instance.array[41336] = true;
-    instance.array[41338] = true;
-    instance.array[41448] = true;
-    index = 41451;
-    while (index <= 41452) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[41458] = true;
-    index = 41696;
-    while (index <= 41697) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 41699;
-    while (index <= 41700) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 41702;
-    while (index <= 41703) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[41705] = true;
-    instance.array[67325] = true;
-    instance.array[67327] = true;
-    instance.array[67455] = true;
-    index = 67501;
-    while (index <= 67503) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 67508;
-    while (index <= 67509) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[67625] = true;
-    index = 67650;
-    while (index <= 67651) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[67711] = true;
-    index = 67760;
-    while (index <= 67762) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 67772;
-    while (index <= 67773) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[67787] = true;
-    index = 67881;
-    while (index <= 67883) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 67887;
-    while (index <= 67888) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[67890] = true;
-    index = 68061;
-    while (index <= 68063) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 68095;
-    while (index <= 68096) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 68155;
-    while (index <= 68156) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 68158;
-    while (index <= 68161) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 68164;
-    while (index <= 68165) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 68168;
-    while (index <= 68170) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[68180] = true;
-    index = 68191;
-    while (index <= 68192) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 68402;
-    while (index <= 68404) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 68413;
-    while (index <= 68414) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[68418] = true;
-    index = 68525;
-    while (index <= 68527) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[68534] = true;
-    index = 68536;
-    while (index <= 68539) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[68542] = true;
-    index = 68780;
-    while (index <= 68782) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 68789;
-    while (index <= 68792) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[68795] = true;
-    index = 68909;
-    while (index <= 68911) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 68920;
-    while (index <= 68921) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[68923] = true;
-    instance.array[69033] = true;
-    index = 69035;
-    while (index <= 69036) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[69043] = true;
-    index = 69149;
-    while (index <= 69150) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[69155] = true;
-    index = 69417;
-    while (index <= 69419) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[69429] = true;
-    index = 69677;
-    while (index <= 69682) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 69684;
-    while (index <= 69685) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[69690] = true;
-    instance.array[69693] = true;
-    instance.array[69695] = true;
-    index = 69838;
-    while (index <= 69840) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 69849;
-    while (index <= 69852) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[69857] = true;
-    instance.array[69942] = true;
-    index = 69972;
-    while (index <= 69973) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[70036] = true;
-    instance.array[70444] = true;
-    instance.array[70459] = true;
-    instance.array[70566] = true;
-    instance.array[70574] = true;
-    instance.array[70577] = true;
-    index = 70791;
-    while (index <= 70795) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 70800;
-    while (index <= 70801) : (index += 1) {
-        instance.array[index] = true;
-    }
-    instance.array[70803] = true;
-    index = 71154;
-    while (index <= 71155) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 91726;
-    while (index <= 91780) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 91885;
-    while (index <= 91886) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 116834;
-    while (index <= 116835) : (index += 1) {
-        instance.array[index] = true;
-    }
-    index = 116842;
-    while (index <= 116847) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(2307, {});
+    try instance.cp_set.put(2363, {});
+    index = 2366;
+    while (index <= 2368) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 2377;
+    while (index <= 2380) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 2382;
+    while (index <= 2383) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 2434;
+    while (index <= 2435) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 2494;
+    while (index <= 2496) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 2503;
+    while (index <= 2504) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 2507;
+    while (index <= 2508) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(2519, {});
+    try instance.cp_set.put(2563, {});
+    index = 2622;
+    while (index <= 2624) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(2691, {});
+    index = 2750;
+    while (index <= 2752) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(2761, {});
+    index = 2763;
+    while (index <= 2764) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 2818;
+    while (index <= 2819) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(2878, {});
+    try instance.cp_set.put(2880, {});
+    index = 2887;
+    while (index <= 2888) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 2891;
+    while (index <= 2892) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(2903, {});
+    index = 3006;
+    while (index <= 3007) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3009;
+    while (index <= 3010) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3014;
+    while (index <= 3016) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3018;
+    while (index <= 3020) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(3031, {});
+    index = 3073;
+    while (index <= 3075) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3137;
+    while (index <= 3140) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3202;
+    while (index <= 3203) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(3262, {});
+    index = 3264;
+    while (index <= 3268) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3271;
+    while (index <= 3272) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3274;
+    while (index <= 3275) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3285;
+    while (index <= 3286) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3330;
+    while (index <= 3331) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3390;
+    while (index <= 3392) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3398;
+    while (index <= 3400) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3402;
+    while (index <= 3404) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(3415, {});
+    index = 3458;
+    while (index <= 3459) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3535;
+    while (index <= 3537) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3544;
+    while (index <= 3551) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3570;
+    while (index <= 3571) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 3902;
+    while (index <= 3903) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(3967, {});
+    index = 4139;
+    while (index <= 4140) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(4145, {});
+    try instance.cp_set.put(4152, {});
+    index = 4155;
+    while (index <= 4156) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 4182;
+    while (index <= 4183) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 4194;
+    while (index <= 4196) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 4199;
+    while (index <= 4205) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 4227;
+    while (index <= 4228) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 4231;
+    while (index <= 4236) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(4239, {});
+    index = 4250;
+    while (index <= 4252) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(6070, {});
+    index = 6078;
+    while (index <= 6085) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 6087;
+    while (index <= 6088) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 6435;
+    while (index <= 6438) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 6441;
+    while (index <= 6443) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 6448;
+    while (index <= 6449) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 6451;
+    while (index <= 6456) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 6681;
+    while (index <= 6682) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(6741, {});
+    try instance.cp_set.put(6743, {});
+    try instance.cp_set.put(6753, {});
+    index = 6755;
+    while (index <= 6756) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 6765;
+    while (index <= 6770) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(6916, {});
+    try instance.cp_set.put(6965, {});
+    try instance.cp_set.put(6971, {});
+    index = 6973;
+    while (index <= 6977) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 6979;
+    while (index <= 6980) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(7042, {});
+    try instance.cp_set.put(7073, {});
+    index = 7078;
+    while (index <= 7079) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(7082, {});
+    try instance.cp_set.put(7143, {});
+    index = 7146;
+    while (index <= 7148) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(7150, {});
+    index = 7154;
+    while (index <= 7155) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 7204;
+    while (index <= 7211) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 7220;
+    while (index <= 7221) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(7393, {});
+    try instance.cp_set.put(7415, {});
+    index = 12334;
+    while (index <= 12335) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 43043;
+    while (index <= 43044) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(43047, {});
+    index = 43136;
+    while (index <= 43137) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 43188;
+    while (index <= 43203) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 43346;
+    while (index <= 43347) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(43395, {});
+    index = 43444;
+    while (index <= 43445) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 43450;
+    while (index <= 43451) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 43454;
+    while (index <= 43456) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 43567;
+    while (index <= 43568) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 43571;
+    while (index <= 43572) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(43597, {});
+    try instance.cp_set.put(43643, {});
+    try instance.cp_set.put(43645, {});
+    try instance.cp_set.put(43755, {});
+    index = 43758;
+    while (index <= 43759) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(43765, {});
+    index = 44003;
+    while (index <= 44004) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 44006;
+    while (index <= 44007) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 44009;
+    while (index <= 44010) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(44012, {});
+    try instance.cp_set.put(69632, {});
+    try instance.cp_set.put(69634, {});
+    try instance.cp_set.put(69762, {});
+    index = 69808;
+    while (index <= 69810) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 69815;
+    while (index <= 69816) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(69932, {});
+    index = 69957;
+    while (index <= 69958) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(70018, {});
+    index = 70067;
+    while (index <= 70069) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 70079;
+    while (index <= 70080) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(70094, {});
+    index = 70188;
+    while (index <= 70190) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 70194;
+    while (index <= 70195) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(70197, {});
+    index = 70368;
+    while (index <= 70370) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 70402;
+    while (index <= 70403) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 70462;
+    while (index <= 70463) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 70465;
+    while (index <= 70468) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 70471;
+    while (index <= 70472) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 70475;
+    while (index <= 70477) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(70487, {});
+    index = 70498;
+    while (index <= 70499) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 70709;
+    while (index <= 70711) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 70720;
+    while (index <= 70721) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(70725, {});
+    index = 70832;
+    while (index <= 70834) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(70841, {});
+    index = 70843;
+    while (index <= 70846) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(70849, {});
+    index = 71087;
+    while (index <= 71089) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 71096;
+    while (index <= 71099) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(71102, {});
+    index = 71216;
+    while (index <= 71218) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 71227;
+    while (index <= 71228) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(71230, {});
+    try instance.cp_set.put(71340, {});
+    index = 71342;
+    while (index <= 71343) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(71350, {});
+    index = 71456;
+    while (index <= 71457) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(71462, {});
+    index = 71724;
+    while (index <= 71726) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(71736, {});
+    index = 71984;
+    while (index <= 71989) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 71991;
+    while (index <= 71992) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(71997, {});
+    try instance.cp_set.put(72000, {});
+    try instance.cp_set.put(72002, {});
+    index = 72145;
+    while (index <= 72147) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 72156;
+    while (index <= 72159) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(72164, {});
+    try instance.cp_set.put(72249, {});
+    index = 72279;
+    while (index <= 72280) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(72343, {});
+    try instance.cp_set.put(72751, {});
+    try instance.cp_set.put(72766, {});
+    try instance.cp_set.put(72873, {});
+    try instance.cp_set.put(72881, {});
+    try instance.cp_set.put(72884, {});
+    index = 73098;
+    while (index <= 73102) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 73107;
+    while (index <= 73108) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    try instance.cp_set.put(73110, {});
+    index = 73461;
+    while (index <= 73462) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 94033;
+    while (index <= 94087) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 94192;
+    while (index <= 94193) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 119141;
+    while (index <= 119142) : (index += 1) {
+        try instance.cp_set.put(index, {});
+    }
+    index = 119149;
+    while (index <= 119154) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -531,12 +528,11 @@ pub fn init(allocator: *mem.Allocator) !SpacingMark {
 }
 
 pub fn deinit(self: *SpacingMark) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isSpacingMark checks if cp is of the kind Spacing_Mark.
 pub fn isSpacingMark(self: SpacingMark, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Fullwidth code points.
 
 const std = @import("std");
@@ -13,85 +12,83 @@ const mem = std.mem;
 const Fullwidth = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 12288,
 hi: u21 = 65510,
 
 pub fn init(allocator: *mem.Allocator) !Fullwidth {
     var instance = Fullwidth{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 53223),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    index = 52993;
-    while (index <= 52995) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(12288, {});
+    index = 65281;
+    while (index <= 65283) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[52996] = true;
-    index = 52997;
-    while (index <= 52999) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(65284, {});
+    index = 65285;
+    while (index <= 65287) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[53000] = true;
-    instance.array[53001] = true;
-    instance.array[53002] = true;
-    instance.array[53003] = true;
-    instance.array[53004] = true;
-    instance.array[53005] = true;
-    index = 53006;
-    while (index <= 53007) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(65288, {});
+    try instance.cp_set.put(65289, {});
+    try instance.cp_set.put(65290, {});
+    try instance.cp_set.put(65291, {});
+    try instance.cp_set.put(65292, {});
+    try instance.cp_set.put(65293, {});
+    index = 65294;
+    while (index <= 65295) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 53008;
-    while (index <= 53017) : (index += 1) {
-        instance.array[index] = true;
+    index = 65296;
+    while (index <= 65305) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 53018;
-    while (index <= 53019) : (index += 1) {
-        instance.array[index] = true;
+    index = 65306;
+    while (index <= 65307) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 53020;
-    while (index <= 53022) : (index += 1) {
-        instance.array[index] = true;
+    index = 65308;
+    while (index <= 65310) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 53023;
-    while (index <= 53024) : (index += 1) {
-        instance.array[index] = true;
+    index = 65311;
+    while (index <= 65312) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 53025;
-    while (index <= 53050) : (index += 1) {
-        instance.array[index] = true;
+    index = 65313;
+    while (index <= 65338) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[53051] = true;
-    instance.array[53052] = true;
-    instance.array[53053] = true;
-    instance.array[53054] = true;
-    instance.array[53055] = true;
-    instance.array[53056] = true;
-    index = 53057;
-    while (index <= 53082) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(65339, {});
+    try instance.cp_set.put(65340, {});
+    try instance.cp_set.put(65341, {});
+    try instance.cp_set.put(65342, {});
+    try instance.cp_set.put(65343, {});
+    try instance.cp_set.put(65344, {});
+    index = 65345;
+    while (index <= 65370) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[53083] = true;
-    instance.array[53084] = true;
-    instance.array[53085] = true;
-    instance.array[53086] = true;
-    instance.array[53087] = true;
-    instance.array[53088] = true;
-    index = 53216;
-    while (index <= 53217) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(65371, {});
+    try instance.cp_set.put(65372, {});
+    try instance.cp_set.put(65373, {});
+    try instance.cp_set.put(65374, {});
+    try instance.cp_set.put(65375, {});
+    try instance.cp_set.put(65376, {});
+    index = 65504;
+    while (index <= 65505) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[53218] = true;
-    instance.array[53219] = true;
-    instance.array[53220] = true;
-    index = 53221;
-    while (index <= 53222) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(65506, {});
+    try instance.cp_set.put(65507, {});
+    try instance.cp_set.put(65508, {});
+    index = 65509;
+    while (index <= 65510) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -99,12 +96,11 @@ pub fn init(allocator: *mem.Allocator) !Fullwidth {
 }
 
 pub fn deinit(self: *Fullwidth) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isFullwidth checks if cp is of the kind Fullwidth.
 pub fn isFullwidth(self: Fullwidth, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

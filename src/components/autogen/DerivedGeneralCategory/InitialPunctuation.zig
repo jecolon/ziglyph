@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Initial_Punctuation code points.
 
 const std = @import("std");
@@ -13,45 +12,42 @@ const mem = std.mem;
 const InitialPunctuation = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 171,
 hi: u21 = 11808,
 
 pub fn init(allocator: *mem.Allocator) !InitialPunctuation {
     var instance = InitialPunctuation{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 11638),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    instance.array[8045] = true;
-    index = 8048;
-    while (index <= 8049) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(171, {});
+    try instance.cp_set.put(8216, {});
+    index = 8219;
+    while (index <= 8220) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[8052] = true;
-    instance.array[8078] = true;
-    instance.array[11607] = true;
-    instance.array[11609] = true;
-    instance.array[11614] = true;
-    instance.array[11617] = true;
-    instance.array[11633] = true;
-    instance.array[11637] = true;
+    try instance.cp_set.put(8223, {});
+    try instance.cp_set.put(8249, {});
+    try instance.cp_set.put(11778, {});
+    try instance.cp_set.put(11780, {});
+    try instance.cp_set.put(11785, {});
+    try instance.cp_set.put(11788, {});
+    try instance.cp_set.put(11804, {});
+    try instance.cp_set.put(11808, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 
 pub fn deinit(self: *InitialPunctuation) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isInitialPunctuation checks if cp is of the kind Initial_Punctuation.
 pub fn isInitialPunctuation(self: InitialPunctuation, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

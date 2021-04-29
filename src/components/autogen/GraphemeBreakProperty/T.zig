@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode T code points.
 
 const std = @import("std");
@@ -13,26 +12,24 @@ const mem = std.mem;
 const T = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 4520,
 hi: u21 = 55291,
 
 pub fn init(allocator: *mem.Allocator) !T {
     var instance = T{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 50772),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    index = 0;
-    while (index <= 87) : (index += 1) {
-        instance.array[index] = true;
+    index = 4520;
+    while (index <= 4607) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 50723;
-    while (index <= 50771) : (index += 1) {
-        instance.array[index] = true;
+    index = 55243;
+    while (index <= 55291) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -40,12 +37,11 @@ pub fn init(allocator: *mem.Allocator) !T {
 }
 
 pub fn deinit(self: *T) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isT checks if cp is of the kind T.
 pub fn isT(self: T, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Logical_Order_Exception code points.
 
 const std = @import("std");
@@ -13,40 +12,38 @@ const mem = std.mem;
 const LogicalOrderException = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 3648,
 hi: u21 = 43708,
 
 pub fn init(allocator: *mem.Allocator) !LogicalOrderException {
     var instance = LogicalOrderException{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 40061),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    index = 0;
-    while (index <= 4) : (index += 1) {
-        instance.array[index] = true;
+    index = 3648;
+    while (index <= 3652) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 128;
-    while (index <= 132) : (index += 1) {
-        instance.array[index] = true;
+    index = 3776;
+    while (index <= 3780) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 2933;
-    while (index <= 2935) : (index += 1) {
-        instance.array[index] = true;
+    index = 6581;
+    while (index <= 6583) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[2938] = true;
-    index = 40053;
-    while (index <= 40054) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(6586, {});
+    index = 43701;
+    while (index <= 43702) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[40057] = true;
-    index = 40059;
-    while (index <= 40060) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(43705, {});
+    index = 43707;
+    while (index <= 43708) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -54,12 +51,11 @@ pub fn init(allocator: *mem.Allocator) !LogicalOrderException {
 }
 
 pub fn deinit(self: *LogicalOrderException) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isLogicalOrderException checks if cp is of the kind Logical_Order_Exception.
 pub fn isLogicalOrderException(self: LogicalOrderException, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

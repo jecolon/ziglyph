@@ -60,7 +60,7 @@ pub fn next(self: *Self) !?Grapheme {
 
     if (prepend.isPrepend(cp)) {
         if (next_cp) |ncp| {
-            if (ncp == CR or ncp == LF or control.isControl(ncp)) {
+            if (ncp == CR or ncp == LF or (control.isControl(ncp))) {
                 return Grapheme{
                     .bytes = self.cp_iter.bytes[cp_start..cp_end],
                 };

@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Other_ID_Start code points.
 
 const std = @import("std");
@@ -13,28 +12,26 @@ const mem = std.mem;
 const OtherIDStart = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 6277,
 hi: u21 = 12444,
 
 pub fn init(allocator: *mem.Allocator) !OtherIDStart {
     var instance = OtherIDStart{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 6168),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    index = 0;
-    while (index <= 1) : (index += 1) {
-        instance.array[index] = true;
+    index = 6277;
+    while (index <= 6278) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[2195] = true;
-    instance.array[2217] = true;
-    index = 6166;
-    while (index <= 6167) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(8472, {});
+    try instance.cp_set.put(8494, {});
+    index = 12443;
+    while (index <= 12444) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -42,12 +39,11 @@ pub fn init(allocator: *mem.Allocator) !OtherIDStart {
 }
 
 pub fn deinit(self: *OtherIDStart) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isOtherIDStart checks if cp is of the kind Other_ID_Start.
 pub fn isOtherIDStart(self: OtherIDStart, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

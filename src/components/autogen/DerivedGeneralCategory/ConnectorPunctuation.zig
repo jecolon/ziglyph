@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Connector_Punctuation code points.
 
 const std = @import("std");
@@ -13,46 +12,43 @@ const mem = std.mem;
 const ConnectorPunctuation = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 95,
 hi: u21 = 65343,
 
 pub fn init(allocator: *mem.Allocator) !ConnectorPunctuation {
     var instance = ConnectorPunctuation{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 65249),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    index = 8160;
-    while (index <= 8161) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(95, {});
+    index = 8255;
+    while (index <= 8256) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[8181] = true;
-    index = 64980;
-    while (index <= 64981) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(8276, {});
+    index = 65075;
+    while (index <= 65076) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 65006;
-    while (index <= 65008) : (index += 1) {
-        instance.array[index] = true;
+    index = 65101;
+    while (index <= 65103) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[65248] = true;
+    try instance.cp_set.put(65343, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 
 pub fn deinit(self: *ConnectorPunctuation) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isConnectorPunctuation checks if cp is of the kind Connector_Punctuation.
 pub fn isConnectorPunctuation(self: ConnectorPunctuation, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

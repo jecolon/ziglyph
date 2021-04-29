@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Format code points.
 
 const std = @import("std");
@@ -13,68 +12,66 @@ const mem = std.mem;
 const Format = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 173,
 hi: u21 = 917631,
 
 pub fn init(allocator: *mem.Allocator) !Format {
     var instance = Format{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 917459),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    index = 1363;
-    while (index <= 1368) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(173, {});
+    index = 1536;
+    while (index <= 1541) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[1391] = true;
-    instance.array[1584] = true;
-    instance.array[1634] = true;
-    instance.array[2101] = true;
-    instance.array[5985] = true;
-    index = 8030;
-    while (index <= 8034) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(1564, {});
+    try instance.cp_set.put(1757, {});
+    try instance.cp_set.put(1807, {});
+    try instance.cp_set.put(2274, {});
+    try instance.cp_set.put(6158, {});
+    index = 8203;
+    while (index <= 8207) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 8061;
-    while (index <= 8065) : (index += 1) {
-        instance.array[index] = true;
+    index = 8234;
+    while (index <= 8238) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 8115;
-    while (index <= 8119) : (index += 1) {
-        instance.array[index] = true;
+    index = 8288;
+    while (index <= 8292) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 8121;
-    while (index <= 8130) : (index += 1) {
-        instance.array[index] = true;
+    index = 8294;
+    while (index <= 8303) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[65106] = true;
-    index = 65356;
-    while (index <= 65358) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(65279, {});
+    index = 65529;
+    while (index <= 65531) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[69648] = true;
-    instance.array[69664] = true;
-    index = 78723;
-    while (index <= 78731) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(69821, {});
+    try instance.cp_set.put(69837, {});
+    index = 78896;
+    while (index <= 78904) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 113651;
-    while (index <= 113654) : (index += 1) {
-        instance.array[index] = true;
+    index = 113824;
+    while (index <= 113827) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 118982;
-    while (index <= 118989) : (index += 1) {
-        instance.array[index] = true;
+    index = 119155;
+    while (index <= 119162) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[917332] = true;
-    index = 917363;
-    while (index <= 917458) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(917505, {});
+    index = 917536;
+    while (index <= 917631) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -82,12 +79,11 @@ pub fn init(allocator: *mem.Allocator) !Format {
 }
 
 pub fn deinit(self: *Format) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isFormat checks if cp is of the kind Format.
 pub fn isFormat(self: Format, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

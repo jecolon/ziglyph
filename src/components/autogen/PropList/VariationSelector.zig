@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Variation_Selector code points.
 
 const std = @import("std");
@@ -13,30 +12,28 @@ const mem = std.mem;
 const VariationSelector = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 6155,
 hi: u21 = 917999,
 
 pub fn init(allocator: *mem.Allocator) !VariationSelector {
     var instance = VariationSelector{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 911845),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    index = 0;
-    while (index <= 2) : (index += 1) {
-        instance.array[index] = true;
+    index = 6155;
+    while (index <= 6157) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 58869;
-    while (index <= 58884) : (index += 1) {
-        instance.array[index] = true;
+    index = 65024;
+    while (index <= 65039) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 911605;
-    while (index <= 911844) : (index += 1) {
-        instance.array[index] = true;
+    index = 917760;
+    while (index <= 917999) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -44,12 +41,11 @@ pub fn init(allocator: *mem.Allocator) !VariationSelector {
 }
 
 pub fn deinit(self: *VariationSelector) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isVariationSelector checks if cp is of the kind Variation_Selector.
 pub fn isVariationSelector(self: VariationSelector, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

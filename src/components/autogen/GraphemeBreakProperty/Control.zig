@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Control code points.
 
 const std = @import("std");
@@ -13,92 +12,90 @@ const mem = std.mem;
 const Control = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 0,
 hi: u21 = 921599,
 
 pub fn init(allocator: *mem.Allocator) !Control {
     var instance = Control{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 921600),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
-
-    mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
     index = 0;
     while (index <= 9) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
     index = 11;
     while (index <= 12) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
     index = 14;
     while (index <= 31) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
     index = 127;
     while (index <= 159) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
-    instance.array[173] = true;
-    instance.array[1564] = true;
-    instance.array[6158] = true;
-    instance.array[8203] = true;
+    try instance.cp_set.put(173, {});
+    try instance.cp_set.put(1564, {});
+    try instance.cp_set.put(6158, {});
+    try instance.cp_set.put(8203, {});
     index = 8206;
     while (index <= 8207) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
-    instance.array[8232] = true;
-    instance.array[8233] = true;
+    try instance.cp_set.put(8232, {});
+    try instance.cp_set.put(8233, {});
     index = 8234;
     while (index <= 8238) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
     index = 8288;
     while (index <= 8292) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
-    instance.array[8293] = true;
+    try instance.cp_set.put(8293, {});
     index = 8294;
     while (index <= 8303) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
-    instance.array[65279] = true;
+    try instance.cp_set.put(65279, {});
     index = 65520;
     while (index <= 65528) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
     index = 65529;
     while (index <= 65531) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
     index = 78896;
     while (index <= 78904) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
     index = 113824;
     while (index <= 113827) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
     index = 119155;
     while (index <= 119162) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
-    instance.array[917504] = true;
-    instance.array[917505] = true;
+    try instance.cp_set.put(917504, {});
+    try instance.cp_set.put(917505, {});
     index = 917506;
     while (index <= 917535) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
     index = 917632;
     while (index <= 917759) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
     index = 918000;
     while (index <= 921599) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -106,12 +103,11 @@ pub fn init(allocator: *mem.Allocator) !Control {
 }
 
 pub fn deinit(self: *Control) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isControl checks if cp is of the kind Control.
 pub fn isControl(self: Control, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

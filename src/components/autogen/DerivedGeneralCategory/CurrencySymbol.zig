@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Currency_Symbol code points.
 
 const std = @import("std");
@@ -13,73 +12,70 @@ const mem = std.mem;
 const CurrencySymbol = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 36,
 hi: u21 = 126128,
 
 pub fn init(allocator: *mem.Allocator) !CurrencySymbol {
     var instance = CurrencySymbol{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 126093),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    index = 126;
-    while (index <= 129) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(36, {});
+    index = 162;
+    while (index <= 165) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[1387] = true;
-    instance.array[1511] = true;
-    index = 2010;
-    while (index <= 2011) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(1423, {});
+    try instance.cp_set.put(1547, {});
+    index = 2046;
+    while (index <= 2047) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 2510;
-    while (index <= 2511) : (index += 1) {
-        instance.array[index] = true;
+    index = 2546;
+    while (index <= 2547) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[2519] = true;
-    instance.array[2765] = true;
-    instance.array[3029] = true;
-    instance.array[3611] = true;
-    instance.array[6071] = true;
-    index = 8316;
-    while (index <= 8347) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(2555, {});
+    try instance.cp_set.put(2801, {});
+    try instance.cp_set.put(3065, {});
+    try instance.cp_set.put(3647, {});
+    try instance.cp_set.put(6107, {});
+    index = 8352;
+    while (index <= 8383) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[43028] = true;
-    instance.array[64984] = true;
-    instance.array[65093] = true;
-    instance.array[65248] = true;
-    index = 65468;
-    while (index <= 65469) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(43064, {});
+    try instance.cp_set.put(65020, {});
+    try instance.cp_set.put(65129, {});
+    try instance.cp_set.put(65284, {});
+    index = 65504;
+    while (index <= 65505) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 65473;
-    while (index <= 65474) : (index += 1) {
-        instance.array[index] = true;
+    index = 65509;
+    while (index <= 65510) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 73657;
-    while (index <= 73660) : (index += 1) {
-        instance.array[index] = true;
+    index = 73693;
+    while (index <= 73696) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[123611] = true;
-    instance.array[126092] = true;
+    try instance.cp_set.put(123647, {});
+    try instance.cp_set.put(126128, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 
 pub fn deinit(self: *CurrencySymbol) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isCurrencySymbol checks if cp is of the kind Currency_Symbol.
 pub fn isCurrencySymbol(self: CurrencySymbol, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

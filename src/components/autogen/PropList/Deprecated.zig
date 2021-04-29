@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Deprecated code points.
 
 const std = @import("std");
@@ -13,46 +12,43 @@ const mem = std.mem;
 const Deprecated = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 329,
 hi: u21 = 917505,
 
 pub fn init(allocator: *mem.Allocator) !Deprecated {
     var instance = Deprecated{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 917177),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    instance.array[1322] = true;
-    instance.array[3630] = true;
-    instance.array[3632] = true;
-    index = 5722;
-    while (index <= 5723) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(329, {});
+    try instance.cp_set.put(1651, {});
+    try instance.cp_set.put(3959, {});
+    try instance.cp_set.put(3961, {});
+    index = 6051;
+    while (index <= 6052) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 7969;
-    while (index <= 7974) : (index += 1) {
-        instance.array[index] = true;
+    index = 8298;
+    while (index <= 8303) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[8672] = true;
-    instance.array[8673] = true;
-    instance.array[917176] = true;
+    try instance.cp_set.put(9001, {});
+    try instance.cp_set.put(9002, {});
+    try instance.cp_set.put(917505, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 
 pub fn deinit(self: *Deprecated) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isDeprecated checks if cp is of the kind Deprecated.
 pub fn isDeprecated(self: Deprecated, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

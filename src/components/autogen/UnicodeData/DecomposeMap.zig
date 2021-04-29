@@ -18224,7 +18224,7 @@ fn allDone(dcs: []const Decomposed) bool {
     return true;
 }
 
-test "codePointTo D" {
+test "Decomp codePointTo D" {
     var allocator = std.testing.allocator;
     var decomp_map = try init(allocator);
     defer decomp_map.deinit();
@@ -18238,7 +18238,7 @@ test "codePointTo D" {
     std.testing.expectEqualSlices(u21, result, &[2]u21{ 0x03D2, 0x0301 });
 }
 
-test "codePointTo KD" {
+test "Decomp codePointTo KD" {
     var allocator = std.testing.allocator;
     var decomp_map = try init(allocator);
     defer decomp_map.deinit();
@@ -18252,7 +18252,7 @@ test "codePointTo KD" {
     std.testing.expectEqualSlices(u21, result, &[2]u21{ 0x03A5, 0x0301 });
 }
 
-test "normalizeTo" {
+test "Decomp normalizeTo" {
     var allocator = std.testing.allocator;
     var decomp_map = try init(allocator);
     defer decomp_map.deinit();

@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Noncharacter_Code_Point code points.
 
 const std = @import("std");
@@ -13,90 +12,88 @@ const mem = std.mem;
 const NoncharacterCodePoint = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 64976,
 hi: u21 = 1114111,
 
 pub fn init(allocator: *mem.Allocator) !NoncharacterCodePoint {
     var instance = NoncharacterCodePoint{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1049136),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    index = 0;
-    while (index <= 31) : (index += 1) {
-        instance.array[index] = true;
+    index = 64976;
+    while (index <= 65007) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 558;
-    while (index <= 559) : (index += 1) {
-        instance.array[index] = true;
+    index = 65534;
+    while (index <= 65535) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 66094;
-    while (index <= 66095) : (index += 1) {
-        instance.array[index] = true;
+    index = 131070;
+    while (index <= 131071) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 131630;
-    while (index <= 131631) : (index += 1) {
-        instance.array[index] = true;
+    index = 196606;
+    while (index <= 196607) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 197166;
-    while (index <= 197167) : (index += 1) {
-        instance.array[index] = true;
+    index = 262142;
+    while (index <= 262143) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 262702;
-    while (index <= 262703) : (index += 1) {
-        instance.array[index] = true;
+    index = 327678;
+    while (index <= 327679) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 328238;
-    while (index <= 328239) : (index += 1) {
-        instance.array[index] = true;
+    index = 393214;
+    while (index <= 393215) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 393774;
-    while (index <= 393775) : (index += 1) {
-        instance.array[index] = true;
+    index = 458750;
+    while (index <= 458751) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 459310;
-    while (index <= 459311) : (index += 1) {
-        instance.array[index] = true;
+    index = 524286;
+    while (index <= 524287) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 524846;
-    while (index <= 524847) : (index += 1) {
-        instance.array[index] = true;
+    index = 589822;
+    while (index <= 589823) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 590382;
-    while (index <= 590383) : (index += 1) {
-        instance.array[index] = true;
+    index = 655358;
+    while (index <= 655359) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 655918;
-    while (index <= 655919) : (index += 1) {
-        instance.array[index] = true;
+    index = 720894;
+    while (index <= 720895) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 721454;
-    while (index <= 721455) : (index += 1) {
-        instance.array[index] = true;
+    index = 786430;
+    while (index <= 786431) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 786990;
-    while (index <= 786991) : (index += 1) {
-        instance.array[index] = true;
+    index = 851966;
+    while (index <= 851967) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 852526;
-    while (index <= 852527) : (index += 1) {
-        instance.array[index] = true;
+    index = 917502;
+    while (index <= 917503) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 918062;
-    while (index <= 918063) : (index += 1) {
-        instance.array[index] = true;
+    index = 983038;
+    while (index <= 983039) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 983598;
-    while (index <= 983599) : (index += 1) {
-        instance.array[index] = true;
+    index = 1048574;
+    while (index <= 1048575) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 1049134;
-    while (index <= 1049135) : (index += 1) {
-        instance.array[index] = true;
+    index = 1114110;
+    while (index <= 1114111) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -104,12 +101,11 @@ pub fn init(allocator: *mem.Allocator) !NoncharacterCodePoint {
 }
 
 pub fn deinit(self: *NoncharacterCodePoint) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isNoncharacterCodePoint checks if cp is of the kind Noncharacter_Code_Point.
 pub fn isNoncharacterCodePoint(self: NoncharacterCodePoint, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

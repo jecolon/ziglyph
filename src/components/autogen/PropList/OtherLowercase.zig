@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Other_Lowercase code points.
 
 const std = @import("std");
@@ -13,74 +12,72 @@ const mem = std.mem;
 const OtherLowercase = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 170,
 hi: u21 = 43871,
 
 pub fn init(allocator: *mem.Allocator) !OtherLowercase {
     var instance = OtherLowercase{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 43702),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    instance.array[16] = true;
-    index = 518;
-    while (index <= 526) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(170, {});
+    try instance.cp_set.put(186, {});
+    index = 688;
+    while (index <= 696) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 534;
-    while (index <= 535) : (index += 1) {
-        instance.array[index] = true;
+    index = 704;
+    while (index <= 705) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 566;
-    while (index <= 570) : (index += 1) {
-        instance.array[index] = true;
+    index = 736;
+    while (index <= 740) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[667] = true;
-    instance.array[720] = true;
-    index = 7298;
-    while (index <= 7360) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(837, {});
+    try instance.cp_set.put(890, {});
+    index = 7468;
+    while (index <= 7530) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[7374] = true;
-    index = 7409;
-    while (index <= 7445) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(7544, {});
+    index = 7579;
+    while (index <= 7615) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[8135] = true;
-    instance.array[8149] = true;
-    index = 8166;
-    while (index <= 8178) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(8305, {});
+    try instance.cp_set.put(8319, {});
+    index = 8336;
+    while (index <= 8348) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 8390;
-    while (index <= 8405) : (index += 1) {
-        instance.array[index] = true;
+    index = 8560;
+    while (index <= 8575) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 9254;
-    while (index <= 9279) : (index += 1) {
-        instance.array[index] = true;
+    index = 9424;
+    while (index <= 9449) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 11218;
-    while (index <= 11219) : (index += 1) {
-        instance.array[index] = true;
+    index = 11388;
+    while (index <= 11389) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 42482;
-    while (index <= 42483) : (index += 1) {
-        instance.array[index] = true;
+    index = 42652;
+    while (index <= 42653) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[42694] = true;
-    index = 42830;
-    while (index <= 42831) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(42864, {});
+    index = 43000;
+    while (index <= 43001) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 43698;
-    while (index <= 43701) : (index += 1) {
-        instance.array[index] = true;
+    index = 43868;
+    while (index <= 43871) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -88,12 +85,11 @@ pub fn init(allocator: *mem.Allocator) !OtherLowercase {
 }
 
 pub fn deinit(self: *OtherLowercase) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isOtherLowercase checks if cp is of the kind Other_Lowercase.
 pub fn isOtherLowercase(self: OtherLowercase, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

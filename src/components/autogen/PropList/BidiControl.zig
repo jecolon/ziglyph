@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Bidi_Control code points.
 
 const std = @import("std");
@@ -13,31 +12,29 @@ const mem = std.mem;
 const BidiControl = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 1564,
 hi: u21 = 8297,
 
 pub fn init(allocator: *mem.Allocator) !BidiControl {
     var instance = BidiControl{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 6734),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    index = 6642;
-    while (index <= 6643) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(1564, {});
+    index = 8206;
+    while (index <= 8207) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 6670;
-    while (index <= 6674) : (index += 1) {
-        instance.array[index] = true;
+    index = 8234;
+    while (index <= 8238) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 6730;
-    while (index <= 6733) : (index += 1) {
-        instance.array[index] = true;
+    index = 8294;
+    while (index <= 8297) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -45,12 +42,11 @@ pub fn init(allocator: *mem.Allocator) !BidiControl {
 }
 
 pub fn deinit(self: *BidiControl) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isBidiControl checks if cp is of the kind Bidi_Control.
 pub fn isBidiControl(self: BidiControl, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

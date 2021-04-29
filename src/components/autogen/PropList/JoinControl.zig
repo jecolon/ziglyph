@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Join_Control code points.
 
 const std = @import("std");
@@ -13,22 +12,20 @@ const mem = std.mem;
 const JoinControl = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 8204,
 hi: u21 = 8205,
 
 pub fn init(allocator: *mem.Allocator) !JoinControl {
     var instance = JoinControl{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 2),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    index = 0;
-    while (index <= 1) : (index += 1) {
-        instance.array[index] = true;
+    index = 8204;
+    while (index <= 8205) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -36,12 +33,11 @@ pub fn init(allocator: *mem.Allocator) !JoinControl {
 }
 
 pub fn deinit(self: *JoinControl) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isJoinControl checks if cp is of the kind Join_Control.
 pub fn isJoinControl(self: JoinControl, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

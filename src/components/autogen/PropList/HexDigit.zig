@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Hex_Digit code points.
 
 const std = @import("std");
@@ -13,42 +12,40 @@ const mem = std.mem;
 const HexDigit = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 48,
 hi: u21 = 65350,
 
 pub fn init(allocator: *mem.Allocator) !HexDigit {
     var instance = HexDigit{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 65303),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    index = 0;
-    while (index <= 9) : (index += 1) {
-        instance.array[index] = true;
+    index = 48;
+    while (index <= 57) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 17;
-    while (index <= 22) : (index += 1) {
-        instance.array[index] = true;
+    index = 65;
+    while (index <= 70) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 49;
-    while (index <= 54) : (index += 1) {
-        instance.array[index] = true;
+    index = 97;
+    while (index <= 102) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 65248;
-    while (index <= 65257) : (index += 1) {
-        instance.array[index] = true;
+    index = 65296;
+    while (index <= 65305) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 65265;
-    while (index <= 65270) : (index += 1) {
-        instance.array[index] = true;
+    index = 65313;
+    while (index <= 65318) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 65297;
-    while (index <= 65302) : (index += 1) {
-        instance.array[index] = true;
+    index = 65345;
+    while (index <= 65350) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -56,12 +53,11 @@ pub fn init(allocator: *mem.Allocator) !HexDigit {
 }
 
 pub fn deinit(self: *HexDigit) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isHexDigit checks if cp is of the kind Hex_Digit.
 pub fn isHexDigit(self: HexDigit, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

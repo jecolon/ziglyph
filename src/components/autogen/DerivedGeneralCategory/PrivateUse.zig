@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Private_Use code points.
 
 const std = @import("std");
@@ -13,30 +12,28 @@ const mem = std.mem;
 const PrivateUse = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 57344,
 hi: u21 = 1114109,
 
 pub fn init(allocator: *mem.Allocator) !PrivateUse {
     var instance = PrivateUse{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1056766),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    index = 0;
-    while (index <= 6399) : (index += 1) {
-        instance.array[index] = true;
+    index = 57344;
+    while (index <= 63743) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 925696;
-    while (index <= 991229) : (index += 1) {
-        instance.array[index] = true;
+    index = 983040;
+    while (index <= 1048573) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 991232;
-    while (index <= 1056765) : (index += 1) {
-        instance.array[index] = true;
+    index = 1048576;
+    while (index <= 1114109) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -44,12 +41,11 @@ pub fn init(allocator: *mem.Allocator) !PrivateUse {
 }
 
 pub fn deinit(self: *PrivateUse) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isPrivateUse checks if cp is of the kind Private_Use.
 pub fn isPrivateUse(self: PrivateUse, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

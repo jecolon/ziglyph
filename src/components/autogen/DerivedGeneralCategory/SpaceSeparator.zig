@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Space_Separator code points.
 
 const std = @import("std");
@@ -13,41 +12,38 @@ const mem = std.mem;
 const SpaceSeparator = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 32,
 hi: u21 = 12288,
 
 pub fn init(allocator: *mem.Allocator) !SpaceSeparator {
     var instance = SpaceSeparator{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 12257),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    instance.array[128] = true;
-    instance.array[5728] = true;
-    index = 8160;
-    while (index <= 8170) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(32, {});
+    try instance.cp_set.put(160, {});
+    try instance.cp_set.put(5760, {});
+    index = 8192;
+    while (index <= 8202) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[8207] = true;
-    instance.array[8255] = true;
-    instance.array[12256] = true;
+    try instance.cp_set.put(8239, {});
+    try instance.cp_set.put(8287, {});
+    try instance.cp_set.put(12288, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 
 pub fn deinit(self: *SpaceSeparator) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isSpaceSeparator checks if cp is of the kind Space_Separator.
 pub fn isSpaceSeparator(self: SpaceSeparator, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

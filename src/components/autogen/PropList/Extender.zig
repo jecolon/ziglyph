@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Extender code points.
 
 const std = @import("std");
@@ -13,80 +12,78 @@ const mem = std.mem;
 const Extender = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 183,
 hi: u21 = 125254,
 
 pub fn init(allocator: *mem.Allocator) !Extender {
     var instance = Extender{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 125072),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    index = 537;
-    while (index <= 538) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(183, {});
+    index = 720;
+    while (index <= 721) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[1417] = true;
-    instance.array[1859] = true;
-    instance.array[2718] = true;
-    instance.array[3471] = true;
-    instance.array[3599] = true;
-    instance.array[5971] = true;
-    instance.array[6028] = true;
-    instance.array[6640] = true;
-    instance.array[7039] = true;
-    instance.array[7108] = true;
-    instance.array[12110] = true;
-    index = 12154;
-    while (index <= 12158) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(1600, {});
+    try instance.cp_set.put(2042, {});
+    try instance.cp_set.put(2901, {});
+    try instance.cp_set.put(3654, {});
+    try instance.cp_set.put(3782, {});
+    try instance.cp_set.put(6154, {});
+    try instance.cp_set.put(6211, {});
+    try instance.cp_set.put(6823, {});
+    try instance.cp_set.put(7222, {});
+    try instance.cp_set.put(7291, {});
+    try instance.cp_set.put(12293, {});
+    index = 12337;
+    while (index <= 12341) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 12262;
-    while (index <= 12263) : (index += 1) {
-        instance.array[index] = true;
+    index = 12445;
+    while (index <= 12446) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 12357;
-    while (index <= 12359) : (index += 1) {
-        instance.array[index] = true;
+    index = 12540;
+    while (index <= 12542) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[40798] = true;
-    instance.array[42325] = true;
-    instance.array[43288] = true;
-    instance.array[43311] = true;
-    instance.array[43449] = true;
-    instance.array[43558] = true;
-    index = 43580;
-    while (index <= 43581) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(40981, {});
+    try instance.cp_set.put(42508, {});
+    try instance.cp_set.put(43471, {});
+    try instance.cp_set.put(43494, {});
+    try instance.cp_set.put(43632, {});
+    try instance.cp_set.put(43741, {});
+    index = 43763;
+    while (index <= 43764) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[65209] = true;
-    instance.array[70310] = true;
-    index = 70927;
-    while (index <= 70929) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(65392, {});
+    try instance.cp_set.put(70493, {});
+    index = 71110;
+    while (index <= 71112) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[72161] = true;
-    index = 92811;
-    while (index <= 92812) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(72344, {});
+    index = 92994;
+    while (index <= 92995) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 93993;
-    while (index <= 93994) : (index += 1) {
-        instance.array[index] = true;
+    index = 94176;
+    while (index <= 94177) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[93996] = true;
-    index = 123013;
-    while (index <= 123014) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(94179, {});
+    index = 123196;
+    while (index <= 123197) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 125069;
-    while (index <= 125071) : (index += 1) {
-        instance.array[index] = true;
+    index = 125252;
+    while (index <= 125254) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -94,12 +91,11 @@ pub fn init(allocator: *mem.Allocator) !Extender {
 }
 
 pub fn deinit(self: *Extender) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isExtender checks if cp is of the kind Extender.
 pub fn isExtender(self: Extender, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

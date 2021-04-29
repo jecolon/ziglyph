@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Prepend code points.
 
 const std = @import("std");
@@ -13,53 +12,50 @@ const mem = std.mem;
 const Prepend = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 1536,
 hi: u21 = 73030,
 
 pub fn init(allocator: *mem.Allocator) !Prepend {
     var instance = Prepend{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 71495),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    index = 0;
-    while (index <= 5) : (index += 1) {
-        instance.array[index] = true;
+    index = 1536;
+    while (index <= 1541) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[221] = true;
-    instance.array[271] = true;
-    instance.array[738] = true;
-    instance.array[1870] = true;
-    instance.array[68285] = true;
-    instance.array[68301] = true;
-    index = 68546;
-    while (index <= 68547) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(1757, {});
+    try instance.cp_set.put(1807, {});
+    try instance.cp_set.put(2274, {});
+    try instance.cp_set.put(3406, {});
+    try instance.cp_set.put(69821, {});
+    try instance.cp_set.put(69837, {});
+    index = 70082;
+    while (index <= 70083) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[70463] = true;
-    instance.array[70465] = true;
-    instance.array[70714] = true;
-    index = 70788;
-    while (index <= 70793) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(71999, {});
+    try instance.cp_set.put(72001, {});
+    try instance.cp_set.put(72250, {});
+    index = 72324;
+    while (index <= 72329) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[71494] = true;
+    try instance.cp_set.put(73030, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 
 pub fn deinit(self: *Prepend) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isPrepend checks if cp is of the kind Prepend.
 pub fn isPrepend(self: Prepend, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

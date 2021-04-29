@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Emoji_Modifier_Base code points.
 
 const std = @import("std");
@@ -13,134 +12,132 @@ const mem = std.mem;
 const EmojiModifierBase = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 9757,
 hi: u21 = 129501,
 
 pub fn init(allocator: *mem.Allocator) !EmojiModifierBase {
     var instance = EmojiModifierBase{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 119745),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    instance.array[220] = true;
-    index = 237;
-    while (index <= 239) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(9757, {});
+    try instance.cp_set.put(9977, {});
+    index = 9994;
+    while (index <= 9996) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[240] = true;
-    instance.array[118120] = true;
-    index = 118181;
-    while (index <= 118183) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(9997, {});
+    try instance.cp_set.put(127877, {});
+    index = 127938;
+    while (index <= 127940) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[118186] = true;
-    instance.array[118189] = true;
-    index = 118190;
-    while (index <= 118191) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(127943, {});
+    try instance.cp_set.put(127946, {});
+    index = 127947;
+    while (index <= 127948) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 118309;
-    while (index <= 118310) : (index += 1) {
-        instance.array[index] = true;
+    index = 128066;
+    while (index <= 128067) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 118313;
-    while (index <= 118323) : (index += 1) {
-        instance.array[index] = true;
+    index = 128070;
+    while (index <= 128080) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 118345;
-    while (index <= 118350) : (index += 1) {
-        instance.array[index] = true;
+    index = 128102;
+    while (index <= 128107) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 118351;
-    while (index <= 118352) : (index += 1) {
-        instance.array[index] = true;
+    index = 128108;
+    while (index <= 128109) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 118353;
-    while (index <= 118363) : (index += 1) {
-        instance.array[index] = true;
+    index = 128110;
+    while (index <= 128120) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[118367] = true;
-    index = 118372;
-    while (index <= 118374) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(128124, {});
+    index = 128129;
+    while (index <= 128131) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 118376;
-    while (index <= 118378) : (index += 1) {
-        instance.array[index] = true;
+    index = 128133;
+    while (index <= 128135) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[118386] = true;
-    instance.array[118388] = true;
-    instance.array[118413] = true;
-    index = 118615;
-    while (index <= 118616) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(128143, {});
+    try instance.cp_set.put(128145, {});
+    try instance.cp_set.put(128170, {});
+    index = 128372;
+    while (index <= 128373) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[118621] = true;
-    instance.array[118643] = true;
-    index = 118648;
-    while (index <= 118649) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(128378, {});
+    try instance.cp_set.put(128400, {});
+    index = 128405;
+    while (index <= 128406) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 118824;
-    while (index <= 118826) : (index += 1) {
-        instance.array[index] = true;
+    index = 128581;
+    while (index <= 128583) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 118830;
-    while (index <= 118834) : (index += 1) {
-        instance.array[index] = true;
+    index = 128587;
+    while (index <= 128591) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[118918] = true;
-    index = 118935;
-    while (index <= 118936) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(128675, {});
+    index = 128692;
+    while (index <= 128693) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[118937] = true;
-    instance.array[118947] = true;
-    instance.array[118959] = true;
-    instance.array[119535] = true;
-    instance.array[119538] = true;
-    instance.array[119547] = true;
-    index = 119548;
-    while (index <= 119553) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(128694, {});
+    try instance.cp_set.put(128704, {});
+    try instance.cp_set.put(128716, {});
+    try instance.cp_set.put(129292, {});
+    try instance.cp_set.put(129295, {});
+    try instance.cp_set.put(129304, {});
+    index = 129305;
+    while (index <= 129310) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[119554] = true;
-    instance.array[119561] = true;
-    instance.array[119571] = true;
-    index = 119572;
-    while (index <= 119573) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(129311, {});
+    try instance.cp_set.put(129318, {});
+    try instance.cp_set.put(129328, {});
+    index = 129329;
+    while (index <= 129330) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 119574;
-    while (index <= 119580) : (index += 1) {
-        instance.array[index] = true;
+    index = 129331;
+    while (index <= 129337) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 119583;
-    while (index <= 119585) : (index += 1) {
-        instance.array[index] = true;
+    index = 129340;
+    while (index <= 129342) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[119642] = true;
-    index = 119704;
-    while (index <= 119705) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(129399, {});
+    index = 129461;
+    while (index <= 129462) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 119707;
-    while (index <= 119708) : (index += 1) {
-        instance.array[index] = true;
+    index = 129464;
+    while (index <= 129465) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[119710] = true;
-    index = 119728;
-    while (index <= 119730) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(129467, {});
+    index = 129485;
+    while (index <= 129487) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 119732;
-    while (index <= 119744) : (index += 1) {
-        instance.array[index] = true;
+    index = 129489;
+    while (index <= 129501) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -148,12 +145,11 @@ pub fn init(allocator: *mem.Allocator) !EmojiModifierBase {
 }
 
 pub fn deinit(self: *EmojiModifierBase) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isEmojiModifierBase checks if cp is of the kind Emoji_Modifier_Base.
 pub fn isEmojiModifierBase(self: EmojiModifierBase, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

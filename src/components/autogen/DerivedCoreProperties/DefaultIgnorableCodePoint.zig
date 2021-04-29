@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Default_Ignorable_Code_Point code points.
 
 const std = @import("std");
@@ -13,92 +12,90 @@ const mem = std.mem;
 const DefaultIgnorableCodePoint = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 173,
 hi: u21 = 921599,
 
 pub fn init(allocator: *mem.Allocator) !DefaultIgnorableCodePoint {
     var instance = DefaultIgnorableCodePoint{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 921427),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    instance.array[674] = true;
-    instance.array[1391] = true;
-    index = 4274;
-    while (index <= 4275) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(173, {});
+    try instance.cp_set.put(847, {});
+    try instance.cp_set.put(1564, {});
+    index = 4447;
+    while (index <= 4448) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 5895;
-    while (index <= 5896) : (index += 1) {
-        instance.array[index] = true;
+    index = 6068;
+    while (index <= 6069) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 5982;
-    while (index <= 5984) : (index += 1) {
-        instance.array[index] = true;
+    index = 6155;
+    while (index <= 6157) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[5985] = true;
-    index = 8030;
-    while (index <= 8034) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(6158, {});
+    index = 8203;
+    while (index <= 8207) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 8061;
-    while (index <= 8065) : (index += 1) {
-        instance.array[index] = true;
+    index = 8234;
+    while (index <= 8238) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 8115;
-    while (index <= 8119) : (index += 1) {
-        instance.array[index] = true;
+    index = 8288;
+    while (index <= 8292) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[8120] = true;
-    index = 8121;
-    while (index <= 8130) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(8293, {});
+    index = 8294;
+    while (index <= 8303) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[12471] = true;
-    index = 64851;
-    while (index <= 64866) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(12644, {});
+    index = 65024;
+    while (index <= 65039) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[65106] = true;
-    instance.array[65267] = true;
-    index = 65347;
-    while (index <= 65355) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(65279, {});
+    try instance.cp_set.put(65440, {});
+    index = 65520;
+    while (index <= 65528) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 113651;
-    while (index <= 113654) : (index += 1) {
-        instance.array[index] = true;
+    index = 113824;
+    while (index <= 113827) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 118982;
-    while (index <= 118989) : (index += 1) {
-        instance.array[index] = true;
+    index = 119155;
+    while (index <= 119162) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[917331] = true;
-    instance.array[917332] = true;
-    index = 917333;
-    while (index <= 917362) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(917504, {});
+    try instance.cp_set.put(917505, {});
+    index = 917506;
+    while (index <= 917535) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 917363;
-    while (index <= 917458) : (index += 1) {
-        instance.array[index] = true;
+    index = 917536;
+    while (index <= 917631) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 917459;
-    while (index <= 917586) : (index += 1) {
-        instance.array[index] = true;
+    index = 917632;
+    while (index <= 917759) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 917587;
-    while (index <= 917826) : (index += 1) {
-        instance.array[index] = true;
+    index = 917760;
+    while (index <= 917999) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 917827;
-    while (index <= 921426) : (index += 1) {
-        instance.array[index] = true;
+    index = 918000;
+    while (index <= 921599) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -106,12 +103,11 @@ pub fn init(allocator: *mem.Allocator) !DefaultIgnorableCodePoint {
 }
 
 pub fn deinit(self: *DefaultIgnorableCodePoint) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isDefaultIgnorableCodePoint checks if cp is of the kind Default_Ignorable_Code_Point.
 pub fn isDefaultIgnorableCodePoint(self: DefaultIgnorableCodePoint, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

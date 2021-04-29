@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode ZWJ code points.
 
 const std = @import("std");
@@ -13,32 +12,29 @@ const mem = std.mem;
 const ZWJ = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 8205,
 hi: u21 = 8205,
 
 pub fn init(allocator: *mem.Allocator) !ZWJ {
     var instance = ZWJ{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 1),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
+    try instance.cp_set.put(8205, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
     return instance;
 }
 
 pub fn deinit(self: *ZWJ) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isZWJ checks if cp is of the kind ZWJ.
 pub fn isZWJ(self: ZWJ, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

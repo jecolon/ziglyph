@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Control code points.
 
 const std = @import("std");
@@ -13,26 +12,24 @@ const mem = std.mem;
 const Control = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 0,
 hi: u21 = 159,
 
 pub fn init(allocator: *mem.Allocator) !Control {
     var instance = Control{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 160),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
-
-    mem.set(bool, instance.array, false);
 
     var index: u21 = 0;
     index = 0;
     while (index <= 31) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
     index = 127;
     while (index <= 159) : (index += 1) {
-        instance.array[index] = true;
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -40,12 +37,11 @@ pub fn init(allocator: *mem.Allocator) !Control {
 }
 
 pub fn deinit(self: *Control) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isControl checks if cp is of the kind Control.
 pub fn isControl(self: Control, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

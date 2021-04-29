@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Letter_Number code points.
 
 const std = @import("std");
@@ -13,57 +12,55 @@ const mem = std.mem;
 const LetterNumber = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 5870,
 hi: u21 = 74862,
 
 pub fn init(allocator: *mem.Allocator) !LetterNumber {
     var instance = LetterNumber{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 68993),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    index = 0;
-    while (index <= 2) : (index += 1) {
-        instance.array[index] = true;
+    index = 5870;
+    while (index <= 5872) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 2674;
-    while (index <= 2708) : (index += 1) {
-        instance.array[index] = true;
+    index = 8544;
+    while (index <= 8578) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 2711;
-    while (index <= 2714) : (index += 1) {
-        instance.array[index] = true;
+    index = 8581;
+    while (index <= 8584) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[6425] = true;
-    index = 6451;
-    while (index <= 6459) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(12295, {});
+    index = 12321;
+    while (index <= 12329) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 6474;
-    while (index <= 6476) : (index += 1) {
-        instance.array[index] = true;
+    index = 12344;
+    while (index <= 12346) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 36856;
-    while (index <= 36865) : (index += 1) {
-        instance.array[index] = true;
+    index = 42726;
+    while (index <= 42735) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 59986;
-    while (index <= 60038) : (index += 1) {
-        instance.array[index] = true;
+    index = 65856;
+    while (index <= 65908) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[60499] = true;
-    instance.array[60508] = true;
-    index = 60643;
-    while (index <= 60647) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(66369, {});
+    try instance.cp_set.put(66378, {});
+    index = 66513;
+    while (index <= 66517) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 68882;
-    while (index <= 68992) : (index += 1) {
-        instance.array[index] = true;
+    index = 74752;
+    while (index <= 74862) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -71,12 +68,11 @@ pub fn init(allocator: *mem.Allocator) !LetterNumber {
 }
 
 pub fn deinit(self: *LetterNumber) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isLetterNumber checks if cp is of the kind Letter_Number.
 pub fn isLetterNumber(self: LetterNumber, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

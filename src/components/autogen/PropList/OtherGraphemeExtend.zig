@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode Other_Grapheme_Extend code points.
 
 const std = @import("std");
@@ -13,58 +12,56 @@ const mem = std.mem;
 const OtherGraphemeExtend = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
+cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 2494,
 hi: u21 = 917631,
 
 pub fn init(allocator: *mem.Allocator) !OtherGraphemeExtend {
     var instance = OtherGraphemeExtend{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, 915138),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
 
-    mem.set(bool, instance.array, false);
-
     var index: u21 = 0;
-    instance.array[0] = true;
-    instance.array[25] = true;
-    instance.array[384] = true;
-    instance.array[409] = true;
-    instance.array[512] = true;
-    instance.array[537] = true;
-    instance.array[772] = true;
-    index = 791;
-    while (index <= 792) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(2494, {});
+    try instance.cp_set.put(2519, {});
+    try instance.cp_set.put(2878, {});
+    try instance.cp_set.put(2903, {});
+    try instance.cp_set.put(3006, {});
+    try instance.cp_set.put(3031, {});
+    try instance.cp_set.put(3266, {});
+    index = 3285;
+    while (index <= 3286) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[896] = true;
-    instance.array[921] = true;
-    instance.array[1041] = true;
-    instance.array[1057] = true;
-    instance.array[4471] = true;
-    instance.array[5710] = true;
-    index = 9840;
-    while (index <= 9841) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(3390, {});
+    try instance.cp_set.put(3415, {});
+    try instance.cp_set.put(3535, {});
+    try instance.cp_set.put(3551, {});
+    try instance.cp_set.put(6965, {});
+    try instance.cp_set.put(8204, {});
+    index = 12334;
+    while (index <= 12335) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 62944;
-    while (index <= 62945) : (index += 1) {
-        instance.array[index] = true;
+    index = 65438;
+    while (index <= 65439) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    instance.array[67968] = true;
-    instance.array[67993] = true;
-    instance.array[68338] = true;
-    instance.array[68351] = true;
-    instance.array[68593] = true;
-    instance.array[69490] = true;
-    instance.array[116647] = true;
-    index = 116656;
-    while (index <= 116660) : (index += 1) {
-        instance.array[index] = true;
+    try instance.cp_set.put(70462, {});
+    try instance.cp_set.put(70487, {});
+    try instance.cp_set.put(70832, {});
+    try instance.cp_set.put(70845, {});
+    try instance.cp_set.put(71087, {});
+    try instance.cp_set.put(71984, {});
+    try instance.cp_set.put(119141, {});
+    index = 119150;
+    while (index <= 119154) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
-    index = 915042;
-    while (index <= 915137) : (index += 1) {
-        instance.array[index] = true;
+    index = 917536;
+    while (index <= 917631) : (index += 1) {
+        try instance.cp_set.put(index, {});
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
@@ -72,12 +69,11 @@ pub fn init(allocator: *mem.Allocator) !OtherGraphemeExtend {
 }
 
 pub fn deinit(self: *OtherGraphemeExtend) void {
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }
 
 // isOtherGraphemeExtend checks if cp is of the kind Other_Grapheme_Extend.
 pub fn isOtherGraphemeExtend(self: OtherGraphemeExtend, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }

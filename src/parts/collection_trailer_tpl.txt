@@ -4,12 +4,11 @@
 }}
 
 pub fn deinit(self: *{0s}) void {{
-    self.allocator.free(self.array);
+    self.cp_set.deinit();
 }}
 
 // is{0s} checks if cp is of the kind {1s}.
 pub fn is{0s}(self: {0s}, cp: u21) bool {{
     if (cp < self.lo or cp > self.hi) return false;
-    const index = cp - self.lo;
-    return if (index >= self.array.len) false else self.array[index];
+    return self.cp_set.get(cp) != null;
 }}

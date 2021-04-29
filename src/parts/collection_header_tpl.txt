@@ -2,9 +2,8 @@
 // Placeholders:
 //    0. Code point type
 //    1. Struct name
-//    2. Array length
-//    3. Lowest code point
-//    4. Highest code point
+//    2. Lowest code point
+//    3. Highest code point
 //! Unicode {0s} code points.
 
 const std = @import("std");
@@ -13,15 +12,13 @@ const mem = std.mem;
 const {1s} = @This();
 
 allocator: *mem.Allocator,
-array: []bool,
-lo: u21 = {3d},
-hi: u21 = {4d},
+cp_set: std.AutoHashMap(u21, void),
+lo: u21 = {2d},
+hi: u21 = {3d},
 
 pub fn init(allocator: *mem.Allocator) !{1s} {{
     var instance = {1s}{{
         .allocator = allocator,
-        .array = try allocator.alloc(bool, {2d}),
+        .cp_set = std.AutoHashMap(u21, void).init(allocator),
     }};
-
-    mem.set(bool, instance.array, false);
 
