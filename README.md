@@ -51,8 +51,8 @@ Finally, you can build the project with:
 $ zig build
 ```
 
-Note that to build in relase modes, either specify them in the `build.zig` file or on the command line
-via the `-Drealease-fast=true`, `-Drealease-small=true`, `-Drealease-safe=true` options to `zig build`.
+Note that to build in realase modes, either specify them in the `build.zig` file or on the command line
+via the `-Drelease-fast=true`, `-Drelease-small=true`, `-Drelease-safe=true` options to `zig build`.
 
 ### Usage Overview
 The basic workflow consists of seting up a global `Context` which will centralize the major data structures
