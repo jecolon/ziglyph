@@ -13,15 +13,13 @@ pub fn new(ctx: *Context) Self {
 }
 
 // isDecimal detects all Unicode digits.
-pub fn isDecimal(self: Self, cp: u21) !bool {
-    const decimal = try self.context.getDecimal();
-    return decimal.isDecimalNumber(cp);
+pub fn isDecimal(self: Self, cp: u21) bool {
+    return self.context.decimal.isDecimalNumber(cp);
 }
 
 // isDigit detects all Unicode digits, which don't include the ASCII digits..
-pub fn isDigit(self: Self, cp: u21) !bool {
-    const digit = try self.context.getDigit();
-    return digit.isDigit(cp) or (try self.isDecimal(cp));
+pub fn isDigit(self: Self, cp: u21) bool {
+    return self.context.digit.isDigit(cp) or self.isDecimal(cp);
 }
 
 /// isAsciiAlphabetic detects ASCII only letters.
@@ -30,9 +28,8 @@ pub fn isAsciiDigit(cp: u21) bool {
 }
 
 // isHex detects the 16 ASCII characters 0-9 A-F, and a-f.
-pub fn isHexDigit(self: Self, cp: u21) !bool {
-    const hex = try self.context.getHex();
-    return hex.isHexDigit(cp);
+pub fn isHexDigit(self: Self, cp: u21) bool {
+    return self.context.hex.isHexDigit(cp);
 }
 
 /// isAsciiHexDigit detects ASCII only hexadecimal digits.
@@ -41,13 +38,9 @@ pub fn isAsciiHexDigit(cp: u21) bool {
 }
 
 /// isNumber covers all Unicode numbers, not just ASII.
-pub fn isNumber(self: Self, cp: u21) !bool {
-    const decimal = try self.context.getDecimal();
-    const letter_number = try self.context.getLetterNumber();
-    const other_number = try self.context.getOtherNumber();
-
-    return decimal.isDecimalNumber(cp) or letter_number.isLetterNumber(cp) or
-        other_number.isOtherNumber(cp);
+pub fn isNumber(self: Self, cp: u21) bool {
+    return self.context.decimal.isDecimalNumber(cp) or self.context.letter_number.isLetterNumber(cp) or
+        self.context.other_number.isOtherNumber(cp);
 }
 
 /// isAsciiNumber detects ASCII only numbers.
@@ -58,46 +51,46 @@ pub fn isAsciiNumber(cp: u21) bool {
 const expect = std.testing.expect;
 
 test "Component isDecimal" {
-    var ctx = Context.init(std.testing.allocator);
+    var ctx = try Context.init(std.testing.allocator);
     defer ctx.deinit();
 
     var number = new(&ctx);
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        expect(try number.isDecimal(cp));
+        expect(number.isDecimal(cp));
     }
 
-    expect(!try number.isDecimal('\u{0003}'));
-    expect(!try number.isDecimal('A'));
+    expect(!number.isDecimal('\u{0003}'));
+    expect(!number.isDecimal('A'));
 }
 
 test "Component isHexDigit" {
-    var ctx = Context.init(std.testing.allocator);
+    var ctx = try Context.init(std.testing.allocator);
     defer ctx.deinit();
 
     var number = new(&ctx);
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        expect(try number.isHexDigit(cp));
+        expect(number.isHexDigit(cp));
     }
 
-    expect(!try number.isHexDigit('\u{0003}'));
-    expect(!try number.isHexDigit('Z'));
+    expect(!number.isHexDigit('\u{0003}'));
+    expect(!number.isHexDigit('Z'));
 }
 
 test "Component isNumber" {
-    var ctx = Context.init(std.testing.allocator);
+    var ctx = try Context.init(std.testing.allocator);
     defer ctx.deinit();
 
     var number = new(&ctx);
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        expect(try number.isNumber(cp));
+        expect(number.isNumber(cp));
     }
 
-    expect(!try number.isNumber('\u{0003}'));
-    expect(!try number.isNumber('A'));
+    expect(!number.isNumber('\u{0003}'));
+    expect(!number.isNumber('A'));
 }

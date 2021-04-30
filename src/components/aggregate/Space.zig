@@ -13,15 +13,13 @@ pub fn new(ctx: *Context) Self {
 }
 
 /// isSpace detects code points that are Unicode space separators.
-pub fn isSpace(self: Self, cp: u21) !bool {
-    const space = try self.context.getSpace();
-    return space.isSpaceSeparator(cp);
+pub fn isSpace(self: Self, cp: u21) bool {
+    return self.context.space.isSpaceSeparator(cp);
 }
 
 /// isWhiteSpace checks for spaces.
-pub fn isWhiteSpace(self: Self, cp: u21) !bool {
-    const whitespace = try self.context.getWhiteSpace();
-    return whitespace.isWhiteSpace(cp);
+pub fn isWhiteSpace(self: Self, cp: u21) bool {
+    return self.context.whitespace.isWhiteSpace(cp);
 }
 
 /// isAsciiWhiteSpace detects ASCII only whitespace.
@@ -32,25 +30,25 @@ pub fn isAsciiWhiteSpace(cp: u21) bool {
 const expect = std.testing.expect;
 
 test "Component isSpace" {
-    var ctx = Context.init(std.testing.allocator);
+    var ctx = try Context.init(std.testing.allocator);
     defer ctx.deinit();
 
     var space = new(&ctx);
 
-    expect(try space.isSpace(' '));
-    expect(!try space.isSpace('\t'));
-    expect(!try space.isSpace('\u{0003}'));
+    expect(space.isSpace(' '));
+    expect(!space.isSpace('\t'));
+    expect(!space.isSpace('\u{0003}'));
 }
 
 test "Component isWhiteSpace" {
-    var ctx = Context.init(std.testing.allocator);
+    var ctx = try Context.init(std.testing.allocator);
     defer ctx.deinit();
 
     var space = new(&ctx);
 
-    expect(try space.isWhiteSpace(' '));
-    expect(try space.isWhiteSpace('\t'));
-    expect(!try space.isWhiteSpace('\u{0003}'));
+    expect(space.isWhiteSpace(' '));
+    expect(space.isWhiteSpace('\t'));
+    expect(!space.isWhiteSpace('\u{0003}'));
 }
 
 test "Component isAsciiWhiteSpace" {

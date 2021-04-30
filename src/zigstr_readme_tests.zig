@@ -9,7 +9,7 @@ const Zigstr = @import("zigstr/Zigstr.zig");
 
 test "README tests" {
     var allocator = std.testing.allocator;
-    var ctx = Context.init(allocator);
+    var ctx = try Context.init(allocator);
     defer ctx.deinit();
 
     var zigstr = try Zigstr.Factory.init(&ctx);
@@ -41,7 +41,7 @@ test "README tests" {
     const gc_want = [_][]const u8{ "H", "é", "l", "l", "o" };
 
     i = 0;
-    while (try giter.next()) |gc| : (i += 1) {
+    while (giter.next()) |gc| : (i += 1) {
         expect(gc.eql(gc_want[i]));
     }
 
