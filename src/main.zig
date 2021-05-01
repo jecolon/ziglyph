@@ -3,7 +3,7 @@ test "Ziglyph" {
 }
 
 test "Decomp Norm" {
-    _ = @import("Context.zig").DecomposeMap;
+    _ = @import("context.zig").DecomposeMap;
 }
 
 test "Grapheme" {

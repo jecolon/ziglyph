@@ -6,19 +6,36 @@ const mem = std.mem;
 const unicode = std.unicode;
 
 const CodePointIterator = @import("CodePointIterator.zig");
-const Context = @import("../Context.zig");
+const Context = @import("../context.zig").Context;
+pub const Control = @import("../context.zig").Control;
+pub const Extend = @import("../context.zig").Extend;
+pub const ExtPic = @import("../context.zig").ExtPic;
+pub const HangulMap = @import("../context.zig").HangulMap;
+pub const Prepend = @import("../context.zig").Prepend;
+pub const Regional = @import("../context.zig").Regional;
+pub const Spacing = @import("../context.zig").Spacing;
 
-allocator: *mem.Allocator,
-context: *Context,
+control: *Control,
 cp_iter: CodePointIterator,
+extend: *Extend,
+extpic: *ExtPic,
+hangul_map: *HangulMap,
+prepend: *Prepend,
+regional: *Regional,
+spacing: *Spacing,
 
 const Self = @This();
 
-pub fn new(ctx: *Context, str: []const u8) !Self {
+pub fn new(ctx: anytype, str: []const u8) !Self {
     return Self{
-        .allocator = ctx.allocator,
-        .context = ctx,
+        .control = &ctx.control,
         .cp_iter = try CodePointIterator.init(str),
+        .extend = &ctx.extend,
+        .extpic = &ctx.extpic,
+        .hangul_map = &ctx.hangul_map,
+        .prepend = &ctx.prepend,
+        .regional = &ctx.regional,
+        .spacing = &ctx.spacing,
     };
 }
 
@@ -55,9 +72,9 @@ pub fn next(self: *Self) ?Grapheme {
     const next_cp = self.cp_iter.peek();
 
     // GB9.2
-    if (self.context.prepend.isPrepend(cp)) {
+    if (self.prepend.isPrepend(cp)) {
         if (next_cp) |ncp| {
-            if (ncp == CR or ncp == LF or (self.context.control.isControl(ncp))) {
+            if (ncp == CR or ncp == LF or (self.control.isControl(ncp))) {
                 return Grapheme{
                     .bytes = self.cp_iter.bytes[cp_start..cp_end],
                 };
@@ -106,14 +123,14 @@ fn processNonPrepend(
         return Slice{ .start = cp_start, .end = cp_end };
     }
 
-    if (self.context.control.isControl(cp)) {
+    if (self.control.isControl(cp)) {
         return Slice{ .start = cp_start, .end = cp_end };
     }
 
     // GB6, GB7, GB8
-    if (self.context.hangul_map.syllableType(cp)) |hst| {
+    if (self.hangul_map.syllableType(cp)) |hst| {
         if (next_cp) |ncp| {
-            const ncp_hst = self.context.hangul_map.syllableType(ncp);
+            const ncp_hst = self.hangul_map.syllableType(ncp);
 
             if (ncp_hst) |nhst| {
                 switch (hst) {
@@ -142,12 +159,12 @@ fn processNonPrepend(
     }
 
     // GB11
-    if (self.context.extpic.isExtendedPictographic(cp)) {
+    if (self.extpic.isExtendedPictographic(cp)) {
         self.fullAdvance();
         if (self.cp_iter.prev) |pcp| {
             if (pcp == ZWJ) {
                 if (self.cp_iter.peek()) |ncp| {
-                    if (self.context.extpic.isExtendedPictographic(ncp)) {
+                    if (self.extpic.isExtendedPictographic(ncp)) {
                         _ = self.cp_iter.next(); // Advance past end emoji.
                         // GB9
                         self.fullAdvance();
@@ -160,9 +177,9 @@ fn processNonPrepend(
     }
 
     // GB12
-    if (self.context.regional.isRegionalIndicator(cp)) {
+    if (self.regional.isRegionalIndicator(cp)) {
         if (next_cp) |ncp| {
-            if (self.context.regional.isRegionalIndicator(ncp)) {
+            if (self.regional.isRegionalIndicator(ncp)) {
                 _ = self.cp_iter.next(); // Advance past 2nd RI.
             }
         }
@@ -191,7 +208,7 @@ fn fullAdvance(self: *Self) void {
     const next_cp = self.cp_iter.peek();
     // Base case.
     if (next_cp) |ncp| {
-        if (ncp != ZWJ and !self.context.extend.isExtend(ncp) and !self.context.spacing.isSpacingMark(ncp)) return;
+        if (ncp != ZWJ and !self.extend.isExtend(ncp) and !self.spacing.isSpacingMark(ncp)) return;
     } else {
         return;
     }
@@ -202,11 +219,11 @@ fn fullAdvance(self: *Self) void {
     if (ncp == ZWJ) {
         _ = self.cp_iter.next();
         self.fullAdvance();
-    } else if (self.context.extend.isExtend(ncp)) {
-        self.lexRun(self.context.extend, Context.Extend.isExtend);
+    } else if (self.extend.isExtend(ncp)) {
+        self.lexRun(self.extend.*, Extend.isExtend);
         self.fullAdvance();
-    } else if (self.context.spacing.isSpacingMark(ncp)) {
-        self.lexRun(self.context.spacing, Context.Spacing.isSpacingMark);
+    } else if (self.spacing.isSpacingMark(ncp)) {
+        self.lexRun(self.spacing.*, Spacing.isSpacingMark);
         self.fullAdvance();
     }
 }
@@ -221,7 +238,7 @@ test "Grapheme iterator" {
     var buf: [640]u8 = undefined;
     var line_no: usize = 1;
 
-    var ctx = try Context.init(allocator);
+    var ctx = try Context(.grapheme).init(allocator);
     defer ctx.deinit();
     var giter: ?Self = null;
 

@@ -5,6 +5,8 @@ const std = @import("std");
 const mem = std.mem;
 const sort = std.sort.sort;
 const unicode = std.unicode;
+
+const Context = @import("../../../context.zig").Context;
 const CccMap = @import("../DerivedCombiningClass/CccMap.zig");
 const HangulMap = @import("../HangulSyllableType/HangulMap.zig");
 
@@ -27,18 +29,17 @@ pub const Form = enum {
     KD, // Compatibility Decomposition
 };
 
-allocator: *std.mem.Allocator,
-ccc_map: CccMap,
-han_map: HangulMap,
+ccc_map: *CccMap,
+hangul_map: *HangulMap,
 map: std.AutoHashMap(u21, Decomposed),
 
 const Self = @This();
-pub fn init(allocator: *std.mem.Allocator) !Self {
+
+pub fn init(ctx: anytype) !Self {
     var instance = Self{
-        .allocator = allocator,
-        .ccc_map = try CccMap.init(allocator),
-        .han_map = try HangulMap.init(allocator),
-        .map = std.AutoHashMap(u21, Decomposed).init(allocator),
+        .ccc_map = &ctx.ccc_map,
+        .hangul_map = &ctx.hangul_map,
+        .map = std.AutoHashMap(u21, Decomposed).init(ctx.allocator),
     };
 
     try instance.map.put(0x00A0, .{ .compat = &[_]u21{
@@ -17990,8 +17991,6 @@ pub fn init(allocator: *std.mem.Allocator) !Self {
 }
 
 pub fn deinit(self: *Self) void {
-    self.ccc_map.deinit();
-    self.han_map.deinit();
     self.map.deinit();
 }
 
@@ -18143,7 +18142,7 @@ pub fn normalizeTo(self: *Self, allocator: *mem.Allocator, form: Form, str: []co
 
     var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
-    var code_points = std.ArrayList(u21).init(self.allocator);
+    var code_points = std.ArrayList(u21).init(allocator);
     defer code_points.deinit();
 
     // Gather decomposed code points.
@@ -18207,7 +18206,7 @@ fn decomposeHangul(self: Self, cp: u21) [3]u21 {
 }
 
 fn isHangulPrecomposed(self: Self, cp: u21) bool {
-    if (self.han_map.syllableType(cp)) |kind| {
+    if (self.hangul_map.syllableType(cp)) |kind| {
         return switch (kind) {
             .LV, .LVT => true,
             else => false,
@@ -18226,7 +18225,9 @@ fn allDone(dcs: []const Decomposed) bool {
 
 test "Decomp codePointTo D" {
     var allocator = std.testing.allocator;
-    var decomp_map = try init(allocator);
+    var ctx = try Context(.decompose).init(allocator);
+    defer ctx.deinit();
+    var decomp_map = try init(&ctx);
     defer decomp_map.deinit();
 
     var result = try decomp_map.codePointTo(allocator, .D, '\u{00E9}');
@@ -18240,7 +18241,9 @@ test "Decomp codePointTo D" {
 
 test "Decomp codePointTo KD" {
     var allocator = std.testing.allocator;
-    var decomp_map = try init(allocator);
+    var ctx = try Context(.decompose).init(allocator);
+    defer ctx.deinit();
+    var decomp_map = try init(&ctx);
     defer decomp_map.deinit();
 
     var result = try decomp_map.codePointTo(allocator, .KD, '\u{00E9}');
@@ -18254,7 +18257,9 @@ test "Decomp codePointTo KD" {
 
 test "Decomp normalizeTo" {
     var allocator = std.testing.allocator;
-    var decomp_map = try init(allocator);
+    var ctx = try Context(.decompose).init(allocator);
+    defer ctx.deinit();
+    var decomp_map = try init(&ctx);
     defer decomp_map.deinit();
 
     var file = try std.fs.cwd().openFile("src/data/ucd/NormalizationTest.txt", .{});

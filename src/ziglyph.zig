@@ -5,7 +5,9 @@ const mem = std.mem;
 const unicode = std.unicode;
 const ascii = @import("ascii.zig");
 
-pub const Context = @import("Context.zig");
+pub const Context = @import("context.zig").Context;
+pub const Alphabetic = @import("context.zig").Alphabetic;
+pub const Control = @import("context.zig").Control;
 pub const Letter = @import("components/aggregate/Letter.zig");
 pub const Mark = @import("components/aggregate/Mark.zig");
 pub const Number = @import("components/aggregate/Number.zig");
@@ -19,7 +21,8 @@ pub const GraphemeIterator = Zigstr.GraphemeIterator;
 
 /// Ziglyph consolidates frequently-used Unicode utility functions in one place.
 pub const Ziglyph = struct {
-    context: *Context,
+    alphabetic: *Alphabetic,
+    control: *Control,
     letter: Letter,
     mark: Mark,
     number: Number,
@@ -29,9 +32,10 @@ pub const Ziglyph = struct {
 
     const Self = @This();
 
-    pub fn new(ctx: *Context) !Self {
+    pub fn new(ctx: anytype) !Self {
         return Self{
-            .context = ctx,
+            .alphabetic = &ctx.alphabetic,
+            .control = &ctx.control,
             .letter = Letter.new(ctx),
             .mark = Mark.new(ctx),
             .number = Number.new(ctx),
@@ -42,7 +46,7 @@ pub const Ziglyph = struct {
     }
 
     pub fn isAlphabetic(self: Self, cp: u21) bool {
-        return self.context.alphabetic.isAlphabetic(cp);
+        return self.alphabetic.isAlphabetic(cp);
     }
 
     pub fn isAsciiAlphabetic(cp: u21) bool {
@@ -105,7 +109,7 @@ pub const Ziglyph = struct {
     }
 
     pub fn isControl(self: Self, cp: u21) bool {
-        return self.context.control.isControl(cp);
+        return self.control.isControl(cp);
     }
 
     pub fn isAsciiControl(cp: u21) bool {
@@ -235,7 +239,7 @@ test "Ziglyph ASCII methods" {
 }
 
 test "Ziglyph struct" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.ziglyph).init(std.testing.allocator);
     defer ctx.deinit();
 
     var ziglyph = try Ziglyph.new(&ctx);
@@ -269,7 +273,7 @@ test "Ziglyph struct" {
 }
 
 test "Ziglyph isGraphic" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.ziglyph).init(std.testing.allocator);
     defer ctx.deinit();
 
     var ziglyph = try Ziglyph.new(&ctx);
@@ -284,7 +288,7 @@ test "Ziglyph isGraphic" {
 }
 
 test "Ziglyph isHexDigit" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.ziglyph).init(std.testing.allocator);
     defer ctx.deinit();
 
     var ziglyph = try Ziglyph.new(&ctx);
@@ -309,7 +313,7 @@ test "Ziglyph isHexDigit" {
 }
 
 test "Ziglyph isPrint" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.ziglyph).init(std.testing.allocator);
     defer ctx.deinit();
 
     var ziglyph = try Ziglyph.new(&ctx);
@@ -325,7 +329,7 @@ test "Ziglyph isPrint" {
 }
 
 test "Ziglyph isAlphaNum" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.ziglyph).init(std.testing.allocator);
     defer ctx.deinit();
 
     var ziglyph = try Ziglyph.new(&ctx);
@@ -349,7 +353,7 @@ test "Ziglyph isAlphaNum" {
 }
 
 test "Ziglyph isControl" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.ziglyph).init(std.testing.allocator);
     defer ctx.deinit();
 
     var ziglyph = try Ziglyph.new(&ctx);

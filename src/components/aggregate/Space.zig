@@ -2,24 +2,30 @@ const std = @import("std");
 const mem = std.mem;
 const ascii = @import("../../ascii.zig");
 
-const Context = @import("../../Context.zig");
+const Context = @import("../../context.zig").Context;
+pub const Space = @import("../../context.zig").Space;
+pub const WhiteSpace = @import("../../context.zig").WhiteSpace;
 
 const Self = @This();
 
-context: *Context,
+space: *Space,
+whitespace: *WhiteSpace,
 
-pub fn new(ctx: *Context) Self {
-    return Self{ .context = ctx };
+pub fn new(ctx: anytype) Self {
+    return Self{
+        .space = &ctx.space,
+        .whitespace = &ctx.whitespace,
+    };
 }
 
 /// isSpace detects code points that are Unicode space separators.
 pub fn isSpace(self: Self, cp: u21) bool {
-    return self.context.space.isSpaceSeparator(cp);
+    return self.space.isSpaceSeparator(cp);
 }
 
 /// isWhiteSpace checks for spaces.
 pub fn isWhiteSpace(self: Self, cp: u21) bool {
-    return self.context.whitespace.isWhiteSpace(cp);
+    return self.whitespace.isWhiteSpace(cp);
 }
 
 /// isAsciiWhiteSpace detects ASCII only whitespace.
@@ -30,7 +36,7 @@ pub fn isAsciiWhiteSpace(cp: u21) bool {
 const expect = std.testing.expect;
 
 test "Component isSpace" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.space).init(std.testing.allocator);
     defer ctx.deinit();
 
     var space = new(&ctx);
@@ -41,7 +47,7 @@ test "Component isSpace" {
 }
 
 test "Component isWhiteSpace" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.space).init(std.testing.allocator);
     defer ctx.deinit();
 
     var space = new(&ctx);

@@ -3,7 +3,9 @@ const mem = std.mem;
 const unicode = std.unicode;
 
 const ascii = @import("../ascii.zig");
-const Context = @import("../Context.zig");
+const Context = @import("../context.zig").Context;
+const CaseFoldMap = @import("../context.zig").CaseFoldMap;
+const DecomposeMap = @import("../context.zig").DecomposeMap;
 const Letter = @import("../ziglyph.zig").Letter;
 
 pub const CodePointIterator = @import("CodePointIterator.zig");
@@ -16,26 +18,31 @@ const Self = @This();
 /// Factory creates Zigstr instances and manages memory and singleton data structures for them.
 pub const Factory = struct {
     arena: std.heap.ArenaAllocator,
-    context: *Context,
+    decomp_map: DecomposeMap,
+    fold_map: *CaseFoldMap,
+    giter: GraphemeIterator,
     letter: Letter,
     width: Width,
 
-    pub fn init(ctx: *Context) !Factory {
+    pub fn init(ctx: anytype) !Factory {
         return Factory{
             .arena = std.heap.ArenaAllocator.init(ctx.allocator),
-            .context = ctx,
+            .decomp_map = try DecomposeMap.init(ctx),
+            .fold_map = &ctx.fold_map,
+            .giter = try GraphemeIterator.new(ctx, ""),
             .letter = Letter.new(ctx),
             .width = try Width.new(ctx),
         };
     }
 
     pub fn deinit(self: *Factory) void {
+        self.decomp_map.deinit();
         self.arena.deinit();
     }
 
     /// new creates a new Zigstr instance.
-    pub fn new(factory: *Factory, str: []const u8) !Self {
-        var zstr = Self{
+    pub fn new(factory: *Factory, str: []const u8) !Self { // Self is Zigstr
+        var zigstr = Self{
             .allocator = &factory.arena.allocator,
             .ascii_only = false,
             .bytes = blk: {
@@ -45,14 +52,16 @@ pub const Factory = struct {
             },
             .code_points = null,
             .cp_count = 0,
+            .decomp_map = &factory.decomp_map,
             .factory = factory,
+            .fold_map = factory.fold_map,
             .grapheme_clusters = null,
         };
 
         // Validates UTF-8, sets cp_count and ascii_only.
-        try zstr.processCodePoints();
+        try zigstr.processCodePoints();
 
-        return zstr;
+        return zigstr;
     }
 };
 
@@ -61,7 +70,9 @@ ascii_only: bool,
 bytes: []const u8,
 code_points: ?[]u21,
 cp_count: usize,
+decomp_map: *DecomposeMap,
 factory: *Factory,
+fold_map: *CaseFoldMap,
 grapheme_clusters: ?[]Grapheme,
 
 /// reset this Zigstr with `str` as its new content.
@@ -152,31 +163,11 @@ pub fn codePointCount(self: *Self) usize {
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
-test "Zigstr code points" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Héllo");
-
-    var cp_iter = try str.codePointIter();
-    var want = [_]u21{ 'H', 0x00E9, 'l', 'l', 'o' };
-    var i: usize = 0;
-    while (cp_iter.next()) |cp| : (i += 1) {
-        expectEqual(want[i], cp);
-    }
-
-    expectEqual(@as(usize, 5), str.codePointCount());
-    expectEqualSlices(u21, &want, try str.codePoints());
-    expectEqual(@as(usize, 6), str.byteCount());
-    expectEqual(@as(usize, 5), str.codePointCount());
-}
-
 /// graphemeIter returns a grapheme cluster iterator based on the bytes of this Zigstr. Each grapheme
 /// can be composed of multiple code points, so the next method returns a slice of bytes.
-pub fn graphemeIter(self: Self) !GraphemeIterator {
-    return GraphemeIterator.new(self.factory.context, self.bytes);
+pub fn graphemeIter(self: Self) !*GraphemeIterator {
+    try self.factory.giter.reinit(self.bytes);
+    return &self.factory.giter;
 }
 
 /// graphemes returns the grapheme clusters that make up this Zigstr.
@@ -211,31 +202,6 @@ pub fn graphemeCount(self: *Self) !usize {
 
 const expectEqualStrings = std.testing.expectEqualStrings;
 
-test "Zigstr graphemes" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Héllo");
-
-    var giter = try str.graphemeIter();
-    var want = [_][]const u8{ "H", "é", "l", "l", "o" };
-    var i: usize = 0;
-    while (giter.next()) |gc| : (i += 1) {
-        expect(gc.eql(want[i]));
-    }
-
-    expectEqual(@as(usize, 5), try str.graphemeCount());
-    const gcs = try str.graphemes();
-    for (gcs) |gc, j| {
-        expect(gc.eql(want[j]));
-    }
-
-    expectEqual(@as(usize, 6), str.byteCount());
-    expectEqual(@as(usize, 5), try str.graphemeCount());
-}
-
 /// copy a Zigstr to a new Zigstr. Don't forget to to `deinit` the returned Zigstr!
 pub fn copy(self: Self) !Self {
     return self.factory.new(self.bytes);
@@ -247,20 +213,6 @@ pub fn sameAs(self: Self, other: Self) bool {
 }
 
 const expect = std.testing.expect;
-
-test "Zigstr copy" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str1 = try zigstr.new("Zig");
-    var str2 = try str1.copy();
-
-    expect(str1.eql(str2.bytes));
-    expect(str2.eql("Zig"));
-    expect(str1.sameAs(str2));
-}
 
 pub const CmpMode = enum {
     ignore_case,
@@ -309,9 +261,9 @@ pub fn eqlBy(self: *Self, other: []const u8, mode: CmpMode) !bool {
 }
 
 fn eqlIgnoreCase(self: *Self, other: []const u8) !bool {
-    const cf_a = try self.factory.context.fold_map.caseFoldStr(self.allocator, self.bytes);
+    const cf_a = try self.fold_map.caseFoldStr(self.allocator, self.bytes);
     defer self.allocator.free(cf_a);
-    const cf_b = try self.factory.context.fold_map.caseFoldStr(self.allocator, other);
+    const cf_b = try self.fold_map.caseFoldStr(self.allocator, other);
     defer self.allocator.free(cf_b);
 
     return mem.eql(u8, cf_a, cf_b);
@@ -321,8 +273,8 @@ fn eqlNorm(self: *Self, other: []const u8) !bool {
     var arena = std.heap.ArenaAllocator.init(self.allocator);
     defer arena.deinit();
 
-    const norm_a = try self.factory.context.decomp_map.normalizeTo(&arena.allocator, .KD, self.bytes);
-    const norm_b = try self.factory.context.decomp_map.normalizeTo(&arena.allocator, .KD, other);
+    const norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .KD, self.bytes);
+    const norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .KD, other);
 
     return mem.eql(u8, norm_a, norm_b);
 }
@@ -333,45 +285,18 @@ fn eqlNormIgnore(self: *Self, other: []const u8) !bool {
 
     // The long winding road of normalized caseless matching...
     // NFKD(CaseFold(NFKD(CaseFold(NFD(str)))))
-    var norm_a = try self.factory.context.decomp_map.normalizeTo(&arena.allocator, .D, self.bytes);
-    var cf_a = try self.factory.context.fold_map.caseFoldStr(&arena.allocator, norm_a);
-    norm_a = try self.factory.context.decomp_map.normalizeTo(&arena.allocator, .KD, cf_a);
-    cf_a = try self.factory.context.fold_map.caseFoldStr(&arena.allocator, norm_a);
-    norm_a = try self.factory.context.decomp_map.normalizeTo(&arena.allocator, .KD, cf_a);
-    var norm_b = try self.factory.context.decomp_map.normalizeTo(&arena.allocator, .D, other);
-    var cf_b = try self.factory.context.fold_map.caseFoldStr(&arena.allocator, norm_b);
-    norm_b = try self.factory.context.decomp_map.normalizeTo(&arena.allocator, .KD, cf_b);
-    cf_b = try self.factory.context.fold_map.caseFoldStr(&arena.allocator, norm_b);
-    norm_b = try self.factory.context.decomp_map.normalizeTo(&arena.allocator, .KD, cf_b);
+    var norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .D, self.bytes);
+    var cf_a = try self.fold_map.caseFoldStr(&arena.allocator, norm_a);
+    norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .KD, cf_a);
+    cf_a = try self.fold_map.caseFoldStr(&arena.allocator, norm_a);
+    norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .KD, cf_a);
+    var norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .D, other);
+    var cf_b = try self.fold_map.caseFoldStr(&arena.allocator, norm_b);
+    norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .KD, cf_b);
+    cf_b = try self.fold_map.caseFoldStr(&arena.allocator, norm_b);
+    norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .KD, cf_b);
 
     return mem.eql(u8, norm_a, norm_b);
-}
-
-test "Zigstr eql" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("foo");
-
-    expect(str.eql("foo")); // exact
-    expect(!str.eql("fooo")); // lengths
-    expect(!str.eql("foó")); // combining
-    expect(!str.eql("Foo")); // letter case
-    expect(try str.eqlBy("Foo", .ignore_case));
-
-    try str.reset("foé");
-    expect(try str.eqlBy("foe\u{0301}", .normalize));
-
-    try str.reset("foϓ");
-    expect(try str.eqlBy("foΥ\u{0301}", .normalize));
-
-    try str.reset("Foϓ");
-    expect(try str.eqlBy("foΥ\u{0301}", .norm_ignore));
-
-    try str.reset("FOÉ");
-    expect(try str.eqlBy("foe\u{0301}", .norm_ignore)); // foÉ == foé
 }
 
 /// isAsciiStr checks if a string (`[]const uu`) is composed solely of ASCII characters.
@@ -406,27 +331,10 @@ pub fn isAsciiStr(str: []const u8) !bool {
     return true;
 }
 
-test "Zigstr isAsciiStr" {
-    expect(try isAsciiStr("Hello!"));
-    expect(!try isAsciiStr("Héllo!"));
-}
-
 /// trimLeft removes `str` from the left of this Zigstr, mutating it.
 pub fn trimLeft(self: *Self, str: []const u8) !void {
     const trimmed = mem.trimLeft(u8, self.bytes, str);
     try self.reset(trimmed);
-}
-
-test "Zigstr trimLeft" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("   Hello");
-
-    try str.trimLeft(" ");
-    expect(str.eql("Hello"));
 }
 
 /// trimRight removes `str` from the right of this Zigstr, mutating it.
@@ -435,34 +343,10 @@ pub fn trimRight(self: *Self, str: []const u8) !void {
     try self.reset(trimmed);
 }
 
-test "Zigstr trimRight" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello   ");
-
-    try str.trimRight(" ");
-    expect(str.eql("Hello"));
-}
-
 /// trim removes `str` from both the left and right of this Zigstr, mutating it.
 pub fn trim(self: *Self, str: []const u8) !void {
     const trimmed = mem.trim(u8, self.bytes, str);
     try self.reset(trimmed);
-}
-
-test "Zigstr trim" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("   Hello   ");
-
-    try str.trim(" ");
-    expect(str.eql("Hello"));
 }
 
 /// indexOf returns the index of `needle` in this Zigstr or null if not found.
@@ -475,53 +359,14 @@ pub fn contains(self: Self, str: []const u8) bool {
     return self.indexOf(str) != null;
 }
 
-test "Zigstr indexOf" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello");
-
-    expectEqual(str.indexOf("l"), 2);
-    expectEqual(str.indexOf("z"), null);
-    expect(str.contains("l"));
-    expect(!str.contains("z"));
-}
-
 /// lastIndexOf returns the index of `needle` in this Zigstr starting from the end, or null if not found.
 pub fn lastIndexOf(self: Self, needle: []const u8) ?usize {
     return mem.lastIndexOf(u8, self.bytes, needle);
 }
 
-test "Zigstr lastIndexOf" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello");
-
-    expectEqual(str.lastIndexOf("l"), 3);
-    expectEqual(str.lastIndexOf("z"), null);
-}
-
 /// count returns the number of `needle`s in this Zigstr.
 pub fn count(self: Self, needle: []const u8) usize {
     return mem.count(u8, self.bytes, needle);
-}
-
-test "Zigstr count" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello");
-
-    expectEqual(str.count("l"), 2);
-    expectEqual(str.count("ll"), 1);
-    expectEqual(str.count("z"), 0);
 }
 
 /// tokenIter returns an iterator on tokens resulting from splitting this Zigstr at every `delim`.
@@ -543,25 +388,6 @@ pub fn tokenize(self: Self, delim: []const u8) ![][]const u8 {
     return ts.toOwnedSlice();
 }
 
-test "Zigstr tokenize" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new(" Hello World ");
-
-    var iter = str.tokenIter(" ");
-    expectEqualStrings("Hello", iter.next().?);
-    expectEqualStrings("World", iter.next().?);
-    expect(iter.next() == null);
-
-    var ts = try str.tokenize(" ");
-    expectEqual(@as(usize, 2), ts.len);
-    expectEqualStrings("Hello", ts[0]);
-    expectEqualStrings("World", ts[1]);
-}
-
 /// splitIter returns an iterator on substrings resulting from splitting this Zigstr at every `delim`.
 /// Semantics are that of `std.mem.split`.
 pub fn splitIter(self: Self, delim: []const u8) mem.SplitIterator {
@@ -581,44 +407,9 @@ pub fn split(self: Self, delim: []const u8) ![][]const u8 {
     return ss.toOwnedSlice();
 }
 
-test "Zigstr split" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new(" Hello World ");
-
-    var iter = str.splitIter(" ");
-    expectEqualStrings("", iter.next().?);
-    expectEqualStrings("Hello", iter.next().?);
-    expectEqualStrings("World", iter.next().?);
-    expectEqualStrings("", iter.next().?);
-    expect(iter.next() == null);
-
-    var ss = try str.split(" ");
-    expectEqual(@as(usize, 4), ss.len);
-    expectEqualStrings("", ss[0]);
-    expectEqualStrings("Hello", ss[1]);
-    expectEqualStrings("World", ss[2]);
-    expectEqualStrings("", ss[3]);
-}
-
 /// startsWith returns true if this Zigstr starts with `str`.
 pub fn startsWith(self: Self, str: []const u8) bool {
     return mem.startsWith(u8, self.bytes, str);
-}
-
-test "Zigstr startsWith" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello World ");
-
-    expect(str.startsWith("Hell"));
-    expect(!str.startsWith("Zig"));
 }
 
 /// endsWith returns true if this Zigstr ends with `str`.
@@ -626,27 +417,8 @@ pub fn endsWith(self: Self, str: []const u8) bool {
     return mem.endsWith(u8, self.bytes, str);
 }
 
-test "Zigstr endsWith" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello World");
-
-    expect(str.endsWith("World"));
-    expect(!str.endsWith("Zig"));
-}
-
 /// Refer to the docs for `std.mem.join`.
 pub const join = mem.join;
-
-test "Zigstr join" {
-    var allocator = std.testing.allocator;
-    const result = try join(allocator, "/", &[_][]const u8{ "this", "is", "a", "path" });
-    defer allocator.free(result);
-    expectEqualSlices(u8, "this/is/a/path", result);
-}
 
 /// concatAll appends each string in `others` to this Zigstr, mutating it.
 pub fn concatAll(self: *Self, others: [][]const u8) !void {
@@ -679,21 +451,6 @@ pub fn concat(self: *Self, other: []const u8) !void {
     try self.concatAll(&[1][]const u8{other});
 }
 
-test "Zigstr concat" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello");
-
-    try str.concat(" World");
-    expectEqualStrings("Hello World", str.bytes);
-    var others = [_][]const u8{ " is", " the", " tradition!" };
-    try str.concatAll(&others);
-    expectEqualStrings("Hello World is the tradition!", str.bytes);
-}
-
 /// replace all occurrences of `needle` with `replacement`, mutating this Zigstr. Returns the total
 /// replacements made.
 pub fn replace(self: *Self, needle: []const u8, replacement: []const u8) !usize {
@@ -704,23 +461,6 @@ pub fn replace(self: *Self, needle: []const u8, replacement: []const u8) !usize 
     try self.resetOwned(buf);
 
     return replacements;
-}
-
-test "Zigstr replace" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello");
-
-    var replacements = try str.replace("l", "z");
-    expectEqual(@as(usize, 2), replacements);
-    expect(str.eql("Hezzo"));
-
-    replacements = try str.replace("z", "");
-    expectEqual(@as(usize, 2), replacements);
-    expect(str.eql("Heo"));
 }
 
 /// append adds `cp` to the end of this Zigstr, mutating it.
@@ -744,22 +484,6 @@ pub fn appendAll(self: *Self, cp_list: []const u21) !void {
     try self.concat(cp_bytes.items);
 }
 
-test "Zigstr append" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hell");
-
-    try str.append('o');
-    expectEqual(@as(usize, 5), str.bytes.len);
-    expect(str.eql("Hello"));
-    try str.appendAll(&[_]u21{ ' ', 'W', 'o', 'r', 'l', 'd' });
-    expectEqual(@as(usize, 11), str.bytes.len);
-    expect(str.eql("Hello World"));
-}
-
 /// empty returns true if this Zigstr has no bytes.
 pub fn empty(self: Self) bool {
     return self.bytes.len == 0;
@@ -777,29 +501,6 @@ pub fn chomp(self: *Self) !void {
         if (len > 1 and last == '\n' and self.bytes[len - 2] == '\r') chomp_size = 2; // CR+LF
         try self.reset(self.bytes[0 .. len - chomp_size]);
     }
-}
-
-test "Zigstr chomp" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello\n");
-
-    try str.chomp();
-    expectEqual(@as(usize, 5), str.bytes.len);
-    expect(str.eql("Hello"));
-
-    try str.reset("Hello\r");
-    try str.chomp();
-    expectEqual(@as(usize, 5), str.bytes.len);
-    expect(str.eql("Hello"));
-
-    try str.reset("Hello\r\n");
-    try str.chomp();
-    expectEqual(@as(usize, 5), str.bytes.len);
-    expect(str.eql("Hello"));
 }
 
 /// byteAt returns the byte at index `i`.
@@ -822,22 +523,6 @@ pub fn graphemeAt(self: *Self, i: usize) !Grapheme {
 }
 
 const expectError = std.testing.expectError;
-
-test "Zigstr xAt" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("H\u{0065}\u{0301}llo");
-
-    expectEqual(try str.byteAt(2), 0x00CC);
-    expectError(error.IndexOutOfBounds, str.byteAt(7));
-    expectEqual(try str.codePointAt(1), 0x0065);
-    expectError(error.IndexOutOfBounds, str.codePointAt(6));
-    expect((try str.graphemeAt(1)).eql("\u{0065}\u{0301}"));
-    expectError(error.IndexOutOfBounds, str.graphemeAt(5));
-}
 
 /// byteSlice returnes the bytes from this Zigstr in the specified range from `start` to `end` - 1.
 pub fn byteSlice(self: Self, start: usize, end: usize) ![]const u8 {
@@ -876,25 +561,6 @@ pub fn substr(self: *Self, start: usize, end: usize) !Self {
     }
 
     return self.factory.new(bytes.items);
-}
-
-test "Zigstr extractions" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("H\u{0065}\u{0301}llo");
-
-    // Slices
-    expectEqualSlices(u8, try str.byteSlice(1, 4), "\u{0065}\u{0301}");
-    expectEqualSlices(u21, try str.codePointSlice(1, 3), &[_]u21{ '\u{0065}', '\u{0301}' });
-    const gc1 = try str.graphemeSlice(1, 2);
-    expect(gc1[0].eql("\u{0065}\u{0301}"));
-    // Substrings
-    var str2 = try str.substr(1, 2);
-    expect(str2.eql("\u{0065}\u{0301}"));
-    expect(str2.eql(try str.byteSlice(1, 4)));
 }
 
 /// processCodePoints performs some house-keeping and accounting on the code points that make up this
@@ -988,8 +654,364 @@ pub fn toUpper(self: *Self) !void {
     try self.reset(bytes.items);
 }
 
+/// format implements the `std.fmt` format interface for printing types.
+pub fn format(self: Self, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
+    _ = try writer.print("{s}", .{self.bytes});
+}
+
+/// width returns the cells (or columns) this Zigstr would occupy in a fixed-width context.
+pub fn width(self: Self) !usize {
+    return self.factory.width.strWidth(self.bytes, .half);
+}
+
+test "Zigstr code points" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("Héllo");
+
+    var cp_iter = try str.codePointIter();
+    var want = [_]u21{ 'H', 0x00E9, 'l', 'l', 'o' };
+    var i: usize = 0;
+    while (cp_iter.next()) |cp| : (i += 1) {
+        expectEqual(want[i], cp);
+    }
+
+    expectEqual(@as(usize, 5), str.codePointCount());
+    expectEqualSlices(u21, &want, try str.codePoints());
+    expectEqual(@as(usize, 6), str.byteCount());
+    expectEqual(@as(usize, 5), str.codePointCount());
+}
+
+test "Zigstr graphemes" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("Héllo");
+
+    var giter = try str.graphemeIter();
+    var want = [_][]const u8{ "H", "é", "l", "l", "o" };
+    var i: usize = 0;
+    while (giter.next()) |gc| : (i += 1) {
+        expect(gc.eql(want[i]));
+    }
+
+    expectEqual(@as(usize, 5), try str.graphemeCount());
+    const gcs = try str.graphemes();
+    for (gcs) |gc, j| {
+        expect(gc.eql(want[j]));
+    }
+
+    expectEqual(@as(usize, 6), str.byteCount());
+    expectEqual(@as(usize, 5), try str.graphemeCount());
+}
+
+test "Zigstr copy" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str1 = try zigstr.new("Zig");
+    var str2 = try str1.copy();
+
+    expect(str1.eql(str2.bytes));
+    expect(str2.eql("Zig"));
+    expect(str1.sameAs(str2));
+}
+
+test "Zigstr eql" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("foo");
+
+    expect(str.eql("foo")); // exact
+    expect(!str.eql("fooo")); // lengths
+    expect(!str.eql("foó")); // combining
+    expect(!str.eql("Foo")); // letter case
+    expect(try str.eqlBy("Foo", .ignore_case));
+
+    try str.reset("foé");
+    expect(try str.eqlBy("foe\u{0301}", .normalize));
+
+    try str.reset("foϓ");
+    expect(try str.eqlBy("foΥ\u{0301}", .normalize));
+
+    try str.reset("Foϓ");
+    expect(try str.eqlBy("foΥ\u{0301}", .norm_ignore));
+
+    try str.reset("FOÉ");
+    expect(try str.eqlBy("foe\u{0301}", .norm_ignore)); // foÉ == foé
+}
+
+test "Zigstr isAsciiStr" {
+    expect(try isAsciiStr("Hello!"));
+    expect(!try isAsciiStr("Héllo!"));
+}
+
+test "Zigstr trimLeft" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("   Hello");
+
+    try str.trimLeft(" ");
+    expect(str.eql("Hello"));
+}
+
+test "Zigstr trimRight" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("Hello   ");
+
+    try str.trimRight(" ");
+    expect(str.eql("Hello"));
+}
+
+test "Zigstr trim" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("   Hello   ");
+
+    try str.trim(" ");
+    expect(str.eql("Hello"));
+}
+
+test "Zigstr indexOf" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("Hello");
+
+    expectEqual(str.indexOf("l"), 2);
+    expectEqual(str.indexOf("z"), null);
+    expect(str.contains("l"));
+    expect(!str.contains("z"));
+}
+
+test "Zigstr lastIndexOf" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("Hello");
+
+    expectEqual(str.lastIndexOf("l"), 3);
+    expectEqual(str.lastIndexOf("z"), null);
+}
+
+test "Zigstr count" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("Hello");
+
+    expectEqual(str.count("l"), 2);
+    expectEqual(str.count("ll"), 1);
+    expectEqual(str.count("z"), 0);
+}
+
+test "Zigstr tokenize" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new(" Hello World ");
+
+    var iter = str.tokenIter(" ");
+    expectEqualStrings("Hello", iter.next().?);
+    expectEqualStrings("World", iter.next().?);
+    expect(iter.next() == null);
+
+    var ts = try str.tokenize(" ");
+    expectEqual(@as(usize, 2), ts.len);
+    expectEqualStrings("Hello", ts[0]);
+    expectEqualStrings("World", ts[1]);
+}
+
+test "Zigstr split" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new(" Hello World ");
+
+    var iter = str.splitIter(" ");
+    expectEqualStrings("", iter.next().?);
+    expectEqualStrings("Hello", iter.next().?);
+    expectEqualStrings("World", iter.next().?);
+    expectEqualStrings("", iter.next().?);
+    expect(iter.next() == null);
+
+    var ss = try str.split(" ");
+    expectEqual(@as(usize, 4), ss.len);
+    expectEqualStrings("", ss[0]);
+    expectEqualStrings("Hello", ss[1]);
+    expectEqualStrings("World", ss[2]);
+    expectEqualStrings("", ss[3]);
+}
+
+test "Zigstr startsWith" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("Hello World ");
+
+    expect(str.startsWith("Hell"));
+    expect(!str.startsWith("Zig"));
+}
+
+test "Zigstr endsWith" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("Hello World");
+
+    expect(str.endsWith("World"));
+    expect(!str.endsWith("Zig"));
+}
+
+test "Zigstr join" {
+    var allocator = std.testing.allocator;
+    const result = try join(allocator, "/", &[_][]const u8{ "this", "is", "a", "path" });
+    defer allocator.free(result);
+    expectEqualSlices(u8, "this/is/a/path", result);
+}
+
+test "Zigstr concat" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("Hello");
+
+    try str.concat(" World");
+    expectEqualStrings("Hello World", str.bytes);
+    var others = [_][]const u8{ " is", " the", " tradition!" };
+    try str.concatAll(&others);
+    expectEqualStrings("Hello World is the tradition!", str.bytes);
+}
+
+test "Zigstr replace" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("Hello");
+
+    var replacements = try str.replace("l", "z");
+    expectEqual(@as(usize, 2), replacements);
+    expect(str.eql("Hezzo"));
+
+    replacements = try str.replace("z", "");
+    expectEqual(@as(usize, 2), replacements);
+    expect(str.eql("Heo"));
+}
+
+test "Zigstr append" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("Hell");
+
+    try str.append('o');
+    expectEqual(@as(usize, 5), str.bytes.len);
+    expect(str.eql("Hello"));
+    try str.appendAll(&[_]u21{ ' ', 'W', 'o', 'r', 'l', 'd' });
+    expectEqual(@as(usize, 11), str.bytes.len);
+    expect(str.eql("Hello World"));
+}
+
+test "Zigstr chomp" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("Hello\n");
+
+    try str.chomp();
+    expectEqual(@as(usize, 5), str.bytes.len);
+    expect(str.eql("Hello"));
+
+    try str.reset("Hello\r");
+    try str.chomp();
+    expectEqual(@as(usize, 5), str.bytes.len);
+    expect(str.eql("Hello"));
+
+    try str.reset("Hello\r\n");
+    try str.chomp();
+    expectEqual(@as(usize, 5), str.bytes.len);
+    expect(str.eql("Hello"));
+}
+
+test "Zigstr xAt" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("H\u{0065}\u{0301}llo");
+
+    expectEqual(try str.byteAt(2), 0x00CC);
+    expectError(error.IndexOutOfBounds, str.byteAt(7));
+    expectEqual(try str.codePointAt(1), 0x0065);
+    expectError(error.IndexOutOfBounds, str.codePointAt(6));
+    expect((try str.graphemeAt(1)).eql("\u{0065}\u{0301}"));
+    expectError(error.IndexOutOfBounds, str.graphemeAt(5));
+}
+
+test "Zigstr extractions" {
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
+    defer ctx.deinit();
+    var zigstr = try Factory.init(&ctx);
+    defer zigstr.deinit();
+
+    var str = try zigstr.new("H\u{0065}\u{0301}llo");
+
+    // Slices
+    expectEqualSlices(u8, try str.byteSlice(1, 4), "\u{0065}\u{0301}");
+    expectEqualSlices(u21, try str.codePointSlice(1, 3), &[_]u21{ '\u{0065}', '\u{0301}' });
+    const gc1 = try str.graphemeSlice(1, 2);
+    expect(gc1[0].eql("\u{0065}\u{0301}"));
+    // Substrings
+    var str2 = try str.substr(1, 2);
+    expect(str2.eql("\u{0065}\u{0301}"));
+    expect(str2.eql(try str.byteSlice(1, 4)));
+}
+
 test "Zigstr casing" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
     defer ctx.deinit();
     var zigstr = try Factory.init(&ctx);
     defer zigstr.deinit();
@@ -1006,13 +1028,8 @@ test "Zigstr casing" {
     expect(str.eql("HÉLLO! 123"));
 }
 
-/// format implements the `std.fmt` format interface for printing types.
-pub fn format(self: Self, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
-    _ = try writer.print("{s}", .{self.bytes});
-}
-
 test "Zigstr format" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
     defer ctx.deinit();
     var zigstr = try Factory.init(&ctx);
     defer zigstr.deinit();
@@ -1022,13 +1039,8 @@ test "Zigstr format" {
     std.debug.print("{}\n", .{str});
 }
 
-/// width returns the cells (or columns) this Zigstr would occupy in a fixed-width context.
-pub fn width(self: Self) !usize {
-    return self.factory.width.strWidth(self.bytes, .half);
-}
-
 test "Zigstr width" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
     defer ctx.deinit();
     var zigstr = try Factory.init(&ctx);
     defer zigstr.deinit();

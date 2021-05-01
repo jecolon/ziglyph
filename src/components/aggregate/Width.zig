@@ -2,22 +2,44 @@ const std = @import("std");
 const mem = std.mem;
 const unicode = std.unicode;
 
-const Context = @import("../../Context.zig");
-const Ziglyph = @import("../../ziglyph.zig").Ziglyph;
+const Ambiguous = @import("../../context.zig").Ambiguous;
+const Context = @import("../../context.zig").Context;
+const Enclosing = @import("../../context.zig").Enclosing;
+const ExtPic = @import("../../context.zig").ExtPic;
+const Format = @import("../../context.zig").Format;
+const Fullwidth = @import("../../context.zig").Fullwidth;
+const Regional = @import("../../context.zig").Regional;
+const Wide = @import("../../context.zig").Wide;
 const GraphemeIterator = @import("../../zigstr/GraphemeIterator.zig");
+const Nonspacing = @import("../../context.zig").Nonspacing;
+const Ziglyph = @import("../../ziglyph.zig").Ziglyph;
 
 const Self = @This();
 
 allocator: *mem.Allocator,
-context: *Context,
-giter: ?GraphemeIterator,
+ambiguous: *Ambiguous,
+enclosing: *Enclosing,
+extpic: *ExtPic,
+format: *Format,
+fullwidth: *Fullwidth,
+giter: GraphemeIterator,
+nonspacing: *Nonspacing,
+regional: *Regional,
+wide: *Wide,
 ziglyph: Ziglyph,
 
-pub fn new(ctx: *Context) !Self {
+pub fn new(ctx: anytype) !Self {
     return Self{
         .allocator = ctx.allocator,
-        .context = ctx,
-        .giter = null,
+        .giter = try GraphemeIterator.new(ctx, ""),
+        .ambiguous = &ctx.ambiguous,
+        .enclosing = &ctx.enclosing,
+        .extpic = &ctx.extpic,
+        .format = &ctx.format,
+        .fullwidth = &ctx.fullwidth,
+        .nonspacing = &ctx.nonspacing,
+        .regional = &ctx.regional,
+        .wide = &ctx.wide,
         .ziglyph = try Ziglyph.new(ctx),
     };
 }
@@ -48,10 +70,10 @@ pub fn codePointWidth(self: Self, cp: u21, am_width: AmbiguousWidth) i8 {
     } else if (cp == 0x2E3B) {
         // three-em dash
         return 3;
-    } else if (self.context.enclosing.isEnclosingMark(cp) or self.context.nonspacing.isNonspacingMark(cp)) {
+    } else if (self.enclosing.isEnclosingMark(cp) or self.nonspacing.isNonspacingMark(cp)) {
         // Combining Marks.
         return 0;
-    } else if (self.context.format.isFormat(cp) and (!(cp >= 0x0600 and cp <= 0x0605) and cp != 0x061C and
+    } else if (self.format.isFormat(cp) and (!(cp >= 0x0600 and cp <= 0x0605) and cp != 0x061C and
         cp != 0x06DD and cp != 0x08E2))
     {
         // Format except Arabic.
@@ -66,11 +88,11 @@ pub fn codePointWidth(self: Self, cp: u21, am_width: AmbiguousWidth) i8 {
         (cp >= 0x30000 and cp <= 0x3FFFD))
     {
         return 2;
-    } else if (self.context.wide.isWide(cp) or self.context.fullwidth.isFullwidth(cp)) {
+    } else if (self.wide.isWide(cp) or self.fullwidth.isFullwidth(cp)) {
         return 2;
-    } else if (self.context.regional.isRegionalIndicator(cp)) {
+    } else if (self.regional.isRegionalIndicator(cp)) {
         return 2;
-    } else if (self.context.ambiguous.isAmbiguous(cp)) {
+    } else if (self.ambiguous.isAmbiguous(cp)) {
         return @enumToInt(am_width);
     } else {
         return 1;
@@ -82,22 +104,16 @@ pub fn codePointWidth(self: Self, cp: u21, am_width: AmbiguousWidth) i8 {
 pub fn strWidth(self: *Self, str: []const u8, am_width: AmbiguousWidth) !usize {
     var total: isize = 0;
 
-    if (self.giter == null) {
-        self.giter = try GraphemeIterator.new(self.context, str);
-    } else {
-        try self.giter.?.reinit(str);
-    }
+    try self.giter.reinit(str);
 
-    var giter = self.giter.?;
-
-    while (giter.next()) |gc| {
+    while (self.giter.next()) |gc| {
         var cp_iter = (try unicode.Utf8View.init(gc.bytes)).iterator();
 
         while (cp_iter.nextCodepoint()) |cp| {
             var w = self.codePointWidth(cp, am_width);
 
             if (w != 0) {
-                if (self.context.extpic.isExtendedPictographic(cp)) {
+                if (self.extpic.isExtendedPictographic(cp)) {
                     if (cp_iter.nextCodepoint()) |ncp| {
                         if (ncp == 0xFE0E) w = 1; // Emoji text sequence.
                     }
@@ -114,7 +130,7 @@ pub fn strWidth(self: *Self, str: []const u8, am_width: AmbiguousWidth) !usize {
 const expectEqual = std.testing.expectEqual;
 
 test "Grapheme Width" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.width).init(std.testing.allocator);
     defer ctx.deinit();
 
     var width = try new(&ctx);

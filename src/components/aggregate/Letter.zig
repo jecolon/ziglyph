@@ -2,26 +2,57 @@ const std = @import("std");
 const mem = std.mem;
 const ascii = @import("../../ascii.zig");
 
-const Context = @import("../../Context.zig");
+const Context = @import("../../context.zig").Context;
+pub const CaseFoldMap = @import("../../context.zig").CaseFoldMap;
+pub const CaseFold = CaseFoldMap.CaseFold;
+pub const Cased = @import("../../context.zig").Cased;
+pub const Lower = @import("../../context.zig").Lower;
+pub const LowerMap = @import("../../context.zig").LowerMap;
+pub const ModifierLetter = @import("../../context.zig").ModifierLetter;
+pub const OtherLetter = @import("../../context.zig").OtherLetter;
+pub const Title = @import("../../context.zig").Title;
+pub const TitleMap = @import("../../context.zig").TitleMap;
+pub const Upper = @import("../../context.zig").Upper;
+pub const UpperMap = @import("../../context.zig").UpperMap;
 
 const Self = @This();
 
-context: *Context,
+fold_map: *CaseFoldMap,
+cased: *Cased,
+lower: *Lower,
+lower_map: *LowerMap,
+modifier_letter: *ModifierLetter,
+other_letter: *OtherLetter,
+title: *Title,
+title_map: *TitleMap,
+upper: *Upper,
+upper_map: *UpperMap,
 
-pub fn new(ctx: *Context) Self {
-    return Self{ .context = ctx };
+pub fn new(ctx: anytype) Self {
+    return Self{
+        .fold_map = &ctx.fold_map,
+        .cased = &ctx.cased,
+        .lower = &ctx.lower,
+        .lower_map = &ctx.lower_map,
+        .modifier_letter = &ctx.modifier_letter,
+        .other_letter = &ctx.other_letter,
+        .title = &ctx.title,
+        .title_map = &ctx.title_map,
+        .upper = &ctx.upper,
+        .upper_map = &ctx.upper_map,
+    };
 }
 
 /// isCased detects cased letters.
 pub fn isCased(self: Self, cp: u21) bool {
-    return self.context.cased.isCased(cp);
+    return self.cased.isCased(cp);
 }
 
 /// isLetter covers all letters in Unicode, not just ASCII.
 pub fn isLetter(self: Self, cp: u21) bool {
-    return self.context.lower.isLowercaseLetter(cp) or self.context.modifier_letter.isModifierLetter(cp) or
-        self.context.other_letter.isOtherLetter(cp) or self.context.title.isTitlecaseLetter(cp) or
-        self.context.upper.isUppercaseLetter(cp);
+    return self.lower.isLowercaseLetter(cp) or self.modifier_letter.isModifierLetter(cp) or
+        self.other_letter.isOtherLetter(cp) or self.title.isTitlecaseLetter(cp) or
+        self.upper.isUppercaseLetter(cp);
 }
 
 /// isAscii detects ASCII only letters.
@@ -31,7 +62,7 @@ pub fn isAscii(cp: u21) bool {
 
 /// isLower detects code points that are lowercase.
 pub fn isLower(self: Self, cp: u21) bool {
-    return self.context.lower.isLowercaseLetter(cp) or !self.isCased(cp);
+    return self.lower.isLowercaseLetter(cp) or !self.isCased(cp);
 }
 
 /// isAsciiLower detects ASCII only lowercase letters.
@@ -41,12 +72,12 @@ pub fn isAsciiLower(cp: u21) bool {
 
 /// isTitle detects code points in titlecase.
 pub fn isTitle(self: Self, cp: u21) bool {
-    return self.context.title.isTitlecaseLetter(cp) or !self.isCased(cp);
+    return self.title.isTitlecaseLetter(cp) or !self.isCased(cp);
 }
 
 /// isUpper detects code points in uppercase.
 pub fn isUpper(self: Self, cp: u21) bool {
-    return self.context.upper.isUppercaseLetter(cp) or !self.isCased(cp);
+    return self.upper.isUppercaseLetter(cp) or !self.isCased(cp);
 }
 
 /// isAsciiUpper detects ASCII only uppercase letters.
@@ -59,7 +90,7 @@ pub fn isAsciiUpper(cp: u21) bool {
 pub fn toLower(self: Self, cp: u21) u21 {
     // Only cased letters.
     if (!self.isCased(cp)) return cp;
-    return self.context.lower_map.toLower(cp);
+    return self.lower_map.toLower(cp);
 }
 
 /// toAsciiLower converts an ASCII letter to lowercase.
@@ -72,7 +103,7 @@ pub fn toAsciiLower(self: Self, cp: u21) u21 {
 pub fn toTitle(self: Self, cp: u21) u21 {
     // Only cased letters.
     if (!self.isCased(cp)) return cp;
-    return self.context.title_map.toTitle(cp);
+    return self.title_map.toTitle(cp);
 }
 
 /// toUpper returns the uppercase code point for the given code point. It returns the same 
@@ -80,7 +111,7 @@ pub fn toTitle(self: Self, cp: u21) u21 {
 pub fn toUpper(self: Self, cp: u21) u21 {
     // Only cased letters.
     if (!self.isCased(cp)) return cp;
-    return self.context.upper_map.toUpper(cp);
+    return self.upper_map.toUpper(cp);
 }
 
 /// toAsciiUpper converts an ASCII letter to uppercase.
@@ -90,15 +121,15 @@ pub fn toAsciiUpper(self: Self, cp: u21) u21 {
 
 /// toCaseFold will convert a code point into its case folded equivalent. Note that this can result
 /// in a mapping to more than one code point, known as the full case fold.
-pub fn toCaseFold(self: Self, cp: u21) Context.CaseFold {
-    return self.context.fold_map.toCaseFold(cp);
+pub fn toCaseFold(self: Self, cp: u21) CaseFold {
+    return self.fold_map.toCaseFold(cp);
 }
 
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 
 test "Component struct" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.letter).init(std.testing.allocator);
     defer ctx.deinit();
 
     var letter = new(&ctx);
@@ -112,7 +143,7 @@ test "Component struct" {
 }
 
 test "Component isCased" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.letter).init(std.testing.allocator);
     defer ctx.deinit();
 
     var letter = new(&ctx);
@@ -123,7 +154,7 @@ test "Component isCased" {
 }
 
 test "Component isLower" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.letter).init(std.testing.allocator);
     defer ctx.deinit();
 
     var letter = new(&ctx);
@@ -141,7 +172,7 @@ test "Component isLower" {
 const expectEqualSlices = std.testing.expectEqualSlices;
 
 test "Component toCaseFold" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.letter).init(std.testing.allocator);
     defer ctx.deinit();
 
     var letter = new(&ctx);
@@ -178,7 +209,7 @@ test "Component toCaseFold" {
 }
 
 test "Component toLower" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.letter).init(std.testing.allocator);
     defer ctx.deinit();
 
     var letter = new(&ctx);
@@ -196,7 +227,7 @@ test "Component toLower" {
 }
 
 test "Component isUpper" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.letter).init(std.testing.allocator);
     defer ctx.deinit();
 
     var letter = new(&ctx);
@@ -212,7 +243,7 @@ test "Component isUpper" {
 }
 
 test "Component toUpper" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.letter).init(std.testing.allocator);
     defer ctx.deinit();
 
     var letter = new(&ctx);
@@ -228,7 +259,7 @@ test "Component toUpper" {
 }
 
 test "Component isTitle" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.letter).init(std.testing.allocator);
     defer ctx.deinit();
 
     var letter = new(&ctx);
@@ -244,7 +275,7 @@ test "Component isTitle" {
 }
 
 test "Component toTitle" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.letter).init(std.testing.allocator);
     defer ctx.deinit();
 
     var letter = new(&ctx);
@@ -257,7 +288,7 @@ test "Component toTitle" {
 }
 
 test "Component isLetter" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.letter).init(std.testing.allocator);
     defer ctx.deinit();
 
     var letter = new(&ctx);
