@@ -14,6 +14,8 @@ they still will occur until we reach 1.0.
 *   2021-04-27: Major refactor introducing `Context`, a struct that centralizes the major component 
     data structures, avoiding repeated allocations of these, which can be very large. Also, initial 
     support for code point and string width calculation added.
+*   2021-05-02: Major refactor to make handling of `Context` more ergonomic and efficient, via singletons
+    caching, and convenience functions.
 
 ## Background
 This library has been built from scratch in Zig. Although initially inspired by the Go `unicode`
@@ -41,6 +43,7 @@ can import components like this:
 
 ```zig
 const Ziglyph = @import("Ziglyph").Ziglyph;
+const Context = @import("Ziglyph").Context;
 const Letter = @import("Ziglyph").Letter;
 const Number = @import("Ziglyph").Number;
 ```
@@ -55,31 +58,64 @@ Note that to build in realase modes, either specify them in the `build.zig` file
 via the `-Drelease-fast=true`, `-Drelease-small=true`, `-Drelease-safe=true` options to `zig build`.
 
 ### Usage Overview
-The basic workflow consists of seting up a global `Context` which will centralize the major data structures
-to reduce memory footprint. This `Context` can then be passed to the `new` and `init` functions of other
-components of the library. The `Ziglyph` struct consolidates many frequently-used functions for Unicode
-code point type and letter case detection, letter case conversion, along with their ASCII counterparts.
-More specific aggregate structs are also available such as `Letter`, `Punct`, `Symbol`, and others to
-provide more granular control over memory usage.
+#### Unicode Data and Contexts
+Unicode is a large standard, and the data needed to implement it is also large. Given that the nature
+and use of parts of this data are varied, it would be inefficient to load all the data all the time, 
+so the Ziglyph library provides the concept of a `Context`, which loads only parts of the data needed
+by the components used in your program. For example, if you're only dealing with the `Number` component,
+the `Context(.number)` only loads the required data to handle Unicode number functions. Here's the code:
+
+```zig
+const Context = @import("Ziglyph").Context;
+const Number = Context.Number;
+
+// First the Context
+var ctx = try Context(.number).init(std.testing.allocator);
+defer ctx.deinit();
+
+// and now the component struct
+var number = Number.initWithContext(ctx);
+defer number.deinit();
+
+// do stuff with number
+expect(number.isNumber('1'));
+```
+
+Creating a `Context` can be useful when you plan on using a single `Context` with more than one component.
+The context types are defined in the `DataSet` enum in the `Context` struct. They practically mirror the 
+major components of the library.
+
+For convenience, if you won't be using different components, you can create your component directly 
+without a `Context`, an internal one will be created and managed for you:
+
+```zig
+const Number = @import("Ziglyph").Context.Number;
+
+// No need for a context if you don't want one.
+var number = try Number.init(std.testing.allocator);
+defer number.deinit();
+
+// do stuff with number
+expect(number.isNumber('1'));
+```
+
+Not all `Context` types can be used with all componets, the compiler will let you know this. ;)
 
 ### Using the Ziglyph Struct
 ```zig
-const Context = @import("Ziglyph").Context;
 const Ziglyph = @import("Ziglyph").Ziglyph;
 
 test "Ziglyph struct" {
-    var ctx = Context.init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var ziglyph = try Ziglyph.new(&ctx);
+    var ziglyph = try Ziglyph.init(std.testing.allocator);
+    defer ziglyph.deinit();
 
     const z = 'z';
-    expect(try ziglyph.isLetter(z));
-    expect(try ziglyph.isAlphaNum(z));
-    expect(try ziglyph.isPrint(z));
-    expect(!try ziglyph.isUpper(z));
-    const uz = try ziglyph.toUpper(z);
-    expect(try ziglyph.isUpper(uz));
+    expect(ziglyph.isLetter(z));
+    expect(ziglyph.isAlphaNum(z));
+    expect(ziglyph.isPrint(z));
+    expect(!ziglyph.isUpper(z));
+    const uz = ziglyph.toUpper(z);
+    expect(ziglyph.isUpper(uz));
     expectEqual(uz, 'Z');
 }
 ```
@@ -87,23 +123,43 @@ test "Ziglyph struct" {
 ### Using the aggregate Structs
 ```zig
 const Context = @import("Ziglyph").Context;
-const Letter = @import("components/aggregate/Letter.zig");
-const Punct = @import("components/aggregate/Punct.zig");
+const Letter = Context.Letter;
+const Punct = Context.Punct;
 
 test "Aggregate struct" {
-    var ctx = Context.init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var letter = Letter.new(&ctx);
-    var punct = Punct.new(&ctx);
+    var letter = try Letter.init(std.testing.allocator);
+    defer letter.deinit();
+    var punct = try Punct.init(std.testing.allocator);
+    defer punct.deinit();
 
     const z = 'z';
-    expect(try letter.isLetter(z));
-    expect(!try letter.isUpper(z));
-    expect(!try punct.isPunct(z));
-    expect(try punct.isPunct('!'));
-    const uz = try letter.toUpper(z);
-    expect(try letter.isUpper(uz));
+    expect(letter.isLetter(z));
+    expect(!letter.isUpper(z));
+    expect(!punct.isPunct(z));
+    expect(punct.isPunct('!'));
+    const uz = letter.toUpper(z);
+    expect(letter.isUpper(uz));
+    expectEqual(uz, 'Z');
+}
+
+test "Aggregate struct, shared Context" {
+    // The .ziglyph context has all the fequently used data, including what Letter and Punct need.
+    // The individual .letter and .punct contexts wouldn't suffice for both component structs at once.
+    var ctx = try Context(.ziglyph).init(std.testing.allocator);
+    defer ctx.deinit();
+
+    var letter = Letter.initWithContext(ctx);
+    defer letter.deinit();
+    var punct = Punct.initWithContext(ctx);
+    defer punct.deinit();
+
+    const z = 'z';
+    expect(letter.isLetter(z));
+    expect(!letter.isUpper(z));
+    expect(!punct.isPunct(z));
+    expect(punct.isPunct('!'));
+    const uz = letter.toUpper(z);
+    expect(letter.isUpper(uz));
     expectEqual(uz, 'Z');
 }
 ```
@@ -113,18 +169,14 @@ test "Aggregate struct" {
 const Context = @import("Ziglyph").Context;
 
 test "Component structs" {
-    var ctx = Context.init(std.testing.allocator);
+    var ctx = try Context(.ziglyph).init(std.testing.allocator);
     defer ctx.deinit();
 
-    const lower = try ctx.getLower();
-    const upper = try ctx.getUpper();
-    const upper_map = try ctx.getUpperMap();
-
     const z = 'z';
-    expect(lower.isLowercaseLetter(z));
-    expect(!upper.isUppercaseLetter(z));
-    const uz = upper_map.toUpper(z);
-    expect(upper.isUppercaseLetter(uz));
+    expect(ctx.lower.isLowercaseLetter(z));
+    expect(!ctx.upper.isUppercaseLetter(z));
+    const uz = ctx.upper_map.toUpper(z);
+    expect(ctx.upper.isUppercaseLetter(uz));
     expectEqual(uz, 'Z');
 }
 ```
@@ -136,14 +188,12 @@ performs full canonical and compatibility decomposition and normalization (NFD a
 versions may add more normalization forms.
 
 ```zig
-const Context = @import("Ziglyph").Context;
+const DecomposeMap = @import("Ziglyph").Context.DecomposeMap;
 
 test "normalizeTo" {
     var allocator = std.testing.allocator;
-    var ctx = Context.init(allocator);
-    defer ctx.deinit();
-
-    const decomp_map = try ctx.getDecomposeMap();
+    var decomp_map = try DecomposeMap.init(allocator);
+    defer decomp_map.deinit();
 
     // Canonical (NFD)
     var input = "Complex char: \u{03D3}";
@@ -173,19 +223,16 @@ called *Grapheme Clusters* and Ziglyph provides the `GraphemeIterator` to extrac
 (not just single code points) from a string.
 
 ```
-const Context = @import("Ziglyph").Context;
-const GraphemeIterator = @import("Ziglyph").GraphemeIterator;
+const GraphemeIterator = @import("Ziglyph").Context.GraphemeIterator;
 
 test "GraphemeIterator" {
-    var ctx = Context.init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var iter = try GraphemeIterator.new(&ctx, "H\u{0065}\u{0301}llo");
+    var giter = try GraphemeIterator.init(std.testing.allocator, "H\u{0065}\u{0301}llo");
+    defer giter.deinit();
 
     const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
 
     var i: usize = 0;
-    while (try iter.next()) |gc| : (i += 1) {
+    while (giter.next()) |gc| : (i += 1) {
         expect(gc.eql(want[i]));
     }
 }
@@ -197,20 +244,17 @@ emulators, it's necessary to know how many cells (or columns) a particular code 
 occupy. The `Width` component struct provides methods to do just that.
 
 ```
-const Context = @import("Ziglyph").Context;
 const Width = @import("Ziglyph").Zigstr.Width;
 
 test "Code point / string widths" {
-    var ctx = Context.init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var width = try Width.new(&ctx);
+    var width = try Width.init(std.testing.allocator);
+    defer width.deinit();
 
     // The width methods take a second parameter of value .half or .full to determine the width of 
     // ambiguous code points as per the Unicode standard. .half is the most common case.
-    expectEqual(try width.codePointWidth('é', .half), 1);
-    expectEqual(try width.codePointWidth('😊', .half), 2);
-    expectEqual(try width.codePointWidth('统', .half), 2);
+    expectEqual(width.codePointWidth('é', .half), 1);
+    expectEqual(width.codePointWidth('😊', .half), 2);
+    expectEqual(width.codePointWidth('统', .half), 2);
     expectEqual(try width.strWidth("Hello\r\n", .half), 5);
     expectEqual(try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
     expectEqual(try width.strWidth("Héllo 🇪🇸", .half), 8);

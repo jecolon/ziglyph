@@ -9,20 +9,14 @@ missing here, as it tends to produce more confusion than clarity, and in fact Un
 a human-readable *character* is the Grapheme Cluster, which Zigstr handles as sub-slices of bytes.
 
 ```zig
+const Context = @import("context.zig").Context;
 const Zigstr = @import("Ziglyph").Zigstr;
 
-test "README tests" {
+test "Zigstr README tests" {
     var allocator = std.testing.allocator;
-
-    // Prepare the global context.
-    var ctx = Context.init(allocator);
-    defer ctx.deinit();
-
-    // Prepare the Zigstr factory.
-    var zigstr = try Zigstr.Factory.init(&ctx);
+    var zigstr = try Zigstr.Factory.init(allocator);
     defer zigstr.deinit();
 
-    // Create an instance, or as many as you like!
     var str = try zigstr.new("Héllo");
 
     // Byte count.
@@ -49,7 +43,7 @@ test "README tests" {
     const gc_want = [_][]const u8{ "H", "é", "l", "l", "o" };
 
     i = 0;
-    while (try giter.next()) |gc| : (i += 1) {
+    while (giter.next()) |gc| : (i += 1) {
         expect(gc.eql(gc_want[i]));
     }
 
