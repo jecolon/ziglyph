@@ -4,7 +4,8 @@ const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
 // Import structs.
-const Context = @import("Context.zig");
+const Context = @import("context.zig").Context;
+const DecomposeMap = @import("context.zig").DecomposeMap;
 const GraphemeIterator = @import("ziglyph.zig").GraphemeIterator;
 const Letter = @import("components/aggregate/Letter.zig");
 const Punct = @import("components/aggregate/Punct.zig");
@@ -12,7 +13,7 @@ const Width = @import("components/aggregate/Width.zig");
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
 
 test "Ziglyph struct" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.zigstr).init(std.testing.allocator);
     defer ctx.deinit();
 
     var ziglyph = try Ziglyph.new(&ctx);
@@ -28,11 +29,13 @@ test "Ziglyph struct" {
 }
 
 test "Aggregate struct" {
-    var ctx = try Context.init(std.testing.allocator);
-    defer ctx.deinit();
+    var letter_ctx = try Context(.letter).init(std.testing.allocator);
+    defer letter_ctx.deinit();
+    var punct_ctx = try Context(.punct).init(std.testing.allocator);
+    defer punct_ctx.deinit();
 
-    var letter = Letter.new(&ctx);
-    var punct = Punct.new(&ctx);
+    var letter = Letter.new(&letter_ctx);
+    var punct = Punct.new(&punct_ctx);
 
     const z = 'z';
     expect(letter.isLetter(z));
@@ -45,7 +48,7 @@ test "Aggregate struct" {
 }
 
 test "Component structs" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.letter).init(std.testing.allocator);
     defer ctx.deinit();
 
     const z = 'z';
@@ -58,14 +61,16 @@ test "Component structs" {
 
 test "decomposeTo" {
     var allocator = std.testing.allocator;
-    var ctx = try Context.init(allocator);
+    var ctx = try Context(.decompose).init(allocator);
     defer ctx.deinit();
 
-    const Decomposed = Context.DecomposeMap.Decomposed;
+    var decomp_map = try DecomposeMap.init(&ctx);
+    defer decomp_map.deinit();
+    const Decomposed = DecomposeMap.Decomposed;
 
     // CD: ox03D3 -> 0x03D2, 0x0301
     var src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    var result = try ctx.decomp_map.decomposeTo(allocator, .D, &src);
+    var result = try decomp_map.decomposeTo(allocator, .D, &src);
     defer allocator.free(result);
     expectEqual(result.len, 2);
     expectEqual(result[0].same, 0x03D2);
@@ -74,7 +79,7 @@ test "decomposeTo" {
 
     // KD: ox03D3 -> 0x03D2, 0x0301 -> 0x03A5, 0x0301
     src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    result = try ctx.decomp_map.decomposeTo(allocator, .KD, &src);
+    result = try decomp_map.decomposeTo(allocator, .KD, &src);
     expectEqual(result.len, 2);
     expect(result[0] == .same);
     expectEqual(result[0].same, 0x03A5);
@@ -84,13 +89,16 @@ test "decomposeTo" {
 
 test "normalizeTo" {
     var allocator = std.testing.allocator;
-    var ctx = try Context.init(allocator);
+    var ctx = try Context(.decompose).init(allocator);
     defer ctx.deinit();
+
+    var decomp_map = try DecomposeMap.init(&ctx);
+    defer decomp_map.deinit();
 
     // Canonical (NFD)
     var input = "Complex char: \u{03D3}";
     var want = "Complex char: \u{03D2}\u{0301}";
-    var got = try ctx.decomp_map.normalizeTo(allocator, .D, input);
+    var got = try decomp_map.normalizeTo(allocator, .D, input);
     defer allocator.free(got);
     expectEqualSlices(u8, want, got);
     allocator.free(got);
@@ -98,12 +106,12 @@ test "normalizeTo" {
     // Compatibility (NFKD)
     input = "Complex char: \u{03D3}";
     want = "Complex char: \u{03A5}\u{0301}";
-    got = try ctx.decomp_map.normalizeTo(allocator, .KD, input);
+    got = try decomp_map.normalizeTo(allocator, .KD, input);
     expectEqualSlices(u8, want, got);
 }
 
 test "GraphemeIterator" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.grapheme).init(std.testing.allocator);
     defer ctx.deinit();
 
     var iter = try GraphemeIterator.new(&ctx, "H\u{0065}\u{0301}llo");
@@ -117,7 +125,7 @@ test "GraphemeIterator" {
 }
 
 test "Code point / string widths" {
-    var ctx = try Context.init(std.testing.allocator);
+    var ctx = try Context(.width).init(std.testing.allocator);
     defer ctx.deinit();
 
     var width = try Width.new(&ctx);

@@ -23,8 +23,24 @@ pub const Factory = struct {
     giter: GraphemeIterator,
     letter: Letter,
     width: Width,
+    zctx: ?*Context(.zigstr),
 
-    pub fn init(ctx: anytype) !Factory {
+    pub fn init(allocator: *mem.Allocator) !Factory {
+        var zctx = try allocator.create(Context(.zigstr));
+        zctx.* = try Context(.zigstr).init(allocator);
+
+        return Factory{
+            .arena = std.heap.ArenaAllocator.init(allocator),
+            .decomp_map = try DecomposeMap.init(zctx),
+            .fold_map = &zctx.fold_map,
+            .giter = try GraphemeIterator.new(zctx, ""),
+            .letter = Letter.new(zctx),
+            .width = try Width.new(zctx),
+            .zctx = zctx,
+        };
+    }
+
+    pub fn initWithContext(ctx: anytype) !Factory {
         return Factory{
             .arena = std.heap.ArenaAllocator.init(ctx.allocator),
             .decomp_map = try DecomposeMap.init(ctx),
@@ -32,11 +48,16 @@ pub const Factory = struct {
             .giter = try GraphemeIterator.new(ctx, ""),
             .letter = Letter.new(ctx),
             .width = try Width.new(ctx),
+            .zctx = null,
         };
     }
 
     pub fn deinit(self: *Factory) void {
         self.decomp_map.deinit();
+        if (self.zctx) |zctx| {
+            zctx.deinit();
+            self.arena.child_allocator.destroy(zctx);
+        }
         self.arena.deinit();
     }
 
@@ -665,9 +686,7 @@ pub fn width(self: Self) !usize {
 }
 
 test "Zigstr code points" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Héllo");
@@ -686,9 +705,7 @@ test "Zigstr code points" {
 }
 
 test "Zigstr graphemes" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Héllo");
@@ -711,9 +728,7 @@ test "Zigstr graphemes" {
 }
 
 test "Zigstr copy" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str1 = try zigstr.new("Zig");
@@ -725,9 +740,7 @@ test "Zigstr copy" {
 }
 
 test "Zigstr eql" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("foo");
@@ -757,9 +770,7 @@ test "Zigstr isAsciiStr" {
 }
 
 test "Zigstr trimLeft" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("   Hello");
@@ -769,9 +780,7 @@ test "Zigstr trimLeft" {
 }
 
 test "Zigstr trimRight" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Hello   ");
@@ -781,9 +790,7 @@ test "Zigstr trimRight" {
 }
 
 test "Zigstr trim" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("   Hello   ");
@@ -793,9 +800,7 @@ test "Zigstr trim" {
 }
 
 test "Zigstr indexOf" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Hello");
@@ -807,9 +812,7 @@ test "Zigstr indexOf" {
 }
 
 test "Zigstr lastIndexOf" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Hello");
@@ -819,9 +822,7 @@ test "Zigstr lastIndexOf" {
 }
 
 test "Zigstr count" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Hello");
@@ -832,9 +833,7 @@ test "Zigstr count" {
 }
 
 test "Zigstr tokenize" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new(" Hello World ");
@@ -851,9 +850,7 @@ test "Zigstr tokenize" {
 }
 
 test "Zigstr split" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new(" Hello World ");
@@ -874,9 +871,7 @@ test "Zigstr split" {
 }
 
 test "Zigstr startsWith" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Hello World ");
@@ -886,9 +881,7 @@ test "Zigstr startsWith" {
 }
 
 test "Zigstr endsWith" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Hello World");
@@ -905,9 +898,7 @@ test "Zigstr join" {
 }
 
 test "Zigstr concat" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Hello");
@@ -920,9 +911,7 @@ test "Zigstr concat" {
 }
 
 test "Zigstr replace" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Hello");
@@ -937,9 +926,7 @@ test "Zigstr replace" {
 }
 
 test "Zigstr append" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Hell");
@@ -953,9 +940,7 @@ test "Zigstr append" {
 }
 
 test "Zigstr chomp" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Hello\n");
@@ -976,9 +961,7 @@ test "Zigstr chomp" {
 }
 
 test "Zigstr xAt" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("H\u{0065}\u{0301}llo");
@@ -992,9 +975,7 @@ test "Zigstr xAt" {
 }
 
 test "Zigstr extractions" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("H\u{0065}\u{0301}llo");
@@ -1011,9 +992,7 @@ test "Zigstr extractions" {
 }
 
 test "Zigstr casing" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Héllo! 123");
@@ -1029,9 +1008,7 @@ test "Zigstr casing" {
 }
 
 test "Zigstr format" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Hi, I'm a Zigstr! 😊");
@@ -1042,7 +1019,7 @@ test "Zigstr format" {
 test "Zigstr width" {
     var ctx = try Context(.zigstr).init(std.testing.allocator);
     defer ctx.deinit();
-    var zigstr = try Factory.init(&ctx);
+    var zigstr = try Factory.initWithContext(&ctx);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Héllo 😊");

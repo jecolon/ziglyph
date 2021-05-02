@@ -4,15 +4,12 @@ const expectEqual = std.testing.expectEqual;
 const expectEqualStrings = std.testing.expectEqualStrings;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
-const Context = @import("Context.zig");
+const Context = @import("context.zig").Context;
 const Zigstr = @import("zigstr/Zigstr.zig");
 
-test "README tests" {
+test "Zigstr README tests" {
     var allocator = std.testing.allocator;
-    var ctx = try Context.init(allocator);
-    defer ctx.deinit();
-
-    var zigstr = try Zigstr.Factory.init(&ctx);
+    var zigstr = try Zigstr.Factory.init(allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Héllo");
