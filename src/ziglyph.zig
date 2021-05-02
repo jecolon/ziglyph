@@ -237,7 +237,7 @@ pub const Ziglyph = struct {
     }
 
     pub fn toAsciiUpper(cp: u21) u21 {
-        return if (cp < 128) ascii.toUpper(@intCast(u8, cp)) else false;
+        return if (cp < 128) ascii.toUpper(@intCast(u8, cp)) else cp;
     }
 };
 
@@ -257,6 +257,7 @@ test "Ziglyph ASCII methods" {
     expect(!Ziglyph.isAsciiNumber(z));
     expect(!Ziglyph.isAsciiLower(z));
     expectEqual(Ziglyph.toAsciiLower(z), 'f');
+    expectEqual(Ziglyph.toAsciiUpper('a'), 'A');
     expect(Ziglyph.isAsciiLower(Ziglyph.toAsciiLower(z)));
 }
 
