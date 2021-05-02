@@ -10,11 +10,27 @@ const Self = @This();
 
 space: *Space,
 whitespace: *WhiteSpace,
+sctx: ?*Context(.space),
 
-pub fn new(ctx: anytype) Self {
+pub fn init(allocator: *mem.Allocator) !Self {
+    var sctx = try Context(.space).init(allocator);
+
+    return Self{
+        .space = &sctx.space,
+        .whitespace = &sctx.whitespace,
+        .sctx = sctx,
+    };
+}
+
+pub fn deinit(self: *Self) void {
+    if (self.sctx) |sctx| sctx.deinit();
+}
+
+pub fn initWithContext(ctx: anytype) Self {
     return Self{
         .space = &ctx.space,
         .whitespace = &ctx.whitespace,
+        .sctx = null,
     };
 }
 
@@ -36,10 +52,8 @@ pub fn isAsciiWhiteSpace(cp: u21) bool {
 const expect = std.testing.expect;
 
 test "Component isSpace" {
-    var ctx = try Context(.space).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var space = new(&ctx);
+    var space = try init(std.testing.allocator);
+    defer space.deinit();
 
     expect(space.isSpace(' '));
     expect(!space.isSpace('\t'));
@@ -50,7 +64,8 @@ test "Component isWhiteSpace" {
     var ctx = try Context(.space).init(std.testing.allocator);
     defer ctx.deinit();
 
-    var space = new(&ctx);
+    var space = initWithContext(ctx);
+    defer space.deinit();
 
     expect(space.isWhiteSpace(' '));
     expect(space.isWhiteSpace('\t'));

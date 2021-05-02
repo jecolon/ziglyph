@@ -1,9 +1,8 @@
-
-    return instance;
 }
 
 pub fn deinit(self: *Self) void {
     self.map.deinit();
+    if (self.dctx) |dctx| dctx.deinit();
 }
 
 /// mapping retrieves the decomposition mapping for a code point as per the UCD.
@@ -237,9 +236,7 @@ fn allDone(dcs: []const Decomposed) bool {
 
 test "Decomp codePointTo D" {
     var allocator = std.testing.allocator;
-    var ctx = try Context(.decompose).init(allocator);
-    defer ctx.deinit();
-    var decomp_map = try init(&ctx);
+    var decomp_map = try init(allocator);
     defer decomp_map.deinit();
 
     var result = try decomp_map.codePointTo(allocator, .D, '\u{00E9}');
@@ -253,9 +250,7 @@ test "Decomp codePointTo D" {
 
 test "Decomp codePointTo KD" {
     var allocator = std.testing.allocator;
-    var ctx = try Context(.decompose).init(allocator);
-    defer ctx.deinit();
-    var decomp_map = try init(&ctx);
+    var decomp_map = try init(allocator);
     defer decomp_map.deinit();
 
     var result = try decomp_map.codePointTo(allocator, .KD, '\u{00E9}');
@@ -271,7 +266,7 @@ test "Decomp normalizeTo" {
     var allocator = std.testing.allocator;
     var ctx = try Context(.decompose).init(allocator);
     defer ctx.deinit();
-    var decomp_map = try init(&ctx);
+    var decomp_map = try initWithContext(ctx);
     defer decomp_map.deinit();
 
     var file = try std.fs.cwd().openFile("src/data/ucd/NormalizationTest.txt", .{});

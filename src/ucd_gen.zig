@@ -541,11 +541,11 @@ const UcdGenerator = struct {
                     }
                     if (!is_compat and cp_list.items.len == 1) {
                         // Singleton
-                        _ = try d_writer.print("    try instance.map.put(0x{s}, .{{ .single = 0x{s} }});\n", .{ code_point, cp_list.items[0] });
+                        _ = try d_writer.print("    try self.map.put(0x{s}, .{{ .single = 0x{s} }});\n", .{ code_point, cp_list.items[0] });
                     } else if (!is_compat) {
                         // Canonical
                         std.debug.assert(cp_list.items.len != 0);
-                        _ = try d_writer.print("    try instance.map.put(0x{s}, .{{ .canon = [2]u21{{\n", .{code_point});
+                        _ = try d_writer.print("    try self.map.put(0x{s}, .{{ .canon = [2]u21{{\n", .{code_point});
                         for (cp_list.items) |cp| {
                             _ = try d_writer.print("        0x{s},\n", .{cp});
                         }
@@ -553,7 +553,7 @@ const UcdGenerator = struct {
                     } else {
                         // Compatibility
                         std.debug.assert(cp_list.items.len != 0);
-                        _ = try d_writer.print("    try instance.map.put(0x{s}, .{{ .compat = &[_]u21{{\n", .{code_point});
+                        _ = try d_writer.print("    try self.map.put(0x{s}, .{{ .compat = &[_]u21{{\n", .{code_point});
                         for (cp_list.items) |cp| {
                             _ = try d_writer.print("        0x{s},\n", .{cp});
                         }

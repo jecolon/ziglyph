@@ -14,13 +14,31 @@ currency: *Currency,
 math: *Math,
 modifier_symbol: *ModifierSymbol,
 other_symbol: *OtherSymbol,
+sctx: ?*Context(.symbol),
 
-pub fn new(ctx: anytype) Self {
+pub fn init(allocator: *mem.Allocator) !Self {
+    var sctx = try Context(.symbol).init(allocator);
+
+    return Self{
+        .currency = &sctx.currency,
+        .math = &sctx.math,
+        .modifier_symbol = &sctx.modifier_symbol,
+        .other_symbol = &sctx.other_symbol,
+        .sctx = sctx,
+    };
+}
+
+pub fn deinit(self: *Self) void {
+    if (self.sctx) |sctx| sctx.deinit();
+}
+
+pub fn initWithContext(ctx: anytype) Self {
     return Self{
         .currency = &ctx.currency,
         .math = &ctx.math,
         .modifier_symbol = &ctx.modifier_symbol,
         .other_symbol = &ctx.other_symbol,
+        .sctx = null,
     };
 }
 
@@ -39,10 +57,8 @@ pub fn isAsciiSymbol(cp: u21) bool {
 const expect = std.testing.expect;
 
 test "Component isSymbol" {
-    var ctx = try Context(.symbol).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var symbol = new(&ctx);
+    var symbol = try init(std.testing.allocator);
+    defer symbol.deinit();
 
     expect(symbol.isSymbol('<'));
     expect(symbol.isSymbol('>'));

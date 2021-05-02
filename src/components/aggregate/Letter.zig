@@ -27,8 +27,31 @@ title: *Title,
 title_map: *TitleMap,
 upper: *Upper,
 upper_map: *UpperMap,
+lctx: ?*Context(.letter),
 
-pub fn new(ctx: anytype) Self {
+pub fn init(allocator: *mem.Allocator) !Self {
+    var lctx = try Context(.letter).init(allocator);
+
+    return Self{
+        .fold_map = &lctx.fold_map,
+        .cased = &lctx.cased,
+        .lower = &lctx.lower,
+        .lower_map = &lctx.lower_map,
+        .modifier_letter = &lctx.modifier_letter,
+        .other_letter = &lctx.other_letter,
+        .title = &lctx.title,
+        .title_map = &lctx.title_map,
+        .upper = &lctx.upper,
+        .upper_map = &lctx.upper_map,
+        .lctx = lctx,
+    };
+}
+
+pub fn deinit(self: *Self) void {
+    if (self.lctx) |lctx| lctx.deinit();
+}
+
+pub fn initWithContext(ctx: anytype) Self {
     return Self{
         .fold_map = &ctx.fold_map,
         .cased = &ctx.cased,
@@ -40,6 +63,7 @@ pub fn new(ctx: anytype) Self {
         .title_map = &ctx.title_map,
         .upper = &ctx.upper,
         .upper_map = &ctx.upper_map,
+        .lctx = null,
     };
 }
 
@@ -129,10 +153,8 @@ const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 
 test "Component struct" {
-    var ctx = try Context(.letter).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var letter = new(&ctx);
+    var letter = try init(std.testing.allocator);
+    defer letter.deinit();
 
     const z = 'z';
     expect(letter.isLetter(z));
@@ -143,10 +165,8 @@ test "Component struct" {
 }
 
 test "Component isCased" {
-    var ctx = try Context(.letter).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var letter = new(&ctx);
+    var letter = try init(std.testing.allocator);
+    defer letter.deinit();
 
     expect(letter.isCased('a'));
     expect(letter.isCased('A'));
@@ -154,10 +174,8 @@ test "Component isCased" {
 }
 
 test "Component isLower" {
-    var ctx = try Context(.letter).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var letter = new(&ctx);
+    var letter = try init(std.testing.allocator);
+    defer letter.deinit();
 
     expect(letter.isLower('a'));
     expect(letter.isLower('é'));
@@ -172,10 +190,8 @@ test "Component isLower" {
 const expectEqualSlices = std.testing.expectEqualSlices;
 
 test "Component toCaseFold" {
-    var ctx = try Context(.letter).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var letter = new(&ctx);
+    var letter = try init(std.testing.allocator);
+    defer letter.deinit();
 
     var result = letter.toCaseFold('A');
     switch (result) {
@@ -209,10 +225,8 @@ test "Component toCaseFold" {
 }
 
 test "Component toLower" {
-    var ctx = try Context(.letter).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var letter = new(&ctx);
+    var letter = try init(std.testing.allocator);
+    defer letter.deinit();
 
     expectEqual(letter.toLower('a'), 'a');
     expectEqual(letter.toLower('A'), 'a');
@@ -227,10 +241,8 @@ test "Component toLower" {
 }
 
 test "Component isUpper" {
-    var ctx = try Context(.letter).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var letter = new(&ctx);
+    var letter = try init(std.testing.allocator);
+    defer letter.deinit();
 
     expect(!letter.isUpper('a'));
     expect(!letter.isUpper('é'));
@@ -243,10 +255,8 @@ test "Component isUpper" {
 }
 
 test "Component toUpper" {
-    var ctx = try Context(.letter).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var letter = new(&ctx);
+    var letter = try init(std.testing.allocator);
+    defer letter.deinit();
 
     expectEqual(letter.toUpper('a'), 'A');
     expectEqual(letter.toUpper('A'), 'A');
@@ -259,10 +269,8 @@ test "Component toUpper" {
 }
 
 test "Component isTitle" {
-    var ctx = try Context(.letter).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var letter = new(&ctx);
+    var letter = try init(std.testing.allocator);
+    defer letter.deinit();
 
     expect(!letter.isTitle('a'));
     expect(!letter.isTitle('é'));
@@ -275,10 +283,8 @@ test "Component isTitle" {
 }
 
 test "Component toTitle" {
-    var ctx = try Context(.letter).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var letter = new(&ctx);
+    var letter = try init(std.testing.allocator);
+    defer letter.deinit();
 
     expectEqual(letter.toTitle('a'), 'A');
     expectEqual(letter.toTitle('A'), 'A');
@@ -291,7 +297,8 @@ test "Component isLetter" {
     var ctx = try Context(.letter).init(std.testing.allocator);
     defer ctx.deinit();
 
-    var letter = new(&ctx);
+    var letter = initWithContext(ctx);
+    defer letter.deinit();
 
     var cp: u21 = 'a';
     while (cp <= 'z') : (cp += 1) {

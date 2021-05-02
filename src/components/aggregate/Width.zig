@@ -27,11 +27,36 @@ nonspacing: *Nonspacing,
 regional: *Regional,
 wide: *Wide,
 ziglyph: Ziglyph,
+wctx: ?*Context(.width),
 
-pub fn new(ctx: anytype) !Self {
+pub fn init(allocator: *mem.Allocator) !Self {
+    var wctx = try Context(.width).init(allocator);
+
+    return Self{
+        .allocator = allocator,
+        .giter = try GraphemeIterator.initWithContext(wctx, ""),
+        .ambiguous = &wctx.ambiguous,
+        .enclosing = &wctx.enclosing,
+        .extpic = &wctx.extpic,
+        .format = &wctx.format,
+        .fullwidth = &wctx.fullwidth,
+        .nonspacing = &wctx.nonspacing,
+        .regional = &wctx.regional,
+        .wide = &wctx.wide,
+        .ziglyph = try Ziglyph.initWithContext(wctx),
+        .wctx = wctx,
+    };
+}
+
+pub fn deinit(self: *Self) void {
+    self.giter.deinit();
+    if (self.wctx) |wctx| wctx.deinit();
+}
+
+pub fn initWithContext(ctx: anytype) !Self {
     return Self{
         .allocator = ctx.allocator,
-        .giter = try GraphemeIterator.new(ctx, ""),
+        .giter = try GraphemeIterator.initWithContext(ctx, ""),
         .ambiguous = &ctx.ambiguous,
         .enclosing = &ctx.enclosing,
         .extpic = &ctx.extpic,
@@ -40,7 +65,8 @@ pub fn new(ctx: anytype) !Self {
         .nonspacing = &ctx.nonspacing,
         .regional = &ctx.regional,
         .wide = &ctx.wide,
-        .ziglyph = try Ziglyph.new(ctx),
+        .ziglyph = try Ziglyph.initWithContext(ctx),
+        .wctx = null,
     };
 }
 
@@ -130,10 +156,8 @@ pub fn strWidth(self: *Self, str: []const u8, am_width: AmbiguousWidth) !usize {
 const expectEqual = std.testing.expectEqual;
 
 test "Grapheme Width" {
-    var ctx = try Context(.width).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var width = try new(&ctx);
+    var width = try init(std.testing.allocator);
+    defer width.deinit();
 
     expectEqual(@as(i8, -1), width.codePointWidth(0x0008, .half)); // \b DEL
     expectEqual(@as(i8, 0), width.codePointWidth(0x0000, .half)); // null

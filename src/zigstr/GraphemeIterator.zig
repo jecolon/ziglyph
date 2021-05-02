@@ -23,10 +23,31 @@ hangul_map: *HangulMap,
 prepend: *Prepend,
 regional: *Regional,
 spacing: *Spacing,
+gctx: ?*Context(.grapheme),
 
 const Self = @This();
 
-pub fn new(ctx: anytype, str: []const u8) !Self {
+pub fn init(allocator: *mem.Allocator, str: []const u8) !Self {
+    var gctx = try Context(.grapheme).init(allocator);
+
+    return Self{
+        .control = &gctx.control,
+        .cp_iter = try CodePointIterator.init(str),
+        .extend = &gctx.extend,
+        .extpic = &gctx.extpic,
+        .hangul_map = &gctx.hangul_map,
+        .prepend = &gctx.prepend,
+        .regional = &gctx.regional,
+        .spacing = &gctx.spacing,
+        .gctx = gctx,
+    };
+}
+
+pub fn deinit(self: *Self) void {
+    if (self.gctx) |gctx| gctx.deinit();
+}
+
+pub fn initWithContext(ctx: anytype, str: []const u8) !Self {
     return Self{
         .control = &ctx.control,
         .cp_iter = try CodePointIterator.init(str),
@@ -36,6 +57,7 @@ pub fn new(ctx: anytype, str: []const u8) !Self {
         .prepend = &ctx.prepend,
         .regional = &ctx.regional,
         .spacing = &ctx.spacing,
+        .gctx = null,
     };
 }
 
@@ -241,6 +263,9 @@ test "Grapheme iterator" {
     var ctx = try Context(.grapheme).init(allocator);
     defer ctx.deinit();
     var giter: ?Self = null;
+    defer {
+        if (giter) |*gi| gi.deinit();
+    }
 
     while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |raw| : (line_no += 1) {
         // Skip comments or empty lines.
@@ -293,7 +318,7 @@ test "Grapheme iterator" {
         if (giter) |*gi| {
             try gi.reinit(all_bytes.items);
         } else {
-            giter = try new(&ctx, all_bytes.items);
+            giter = try initWithContext(ctx, all_bytes.items);
         }
 
         // Chaeck.

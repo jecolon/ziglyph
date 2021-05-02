@@ -26,16 +26,15 @@ pub const Factory = struct {
     zctx: ?*Context(.zigstr),
 
     pub fn init(allocator: *mem.Allocator) !Factory {
-        var zctx = try allocator.create(Context(.zigstr));
-        zctx.* = try Context(.zigstr).init(allocator);
+        var zctx = try Context(.zigstr).init(allocator);
 
         return Factory{
             .arena = std.heap.ArenaAllocator.init(allocator),
-            .decomp_map = try DecomposeMap.init(zctx),
+            .decomp_map = try DecomposeMap.initWithContext(zctx),
             .fold_map = &zctx.fold_map,
-            .giter = try GraphemeIterator.new(zctx, ""),
-            .letter = Letter.new(zctx),
-            .width = try Width.new(zctx),
+            .giter = try GraphemeIterator.initWithContext(zctx, ""),
+            .letter = Letter.initWithContext(zctx),
+            .width = try Width.initWithContext(zctx),
             .zctx = zctx,
         };
     }
@@ -43,20 +42,20 @@ pub const Factory = struct {
     pub fn initWithContext(ctx: anytype) !Factory {
         return Factory{
             .arena = std.heap.ArenaAllocator.init(ctx.allocator),
-            .decomp_map = try DecomposeMap.init(ctx),
+            .decomp_map = try DecomposeMap.initWithContext(ctx),
             .fold_map = &ctx.fold_map,
-            .giter = try GraphemeIterator.new(ctx, ""),
-            .letter = Letter.new(ctx),
-            .width = try Width.new(ctx),
+            .giter = try GraphemeIterator.initWithContext(ctx, ""),
+            .letter = Letter.initWithContext(ctx),
+            .width = try Width.initWithContext(ctx),
             .zctx = null,
         };
     }
 
     pub fn deinit(self: *Factory) void {
         self.decomp_map.deinit();
+        self.giter.deinit();
         if (self.zctx) |zctx| {
             zctx.deinit();
-            self.arena.child_allocator.destroy(zctx);
         }
         self.arena.deinit();
     }
@@ -1019,7 +1018,7 @@ test "Zigstr format" {
 test "Zigstr width" {
     var ctx = try Context(.zigstr).init(std.testing.allocator);
     defer ctx.deinit();
-    var zigstr = try Factory.initWithContext(&ctx);
+    var zigstr = try Factory.initWithContext(ctx);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Héllo 😊");

@@ -16,14 +16,33 @@ digit: *Digit,
 hex: *Hex,
 letter_number: *LetterNumber,
 other_number: *OtherNumber,
+nctx: ?*Context(.number),
 
-pub fn new(ctx: anytype) Self {
+pub fn init(allocator: *mem.Allocator) !Self {
+    var nctx = try Context(.number).init(allocator);
+
+    return Self{
+        .decimal = &nctx.decimal,
+        .digit = &nctx.digit,
+        .hex = &nctx.hex,
+        .letter_number = &nctx.letter_number,
+        .other_number = &nctx.other_number,
+        .nctx = nctx,
+    };
+}
+
+pub fn deinit(self: *Self) void {
+    if (self.nctx) |nctx| nctx.deinit();
+}
+
+pub fn initWithContext(ctx: anytype) Self {
     return Self{
         .decimal = &ctx.decimal,
         .digit = &ctx.digit,
         .hex = &ctx.hex,
         .letter_number = &ctx.letter_number,
         .other_number = &ctx.other_number,
+        .nctx = null,
     };
 }
 
@@ -69,7 +88,8 @@ test "Component isDecimal" {
     var ctx = try Context(.number).init(std.testing.allocator);
     defer ctx.deinit();
 
-    var number = new(&ctx);
+    var number = initWithContext(ctx);
+    defer number.deinit();
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
@@ -81,10 +101,8 @@ test "Component isDecimal" {
 }
 
 test "Component isHexDigit" {
-    var ctx = try Context(.number).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var number = new(&ctx);
+    var number = try init(std.testing.allocator);
+    defer number.deinit();
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
@@ -96,10 +114,8 @@ test "Component isHexDigit" {
 }
 
 test "Component isNumber" {
-    var ctx = try Context(.number).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var number = new(&ctx);
+    var number = try init(std.testing.allocator);
+    defer number.deinit();
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {

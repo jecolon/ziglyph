@@ -120,8 +120,22 @@ pub fn Context(comptime data_set: DataSet) type {
 
             const Self = @This();
 
-            pub fn init(allocator: *mem.Allocator) !Self {
-                return Self{
+            const Singleton = struct {
+                instance: *Self,
+                ref_count: usize,
+            };
+
+            var singleton: ?Singleton = null;
+
+            pub fn init(allocator: *mem.Allocator) !*Self {
+                if (singleton) |*s| {
+                    s.ref_count += 1;
+                    return s.instance;
+                }
+
+                var instance = try allocator.create(Self);
+
+                instance.* = Self{
                     .allocator = allocator,
                     .alphabetic = try Alphabetic.init(allocator),
                     .ccc_map = try CccMap.init(allocator),
@@ -167,6 +181,13 @@ pub fn Context(comptime data_set: DataSet) type {
                     .modifier_symbol = try ModifierSymbol.init(allocator),
                     .other_symbol = try OtherSymbol.init(allocator),
                 };
+
+                singleton = Singleton{
+                    .instance = instance,
+                    .ref_count = 1,
+                };
+
+                return instance;
             }
 
             pub fn deinit(self: *Self) void {
@@ -213,6 +234,14 @@ pub fn Context(comptime data_set: DataSet) type {
                 self.fullwidth.deinit();
                 self.wide.deinit();
                 self.ambiguous.deinit();
+
+                if (singleton) |*s| {
+                    s.ref_count -= 1;
+                    if (s.ref_count == 0) {
+                        self.allocator.destroy(s.instance);
+                        singleton = null;
+                    }
+                }
             }
         },
         .decompose => struct {
@@ -222,17 +251,46 @@ pub fn Context(comptime data_set: DataSet) type {
 
             const Self = @This();
 
-            pub fn init(allocator: *mem.Allocator) !Self {
-                return Self{
+            const Singleton = struct {
+                instance: *Self,
+                ref_count: usize,
+            };
+
+            var singleton: ?Singleton = null;
+
+            pub fn init(allocator: *mem.Allocator) !*Self {
+                if (singleton) |*s| {
+                    s.ref_count += 1;
+                    return s.instance;
+                }
+
+                var instance = try allocator.create(Self);
+
+                instance.* = Self{
                     .allocator = allocator,
                     .ccc_map = try CccMap.init(allocator),
                     .hangul_map = try HangulMap.init(allocator),
                 };
+
+                singleton = Singleton{
+                    .instance = instance,
+                    .ref_count = 1,
+                };
+
+                return instance;
             }
 
             pub fn deinit(self: *Self) void {
                 self.ccc_map.deinit();
                 self.hangul_map.deinit();
+
+                if (singleton) |*s| {
+                    s.ref_count -= 1;
+                    if (s.ref_count == 0) {
+                        self.allocator.destroy(s.instance);
+                        singleton = null;
+                    }
+                }
             }
         },
         .grapheme => struct {
@@ -247,8 +305,22 @@ pub fn Context(comptime data_set: DataSet) type {
 
             const Self = @This();
 
-            pub fn init(allocator: *mem.Allocator) !Self {
-                return Self{
+            const Singleton = struct {
+                instance: *Self,
+                ref_count: usize,
+            };
+
+            var singleton: ?Singleton = null;
+
+            pub fn init(allocator: *mem.Allocator) !*Self {
+                if (singleton) |*s| {
+                    s.ref_count += 1;
+                    return s.instance;
+                }
+
+                var instance = try allocator.create(Self);
+
+                instance.* = Self{
                     .allocator = allocator,
                     .control = try Control.init(allocator),
                     .extend = try Extend.init(allocator),
@@ -258,6 +330,13 @@ pub fn Context(comptime data_set: DataSet) type {
                     .regional = try Regional.init(allocator),
                     .spacing = try Spacing.init(allocator),
                 };
+
+                singleton = Singleton{
+                    .instance = instance,
+                    .ref_count = 1,
+                };
+
+                return instance;
             }
 
             pub fn deinit(self: *Self) void {
@@ -268,6 +347,14 @@ pub fn Context(comptime data_set: DataSet) type {
                 self.prepend.deinit();
                 self.regional.deinit();
                 self.spacing.deinit();
+
+                if (singleton) |*s| {
+                    s.ref_count -= 1;
+                    if (s.ref_count == 0) {
+                        self.allocator.destroy(s.instance);
+                        singleton = null;
+                    }
+                }
             }
         },
         .letter => struct {
@@ -285,8 +372,22 @@ pub fn Context(comptime data_set: DataSet) type {
 
             const Self = @This();
 
-            pub fn init(allocator: *mem.Allocator) !Self {
-                return Self{
+            const Singleton = struct {
+                instance: *Self,
+                ref_count: usize,
+            };
+
+            var singleton: ?Singleton = null;
+
+            pub fn init(allocator: *mem.Allocator) !*Self {
+                if (singleton) |*s| {
+                    s.ref_count += 1;
+                    return s.instance;
+                }
+
+                var instance = try allocator.create(Self);
+
+                instance.* = Self{
                     .allocator = allocator,
                     .fold_map = try CaseFoldMap.init(allocator),
                     .cased = try Cased.init(allocator),
@@ -299,6 +400,13 @@ pub fn Context(comptime data_set: DataSet) type {
                     .upper = try Upper.init(allocator),
                     .upper_map = try UpperMap.init(allocator),
                 };
+
+                singleton = Singleton{
+                    .instance = instance,
+                    .ref_count = 1,
+                };
+
+                return instance;
             }
 
             pub fn deinit(self: *Self) void {
@@ -312,6 +420,14 @@ pub fn Context(comptime data_set: DataSet) type {
                 self.title_map.deinit();
                 self.upper.deinit();
                 self.upper_map.deinit();
+
+                if (singleton) |*s| {
+                    s.ref_count -= 1;
+                    if (s.ref_count == 0) {
+                        self.allocator.destroy(s.instance);
+                        singleton = null;
+                    }
+                }
             }
         },
         .mark => struct {
@@ -322,19 +438,48 @@ pub fn Context(comptime data_set: DataSet) type {
 
             const Self = @This();
 
-            pub fn init(allocator: *mem.Allocator) !Self {
-                return Self{
+            const Singleton = struct {
+                instance: *Self,
+                ref_count: usize,
+            };
+
+            var singleton: ?Singleton = null;
+
+            pub fn init(allocator: *mem.Allocator) !*Self {
+                if (singleton) |*s| {
+                    s.ref_count += 1;
+                    return s.instance;
+                }
+
+                var instance = try allocator.create(Self);
+
+                instance.* = Self{
                     .allocator = allocator,
                     .enclosing = try Enclosing.init(allocator),
                     .nonspacing = try Nonspacing.init(allocator),
                     .spacing = try Spacing.init(allocator),
                 };
+
+                singleton = Singleton{
+                    .instance = instance,
+                    .ref_count = 1,
+                };
+
+                return instance;
             }
 
             pub fn deinit(self: *Self) void {
                 self.enclosing.deinit();
                 self.nonspacing.deinit();
                 self.spacing.deinit();
+
+                if (singleton) |*s| {
+                    s.ref_count -= 1;
+                    if (s.ref_count == 0) {
+                        self.allocator.destroy(s.instance);
+                        singleton = null;
+                    }
+                }
             }
         },
         .number => struct {
@@ -347,8 +492,22 @@ pub fn Context(comptime data_set: DataSet) type {
 
             const Self = @This();
 
-            pub fn init(allocator: *mem.Allocator) !Self {
-                return Self{
+            const Singleton = struct {
+                instance: *Self,
+                ref_count: usize,
+            };
+
+            var singleton: ?Singleton = null;
+
+            pub fn init(allocator: *mem.Allocator) !*Self {
+                if (singleton) |*s| {
+                    s.ref_count += 1;
+                    return s.instance;
+                }
+
+                var instance = try allocator.create(Self);
+
+                instance.* = Self{
                     .allocator = allocator,
                     .decimal = try Decimal.init(allocator),
                     .digit = try Digit.init(allocator),
@@ -356,6 +515,13 @@ pub fn Context(comptime data_set: DataSet) type {
                     .letter_number = try LetterNumber.init(allocator),
                     .other_number = try OtherNumber.init(allocator),
                 };
+
+                singleton = Singleton{
+                    .instance = instance,
+                    .ref_count = 1,
+                };
+
+                return instance;
             }
 
             pub fn deinit(self: *Self) void {
@@ -364,6 +530,14 @@ pub fn Context(comptime data_set: DataSet) type {
                 self.hex.deinit();
                 self.letter_number.deinit();
                 self.other_number.deinit();
+
+                if (singleton) |*s| {
+                    s.ref_count -= 1;
+                    if (s.ref_count == 0) {
+                        self.allocator.destroy(s.instance);
+                        singleton = null;
+                    }
+                }
             }
         },
         .punct => struct {
@@ -378,8 +552,22 @@ pub fn Context(comptime data_set: DataSet) type {
 
             const Self = @This();
 
-            pub fn init(allocator: *mem.Allocator) !Self {
-                return Self{
+            const Singleton = struct {
+                instance: *Self,
+                ref_count: usize,
+            };
+
+            var singleton: ?Singleton = null;
+
+            pub fn init(allocator: *mem.Allocator) !*Self {
+                if (singleton) |*s| {
+                    s.ref_count += 1;
+                    return s.instance;
+                }
+
+                var instance = try allocator.create(Self);
+
+                instance.* = Self{
                     .allocator = allocator,
                     .close = try Close.init(allocator),
                     .connector = try Connector.init(allocator),
@@ -389,6 +577,13 @@ pub fn Context(comptime data_set: DataSet) type {
                     .open = try Open.init(allocator),
                     .other_punct = try OtherPunct.init(allocator),
                 };
+
+                singleton = Singleton{
+                    .instance = instance,
+                    .ref_count = 1,
+                };
+
+                return instance;
             }
 
             pub fn deinit(self: *Self) void {
@@ -399,6 +594,14 @@ pub fn Context(comptime data_set: DataSet) type {
                 self.initial.deinit();
                 self.open.deinit();
                 self.other_punct.deinit();
+
+                if (singleton) |*s| {
+                    s.ref_count -= 1;
+                    if (s.ref_count == 0) {
+                        self.allocator.destroy(s.instance);
+                        singleton = null;
+                    }
+                }
             }
         },
         .space => struct {
@@ -408,17 +611,46 @@ pub fn Context(comptime data_set: DataSet) type {
 
             const Self = @This();
 
-            pub fn init(allocator: *mem.Allocator) !Self {
-                return Self{
+            const Singleton = struct {
+                instance: *Self,
+                ref_count: usize,
+            };
+
+            var singleton: ?Singleton = null;
+
+            pub fn init(allocator: *mem.Allocator) !*Self {
+                if (singleton) |*s| {
+                    s.ref_count += 1;
+                    return s.instance;
+                }
+
+                var instance = try allocator.create(Self);
+
+                instance.* = Self{
                     .allocator = allocator,
                     .space = try Space.init(allocator),
                     .whitespace = try WhiteSpace.init(allocator),
                 };
+
+                singleton = Singleton{
+                    .instance = instance,
+                    .ref_count = 1,
+                };
+
+                return instance;
             }
 
             pub fn deinit(self: *Self) void {
                 self.space.deinit();
                 self.whitespace.deinit();
+
+                if (singleton) |*s| {
+                    s.ref_count -= 1;
+                    if (s.ref_count == 0) {
+                        self.allocator.destroy(s.instance);
+                        singleton = null;
+                    }
+                }
             }
         },
         .symbol => struct {
@@ -430,14 +662,35 @@ pub fn Context(comptime data_set: DataSet) type {
 
             const Self = @This();
 
-            pub fn init(allocator: *mem.Allocator) !Self {
-                return Self{
+            const Singleton = struct {
+                instance: *Self,
+                ref_count: usize,
+            };
+
+            var singleton: ?Singleton = null;
+
+            pub fn init(allocator: *mem.Allocator) !*Self {
+                if (singleton) |*s| {
+                    s.ref_count += 1;
+                    return s.instance;
+                }
+
+                var instance = try allocator.create(Self);
+
+                instance.* = Self{
                     .allocator = allocator,
                     .currency = try Currency.init(allocator),
                     .math = try Math.init(allocator),
                     .modifier_symbol = try ModifierSymbol.init(allocator),
                     .other_symbol = try OtherSymbol.init(allocator),
                 };
+
+                singleton = Singleton{
+                    .instance = instance,
+                    .ref_count = 1,
+                };
+
+                return instance;
             }
 
             pub fn deinit(self: *Self) void {
@@ -445,6 +698,14 @@ pub fn Context(comptime data_set: DataSet) type {
                 self.math.deinit();
                 self.modifier_symbol.deinit();
                 self.other_symbol.deinit();
+
+                if (singleton) |*s| {
+                    s.ref_count -= 1;
+                    if (s.ref_count == 0) {
+                        self.allocator.destroy(s.instance);
+                        singleton = null;
+                    }
+                }
             }
         },
         .width => struct {
@@ -494,8 +755,22 @@ pub fn Context(comptime data_set: DataSet) type {
 
             const Self = @This();
 
-            pub fn init(allocator: *mem.Allocator) !Self {
-                return Self{
+            const Singleton = struct {
+                instance: *Self,
+                ref_count: usize,
+            };
+
+            var singleton: ?Singleton = null;
+
+            pub fn init(allocator: *mem.Allocator) !*Self {
+                if (singleton) |*s| {
+                    s.ref_count += 1;
+                    return s.instance;
+                }
+
+                var instance = try allocator.create(Self);
+
+                instance.* = Self{
                     .allocator = allocator,
                     .ambiguous = try Ambiguous.init(allocator),
                     .control = try Control.init(allocator),
@@ -540,6 +815,13 @@ pub fn Context(comptime data_set: DataSet) type {
                     .modifier_symbol = try ModifierSymbol.init(allocator),
                     .other_symbol = try OtherSymbol.init(allocator),
                 };
+
+                singleton = Singleton{
+                    .instance = instance,
+                    .ref_count = 1,
+                };
+
+                return instance;
             }
 
             pub fn deinit(self: *Self) void {
@@ -585,6 +867,14 @@ pub fn Context(comptime data_set: DataSet) type {
                 self.math.deinit();
                 self.modifier_symbol.deinit();
                 self.other_symbol.deinit();
+
+                if (singleton) |*s| {
+                    s.ref_count -= 1;
+                    if (s.ref_count == 0) {
+                        self.allocator.destroy(s.instance);
+                        singleton = null;
+                    }
+                }
             }
         },
         .ziglyph => struct {
@@ -625,8 +915,22 @@ pub fn Context(comptime data_set: DataSet) type {
 
             const Self = @This();
 
-            pub fn init(allocator: *mem.Allocator) !Self {
-                return Self{
+            const Singleton = struct {
+                instance: *Self,
+                ref_count: usize,
+            };
+
+            var singleton: ?Singleton = null;
+
+            pub fn init(allocator: *mem.Allocator) !*Self {
+                if (singleton) |*s| {
+                    s.ref_count += 1;
+                    return s.instance;
+                }
+
+                var instance = try allocator.create(Self);
+
+                instance.* = Self{
                     .allocator = allocator,
                     .alphabetic = try Alphabetic.init(allocator),
                     .control = try Control.init(allocator),
@@ -662,6 +966,13 @@ pub fn Context(comptime data_set: DataSet) type {
                     .modifier_symbol = try ModifierSymbol.init(allocator),
                     .other_symbol = try OtherSymbol.init(allocator),
                 };
+
+                singleton = Singleton{
+                    .instance = instance,
+                    .ref_count = 1,
+                };
+
+                return instance;
             }
 
             pub fn deinit(self: *Self) void {
@@ -698,6 +1009,14 @@ pub fn Context(comptime data_set: DataSet) type {
                 self.math.deinit();
                 self.modifier_symbol.deinit();
                 self.other_symbol.deinit();
+
+                if (singleton) |*s| {
+                    s.ref_count -= 1;
+                    if (s.ref_count == 0) {
+                        self.allocator.destroy(s.instance);
+                        singleton = null;
+                    }
+                }
             }
         },
         .zigstr => struct {
@@ -746,10 +1065,24 @@ pub fn Context(comptime data_set: DataSet) type {
             modifier_symbol: ModifierSymbol,
             other_symbol: OtherSymbol,
 
+            const Singleton = struct {
+                instance: *Self,
+                ref_count: usize,
+            };
+
+            var singleton: ?Singleton = null;
+
             const Self = @This();
 
-            pub fn init(allocator: *mem.Allocator) !Self {
-                return Self{
+            pub fn init(allocator: *mem.Allocator) !*Self {
+                if (singleton) |*s| {
+                    s.ref_count += 1;
+                    return s.instance;
+                }
+
+                var instance = try allocator.create(Self);
+
+                instance.* = Self{
                     .allocator = allocator,
                     .ambiguous = try Ambiguous.init(allocator),
                     .ccc_map = try CccMap.init(allocator),
@@ -795,6 +1128,13 @@ pub fn Context(comptime data_set: DataSet) type {
                     .modifier_symbol = try ModifierSymbol.init(allocator),
                     .other_symbol = try OtherSymbol.init(allocator),
                 };
+
+                singleton = Singleton{
+                    .instance = instance,
+                    .ref_count = 1,
+                };
+
+                return instance;
             }
 
             pub fn deinit(self: *Self) void {
@@ -841,6 +1181,14 @@ pub fn Context(comptime data_set: DataSet) type {
                 self.math.deinit();
                 self.modifier_symbol.deinit();
                 self.other_symbol.deinit();
+
+                if (singleton) |*s| {
+                    s.ref_count -= 1;
+                    if (s.ref_count == 0) {
+                        self.allocator.destroy(s.instance);
+                        singleton = null;
+                    }
+                }
             }
         },
     };

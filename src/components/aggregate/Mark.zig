@@ -11,12 +11,29 @@ const Self = @This();
 enclosing: *Enclosing,
 nonspacing: *Nonspacing,
 spacing: *Spacing,
+mctx: ?*Context(.mark),
 
-pub fn new(ctx: anytype) Self {
+pub fn init(allocator: *mem.Allocator) !Self {
+    var mctx = try Context(.mark).init(allocator);
+
+    return Self{
+        .enclosing = &mctx.enclosing,
+        .nonspacing = &mctx.nonspacing,
+        .spacing = &mctx.spacing,
+        .mctx = mctx,
+    };
+}
+
+pub fn deinit(self: *Self) void {
+    if (self.mctx) |mctx| mctx.deinit();
+}
+
+pub fn initWithContext(ctx: anytype) Self {
     return Self{
         .enclosing = &ctx.enclosing,
         .nonspacing = &ctx.nonspacing,
         .spacing = &ctx.spacing,
+        .mctx = null,
     };
 }
 
@@ -28,10 +45,8 @@ pub fn isMark(self: Self, cp: u21) bool {
 const expect = std.testing.expect;
 
 test "Component isMark" {
-    var ctx = try Context(.mark).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var mark = new(&ctx);
+    var mark = try init(std.testing.allocator);
+    defer mark.deinit();
 
     expect(mark.isMark('\u{20E4}'));
     expect(!mark.isMark('='));

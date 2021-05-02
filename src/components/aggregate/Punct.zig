@@ -20,8 +20,28 @@ final: *Final,
 initial: *Initial,
 open: *Open,
 other_punct: *OtherPunct,
+pctx: ?*Context(.punct),
 
-pub fn new(ctx: anytype) Self {
+pub fn init(allocator: *mem.Allocator) !Self {
+    var pctx = try Context(.punct).init(allocator);
+
+    return Self{
+        .close = &pctx.close,
+        .connector = &pctx.connector,
+        .dash = &pctx.dash,
+        .final = &pctx.final,
+        .initial = &pctx.initial,
+        .open = &pctx.open,
+        .other_punct = &pctx.other_punct,
+        .pctx = pctx,
+    };
+}
+
+pub fn deinit(self: *Self) void {
+    if (self.pctx) |pctx| pctx.deinit();
+}
+
+pub fn initWithContext(ctx: anytype) Self {
     return Self{
         .close = &ctx.close,
         .connector = &ctx.connector,
@@ -30,6 +50,7 @@ pub fn new(ctx: anytype) Self {
         .initial = &ctx.initial,
         .open = &ctx.open,
         .other_punct = &ctx.other_punct,
+        .pctx = null,
     };
 }
 
@@ -49,10 +70,8 @@ pub fn isAsciiPunct(cp: u21) bool {
 const expect = std.testing.expect;
 
 test "Component isPunct" {
-    var ctx = try Context(.punct).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var punct = new(&ctx);
+    var punct = try init(std.testing.allocator);
+    defer punct.deinit();
 
     expect(punct.isPunct('!'));
     expect(punct.isPunct('?'));

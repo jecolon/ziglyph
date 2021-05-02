@@ -27,21 +27,43 @@ pub const Ziglyph = struct {
     mark: Mark,
     number: Number,
     punct: Punct,
-    symbol: Symbol,
     space: Space,
+    symbol: Symbol,
+    zctx: ?*Context(.ziglyph),
 
     const Self = @This();
 
-    pub fn new(ctx: anytype) !Self {
+    pub fn init(allocator: *mem.Allocator) !Self {
+        var zctx = try Context(.ziglyph).init(allocator);
+
+        return Self{
+            .alphabetic = &zctx.alphabetic,
+            .control = &zctx.control,
+            .letter = Letter.initWithContext(zctx),
+            .mark = Mark.initWithContext(zctx),
+            .number = Number.initWithContext(zctx),
+            .punct = Punct.initWithContext(zctx),
+            .space = Space.initWithContext(zctx),
+            .symbol = Symbol.initWithContext(zctx),
+            .zctx = zctx,
+        };
+    }
+
+    pub fn deinit(self: *Self) void {
+        if (self.zctx) |zctx| zctx.deinit();
+    }
+
+    pub fn initWithContext(ctx: anytype) !Self {
         return Self{
             .alphabetic = &ctx.alphabetic,
             .control = &ctx.control,
-            .letter = Letter.new(ctx),
-            .mark = Mark.new(ctx),
-            .number = Number.new(ctx),
-            .punct = Punct.new(ctx),
-            .symbol = Symbol.new(ctx),
-            .space = Space.new(ctx),
+            .letter = Letter.initWithContext(ctx),
+            .mark = Mark.initWithContext(ctx),
+            .number = Number.initWithContext(ctx),
+            .punct = Punct.initWithContext(ctx),
+            .space = Space.initWithContext(ctx),
+            .symbol = Symbol.initWithContext(ctx),
+            .zctx = null,
         };
     }
 
@@ -239,10 +261,8 @@ test "Ziglyph ASCII methods" {
 }
 
 test "Ziglyph struct" {
-    var ctx = try Context(.ziglyph).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var ziglyph = try Ziglyph.new(&ctx);
+    var ziglyph = try Ziglyph.init(std.testing.allocator);
+    defer ziglyph.deinit();
 
     const z = 'z';
     expect(ziglyph.isAlphaNum(z));
@@ -273,10 +293,8 @@ test "Ziglyph struct" {
 }
 
 test "Ziglyph isGraphic" {
-    var ctx = try Context(.ziglyph).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var ziglyph = try Ziglyph.new(&ctx);
+    var ziglyph = try Ziglyph.init(std.testing.allocator);
+    defer ziglyph.deinit();
 
     expect(ziglyph.isGraphic('A'));
     expect(ziglyph.isGraphic('\u{20E4}'));
@@ -288,10 +306,8 @@ test "Ziglyph isGraphic" {
 }
 
 test "Ziglyph isHexDigit" {
-    var ctx = try Context(.ziglyph).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var ziglyph = try Ziglyph.new(&ctx);
+    var ziglyph = try Ziglyph.init(std.testing.allocator);
+    defer ziglyph.deinit();
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
@@ -313,10 +329,8 @@ test "Ziglyph isHexDigit" {
 }
 
 test "Ziglyph isPrint" {
-    var ctx = try Context(.ziglyph).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var ziglyph = try Ziglyph.new(&ctx);
+    var ziglyph = try Ziglyph.init(std.testing.allocator);
+    defer ziglyph.deinit();
 
     expect(ziglyph.isPrint('A'));
     expect(ziglyph.isPrint('\u{20E4}'));
@@ -329,10 +343,8 @@ test "Ziglyph isPrint" {
 }
 
 test "Ziglyph isAlphaNum" {
-    var ctx = try Context(.ziglyph).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var ziglyph = try Ziglyph.new(&ctx);
+    var ziglyph = try Ziglyph.init(std.testing.allocator);
+    defer ziglyph.deinit();
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
@@ -356,7 +368,8 @@ test "Ziglyph isControl" {
     var ctx = try Context(.ziglyph).init(std.testing.allocator);
     defer ctx.deinit();
 
-    var ziglyph = try Ziglyph.new(&ctx);
+    var ziglyph = try Ziglyph.initWithContext(ctx);
+    defer ziglyph.deinit();
 
     expect(ziglyph.isControl('\n'));
     expect(ziglyph.isControl('\r'));
