@@ -1,6 +1,5 @@
 const std = @import("std");
 const mem = std.mem;
-const ascii = @import("../../ascii.zig");
 
 const Context = @import("../../context.zig").Context;
 pub const CaseFoldMap = @import("../../context.zig").CaseFoldMap;
@@ -69,29 +68,35 @@ pub fn initWithContext(ctx: anytype) Self {
 
 /// isCased detects cased letters.
 pub fn isCased(self: Self, cp: u21) bool {
+    // ASCII optimization.
+    if ((cp >= 'A' and cp <= 'Z') or (cp >= 'a' and cp <= 'z')) return true;
     return self.cased.isCased(cp);
 }
 
 /// isLetter covers all letters in Unicode, not just ASCII.
 pub fn isLetter(self: Self, cp: u21) bool {
+    // ASCII optimization.
+    if ((cp >= 'A' and cp <= 'Z') or (cp >= 'a' and cp <= 'z')) return true;
     return self.lower.isLowercaseLetter(cp) or self.modifier_letter.isModifierLetter(cp) or
         self.other_letter.isOtherLetter(cp) or self.title.isTitlecaseLetter(cp) or
         self.upper.isUppercaseLetter(cp);
 }
 
 /// isAscii detects ASCII only letters.
-pub fn isAscii(cp: u21) bool {
-    return if (cp < 128) ascii.isAlpha(@intCast(u8, cp)) else false;
+pub fn isAsciiLetter(cp: u21) bool {
+    return (cp >= 'A' and cp <= 'Z') or (cp >= 'a' and cp <= 'z');
 }
 
 /// isLower detects code points that are lowercase.
 pub fn isLower(self: Self, cp: u21) bool {
+    // ASCII optimization.
+    if (cp >= 'a' and cp <= 'z') return true;
     return self.lower.isLowercaseLetter(cp) or !self.isCased(cp);
 }
 
 /// isAsciiLower detects ASCII only lowercase letters.
 pub fn isAsciiLower(cp: u21) bool {
-    return if (cp < 128) ascii.isLower(@intCast(u8, cp)) else false;
+    return cp >= 'a' and cp <= 'z';
 }
 
 /// isTitle detects code points in titlecase.
@@ -101,17 +106,21 @@ pub fn isTitle(self: Self, cp: u21) bool {
 
 /// isUpper detects code points in uppercase.
 pub fn isUpper(self: Self, cp: u21) bool {
+    // ASCII optimization.
+    if (cp >= 'A' and cp <= 'Z') return true;
     return self.upper.isUppercaseLetter(cp) or !self.isCased(cp);
 }
 
 /// isAsciiUpper detects ASCII only uppercase letters.
 pub fn isAsciiUpper(cp: u21) bool {
-    return if (cp < 128) ascii.isUpper(@intCast(u8, cp)) else false;
+    return cp >= 'A' and cp <= 'Z';
 }
 
 /// toLower returns the lowercase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
 pub fn toLower(self: Self, cp: u21) u21 {
+    // ASCII optimization.
+    if (cp >= 'A' and cp <= 'Z') return cp ^ 32;
     // Only cased letters.
     if (!self.isCased(cp)) return cp;
     return self.lower_map.toLower(cp);
@@ -119,7 +128,7 @@ pub fn toLower(self: Self, cp: u21) u21 {
 
 /// toAsciiLower converts an ASCII letter to lowercase.
 pub fn toAsciiLower(self: Self, cp: u21) u21 {
-    return if (cp < 128) ascii.toLower(@intCast(u8, cp)) else cp;
+    return if (cp >= 'A' and cp <= 'Z') cp ^ 32 else cp;
 }
 
 /// toTitle returns the titlecase code point for the given code point. It returns the same 
@@ -133,6 +142,8 @@ pub fn toTitle(self: Self, cp: u21) u21 {
 /// toUpper returns the uppercase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
 pub fn toUpper(self: Self, cp: u21) u21 {
+    // ASCII optimization.
+    if (cp >= 'a' and cp <= 'z') return cp ^ 32;
     // Only cased letters.
     if (!self.isCased(cp)) return cp;
     return self.upper_map.toUpper(cp);
@@ -140,7 +151,7 @@ pub fn toUpper(self: Self, cp: u21) u21 {
 
 /// toAsciiUpper converts an ASCII letter to uppercase.
 pub fn toAsciiUpper(self: Self, cp: u21) u21 {
-    return if (cp < 128) ascii.toUpper(@intCast(u8, cp)) else false;
+    return if (cp >= 'a' and cp <= 'z') cp ^ 32 else cp;
 }
 
 /// toCaseFold will convert a code point into its case folded equivalent. Note that this can result

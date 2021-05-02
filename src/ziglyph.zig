@@ -72,7 +72,7 @@ pub const Ziglyph = struct {
     }
 
     pub fn isAsciiAlphabetic(cp: u21) bool {
-        return if (cp < 128) ascii.isAlpha(@intCast(u8, cp)) else false;
+        return (cp >= 'A' and cp <= 'Z') or (cp >= 'a' and cp <= 'z');
     }
 
     pub fn isAlphaNum(self: Self, cp: u21) bool {
@@ -80,7 +80,7 @@ pub const Ziglyph = struct {
     }
 
     pub fn isAsciiAlphaNum(cp: u21) bool {
-        return if (cp < 128) ascii.isAlNum(@intCast(u8, cp)) else false;
+        return (cp >= 'A' and cp <= 'Z') or (cp >= 'a' and cp <= 'z') or (cp >= '0' and cp <= '9');
     }
 
     /// isCased detects cased code points, usually letters.
@@ -99,7 +99,7 @@ pub const Ziglyph = struct {
     }
 
     pub fn isAsciiDigit(cp: u21) bool {
-        return if (cp < 128) ascii.isDigit(@intCast(u8, cp)) else false;
+        return cp >= '0' and cp <= '9';
     }
 
     /// isGraphic detects any code point that can be represented graphically, including spaces.
@@ -117,7 +117,7 @@ pub const Ziglyph = struct {
     }
 
     pub fn isAsciiHexDigit(cp: u21) bool {
-        return if (cp < 128) ascii.isXDigit(@intCast(u8, cp)) else false;
+        return (cp >= 'a' and cp <= 'f') or (cp >= 'A' and cp <= 'F') or (cp >= '0' and cp <= '9');
     }
 
     /// isPrint detects any code point that can be printed, excluding spaces.
@@ -143,7 +143,7 @@ pub const Ziglyph = struct {
     }
 
     pub fn isAsciiLetter(cp: u21) bool {
-        return if (cp < 128) ascii.isAlpha(@intCast(u8, cp)) else false;
+        return (cp >= 'A' and cp <= 'Z') or (cp >= 'a' and cp <= 'z');
     }
 
     /// isLower detects code points that are lowercase.
@@ -152,7 +152,7 @@ pub const Ziglyph = struct {
     }
 
     pub fn isAsciiLower(cp: u21) bool {
-        return if (cp < 128) ascii.isLower(@intCast(u8, cp)) else false;
+        return cp >= 'a' and cp <= 'z';
     }
 
     /// isMark detects special code points that serve as marks in different alphabets.
@@ -165,7 +165,7 @@ pub const Ziglyph = struct {
     }
 
     pub fn isAsciiNumber(cp: u21) bool {
-        return if (cp < 128) ascii.isDigit(@intCast(u8, cp)) else false;
+        return cp >= '0' and cp <= '9';
     }
 
     /// isPunct detects punctuation characters. Note some punctuation may be considered as symbols by Unicode.
@@ -211,7 +211,7 @@ pub const Ziglyph = struct {
     }
 
     pub fn isAsciiUpper(cp: u21) bool {
-        return if (cp < 128) ascii.isUpper(@intCast(u8, cp)) else false;
+        return cp >= 'A' and cp <= 'Z';
     }
 
     /// toLower returns the lowercase code point for the given code point. It returns the same 
@@ -221,7 +221,7 @@ pub const Ziglyph = struct {
     }
 
     pub fn toAsciiLower(cp: u21) u21 {
-        return if (cp < 128) ascii.toLower(@intCast(u8, cp)) else cp;
+        return if (cp >= 'A' and cp <= 'Z') cp ^ 32 else cp;
     }
 
     /// toTitle returns the titlecase code point for the given code point. It returns the same 
@@ -237,7 +237,7 @@ pub const Ziglyph = struct {
     }
 
     pub fn toAsciiUpper(cp: u21) u21 {
-        return if (cp < 128) ascii.toUpper(@intCast(u8, cp)) else cp;
+        return if (cp >= 'a' and cp <= 'z') cp ^ 32 else cp;
     }
 };
 

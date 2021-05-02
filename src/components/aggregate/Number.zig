@@ -1,6 +1,5 @@
 const std = @import("std");
 const mem = std.mem;
-const ascii = @import("../../ascii.zig");
 
 const Context = @import("../../context.zig").Context;
 pub const Decimal = @import("../../context.zig").Decimal;
@@ -48,38 +47,46 @@ pub fn initWithContext(ctx: anytype) Self {
 
 // isDecimal detects all Unicode digits.
 pub fn isDecimal(self: Self, cp: u21) bool {
+    // ASCII optimization.
+    if (cp < 128 and (cp >= '0' and cp <= '9')) return true;
     return self.decimal.isDecimalNumber(cp);
 }
 
 // isDigit detects all Unicode digits, which don't include the ASCII digits..
 pub fn isDigit(self: Self, cp: u21) bool {
+    // ASCII optimization.
+    if (cp < 128 and (cp >= '0' and cp <= '9')) return true;
     return self.digit.isDigit(cp) or self.isDecimal(cp);
 }
 
 /// isAsciiAlphabetic detects ASCII only letters.
 pub fn isAsciiDigit(cp: u21) bool {
-    return if (cp < 128) ascii.isDigit(@intCast(u8, cp)) else false;
+    return cp < 128 and (cp >= '0' and cp <= '9');
 }
 
 // isHex detects the 16 ASCII characters 0-9 A-F, and a-f.
 pub fn isHexDigit(self: Self, cp: u21) bool {
+    // ASCII optimization.
+    if (cp < 128 and ((cp >= 'a' and cp <= 'f') or (cp >= 'A' and cp <= 'F') or (cp >= '0' and cp <= '9'))) return true;
     return self.hex.isHexDigit(cp);
 }
 
 /// isAsciiHexDigit detects ASCII only hexadecimal digits.
 pub fn isAsciiHexDigit(cp: u21) bool {
-    return if (cp < 128) ascii.isXDigit(@intCast(u8, cp)) else false;
+    return cp < 128 and ((cp >= 'a' and cp <= 'f') or (cp >= 'A' and cp <= 'F') or (cp >= '0' and cp <= '9'));
 }
 
 /// isNumber covers all Unicode numbers, not just ASII.
 pub fn isNumber(self: Self, cp: u21) bool {
+    // ASCII optimization.
+    if (cp < 128 and (cp >= '0' and cp <= '9')) return true;
     return self.decimal.isDecimalNumber(cp) or self.letter_number.isLetterNumber(cp) or
         self.other_number.isOtherNumber(cp);
 }
 
 /// isAsciiNumber detects ASCII only numbers.
 pub fn isAsciiNumber(cp: u21) bool {
-    return if (cp < 128) ascii.isDigit(@intCast(u8, cp)) else false;
+    return cp < 128 and (cp >= '0' and cp <= '9');
 }
 
 const expect = std.testing.expect;
