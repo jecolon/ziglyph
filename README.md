@@ -223,7 +223,7 @@ called *Grapheme Clusters* and Ziglyph provides the `GraphemeIterator` to extrac
 (not just single code points) from a string.
 
 ```
-const GraphemeIterator = @import("Ziglyph").Context.GraphemeIterator;
+const GraphemeIterator = @import("Ziglyph").Zigstr.GraphemeIterator;
 
 test "GraphemeIterator" {
     var giter = try GraphemeIterator.init(std.testing.allocator, "H\u{0065}\u{0301}llo");
