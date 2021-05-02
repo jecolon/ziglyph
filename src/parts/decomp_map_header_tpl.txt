@@ -5,6 +5,8 @@ const std = @import("std");
 const mem = std.mem;
 const sort = std.sort.sort;
 const unicode = std.unicode;
+
+const Context = @import("../../../context.zig").Context;
 const CccMap = @import("../DerivedCombiningClass/CccMap.zig");
 const HangulMap = @import("../HangulSyllableType/HangulMap.zig");
 
@@ -27,17 +29,16 @@ pub const Form = enum {{
     KD, // Compatibility Decomposition
 }};
 
-allocator: *std.mem.Allocator,
-ccc_map: CccMap,
-han_map: HangulMap,
+ccc_map: *CccMap,
+hangul_map: *HangulMap,
 map: std.AutoHashMap(u21, Decomposed),
 
 const Self = @This();
-pub fn init(allocator: *std.mem.Allocator) !Self {{
+
+pub fn init(ctx: anytype) !Self {{
     var instance = Self{{
-        .allocator = allocator,
-        .ccc_map = try CccMap.init(allocator),
-        .han_map = try HangulMap.init(allocator),
-        .map = std.AutoHashMap(u21, Decomposed).init(allocator),
+        .ccc_map = &ctx.ccc_map,
+        .hangul_map = &ctx.hangul_map,
+        .map = std.AutoHashMap(u21, Decomposed).init(ctx.allocator),
     }};
 
