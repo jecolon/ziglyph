@@ -10,8 +10,22 @@ const LowerMap = @This();
 allocator: *mem.Allocator,
 map: std.AutoHashMap(u21, u21),
 
-pub fn init(allocator: *mem.Allocator) !LowerMap {
-    var instance = LowerMap{
+const Singleton = struct {
+    instance: *LowerMap,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*LowerMap {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(LowerMap);
+
+    instance.* = LowerMap{
         .allocator = allocator,
         .map = std.AutoHashMap(u21, u21).init(allocator),
     };
@@ -1411,11 +1425,23 @@ pub fn init(allocator: *mem.Allocator) !LowerMap {
     try instance.map.put(0x1E921, 0x1E943);
 
     // Placeholder: 0. Method suffix, 1. Struct name
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *LowerMap) void {
     self.map.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 /// toLower maps the code point to the desired case or returns the same code point if no mapping exists.

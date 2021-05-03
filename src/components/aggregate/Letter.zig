@@ -50,13 +50,13 @@ pub fn init(allocator: *mem.Allocator) !*Self {
         .fold_map = lctx.fold_map,
         .cased = lctx.cased,
         .lower = lctx.lower,
-        .lower_map = &lctx.lower_map,
+        .lower_map = lctx.lower_map,
         .modifier_letter = lctx.modifier_letter,
         .other_letter = lctx.other_letter,
         .title = lctx.title,
-        .title_map = &lctx.title_map,
+        .title_map = lctx.title_map,
         .upper = lctx.upper,
-        .upper_map = &lctx.upper_map,
+        .upper_map = lctx.upper_map,
         .lctx = lctx,
     };
 
@@ -92,13 +92,13 @@ pub fn initWithContext(ctx: anytype) !*Self {
         .fold_map = ctx.fold_map,
         .cased = ctx.cased,
         .lower = ctx.lower,
-        .lower_map = &ctx.lower_map,
+        .lower_map = ctx.lower_map,
         .modifier_letter = ctx.modifier_letter,
         .other_letter = ctx.other_letter,
         .title = ctx.title,
-        .title_map = &ctx.title_map,
+        .title_map = ctx.title_map,
         .upper = ctx.upper,
-        .upper_map = &ctx.upper_map,
+        .upper_map = ctx.upper_map,
         .lctx = null,
     };
 

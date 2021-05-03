@@ -10,8 +10,22 @@ const UpperMap = @This();
 allocator: *mem.Allocator,
 map: std.AutoHashMap(u21, u21),
 
-pub fn init(allocator: *mem.Allocator) !UpperMap {
-    var instance = UpperMap{
+const Singleton = struct {
+    instance: *UpperMap,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*UpperMap {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(UpperMap);
+
+    instance.* = UpperMap{
         .allocator = allocator,
         .map = std.AutoHashMap(u21, u21).init(allocator),
     };
@@ -1428,11 +1442,23 @@ pub fn init(allocator: *mem.Allocator) !UpperMap {
     try instance.map.put(0x1E943, 0x1E921);
 
     // Placeholder: 0. Method suffix, 1. Struct name
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *UpperMap) void {
     self.map.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 /// toUpper maps the code point to the desired case or returns the same code point if no mapping exists.
