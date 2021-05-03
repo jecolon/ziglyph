@@ -4,10 +4,12 @@ const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
 // Import structs.
-const Context = @import("context.zig").Context;
-const DecomposeMap = @import("context.zig").DecomposeMap;
+const DecomposeMap = @import("components.zig").DecomposeMap;
 const GraphemeIterator = @import("ziglyph.zig").GraphemeIterator;
 const Letter = @import("components/aggregate/Letter.zig");
+const Lower = @import("components/autogen/DerivedCoreProperties/Lowercase.zig");
+const Upper = @import("components/autogen/DerivedCoreProperties/Uppercase.zig");
+const UpperMap = @import("components/autogen/UnicodeData/UpperMap.zig");
 const Punct = @import("components/aggregate/Punct.zig");
 const Width = @import("components/aggregate/Width.zig");
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
@@ -43,14 +45,18 @@ test "Aggregate struct" {
 }
 
 test "Component structs" {
-    var ctx = try Context(.letter).init(std.testing.allocator);
-    defer ctx.deinit();
+    var lower = try Lower.init(std.testing.allocator);
+    defer lower.deinit();
+    var upper = try Upper.init(std.testing.allocator);
+    defer upper.deinit();
+    var upper_map = try UpperMap.init(std.testing.allocator);
+    defer upper_map.deinit();
 
     const z = 'z';
-    expect(ctx.lower.isLowercaseLetter(z));
-    expect(!ctx.upper.isUppercaseLetter(z));
-    const uz = ctx.upper_map.toUpper(z);
-    expect(ctx.upper.isUppercaseLetter(uz));
+    expect(lower.isLowercase(z));
+    expect(!upper.isUppercase(z));
+    const uz = upper_map.toUpper(z);
+    expect(upper.isUppercase(uz));
     expectEqual(uz, 'Z');
 }
 

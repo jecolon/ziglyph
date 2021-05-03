@@ -5,18 +5,68 @@ const mem = std.mem;
 const unicode = std.unicode;
 const ascii = @import("ascii.zig");
 
+/// Library Components
 pub const Alphabetic = @import("components.zig").Alphabetic;
+pub const CccMap = @import("components.zig").CccMap;
 pub const Control = @import("components.zig").Control;
-pub const Letter = @import("components/aggregate/Letter.zig");
-pub const Mark = @import("components/aggregate/Mark.zig");
-pub const Number = @import("components/aggregate/Number.zig");
-pub const Punct = @import("components/aggregate/Punct.zig");
-pub const Space = @import("components/aggregate/Space.zig");
-pub const Symbol = @import("components/aggregate/Symbol.zig");
-
-/// Zigstr is a UTF-8 string type.
-pub const Zigstr = @import("zigstr/Zigstr.zig");
-pub const GraphemeIterator = Zigstr.GraphemeIterator;
+pub const DecomposeMap = @import("components.zig").DecomposeMap;
+pub const GraphemeIterator = @import("components.zig").GraphemeIterator;
+pub const Extend = @import("components.zig").Extend;
+pub const ExtPic = @import("components.zig").ExtPic;
+pub const Format = @import("components.zig").Format;
+pub const HangulMap = @import("components.zig").HangulMap;
+pub const Prepend = @import("components.zig").Prepend;
+pub const Regional = @import("components.zig").Regional;
+pub const Width = @import("components.zig").Width;
+// Letter
+pub const CaseFoldMap = @import("components.zig").CaseFoldMap;
+pub const CaseFold = CaseFoldMap.CaseFold;
+pub const Cased = @import("components.zig").Cased;
+pub const Lower = @import("components.zig").Lower;
+pub const LowerMap = @import("components.zig").LowerMap;
+pub const ModifierLetter = @import("components.zig").ModifierLetter;
+pub const OtherLetter = @import("components.zig").OtherLetter;
+pub const Title = @import("components.zig").Title;
+pub const TitleMap = @import("components.zig").TitleMap;
+pub const Upper = @import("components.zig").Upper;
+pub const UpperMap = @import("components.zig").UpperMap;
+// Aggregates
+pub const Letter = @import("components.zig").Letter;
+pub const Mark = @import("components.zig").Mark;
+pub const Number = @import("components.zig").Number;
+pub const Punct = @import("components.zig").Punct;
+pub const Symbol = @import("components.zig").Symbol;
+// Mark
+pub const Enclosing = @import("components.zig").Enclosing;
+pub const Nonspacing = @import("components.zig").Nonspacing;
+pub const Spacing = @import("components.zig").Spacing;
+// Number
+pub const Decimal = @import("components.zig").Decimal;
+pub const Digit = @import("components.zig").Digit;
+pub const Hex = @import("components.zig").Hex;
+pub const LetterNumber = @import("components.zig").LetterNumber;
+pub const OtherNumber = @import("components.zig").OtherNumber;
+// Punct
+pub const Close = @import("components.zig").Close;
+pub const Connector = @import("components.zig").Connector;
+pub const Dash = @import("components.zig").Dash;
+pub const Final = @import("components.zig").Final;
+pub const Initial = @import("components.zig").Initial;
+pub const Open = @import("components.zig").Open;
+pub const OtherPunct = @import("components.zig").OtherPunct;
+// Space
+pub const WhiteSpace = @import("components.zig").WhiteSpace;
+// Symbol
+pub const Currency = @import("components.zig").Currency;
+pub const Math = @import("components.zig").Math;
+pub const ModifierSymbol = @import("components.zig").ModifierSymbol;
+pub const OtherSymbol = @import("components.zig").OtherSymbol;
+// Width
+pub const Ambiguous = @import("components.zig").Ambiguous;
+pub const Fullwidth = @import("components.zig").Fullwidth;
+pub const Wide = @import("components.zig").Wide;
+// UTF-8 string struct
+pub const Zigstr = @import("components.zig").Zigstr;
 
 /// Ziglyph consolidates frequently-used Unicode utility functions in one place.
 pub const Ziglyph = struct {
@@ -26,7 +76,7 @@ pub const Ziglyph = struct {
     mark: *Mark,
     number: *Number,
     punct: *Punct,
-    space: *Space,
+    space: *WhiteSpace,
     symbol: *Symbol,
 
     const Self = @This();
@@ -39,7 +89,7 @@ pub const Ziglyph = struct {
             .mark = try Mark.init(allocator),
             .number = try Number.init(allocator),
             .punct = try Punct.init(allocator),
-            .space = try Space.init(allocator),
+            .space = try WhiteSpace.init(allocator),
             .symbol = try Symbol.init(allocator),
         };
     }
@@ -92,7 +142,7 @@ pub const Ziglyph = struct {
 
     /// isGraphic detects any code point that can be represented graphically, including spaces.
     pub fn isGraphic(self: Self, cp: u21) bool {
-        return self.isPrint(cp) or self.isSpace(cp);
+        return self.isPrint(cp) or self.isWhiteSpace(cp);
     }
 
     pub fn isAsciiGraphic(cp: u21) bool {
@@ -163,11 +213,6 @@ pub const Ziglyph = struct {
 
     pub fn isAsciiPunct(cp: u21) bool {
         return if (cp < 128) ascii.isPunct(@intCast(u8, cp)) else false;
-    }
-
-    /// isSpace detects code points that are Unicode space separators.
-    pub fn isSpace(self: Self, cp: u21) bool {
-        return self.space.isSpace(cp);
     }
 
     /// isWhiteSpace detects code points that have the Unicode *WhiteSpace* property.

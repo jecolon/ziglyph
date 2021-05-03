@@ -15,7 +15,6 @@ test "Components" {
     _ = @import("ziglyph.zig").Mark;
     _ = @import("ziglyph.zig").Number;
     _ = @import("ziglyph.zig").Punct;
-    _ = @import("ziglyph.zig").Space;
     _ = @import("ziglyph.zig").Symbol;
 }
 

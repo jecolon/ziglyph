@@ -9,7 +9,6 @@ missing here, as it tends to produce more confusion than clarity, and in fact Un
 a human-readable *character* is the Grapheme Cluster, which Zigstr handles as sub-slices of bytes.
 
 ```zig
-const Context = @import("Ziglyph").Context;
 const Zigstr = @import("Ziglyph").Zigstr;
 
 test "Zigstr README tests" {
