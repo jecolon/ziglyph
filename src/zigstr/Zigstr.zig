@@ -21,7 +21,7 @@ pub const Factory = struct {
     decomp_map: DecomposeMap,
     fold_map: *CaseFoldMap,
     giter: GraphemeIterator,
-    letter: Letter,
+    letter: *Letter,
     width: Width,
     zctx: ?*Context(.zigstr),
 
@@ -33,7 +33,7 @@ pub const Factory = struct {
             .decomp_map = try DecomposeMap.initWithContext(zctx),
             .fold_map = &zctx.fold_map,
             .giter = try GraphemeIterator.initWithContext(zctx, ""),
-            .letter = Letter.initWithContext(zctx),
+            .letter = try Letter.initWithContext(zctx),
             .width = try Width.initWithContext(zctx),
             .zctx = zctx,
         };
@@ -45,7 +45,7 @@ pub const Factory = struct {
             .decomp_map = try DecomposeMap.initWithContext(ctx),
             .fold_map = &ctx.fold_map,
             .giter = try GraphemeIterator.initWithContext(ctx, ""),
-            .letter = Letter.initWithContext(ctx),
+            .letter = try Letter.initWithContext(ctx),
             .width = try Width.initWithContext(ctx),
             .zctx = null,
         };
@@ -54,6 +54,8 @@ pub const Factory = struct {
     pub fn deinit(self: *Factory) void {
         self.decomp_map.deinit();
         self.giter.deinit();
+        self.letter.deinit();
+        self.width.deinit();
         if (self.zctx) |zctx| {
             zctx.deinit();
         }

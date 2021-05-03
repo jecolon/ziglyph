@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 8232,
 hi: u21 = 8232,
 
-pub fn init(allocator: *mem.Allocator) !LineSeparator {
-    var instance = LineSeparator{
+const Singleton = struct {
+    instance: *LineSeparator,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*LineSeparator {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(LineSeparator);
+
+    instance.* = LineSeparator{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
@@ -26,11 +40,23 @@ pub fn init(allocator: *mem.Allocator) !LineSeparator {
     try instance.cp_set.put(8232, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *LineSeparator) void {
     self.cp_set.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isLineSeparator checks if cp is of the kind Line_Separator.

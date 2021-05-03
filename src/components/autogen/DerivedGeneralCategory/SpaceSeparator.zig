@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 32,
 hi: u21 = 12288,
 
-pub fn init(allocator: *mem.Allocator) !SpaceSeparator {
-    var instance = SpaceSeparator{
+const Singleton = struct {
+    instance: *SpaceSeparator,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*SpaceSeparator {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(SpaceSeparator);
+
+    instance.* = SpaceSeparator{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
@@ -35,11 +49,23 @@ pub fn init(allocator: *mem.Allocator) !SpaceSeparator {
     try instance.cp_set.put(12288, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *SpaceSeparator) void {
     self.cp_set.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isSpaceSeparator checks if cp is of the kind Space_Separator.

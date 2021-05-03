@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 44032,
 hi: u21 = 55176,
 
-pub fn init(allocator: *mem.Allocator) !LV {
-    var instance = LV{
+const Singleton = struct {
+    instance: *LV,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*LV {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(LV);
+
+    instance.* = LV{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
@@ -424,11 +438,23 @@ pub fn init(allocator: *mem.Allocator) !LV {
     try instance.cp_set.put(55176, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *LV) void {
     self.cp_set.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isLV checks if cp is of the kind LV.

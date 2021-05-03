@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 64976,
 hi: u21 = 1114111,
 
-pub fn init(allocator: *mem.Allocator) !NoncharacterCodePoint {
-    var instance = NoncharacterCodePoint{
+const Singleton = struct {
+    instance: *NoncharacterCodePoint,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*NoncharacterCodePoint {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(NoncharacterCodePoint);
+
+    instance.* = NoncharacterCodePoint{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
@@ -97,11 +111,23 @@ pub fn init(allocator: *mem.Allocator) !NoncharacterCodePoint {
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *NoncharacterCodePoint) void {
     self.cp_set.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isNoncharacterCodePoint checks if cp is of the kind Noncharacter_Code_Point.

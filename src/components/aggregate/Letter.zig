@@ -16,6 +16,7 @@ pub const UpperMap = @import("../../context.zig").UpperMap;
 
 const Self = @This();
 
+allocator: *mem.Allocator,
 fold_map: *CaseFoldMap,
 cased: *Cased,
 lower: *Lower,
@@ -28,42 +29,85 @@ upper: *Upper,
 upper_map: *UpperMap,
 lctx: ?*Context(.letter),
 
-pub fn init(allocator: *mem.Allocator) !Self {
+const Singleton = struct {
+    instance: *Self,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*Self {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(Self);
     var lctx = try Context(.letter).init(allocator);
 
-    return Self{
+    instance.* = Self{
+        .allocator = allocator,
         .fold_map = &lctx.fold_map,
-        .cased = &lctx.cased,
-        .lower = &lctx.lower,
+        .cased = lctx.cased,
+        .lower = lctx.lower,
         .lower_map = &lctx.lower_map,
-        .modifier_letter = &lctx.modifier_letter,
-        .other_letter = &lctx.other_letter,
-        .title = &lctx.title,
+        .modifier_letter = lctx.modifier_letter,
+        .other_letter = lctx.other_letter,
+        .title = lctx.title,
         .title_map = &lctx.title_map,
-        .upper = &lctx.upper,
+        .upper = lctx.upper,
         .upper_map = &lctx.upper_map,
         .lctx = lctx,
     };
+
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
+    return instance;
 }
 
 pub fn deinit(self: *Self) void {
     if (self.lctx) |lctx| lctx.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
-pub fn initWithContext(ctx: anytype) Self {
-    return Self{
+pub fn initWithContext(ctx: anytype) !*Self {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try ctx.allocator.create(Self);
+
+    instance.* = Self{
+        .allocator = ctx.allocator,
         .fold_map = &ctx.fold_map,
-        .cased = &ctx.cased,
-        .lower = &ctx.lower,
+        .cased = ctx.cased,
+        .lower = ctx.lower,
         .lower_map = &ctx.lower_map,
-        .modifier_letter = &ctx.modifier_letter,
-        .other_letter = &ctx.other_letter,
-        .title = &ctx.title,
+        .modifier_letter = ctx.modifier_letter,
+        .other_letter = ctx.other_letter,
+        .title = ctx.title,
         .title_map = &ctx.title_map,
-        .upper = &ctx.upper,
+        .upper = ctx.upper,
         .upper_map = &ctx.upper_map,
         .lctx = null,
     };
+
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
+    return instance;
 }
 
 /// isCased detects cased letters.
@@ -308,7 +352,7 @@ test "Component isLetter" {
     var ctx = try Context(.letter).init(std.testing.allocator);
     defer ctx.deinit();
 
-    var letter = initWithContext(ctx);
+    var letter = try initWithContext(ctx);
     defer letter.deinit();
 
     var cp: u21 = 'a';

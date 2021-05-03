@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 183,
 hi: u21 = 6618,
 
-pub fn init(allocator: *mem.Allocator) !OtherIDContinue {
-    var instance = OtherIDContinue{
+const Singleton = struct {
+    instance: *OtherIDContinue,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*OtherIDContinue {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(OtherIDContinue);
+
+    instance.* = OtherIDContinue{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
@@ -32,11 +46,23 @@ pub fn init(allocator: *mem.Allocator) !OtherIDContinue {
     try instance.cp_set.put(6618, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *OtherIDContinue) void {
     self.cp_set.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isOtherIDContinue checks if cp is of the kind Other_ID_Continue.

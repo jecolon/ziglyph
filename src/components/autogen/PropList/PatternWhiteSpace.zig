@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 9,
 hi: u21 = 8233,
 
-pub fn init(allocator: *mem.Allocator) !PatternWhiteSpace {
-    var instance = PatternWhiteSpace{
+const Singleton = struct {
+    instance: *PatternWhiteSpace,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*PatternWhiteSpace {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(PatternWhiteSpace);
+
+    instance.* = PatternWhiteSpace{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
@@ -37,11 +51,23 @@ pub fn init(allocator: *mem.Allocator) !PatternWhiteSpace {
     try instance.cp_set.put(8233, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *PatternWhiteSpace) void {
     self.cp_set.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isPatternWhiteSpace checks if cp is of the kind Pattern_White_Space.

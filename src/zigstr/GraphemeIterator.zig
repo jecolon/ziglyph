@@ -31,14 +31,14 @@ pub fn init(allocator: *mem.Allocator, str: []const u8) !Self {
     var gctx = try Context(.grapheme).init(allocator);
 
     return Self{
-        .control = &gctx.control,
+        .control = gctx.control,
         .cp_iter = try CodePointIterator.init(str),
-        .extend = &gctx.extend,
-        .extpic = &gctx.extpic,
-        .hangul_map = &gctx.hangul_map,
-        .prepend = &gctx.prepend,
-        .regional = &gctx.regional,
-        .spacing = &gctx.spacing,
+        .extend = gctx.extend,
+        .extpic = gctx.extpic,
+        .hangul_map = gctx.hangul_map,
+        .prepend = gctx.prepend,
+        .regional = gctx.regional,
+        .spacing = gctx.spacing,
         .gctx = gctx,
     };
 }
@@ -49,14 +49,14 @@ pub fn deinit(self: *Self) void {
 
 pub fn initWithContext(ctx: anytype, str: []const u8) !Self {
     return Self{
-        .control = &ctx.control,
+        .control = ctx.control,
         .cp_iter = try CodePointIterator.init(str),
-        .extend = &ctx.extend,
-        .extpic = &ctx.extpic,
-        .hangul_map = &ctx.hangul_map,
-        .prepend = &ctx.prepend,
-        .regional = &ctx.regional,
-        .spacing = &ctx.spacing,
+        .extend = ctx.extend,
+        .extpic = ctx.extpic,
+        .hangul_map = ctx.hangul_map,
+        .prepend = ctx.prepend,
+        .regional = ctx.regional,
+        .spacing = ctx.spacing,
         .gctx = null,
     };
 }

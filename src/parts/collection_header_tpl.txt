@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = {2d},
 hi: u21 = {3d},
 
-pub fn init(allocator: *mem.Allocator) !{1s} {{
-    var instance = {1s}{{
+const Singleton = struct {{
+    instance: *{1s},
+    ref_count: usize,
+}};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*{1s} {{
+    if (singleton) |*s| {{
+        s.ref_count += 1;
+        return s.instance;
+    }}
+
+    var instance = try allocator.create({1s});
+
+    instance.* = {1s}{{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     }};

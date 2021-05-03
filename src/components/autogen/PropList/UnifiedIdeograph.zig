@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 13312,
 hi: u21 = 201546,
 
-pub fn init(allocator: *mem.Allocator) !UnifiedIdeograph {
-    var instance = UnifiedIdeograph{
+const Singleton = struct {
+    instance: *UnifiedIdeograph,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*UnifiedIdeograph {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(UnifiedIdeograph);
+
+    instance.* = UnifiedIdeograph{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
@@ -76,11 +90,23 @@ pub fn init(allocator: *mem.Allocator) !UnifiedIdeograph {
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *UnifiedIdeograph) void {
     self.cp_set.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isUnifiedIdeograph checks if cp is of the kind Unified_Ideograph.

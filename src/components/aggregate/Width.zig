@@ -35,14 +35,14 @@ pub fn init(allocator: *mem.Allocator) !Self {
     return Self{
         .allocator = allocator,
         .giter = try GraphemeIterator.initWithContext(wctx, ""),
-        .ambiguous = &wctx.ambiguous,
-        .enclosing = &wctx.enclosing,
-        .extpic = &wctx.extpic,
-        .format = &wctx.format,
-        .fullwidth = &wctx.fullwidth,
-        .nonspacing = &wctx.nonspacing,
-        .regional = &wctx.regional,
-        .wide = &wctx.wide,
+        .ambiguous = wctx.ambiguous,
+        .enclosing = wctx.enclosing,
+        .extpic = wctx.extpic,
+        .format = wctx.format,
+        .fullwidth = wctx.fullwidth,
+        .nonspacing = wctx.nonspacing,
+        .regional = wctx.regional,
+        .wide = wctx.wide,
         .ziglyph = try Ziglyph.initWithContext(wctx),
         .wctx = wctx,
     };
@@ -50,6 +50,7 @@ pub fn init(allocator: *mem.Allocator) !Self {
 
 pub fn deinit(self: *Self) void {
     self.giter.deinit();
+    self.ziglyph.deinit();
     if (self.wctx) |wctx| wctx.deinit();
 }
 
@@ -57,14 +58,14 @@ pub fn initWithContext(ctx: anytype) !Self {
     return Self{
         .allocator = ctx.allocator,
         .giter = try GraphemeIterator.initWithContext(ctx, ""),
-        .ambiguous = &ctx.ambiguous,
-        .enclosing = &ctx.enclosing,
-        .extpic = &ctx.extpic,
-        .format = &ctx.format,
-        .fullwidth = &ctx.fullwidth,
-        .nonspacing = &ctx.nonspacing,
-        .regional = &ctx.regional,
-        .wide = &ctx.wide,
+        .ambiguous = ctx.ambiguous,
+        .enclosing = ctx.enclosing,
+        .extpic = ctx.extpic,
+        .format = ctx.format,
+        .fullwidth = ctx.fullwidth,
+        .nonspacing = ctx.nonspacing,
+        .regional = ctx.regional,
+        .wide = ctx.wide,
         .ziglyph = try Ziglyph.initWithContext(ctx),
         .wctx = null,
     };

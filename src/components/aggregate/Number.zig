@@ -21,11 +21,11 @@ pub fn init(allocator: *mem.Allocator) !Self {
     var nctx = try Context(.number).init(allocator);
 
     return Self{
-        .decimal = &nctx.decimal,
-        .digit = &nctx.digit,
-        .hex = &nctx.hex,
-        .letter_number = &nctx.letter_number,
-        .other_number = &nctx.other_number,
+        .decimal = nctx.decimal,
+        .digit = nctx.digit,
+        .hex = nctx.hex,
+        .letter_number = nctx.letter_number,
+        .other_number = nctx.other_number,
         .nctx = nctx,
     };
 }
@@ -36,11 +36,11 @@ pub fn deinit(self: *Self) void {
 
 pub fn initWithContext(ctx: anytype) Self {
     return Self{
-        .decimal = &ctx.decimal,
-        .digit = &ctx.digit,
-        .hex = &ctx.hex,
-        .letter_number = &ctx.letter_number,
-        .other_number = &ctx.other_number,
+        .decimal = ctx.decimal,
+        .digit = ctx.digit,
+        .hex = ctx.hex,
+        .letter_number = ctx.letter_number,
+        .other_number = ctx.other_number,
         .nctx = null,
     };
 }

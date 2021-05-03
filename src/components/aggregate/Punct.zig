@@ -26,13 +26,13 @@ pub fn init(allocator: *mem.Allocator) !Self {
     var pctx = try Context(.punct).init(allocator);
 
     return Self{
-        .close = &pctx.close,
-        .connector = &pctx.connector,
-        .dash = &pctx.dash,
-        .final = &pctx.final,
-        .initial = &pctx.initial,
-        .open = &pctx.open,
-        .other_punct = &pctx.other_punct,
+        .close = pctx.close,
+        .connector = pctx.connector,
+        .dash = pctx.dash,
+        .final = pctx.final,
+        .initial = pctx.initial,
+        .open = pctx.open,
+        .other_punct = pctx.other_punct,
         .pctx = pctx,
     };
 }
@@ -43,13 +43,13 @@ pub fn deinit(self: *Self) void {
 
 pub fn initWithContext(ctx: anytype) Self {
     return Self{
-        .close = &ctx.close,
-        .connector = &ctx.connector,
-        .dash = &ctx.dash,
-        .final = &ctx.final,
-        .initial = &ctx.initial,
-        .open = &ctx.open,
-        .other_punct = &ctx.other_punct,
+        .close = ctx.close,
+        .connector = ctx.connector,
+        .dash = ctx.dash,
+        .final = ctx.final,
+        .initial = ctx.initial,
+        .open = ctx.open,
+        .other_punct = ctx.other_punct,
         .pctx = null,
     };
 }

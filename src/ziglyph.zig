@@ -23,7 +23,7 @@ pub const GraphemeIterator = Zigstr.GraphemeIterator;
 pub const Ziglyph = struct {
     alphabetic: *Alphabetic,
     control: *Control,
-    letter: Letter,
+    letter: *Letter,
     mark: Mark,
     number: Number,
     punct: Punct,
@@ -37,9 +37,9 @@ pub const Ziglyph = struct {
         var zctx = try Context(.ziglyph).init(allocator);
 
         return Self{
-            .alphabetic = &zctx.alphabetic,
-            .control = &zctx.control,
-            .letter = Letter.initWithContext(zctx),
+            .alphabetic = zctx.alphabetic,
+            .control = zctx.control,
+            .letter = try Letter.initWithContext(zctx),
             .mark = Mark.initWithContext(zctx),
             .number = Number.initWithContext(zctx),
             .punct = Punct.initWithContext(zctx),
@@ -50,14 +50,15 @@ pub const Ziglyph = struct {
     }
 
     pub fn deinit(self: *Self) void {
+        self.letter.deinit();
         if (self.zctx) |zctx| zctx.deinit();
     }
 
     pub fn initWithContext(ctx: anytype) !Self {
         return Self{
-            .alphabetic = &ctx.alphabetic,
-            .control = &ctx.control,
-            .letter = Letter.initWithContext(ctx),
+            .alphabetic = ctx.alphabetic,
+            .control = ctx.control,
+            .letter = try Letter.initWithContext(ctx),
             .mark = Mark.initWithContext(ctx),
             .number = Number.initWithContext(ctx),
             .punct = Punct.initWithContext(ctx),

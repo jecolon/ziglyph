@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 9757,
 hi: u21 = 129501,
 
-pub fn init(allocator: *mem.Allocator) !EmojiModifierBase {
-    var instance = EmojiModifierBase{
+const Singleton = struct {
+    instance: *EmojiModifierBase,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*EmojiModifierBase {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(EmojiModifierBase);
+
+    instance.* = EmojiModifierBase{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
@@ -141,11 +155,23 @@ pub fn init(allocator: *mem.Allocator) !EmojiModifierBase {
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *EmojiModifierBase) void {
     self.cp_set.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isEmojiModifierBase checks if cp is of the kind Emoji_Modifier_Base.

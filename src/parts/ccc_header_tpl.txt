@@ -5,12 +5,27 @@
 const std = @import("std");
 const mem = std.mem;
 
+const CccMap = @This();
+
 allocator: *mem.Allocator,
 map: std.AutoHashMap(u21, u8),
 
-const CccMap = @This();
-pub fn init(allocator: *mem.Allocator) !CccMap {
-    var instance = CccMap{
+const Singleton = struct {
+    instance: *CccMap,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*CccMap {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(CccMap);
+
+    instance.* = CccMap{
         .allocator = allocator,
         .map = std.AutoHashMap(u21, u8).init(allocator),
     };

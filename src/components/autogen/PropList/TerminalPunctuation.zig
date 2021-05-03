@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 33,
 hi: u21 = 121482,
 
-pub fn init(allocator: *mem.Allocator) !TerminalPunctuation {
-    var instance = TerminalPunctuation{
+const Singleton = struct {
+    instance: *TerminalPunctuation,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*TerminalPunctuation {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(TerminalPunctuation);
+
+    instance.* = TerminalPunctuation{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
@@ -318,11 +332,23 @@ pub fn init(allocator: *mem.Allocator) !TerminalPunctuation {
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *TerminalPunctuation) void {
     self.cp_set.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isTerminalPunctuation checks if cp is of the kind Terminal_Punctuation.

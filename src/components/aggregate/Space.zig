@@ -16,8 +16,8 @@ pub fn init(allocator: *mem.Allocator) !Self {
     var sctx = try Context(.space).init(allocator);
 
     return Self{
-        .space = &sctx.space,
-        .whitespace = &sctx.whitespace,
+        .space = sctx.space,
+        .whitespace = sctx.whitespace,
         .sctx = sctx,
     };
 }
@@ -28,8 +28,8 @@ pub fn deinit(self: *Self) void {
 
 pub fn initWithContext(ctx: anytype) Self {
     return Self{
-        .space = &ctx.space,
-        .whitespace = &ctx.whitespace,
+        .space = ctx.space,
+        .whitespace = ctx.whitespace,
         .sctx = null,
     };
 }

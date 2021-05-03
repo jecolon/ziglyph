@@ -40,8 +40,8 @@ pub fn init(allocator: *mem.Allocator) !Self {
     var dctx = try Context(.decompose).init(allocator);
 
     var instance = Self{
-        .ccc_map = &dctx.ccc_map,
-        .hangul_map = &dctx.hangul_map,
+        .ccc_map = dctx.ccc_map,
+        .hangul_map = dctx.hangul_map,
         .map = std.AutoHashMap(u21, Decomposed).init(dctx.allocator),
         .dctx = dctx,
     };
@@ -53,8 +53,8 @@ pub fn init(allocator: *mem.Allocator) !Self {
 
 pub fn initWithContext(ctx: anytype) !Self {
     var instance = Self{
-        .ccc_map = &ctx.ccc_map,
-        .hangul_map = &ctx.hangul_map,
+        .ccc_map = ctx.ccc_map,
+        .hangul_map = ctx.hangul_map,
         .map = std.AutoHashMap(u21, Decomposed).init(ctx.allocator),
         .dctx = null,
     };

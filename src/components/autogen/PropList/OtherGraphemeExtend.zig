@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 2494,
 hi: u21 = 917631,
 
-pub fn init(allocator: *mem.Allocator) !OtherGraphemeExtend {
-    var instance = OtherGraphemeExtend{
+const Singleton = struct {
+    instance: *OtherGraphemeExtend,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*OtherGraphemeExtend {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(OtherGraphemeExtend);
+
+    instance.* = OtherGraphemeExtend{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
@@ -65,11 +79,23 @@ pub fn init(allocator: *mem.Allocator) !OtherGraphemeExtend {
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *OtherGraphemeExtend) void {
     self.cp_set.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isOtherGraphemeExtend checks if cp is of the kind Other_Grapheme_Extend.

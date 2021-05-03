@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 3648,
 hi: u21 = 43708,
 
-pub fn init(allocator: *mem.Allocator) !LogicalOrderException {
-    var instance = LogicalOrderException{
+const Singleton = struct {
+    instance: *LogicalOrderException,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*LogicalOrderException {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(LogicalOrderException);
+
+    instance.* = LogicalOrderException{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
@@ -47,11 +61,23 @@ pub fn init(allocator: *mem.Allocator) !LogicalOrderException {
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *LogicalOrderException) void {
     self.cp_set.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isLogicalOrderException checks if cp is of the kind Logical_Order_Exception.

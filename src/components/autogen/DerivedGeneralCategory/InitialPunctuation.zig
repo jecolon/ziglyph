@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 171,
 hi: u21 = 11808,
 
-pub fn init(allocator: *mem.Allocator) !InitialPunctuation {
-    var instance = InitialPunctuation{
+const Singleton = struct {
+    instance: *InitialPunctuation,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*InitialPunctuation {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(InitialPunctuation);
+
+    instance.* = InitialPunctuation{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
@@ -39,11 +53,23 @@ pub fn init(allocator: *mem.Allocator) !InitialPunctuation {
     try instance.cp_set.put(11808, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *InitialPunctuation) void {
     self.cp_set.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isInitialPunctuation checks if cp is of the kind Initial_Punctuation.

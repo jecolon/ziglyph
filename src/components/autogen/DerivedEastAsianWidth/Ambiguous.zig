@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 161,
 hi: u21 = 1114109,
 
-pub fn init(allocator: *mem.Allocator) !Ambiguous {
-    var instance = Ambiguous{
+const Singleton = struct {
+    instance: *Ambiguous,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*Ambiguous {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(Ambiguous);
+
+    instance.* = Ambiguous{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
@@ -493,11 +507,23 @@ pub fn init(allocator: *mem.Allocator) !Ambiguous {
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *Ambiguous) void {
     self.cp_set.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isAmbiguous checks if cp is of the kind Ambiguous.

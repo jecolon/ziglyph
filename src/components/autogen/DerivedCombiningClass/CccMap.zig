@@ -5,12 +5,27 @@
 const std = @import("std");
 const mem = std.mem;
 
+const CccMap = @This();
+
 allocator: *mem.Allocator,
 map: std.AutoHashMap(u21, u8),
 
-const CccMap = @This();
-pub fn init(allocator: *mem.Allocator) !CccMap {
-    var instance = CccMap{
+const Singleton = struct {
+    instance: *CccMap,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*CccMap {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(CccMap);
+
+    instance.* = CccMap{
         .allocator = allocator,
         .map = std.AutoHashMap(u21, u8).init(allocator),
     };
@@ -810,16 +825,26 @@ pub fn init(allocator: *mem.Allocator) !CccMap {
     }
     try instance.map.put(0x1DCD, 234);
     try instance.map.put(0x0345, 240);
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
 
     return instance;
 }
 
-const Self = @This();
-pub fn deinit(self: *Self) void {
+pub fn deinit(self: *CccMap) void {
     self.map.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 /// combiningClass maps the code point to its combining class value.
-pub fn combiningClass(self: Self, cp: u21) u8 {
+pub fn combiningClass(self: CccMap, cp: u21) u8 {
     return if (self.map.get(cp)) |cc| cc else 0;
 }

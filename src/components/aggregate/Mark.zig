@@ -17,9 +17,9 @@ pub fn init(allocator: *mem.Allocator) !Self {
     var mctx = try Context(.mark).init(allocator);
 
     return Self{
-        .enclosing = &mctx.enclosing,
-        .nonspacing = &mctx.nonspacing,
-        .spacing = &mctx.spacing,
+        .enclosing = mctx.enclosing,
+        .nonspacing = mctx.nonspacing,
+        .spacing = mctx.spacing,
         .mctx = mctx,
     };
 }
@@ -30,9 +30,9 @@ pub fn deinit(self: *Self) void {
 
 pub fn initWithContext(ctx: anytype) Self {
     return Self{
-        .enclosing = &ctx.enclosing,
-        .nonspacing = &ctx.nonspacing,
-        .spacing = &ctx.spacing,
+        .enclosing = ctx.enclosing,
+        .nonspacing = ctx.nonspacing,
+        .spacing = ctx.spacing,
         .mctx = null,
     };
 }

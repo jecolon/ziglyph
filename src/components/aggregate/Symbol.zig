@@ -20,10 +20,10 @@ pub fn init(allocator: *mem.Allocator) !Self {
     var sctx = try Context(.symbol).init(allocator);
 
     return Self{
-        .currency = &sctx.currency,
-        .math = &sctx.math,
-        .modifier_symbol = &sctx.modifier_symbol,
-        .other_symbol = &sctx.other_symbol,
+        .currency = sctx.currency,
+        .math = sctx.math,
+        .modifier_symbol = sctx.modifier_symbol,
+        .other_symbol = sctx.other_symbol,
         .sctx = sctx,
     };
 }
@@ -34,10 +34,10 @@ pub fn deinit(self: *Self) void {
 
 pub fn initWithContext(ctx: anytype) Self {
     return Self{
-        .currency = &ctx.currency,
-        .math = &ctx.math,
-        .modifier_symbol = &ctx.modifier_symbol,
-        .other_symbol = &ctx.other_symbol,
+        .currency = ctx.currency,
+        .math = ctx.math,
+        .modifier_symbol = ctx.modifier_symbol,
+        .other_symbol = ctx.other_symbol,
         .sctx = null,
     };
 }

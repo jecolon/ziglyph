@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 45,
 hi: u21 = 65381,
 
-pub fn init(allocator: *mem.Allocator) !Hyphen {
-    var instance = Hyphen{
+const Singleton = struct {
+    instance: *Hyphen,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*Hyphen {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(Hyphen);
+
+    instance.* = Hyphen{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
@@ -38,11 +52,23 @@ pub fn init(allocator: *mem.Allocator) !Hyphen {
     try instance.cp_set.put(65381, {});
 
     // Placeholder: 0. Struct name, 1. Code point kind
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *Hyphen) void {
     self.cp_set.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isHyphen checks if cp is of the kind Hyphen.

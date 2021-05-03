@@ -1,13 +1,24 @@
 
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
-const Self = @This();
-pub fn deinit(self: *Self) void {
+pub fn deinit(self: *HangulMap) void {
     self.map.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 /// syllableType maps the code point to its Hangul Syllable Type.
-pub fn syllableType(self: Self, cp: u21) ?Kind {
+pub fn syllableType(self: HangulMap, cp: u21) ?Kind {
     return self.map.get(cp);
 }

@@ -16,8 +16,22 @@ cp_set: std.AutoHashMap(u21, void),
 lo: u21 = 173,
 hi: u21 = 921599,
 
-pub fn init(allocator: *mem.Allocator) !DefaultIgnorableCodePoint {
-    var instance = DefaultIgnorableCodePoint{
+const Singleton = struct {
+    instance: *DefaultIgnorableCodePoint,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*DefaultIgnorableCodePoint {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(DefaultIgnorableCodePoint);
+
+    instance.* = DefaultIgnorableCodePoint{
         .allocator = allocator,
         .cp_set = std.AutoHashMap(u21, void).init(allocator),
     };
@@ -99,11 +113,23 @@ pub fn init(allocator: *mem.Allocator) !DefaultIgnorableCodePoint {
     }
 
     // Placeholder: 0. Struct name, 1. Code point kind
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
 pub fn deinit(self: *DefaultIgnorableCodePoint) void {
     self.cp_set.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isDefaultIgnorableCodePoint checks if cp is of the kind Default_Ignorable_Code_Point.
