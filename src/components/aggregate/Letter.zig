@@ -47,7 +47,7 @@ pub fn init(allocator: *mem.Allocator) !*Self {
 
     instance.* = Self{
         .allocator = allocator,
-        .fold_map = &lctx.fold_map,
+        .fold_map = lctx.fold_map,
         .cased = lctx.cased,
         .lower = lctx.lower,
         .lower_map = &lctx.lower_map,
@@ -89,7 +89,7 @@ pub fn initWithContext(ctx: anytype) !*Self {
 
     instance.* = Self{
         .allocator = ctx.allocator,
-        .fold_map = &ctx.fold_map,
+        .fold_map = ctx.fold_map,
         .cased = ctx.cased,
         .lower = ctx.lower,
         .lower_map = &ctx.lower_map,

@@ -4,13 +4,28 @@
 const std = @import("std");
 const mem = std.mem;
 const unicode = std.unicode;
+
 const CaseFoldMap = @This();
 
 allocator: *std.mem.Allocator,
 map: std.AutoHashMap(u21, []const u21),
 
-pub fn init(allocator: *std.mem.Allocator) !CaseFoldMap {
-    var instance = CaseFoldMap{
+const Singleton = struct {
+    instance: *CaseFoldMap,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*CaseFoldMap {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(CaseFoldMap);
+
+    instance.* = CaseFoldMap{
         .allocator = allocator,
         .map = std.AutoHashMap(u21, []const u21).init(allocator),
     };
@@ -4606,12 +4621,23 @@ pub fn init(allocator: *std.mem.Allocator) !CaseFoldMap {
         0x1E943,
     });
 
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
-const Self = @This();
-pub fn deinit(self: *Self) void {
+pub fn deinit(self: *CaseFoldMap) void {
     self.map.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 /// CaseFold can be a simple, one code point value or a sequence of code points in the full case fold scenario.
@@ -4622,7 +4648,7 @@ pub const CaseFold = union(enum) {
 
 /// toCaseFold will convert a code point into its case folded equivalent. Note that this can result
 /// in a mapping to more than one code point, known as the full case fold.
-pub fn toCaseFold(self: Self, cp: u21) CaseFold {
+pub fn toCaseFold(self: CaseFoldMap, cp: u21) CaseFold {
     if (self.map.get(cp)) |seq| {
         if (seq.len == 1) {
             return .{ .simple = seq[0] };
@@ -4636,7 +4662,7 @@ pub fn toCaseFold(self: Self, cp: u21) CaseFold {
 
 /// caseFoldStr will caseFold the code points in str, producing a slice of u8 with the new bytes.
 /// Caller must free returned bytes.
-pub fn caseFoldStr(self: *Self, allocator: *mem.Allocator, str: []const u8) ![]u8 {
+pub fn caseFoldStr(self: *CaseFoldMap, allocator: *mem.Allocator, str: []const u8) ![]u8 {
     var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
     var code_points = std.ArrayList(u21).init(self.allocator);

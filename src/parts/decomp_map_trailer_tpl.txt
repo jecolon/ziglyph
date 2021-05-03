@@ -3,6 +3,13 @@
 pub fn deinit(self: *Self) void {
     self.map.deinit();
     if (self.dctx) |dctx| dctx.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 /// mapping retrieves the decomposition mapping for a code point as per the UCD.

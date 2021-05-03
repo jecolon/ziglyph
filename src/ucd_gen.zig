@@ -425,7 +425,7 @@ const UcdGenerator = struct {
         defer out_file.close();
         var buf_writer = io.bufferedWriter(out_file.writer());
         const writer = buf_writer.writer();
-        _ = try writer.print(header_tpl, .{});
+        _ = try writer.write(header_tpl);
 
         // Iterate over lines.
         var buf: [640]u8 = undefined;
@@ -462,7 +462,7 @@ const UcdGenerator = struct {
         }
 
         // Finish writing.
-        _ = try writer.print(trailer_tpl, .{});
+        _ = try writer.write(trailer_tpl);
         try buf_writer.flush();
     }
 
@@ -503,7 +503,7 @@ const UcdGenerator = struct {
         const u_writer = u_buf.writer();
 
         // Headers.
-        _ = try d_writer.print(decomp_header_tpl, .{});
+        _ = try d_writer.write(decomp_header_tpl);
         _ = try l_writer.print(map_header_tpl, .{"LowerMap"});
         _ = try t_writer.print(map_header_tpl, .{"TitleMap"});
         _ = try u_writer.print(map_header_tpl, .{"UpperMap"});

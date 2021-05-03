@@ -29,6 +29,7 @@ pub const Form = enum {
     KD, // Compatibility Decomposition
 };
 
+allocator: *mem.Allocator,
 ccc_map: *CccMap,
 hangul_map: *HangulMap,
 map: std.AutoHashMap(u21, Decomposed),
@@ -36,10 +37,24 @@ dctx: ?*Context(.decompose),
 
 const Self = @This();
 
-pub fn init(allocator: *mem.Allocator) !Self {
+const Singleton = struct {
+    instance: *Self,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*Self {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(Self);
     var dctx = try Context(.decompose).init(allocator);
 
-    var instance = Self{
+    instance.* = Self{
+        .allocator = allocator,
         .ccc_map = dctx.ccc_map,
         .hangul_map = dctx.hangul_map,
         .map = std.AutoHashMap(u21, Decomposed).init(dctx.allocator),
@@ -48,11 +63,24 @@ pub fn init(allocator: *mem.Allocator) !Self {
 
     try instance.addEntries();
 
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
     return instance;
 }
 
-pub fn initWithContext(ctx: anytype) !Self {
-    var instance = Self{
+pub fn initWithContext(ctx: anytype) !*Self {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try ctx.allocator.create(Self);
+
+    instance.* = Self{
+        .allocator = ctx.allocator,
         .ccc_map = ctx.ccc_map,
         .hangul_map = ctx.hangul_map,
         .map = std.AutoHashMap(u21, Decomposed).init(ctx.allocator),
@@ -60,6 +88,11 @@ pub fn initWithContext(ctx: anytype) !Self {
     };
 
     try instance.addEntries();
+
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
 
     return instance;
 }
@@ -18014,6 +18047,13 @@ fn addEntries(self: *Self) !void {
 pub fn deinit(self: *Self) void {
     self.map.deinit();
     if (self.dctx) |dctx| dctx.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 /// mapping retrieves the decomposition mapping for a code point as per the UCD.

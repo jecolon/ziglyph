@@ -1,35 +1,46 @@
 
-    return instance;
-}}
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
 
-const Self = @This();
-pub fn deinit(self: *Self) void {{
+    return instance;
+}
+
+pub fn deinit(self: *CaseFoldMap) void {
     self.map.deinit();
-}}
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
+}
 
 /// CaseFold can be a simple, one code point value or a sequence of code points in the full case fold scenario.
-pub const CaseFold = union(enum) {{
+pub const CaseFold = union(enum) {
     simple: u21,
     full: []const u21,
-}};
+};
 
 /// toCaseFold will convert a code point into its case folded equivalent. Note that this can result
 /// in a mapping to more than one code point, known as the full case fold.
-pub fn toCaseFold(self: Self, cp: u21) CaseFold {{
-    if (self.map.get(cp)) |seq| {{
-        if (seq.len == 1) {{
-            return .{{ .simple = seq[0] }};
-        }} else {{
-            return .{{ .full = seq }};
-        }}
-    }} else {{
-        return .{{ .simple = cp }};
-    }}
-}}
+pub fn toCaseFold(self: CaseFoldMap, cp: u21) CaseFold {
+    if (self.map.get(cp)) |seq| {
+        if (seq.len == 1) {
+            return .{ .simple = seq[0] };
+        } else {
+            return .{ .full = seq };
+        }
+    } else {
+        return .{ .simple = cp };
+    }
+}
 
 /// caseFoldStr will caseFold the code points in str, producing a slice of u8 with the new bytes.
 /// Caller must free returned bytes.
-pub fn caseFoldStr(self: *Self, allocator: *mem.Allocator, str: []const u8) ![]u8 {{
+pub fn caseFoldStr(self: *CaseFoldMap, allocator: *mem.Allocator, str: []const u8) ![]u8 {
     var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
     var code_points = std.ArrayList(u21).init(self.allocator);
@@ -37,20 +48,20 @@ pub fn caseFoldStr(self: *Self, allocator: *mem.Allocator, str: []const u8) ![]u
 
     // Gather decomposed code points.
     var iter = (try unicode.Utf8View.init(str)).iterator();
-    while (iter.nextCodepoint()) |cp| {{
+    while (iter.nextCodepoint()) |cp| {
         const cf = self.toCaseFold(cp);
-        switch (cf) {{
+        switch (cf) {
             .simple => |scp| try code_points.append(scp),
             .full => |seq| try code_points.appendSlice(seq),
-        }}
-    }}
+        }
+    }
 
     // Encode as UTF-8 code units.
     var buf: [4]u8 = undefined;
-    for (code_points.items) |dcp| {{
+    for (code_points.items) |dcp| {
         const len = try unicode.utf8Encode(dcp, &buf);
         try result.appendSlice(buf[0..len]);
-    }}
+    }
 
     return result.toOwnedSlice();
-}}
+}

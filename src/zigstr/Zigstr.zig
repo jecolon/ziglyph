@@ -18,7 +18,7 @@ const Self = @This();
 /// Factory creates Zigstr instances and manages memory and singleton data structures for them.
 pub const Factory = struct {
     arena: std.heap.ArenaAllocator,
-    decomp_map: DecomposeMap,
+    decomp_map: *DecomposeMap,
     fold_map: *CaseFoldMap,
     giter: GraphemeIterator,
     letter: *Letter,
@@ -31,7 +31,7 @@ pub const Factory = struct {
         return Factory{
             .arena = std.heap.ArenaAllocator.init(allocator),
             .decomp_map = try DecomposeMap.initWithContext(zctx),
-            .fold_map = &zctx.fold_map,
+            .fold_map = zctx.fold_map,
             .giter = try GraphemeIterator.initWithContext(zctx, ""),
             .letter = try Letter.initWithContext(zctx),
             .width = try Width.initWithContext(zctx),
@@ -43,7 +43,7 @@ pub const Factory = struct {
         return Factory{
             .arena = std.heap.ArenaAllocator.init(ctx.allocator),
             .decomp_map = try DecomposeMap.initWithContext(ctx),
-            .fold_map = &ctx.fold_map,
+            .fold_map = ctx.fold_map,
             .giter = try GraphemeIterator.initWithContext(ctx, ""),
             .letter = try Letter.initWithContext(ctx),
             .width = try Width.initWithContext(ctx),
@@ -74,7 +74,7 @@ pub const Factory = struct {
             },
             .code_points = null,
             .cp_count = 0,
-            .decomp_map = &factory.decomp_map,
+            .decomp_map = factory.decomp_map,
             .factory = factory,
             .fold_map = factory.fold_map,
             .grapheme_clusters = null,

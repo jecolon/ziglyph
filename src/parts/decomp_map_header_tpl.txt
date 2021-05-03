@@ -16,19 +16,20 @@ const HangulMap = @import("../HangulSyllableType/HangulMap.zig");
 /// * .single : Singleton canonical decomposition to a different single code point.
 /// * .canon : Canonical decomposition, which always results in two code points.
 /// * .compat : Compatibility decomposition, which can results in at most 18 code points.
-pub const Decomposed = union(enum) {{
+pub const Decomposed = union(enum) {
     src: u21,
     same: u21,
     single: u21,
     canon: [2]u21,
     compat: []const u21,
-}};
+};
 
-pub const Form = enum {{
+pub const Form = enum {
     D, // Canonical Decomposition
     KD, // Compatibility Decomposition
-}};
+};
 
+allocator: *mem.Allocator,
 ccc_map: *CccMap,
 hangul_map: *HangulMap,
 map: std.AutoHashMap(u21, Decomposed),
@@ -36,32 +37,64 @@ dctx: ?*Context(.decompose),
 
 const Self = @This();
 
-pub fn init(allocator: *mem.Allocator) !Self {{
+const Singleton = struct {
+    instance: *Self,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*Self {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(Self);
     var dctx = try Context(.decompose).init(allocator);
 
-    var instance = Self{{
+    instance.* = Self{
+        .allocator = allocator,
         .ccc_map = dctx.ccc_map,
         .hangul_map = dctx.hangul_map,
         .map = std.AutoHashMap(u21, Decomposed).init(dctx.allocator),
         .dctx = dctx,
-    }};
+    };
 
     try instance.addEntries();
 
-    return instance;
-}}
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
 
-pub fn initWithContext(ctx: anytype) !Self {{
-    var instance = Self{{
+    return instance;
+}
+
+pub fn initWithContext(ctx: anytype) !*Self {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try ctx.allocator.create(Self);
+
+    instance.* = Self{
+        .allocator = ctx.allocator,
         .ccc_map = ctx.ccc_map,
         .hangul_map = ctx.hangul_map,
         .map = std.AutoHashMap(u21, Decomposed).init(ctx.allocator),
         .dctx = null,
-    }};
+    };
 
     try instance.addEntries();
 
-    return instance;
-}}
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
 
-fn addEntries(self: *Self) !void {{
+    return instance;
+}
+
+fn addEntries(self: *Self) !void {
