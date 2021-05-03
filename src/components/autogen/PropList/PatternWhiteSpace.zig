@@ -60,10 +60,10 @@ pub fn init(allocator: *mem.Allocator) !*PatternWhiteSpace {
 }
 
 pub fn deinit(self: *PatternWhiteSpace) void {
-    self.cp_set.deinit();
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
+            self.cp_set.deinit();
             self.allocator.destroy(s.instance);
             singleton = null;
         }

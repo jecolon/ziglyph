@@ -1340,10 +1340,10 @@ pub fn init(allocator: *mem.Allocator) !*ExtendedPictographic {
 }
 
 pub fn deinit(self: *ExtendedPictographic) void {
-    self.cp_set.deinit();
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
+            self.cp_set.deinit();
             self.allocator.destroy(s.instance);
             singleton = null;
         }

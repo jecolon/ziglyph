@@ -2,36 +2,55 @@ const std = @import("std");
 const mem = std.mem;
 const ascii = @import("../../ascii.zig");
 
-const Context = @import("../../context.zig").Context;
-pub const Space = @import("../../context.zig").Space;
-pub const WhiteSpace = @import("../../context.zig").WhiteSpace;
+pub const Space = @import("../../components.zig").Space;
+pub const WhiteSpace = @import("../../components.zig").WhiteSpace;
 
 const Self = @This();
 
+allocator: *mem.Allocator,
 space: *Space,
 whitespace: *WhiteSpace,
-sctx: ?*Context(.space),
 
-pub fn init(allocator: *mem.Allocator) !Self {
-    var sctx = try Context(.space).init(allocator);
+const Singleton = struct {
+    instance: *Self,
+    ref_count: usize,
+};
 
-    return Self{
-        .space = sctx.space,
-        .whitespace = sctx.whitespace,
-        .sctx = sctx,
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*Self {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(Self);
+
+    instance.* = Self{
+        .allocator = allocator,
+        .space = try Space.init(allocator),
+        .whitespace = try WhiteSpace.init(allocator),
     };
+
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
+    return instance;
 }
 
 pub fn deinit(self: *Self) void {
-    if (self.sctx) |sctx| sctx.deinit();
-}
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.space.deinit();
+            self.whitespace.deinit();
 
-pub fn initWithContext(ctx: anytype) Self {
-    return Self{
-        .space = ctx.space,
-        .whitespace = ctx.whitespace,
-        .sctx = null,
-    };
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 /// isSpace detects code points that are Unicode space separators.
@@ -61,10 +80,7 @@ test "Component isSpace" {
 }
 
 test "Component isWhiteSpace" {
-    var ctx = try Context(.space).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var space = initWithContext(ctx);
+    var space = try init(std.testing.allocator);
     defer space.deinit();
 
     expect(space.isWhiteSpace(' '));

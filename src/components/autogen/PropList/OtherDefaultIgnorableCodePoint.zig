@@ -77,10 +77,10 @@ pub fn init(allocator: *mem.Allocator) !*OtherDefaultIgnorableCodePoint {
 }
 
 pub fn deinit(self: *OtherDefaultIgnorableCodePoint) void {
-    self.cp_set.deinit();
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
+            self.cp_set.deinit();
             self.allocator.destroy(s.instance);
             singleton = null;
         }

@@ -2,17 +2,17 @@ const std = @import("std");
 const mem = std.mem;
 const ascii = @import("../../ascii.zig");
 
-const Context = @import("../../context.zig").Context;
-pub const Close = @import("../../context.zig").Close;
-pub const Connector = @import("../../context.zig").Connector;
-pub const Dash = @import("../../context.zig").Dash;
-pub const Final = @import("../../context.zig").Final;
-pub const Initial = @import("../../context.zig").Initial;
-pub const Open = @import("../../context.zig").Open;
-pub const OtherPunct = @import("../../context.zig").OtherPunct;
+pub const Close = @import("../../components.zig").Close;
+pub const Connector = @import("../../components.zig").Connector;
+pub const Dash = @import("../../components.zig").Dash;
+pub const Final = @import("../../components.zig").Final;
+pub const Initial = @import("../../components.zig").Initial;
+pub const Open = @import("../../components.zig").Open;
+pub const OtherPunct = @import("../../components.zig").OtherPunct;
 
 const Self = @This();
 
+allocator: *mem.Allocator,
 close: *Close,
 connector: *Connector,
 dash: *Dash,
@@ -20,38 +20,57 @@ final: *Final,
 initial: *Initial,
 open: *Open,
 other_punct: *OtherPunct,
-pctx: ?*Context(.punct),
 
-pub fn init(allocator: *mem.Allocator) !Self {
-    var pctx = try Context(.punct).init(allocator);
+const Singleton = struct {
+    instance: *Self,
+    ref_count: usize,
+};
 
-    return Self{
-        .close = pctx.close,
-        .connector = pctx.connector,
-        .dash = pctx.dash,
-        .final = pctx.final,
-        .initial = pctx.initial,
-        .open = pctx.open,
-        .other_punct = pctx.other_punct,
-        .pctx = pctx,
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*Self {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(Self);
+
+    instance.* = Self{
+        .allocator = allocator,
+        .close = try Close.init(allocator),
+        .connector = try Connector.init(allocator),
+        .dash = try Dash.init(allocator),
+        .final = try Final.init(allocator),
+        .initial = try Initial.init(allocator),
+        .open = try Open.init(allocator),
+        .other_punct = try OtherPunct.init(allocator),
     };
+
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
+    return instance;
 }
 
 pub fn deinit(self: *Self) void {
-    if (self.pctx) |pctx| pctx.deinit();
-}
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.close.deinit();
+            self.connector.deinit();
+            self.dash.deinit();
+            self.final.deinit();
+            self.initial.deinit();
+            self.open.deinit();
+            self.other_punct.deinit();
 
-pub fn initWithContext(ctx: anytype) Self {
-    return Self{
-        .close = ctx.close,
-        .connector = ctx.connector,
-        .dash = ctx.dash,
-        .final = ctx.final,
-        .initial = ctx.initial,
-        .open = ctx.open,
-        .other_punct = ctx.other_punct,
-        .pctx = null,
-    };
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 /// isPunct detects punctuation characters. Note some punctuation maybe considered symbols by Unicode.

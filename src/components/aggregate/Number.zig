@@ -1,48 +1,67 @@
 const std = @import("std");
 const mem = std.mem;
 
-const Context = @import("../../context.zig").Context;
-pub const Decimal = @import("../../context.zig").Decimal;
-pub const Digit = @import("../../context.zig").Digit;
-pub const Hex = @import("../../context.zig").Hex;
-pub const LetterNumber = @import("../../context.zig").LetterNumber;
-pub const OtherNumber = @import("../../context.zig").OtherNumber;
+pub const Decimal = @import("../../components.zig").Decimal;
+pub const Digit = @import("../../components.zig").Digit;
+pub const Hex = @import("../../components.zig").Hex;
+pub const LetterNumber = @import("../../components.zig").LetterNumber;
+pub const OtherNumber = @import("../../components.zig").OtherNumber;
 
 const Self = @This();
 
+allocator: *mem.Allocator,
 decimal: *Decimal,
 digit: *Digit,
 hex: *Hex,
 letter_number: *LetterNumber,
 other_number: *OtherNumber,
-nctx: ?*Context(.number),
 
-pub fn init(allocator: *mem.Allocator) !Self {
-    var nctx = try Context(.number).init(allocator);
+const Singleton = struct {
+    instance: *Self,
+    ref_count: usize,
+};
 
-    return Self{
-        .decimal = nctx.decimal,
-        .digit = nctx.digit,
-        .hex = nctx.hex,
-        .letter_number = nctx.letter_number,
-        .other_number = nctx.other_number,
-        .nctx = nctx,
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*Self {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(Self);
+
+    instance.* = Self{
+        .allocator = allocator,
+        .decimal = try Decimal.init(allocator),
+        .digit = try Digit.init(allocator),
+        .hex = try Hex.init(allocator),
+        .letter_number = try LetterNumber.init(allocator),
+        .other_number = try OtherNumber.init(allocator),
     };
+
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
+    return instance;
 }
 
 pub fn deinit(self: *Self) void {
-    if (self.nctx) |nctx| nctx.deinit();
-}
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.decimal.deinit();
+            self.digit.deinit();
+            self.hex.deinit();
+            self.letter_number.deinit();
+            self.other_number.deinit();
 
-pub fn initWithContext(ctx: anytype) Self {
-    return Self{
-        .decimal = ctx.decimal,
-        .digit = ctx.digit,
-        .hex = ctx.hex,
-        .letter_number = ctx.letter_number,
-        .other_number = ctx.other_number,
-        .nctx = null,
-    };
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isDecimal detects all Unicode digits.
@@ -92,10 +111,7 @@ pub fn isAsciiNumber(cp: u21) bool {
 const expect = std.testing.expect;
 
 test "Component isDecimal" {
-    var ctx = try Context(.number).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var number = initWithContext(ctx);
+    var number = try init(std.testing.allocator);
     defer number.deinit();
 
     var cp: u21 = '0';

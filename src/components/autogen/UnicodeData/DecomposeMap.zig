@@ -6,7 +6,6 @@ const mem = std.mem;
 const sort = std.sort.sort;
 const unicode = std.unicode;
 
-const Context = @import("../../../context.zig").Context;
 const CccMap = @import("../DerivedCombiningClass/CccMap.zig");
 const HangulMap = @import("../HangulSyllableType/HangulMap.zig");
 
@@ -33,7 +32,6 @@ allocator: *mem.Allocator,
 ccc_map: *CccMap,
 hangul_map: *HangulMap,
 map: std.AutoHashMap(u21, Decomposed),
-dctx: ?*Context(.decompose),
 
 const Self = @This();
 
@@ -51,40 +49,12 @@ pub fn init(allocator: *mem.Allocator) !*Self {
     }
 
     var instance = try allocator.create(Self);
-    var dctx = try Context(.decompose).init(allocator);
 
     instance.* = Self{
         .allocator = allocator,
-        .ccc_map = dctx.ccc_map,
-        .hangul_map = dctx.hangul_map,
-        .map = std.AutoHashMap(u21, Decomposed).init(dctx.allocator),
-        .dctx = dctx,
-    };
-
-    try instance.addEntries();
-
-    singleton = Singleton{
-        .instance = instance,
-        .ref_count = 1,
-    };
-
-    return instance;
-}
-
-pub fn initWithContext(ctx: anytype) !*Self {
-    if (singleton) |*s| {
-        s.ref_count += 1;
-        return s.instance;
-    }
-
-    var instance = try ctx.allocator.create(Self);
-
-    instance.* = Self{
-        .allocator = ctx.allocator,
-        .ccc_map = ctx.ccc_map,
-        .hangul_map = ctx.hangul_map,
-        .map = std.AutoHashMap(u21, Decomposed).init(ctx.allocator),
-        .dctx = null,
+        .ccc_map = try CccMap.init(allocator),
+        .hangul_map = try HangulMap.init(allocator),
+        .map = std.AutoHashMap(u21, Decomposed).init(allocator),
     };
 
     try instance.addEntries();
@@ -18045,11 +18015,12 @@ fn addEntries(self: *Self) !void {
 }
 
 pub fn deinit(self: *Self) void {
-    self.map.deinit();
-    if (self.dctx) |dctx| dctx.deinit();
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
+            self.map.deinit();
+            self.ccc_map.deinit();
+            self.hangul_map.deinit();
             self.allocator.destroy(s.instance);
             singleton = null;
         }
@@ -18315,9 +18286,7 @@ test "Decomp codePointTo KD" {
 
 test "Decomp normalizeTo" {
     var allocator = std.testing.allocator;
-    var ctx = try Context(.decompose).init(allocator);
-    defer ctx.deinit();
-    var decomp_map = try initWithContext(ctx);
+    var decomp_map = try init(allocator);
     defer decomp_map.deinit();
 
     var file = try std.fs.cwd().openFile("src/data/ucd/NormalizationTest.txt", .{});

@@ -5,9 +5,8 @@ const mem = std.mem;
 const unicode = std.unicode;
 const ascii = @import("ascii.zig");
 
-pub const Context = @import("context.zig").Context;
-pub const Alphabetic = @import("context.zig").Alphabetic;
-pub const Control = @import("context.zig").Control;
+pub const Alphabetic = @import("components.zig").Alphabetic;
+pub const Control = @import("components.zig").Control;
 pub const Letter = @import("components/aggregate/Letter.zig");
 pub const Mark = @import("components/aggregate/Mark.zig");
 pub const Number = @import("components/aggregate/Number.zig");
@@ -24,48 +23,36 @@ pub const Ziglyph = struct {
     alphabetic: *Alphabetic,
     control: *Control,
     letter: *Letter,
-    mark: Mark,
-    number: Number,
-    punct: Punct,
-    space: Space,
-    symbol: Symbol,
-    zctx: ?*Context(.ziglyph),
+    mark: *Mark,
+    number: *Number,
+    punct: *Punct,
+    space: *Space,
+    symbol: *Symbol,
 
     const Self = @This();
 
     pub fn init(allocator: *mem.Allocator) !Self {
-        var zctx = try Context(.ziglyph).init(allocator);
-
         return Self{
-            .alphabetic = zctx.alphabetic,
-            .control = zctx.control,
-            .letter = try Letter.initWithContext(zctx),
-            .mark = Mark.initWithContext(zctx),
-            .number = Number.initWithContext(zctx),
-            .punct = Punct.initWithContext(zctx),
-            .space = Space.initWithContext(zctx),
-            .symbol = Symbol.initWithContext(zctx),
-            .zctx = zctx,
+            .alphabetic = try Alphabetic.init(allocator),
+            .control = try Control.init(allocator),
+            .letter = try Letter.init(allocator),
+            .mark = try Mark.init(allocator),
+            .number = try Number.init(allocator),
+            .punct = try Punct.init(allocator),
+            .space = try Space.init(allocator),
+            .symbol = try Symbol.init(allocator),
         };
     }
 
     pub fn deinit(self: *Self) void {
+        self.alphabetic.deinit();
+        self.control.deinit();
         self.letter.deinit();
-        if (self.zctx) |zctx| zctx.deinit();
-    }
-
-    pub fn initWithContext(ctx: anytype) !Self {
-        return Self{
-            .alphabetic = ctx.alphabetic,
-            .control = ctx.control,
-            .letter = try Letter.initWithContext(ctx),
-            .mark = Mark.initWithContext(ctx),
-            .number = Number.initWithContext(ctx),
-            .punct = Punct.initWithContext(ctx),
-            .space = Space.initWithContext(ctx),
-            .symbol = Symbol.initWithContext(ctx),
-            .zctx = null,
-        };
+        self.mark.deinit();
+        self.number.deinit();
+        self.punct.deinit();
+        self.space.deinit();
+        self.symbol.deinit();
     }
 
     pub fn isAlphabetic(self: Self, cp: u21) bool {
@@ -367,10 +354,7 @@ test "Ziglyph isAlphaNum" {
 }
 
 test "Ziglyph isControl" {
-    var ctx = try Context(.ziglyph).init(std.testing.allocator);
-    defer ctx.deinit();
-
-    var ziglyph = try Ziglyph.initWithContext(ctx);
+    var ziglyph = try Ziglyph.init(std.testing.allocator);
     defer ziglyph.deinit();
 
     expect(ziglyph.isControl('\n'));

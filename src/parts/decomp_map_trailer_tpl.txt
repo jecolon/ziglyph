@@ -1,11 +1,12 @@
 }
 
 pub fn deinit(self: *Self) void {
-    self.map.deinit();
-    if (self.dctx) |dctx| dctx.deinit();
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
+            self.map.deinit();
+            self.ccc_map.deinit();
+            self.hangul_map.deinit();
             self.allocator.destroy(s.instance);
             singleton = null;
         }
@@ -271,9 +272,7 @@ test "Decomp codePointTo KD" {
 
 test "Decomp normalizeTo" {
     var allocator = std.testing.allocator;
-    var ctx = try Context(.decompose).init(allocator);
-    defer ctx.deinit();
-    var decomp_map = try initWithContext(ctx);
+    var decomp_map = try init(allocator);
     defer decomp_map.deinit();
 
     var file = try std.fs.cwd().openFile("src/data/ucd/NormalizationTest.txt", .{});

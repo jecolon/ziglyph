@@ -2,17 +2,15 @@ const std = @import("std");
 const mem = std.mem;
 const unicode = std.unicode;
 
-const Ambiguous = @import("../../context.zig").Ambiguous;
-const Context = @import("../../context.zig").Context;
-const Enclosing = @import("../../context.zig").Enclosing;
-const ExtPic = @import("../../context.zig").ExtPic;
-const Format = @import("../../context.zig").Format;
-const Fullwidth = @import("../../context.zig").Fullwidth;
-const Regional = @import("../../context.zig").Regional;
-const Wide = @import("../../context.zig").Wide;
+const Ambiguous = @import("../../components.zig").Ambiguous;
+const Enclosing = @import("../../components.zig").Enclosing;
+const ExtPic = @import("../../components.zig").ExtPic;
+const Format = @import("../../components.zig").Format;
+const Fullwidth = @import("../../components.zig").Fullwidth;
+const Regional = @import("../../components.zig").Regional;
+const Wide = @import("../../components.zig").Wide;
 const GraphemeIterator = @import("../../zigstr/GraphemeIterator.zig");
-const Nonspacing = @import("../../context.zig").Nonspacing;
-const Ziglyph = @import("../../ziglyph.zig").Ziglyph;
+const Nonspacing = @import("../../components.zig").Nonspacing;
 
 const Self = @This();
 
@@ -26,49 +24,61 @@ giter: GraphemeIterator,
 nonspacing: *Nonspacing,
 regional: *Regional,
 wide: *Wide,
-ziglyph: Ziglyph,
-wctx: ?*Context(.width),
 
-pub fn init(allocator: *mem.Allocator) !Self {
-    var wctx = try Context(.width).init(allocator);
+const Singleton = struct {
+    instance: *Self,
+    ref_count: usize,
+};
 
-    return Self{
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*Self {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(Self);
+
+    instance.* = Self{
         .allocator = allocator,
-        .giter = try GraphemeIterator.initWithContext(wctx, ""),
-        .ambiguous = wctx.ambiguous,
-        .enclosing = wctx.enclosing,
-        .extpic = wctx.extpic,
-        .format = wctx.format,
-        .fullwidth = wctx.fullwidth,
-        .nonspacing = wctx.nonspacing,
-        .regional = wctx.regional,
-        .wide = wctx.wide,
-        .ziglyph = try Ziglyph.initWithContext(wctx),
-        .wctx = wctx,
+        .ambiguous = try Ambiguous.init(allocator),
+        .enclosing = try Enclosing.init(allocator),
+        .extpic = try ExtPic.init(allocator),
+        .format = try Format.init(allocator),
+        .fullwidth = try Fullwidth.init(allocator),
+        .giter = try GraphemeIterator.init(allocator, ""),
+        .nonspacing = try Nonspacing.init(allocator),
+        .regional = try Regional.init(allocator),
+        .wide = try Wide.init(allocator),
     };
+
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
+    return instance;
 }
 
 pub fn deinit(self: *Self) void {
-    self.giter.deinit();
-    self.ziglyph.deinit();
-    if (self.wctx) |wctx| wctx.deinit();
-}
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.ambiguous.deinit();
+            self.enclosing.deinit();
+            self.extpic.deinit();
+            self.format.deinit();
+            self.fullwidth.deinit();
+            self.giter.deinit();
+            self.nonspacing.deinit();
+            self.regional.deinit();
+            self.wide.deinit();
 
-pub fn initWithContext(ctx: anytype) !Self {
-    return Self{
-        .allocator = ctx.allocator,
-        .giter = try GraphemeIterator.initWithContext(ctx, ""),
-        .ambiguous = ctx.ambiguous,
-        .enclosing = ctx.enclosing,
-        .extpic = ctx.extpic,
-        .format = ctx.format,
-        .fullwidth = ctx.fullwidth,
-        .nonspacing = ctx.nonspacing,
-        .regional = ctx.regional,
-        .wide = ctx.wide,
-        .ziglyph = try Ziglyph.initWithContext(ctx),
-        .wctx = null,
-    };
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 /// AmbiguousWidth determines the width of ambiguous characters according to the context. In an 

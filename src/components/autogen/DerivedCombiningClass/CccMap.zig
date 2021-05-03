@@ -834,10 +834,10 @@ pub fn init(allocator: *mem.Allocator) !*CccMap {
 }
 
 pub fn deinit(self: *CccMap) void {
-    self.map.deinit();
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
+            self.map.deinit();
             self.allocator.destroy(s.instance);
             singleton = null;
         }

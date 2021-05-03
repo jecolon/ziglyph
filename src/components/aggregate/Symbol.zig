@@ -2,44 +2,63 @@ const std = @import("std");
 const mem = std.mem;
 const ascii = @import("../../ascii.zig");
 
-const Context = @import("../../context.zig").Context;
-pub const Currency = @import("../../context.zig").Currency;
-pub const Math = @import("../../context.zig").Math;
-pub const ModifierSymbol = @import("../../context.zig").ModifierSymbol;
-pub const OtherSymbol = @import("../../context.zig").OtherSymbol;
+pub const Currency = @import("../../components.zig").Currency;
+pub const Math = @import("../../components.zig").Math;
+pub const ModifierSymbol = @import("../../components.zig").ModifierSymbol;
+pub const OtherSymbol = @import("../../components.zig").OtherSymbol;
 
 const Self = @This();
 
+allocator: *mem.Allocator,
 currency: *Currency,
 math: *Math,
 modifier_symbol: *ModifierSymbol,
 other_symbol: *OtherSymbol,
-sctx: ?*Context(.symbol),
 
-pub fn init(allocator: *mem.Allocator) !Self {
-    var sctx = try Context(.symbol).init(allocator);
+const Singleton = struct {
+    instance: *Self,
+    ref_count: usize,
+};
 
-    return Self{
-        .currency = sctx.currency,
-        .math = sctx.math,
-        .modifier_symbol = sctx.modifier_symbol,
-        .other_symbol = sctx.other_symbol,
-        .sctx = sctx,
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*Self {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(Self);
+
+    instance.* = Self{
+        .allocator = allocator,
+        .currency = try Currency.init(allocator),
+        .math = try Math.init(allocator),
+        .modifier_symbol = try ModifierSymbol.init(allocator),
+        .other_symbol = try OtherSymbol.init(allocator),
     };
+
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
+    return instance;
 }
 
 pub fn deinit(self: *Self) void {
-    if (self.sctx) |sctx| sctx.deinit();
-}
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.currency.deinit();
+            self.math.deinit();
+            self.modifier_symbol.deinit();
+            self.other_symbol.deinit();
 
-pub fn initWithContext(ctx: anytype) Self {
-    return Self{
-        .currency = ctx.currency,
-        .math = ctx.math,
-        .modifier_symbol = ctx.modifier_symbol,
-        .other_symbol = ctx.other_symbol,
-        .sctx = null,
-    };
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 // isSymbol detects symbols which curiosly may include some code points commonly thought of as

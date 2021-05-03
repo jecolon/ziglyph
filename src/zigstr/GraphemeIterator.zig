@@ -6,14 +6,13 @@ const mem = std.mem;
 const unicode = std.unicode;
 
 const CodePointIterator = @import("CodePointIterator.zig");
-const Context = @import("../context.zig").Context;
-pub const Control = @import("../context.zig").Control;
-pub const Extend = @import("../context.zig").Extend;
-pub const ExtPic = @import("../context.zig").ExtPic;
-pub const HangulMap = @import("../context.zig").HangulMap;
-pub const Prepend = @import("../context.zig").Prepend;
-pub const Regional = @import("../context.zig").Regional;
-pub const Spacing = @import("../context.zig").Spacing;
+pub const Control = @import("../components.zig").Control;
+pub const Extend = @import("../components.zig").Extend;
+pub const ExtPic = @import("../components.zig").ExtPic;
+pub const HangulMap = @import("../components.zig").HangulMap;
+pub const Prepend = @import("../components.zig").Prepend;
+pub const Regional = @import("../components.zig").Regional;
+pub const Spacing = @import("../components.zig").Spacing;
 
 control: *Control,
 cp_iter: CodePointIterator,
@@ -23,42 +22,30 @@ hangul_map: *HangulMap,
 prepend: *Prepend,
 regional: *Regional,
 spacing: *Spacing,
-gctx: ?*Context(.grapheme),
 
 const Self = @This();
 
 pub fn init(allocator: *mem.Allocator, str: []const u8) !Self {
-    var gctx = try Context(.grapheme).init(allocator);
-
     return Self{
-        .control = gctx.control,
+        .control = try Control.init(allocator),
         .cp_iter = try CodePointIterator.init(str),
-        .extend = gctx.extend,
-        .extpic = gctx.extpic,
-        .hangul_map = gctx.hangul_map,
-        .prepend = gctx.prepend,
-        .regional = gctx.regional,
-        .spacing = gctx.spacing,
-        .gctx = gctx,
+        .extend = try Extend.init(allocator),
+        .extpic = try ExtPic.init(allocator),
+        .hangul_map = try HangulMap.init(allocator),
+        .prepend = try Prepend.init(allocator),
+        .regional = try Regional.init(allocator),
+        .spacing = try Spacing.init(allocator),
     };
 }
 
 pub fn deinit(self: *Self) void {
-    if (self.gctx) |gctx| gctx.deinit();
-}
-
-pub fn initWithContext(ctx: anytype, str: []const u8) !Self {
-    return Self{
-        .control = ctx.control,
-        .cp_iter = try CodePointIterator.init(str),
-        .extend = ctx.extend,
-        .extpic = ctx.extpic,
-        .hangul_map = ctx.hangul_map,
-        .prepend = ctx.prepend,
-        .regional = ctx.regional,
-        .spacing = ctx.spacing,
-        .gctx = null,
-    };
+    self.control.deinit();
+    self.extend.deinit();
+    self.extpic.deinit();
+    self.hangul_map.deinit();
+    self.prepend.deinit();
+    self.regional.deinit();
+    self.spacing.deinit();
 }
 
 /// reinit resets the iterator with a new string.
@@ -260,8 +247,6 @@ test "Grapheme iterator" {
     var buf: [640]u8 = undefined;
     var line_no: usize = 1;
 
-    var ctx = try Context(.grapheme).init(allocator);
-    defer ctx.deinit();
     var giter: ?Self = null;
     defer {
         if (giter) |*gi| gi.deinit();
@@ -318,7 +303,7 @@ test "Grapheme iterator" {
         if (giter) |*gi| {
             try gi.reinit(all_bytes.items);
         } else {
-            giter = try initWithContext(ctx, all_bytes.items);
+            giter = try init(allocator, all_bytes.items);
         }
 
         // Chaeck.

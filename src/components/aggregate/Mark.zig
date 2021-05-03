@@ -1,40 +1,59 @@
 const std = @import("std");
 const mem = std.mem;
 
-const Context = @import("../../context.zig").Context;
-pub const Enclosing = @import("../../context.zig").Enclosing;
-pub const Nonspacing = @import("../../context.zig").Nonspacing;
-pub const Spacing = @import("../../context.zig").Spacing;
+pub const Enclosing = @import("../../components.zig").Enclosing;
+pub const Nonspacing = @import("../../components.zig").Nonspacing;
+pub const Spacing = @import("../../components.zig").Spacing;
 
 const Self = @This();
 
+allocator: *mem.Allocator,
 enclosing: *Enclosing,
 nonspacing: *Nonspacing,
 spacing: *Spacing,
-mctx: ?*Context(.mark),
 
-pub fn init(allocator: *mem.Allocator) !Self {
-    var mctx = try Context(.mark).init(allocator);
+const Singleton = struct {
+    instance: *Self,
+    ref_count: usize,
+};
 
-    return Self{
-        .enclosing = mctx.enclosing,
-        .nonspacing = mctx.nonspacing,
-        .spacing = mctx.spacing,
-        .mctx = mctx,
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator) !*Self {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var instance = try allocator.create(Self);
+
+    instance.* = Self{
+        .allocator = allocator,
+        .enclosing = try Enclosing.init(allocator),
+        .nonspacing = try Nonspacing.init(allocator),
+        .spacing = try Spacing.init(allocator),
     };
+
+    singleton = Singleton{
+        .instance = instance,
+        .ref_count = 1,
+    };
+
+    return instance;
 }
 
 pub fn deinit(self: *Self) void {
-    if (self.mctx) |mctx| mctx.deinit();
-}
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.enclosing.deinit();
+            self.nonspacing.deinit();
+            self.spacing.deinit();
 
-pub fn initWithContext(ctx: anytype) Self {
-    return Self{
-        .enclosing = ctx.enclosing,
-        .nonspacing = ctx.nonspacing,
-        .spacing = ctx.spacing,
-        .mctx = null,
-    };
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 /// isMark detects special code points that serve as marks in different alphabets.

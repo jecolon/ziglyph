@@ -1455,10 +1455,10 @@ pub fn init(allocator: *mem.Allocator) !*TitleMap {
 }
 
 pub fn deinit(self: *TitleMap) void {
-    self.map.deinit();
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
+            self.map.deinit();
             self.allocator.destroy(s.instance);
             singleton = null;
         }

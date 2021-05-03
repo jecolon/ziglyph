@@ -3,9 +3,8 @@ const mem = std.mem;
 const unicode = std.unicode;
 
 const ascii = @import("../ascii.zig");
-const Context = @import("../context.zig").Context;
-const CaseFoldMap = @import("../context.zig").CaseFoldMap;
-const DecomposeMap = @import("../context.zig").DecomposeMap;
+const CaseFoldMap = @import("../components.zig").CaseFoldMap;
+const DecomposeMap = @import("../components.zig").DecomposeMap;
 const Letter = @import("../ziglyph.zig").Letter;
 
 pub const CodePointIterator = @import("CodePointIterator.zig");
@@ -19,35 +18,17 @@ const Self = @This();
 pub const Factory = struct {
     arena: std.heap.ArenaAllocator,
     decomp_map: *DecomposeMap,
-    fold_map: *CaseFoldMap,
     giter: GraphemeIterator,
     letter: *Letter,
-    width: Width,
-    zctx: ?*Context(.zigstr),
+    width: *Width,
 
     pub fn init(allocator: *mem.Allocator) !Factory {
-        var zctx = try Context(.zigstr).init(allocator);
-
         return Factory{
             .arena = std.heap.ArenaAllocator.init(allocator),
-            .decomp_map = try DecomposeMap.initWithContext(zctx),
-            .fold_map = zctx.fold_map,
-            .giter = try GraphemeIterator.initWithContext(zctx, ""),
-            .letter = try Letter.initWithContext(zctx),
-            .width = try Width.initWithContext(zctx),
-            .zctx = zctx,
-        };
-    }
-
-    pub fn initWithContext(ctx: anytype) !Factory {
-        return Factory{
-            .arena = std.heap.ArenaAllocator.init(ctx.allocator),
-            .decomp_map = try DecomposeMap.initWithContext(ctx),
-            .fold_map = ctx.fold_map,
-            .giter = try GraphemeIterator.initWithContext(ctx, ""),
-            .letter = try Letter.initWithContext(ctx),
-            .width = try Width.initWithContext(ctx),
-            .zctx = null,
+            .decomp_map = try DecomposeMap.init(allocator),
+            .giter = try GraphemeIterator.init(allocator, ""),
+            .letter = try Letter.init(allocator),
+            .width = try Width.init(allocator),
         };
     }
 
@@ -56,9 +37,6 @@ pub const Factory = struct {
         self.giter.deinit();
         self.letter.deinit();
         self.width.deinit();
-        if (self.zctx) |zctx| {
-            zctx.deinit();
-        }
         self.arena.deinit();
     }
 
@@ -76,7 +54,7 @@ pub const Factory = struct {
             .cp_count = 0,
             .decomp_map = factory.decomp_map,
             .factory = factory,
-            .fold_map = factory.fold_map,
+            .letter = factory.letter,
             .grapheme_clusters = null,
         };
 
@@ -94,7 +72,7 @@ code_points: ?[]u21,
 cp_count: usize,
 decomp_map: *DecomposeMap,
 factory: *Factory,
-fold_map: *CaseFoldMap,
+letter: *Letter,
 grapheme_clusters: ?[]Grapheme,
 
 /// reset this Zigstr with `str` as its new content.
@@ -283,9 +261,9 @@ pub fn eqlBy(self: *Self, other: []const u8, mode: CmpMode) !bool {
 }
 
 fn eqlIgnoreCase(self: *Self, other: []const u8) !bool {
-    const cf_a = try self.fold_map.caseFoldStr(self.allocator, self.bytes);
+    const cf_a = try self.letter.fold_map.caseFoldStr(self.allocator, self.bytes);
     defer self.allocator.free(cf_a);
-    const cf_b = try self.fold_map.caseFoldStr(self.allocator, other);
+    const cf_b = try self.letter.fold_map.caseFoldStr(self.allocator, other);
     defer self.allocator.free(cf_b);
 
     return mem.eql(u8, cf_a, cf_b);
@@ -308,14 +286,14 @@ fn eqlNormIgnore(self: *Self, other: []const u8) !bool {
     // The long winding road of normalized caseless matching...
     // NFKD(CaseFold(NFKD(CaseFold(NFD(str)))))
     var norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .D, self.bytes);
-    var cf_a = try self.fold_map.caseFoldStr(&arena.allocator, norm_a);
+    var cf_a = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_a);
     norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .KD, cf_a);
-    cf_a = try self.fold_map.caseFoldStr(&arena.allocator, norm_a);
+    cf_a = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_a);
     norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .KD, cf_a);
     var norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .D, other);
-    var cf_b = try self.fold_map.caseFoldStr(&arena.allocator, norm_b);
+    var cf_b = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_b);
     norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .KD, cf_b);
-    cf_b = try self.fold_map.caseFoldStr(&arena.allocator, norm_b);
+    cf_b = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_b);
     norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .KD, cf_b);
 
     return mem.eql(u8, norm_a, norm_b);
@@ -1018,9 +996,7 @@ test "Zigstr format" {
 }
 
 test "Zigstr width" {
-    var ctx = try Context(.zigstr).init(std.testing.allocator);
-    defer ctx.deinit();
-    var zigstr = try Factory.initWithContext(ctx);
+    var zigstr = try Factory.init(std.testing.allocator);
     defer zigstr.deinit();
 
     var str = try zigstr.new("Héllo 😊");

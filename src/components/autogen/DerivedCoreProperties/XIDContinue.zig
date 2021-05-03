@@ -4075,10 +4075,10 @@ pub fn init(allocator: *mem.Allocator) !*XIDContinue {
 }
 
 pub fn deinit(self: *XIDContinue) void {
-    self.cp_set.deinit();
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
+            self.cp_set.deinit();
             self.allocator.destroy(s.instance);
             singleton = null;
         }
