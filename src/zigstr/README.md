@@ -12,8 +12,25 @@ a human-readable *character* is the Grapheme Cluster, which Zigstr handles as su
 The usual pattern of `init` and `deinit` is used, but given the large datasets that are involved in
 initializing a new `Zigstr`, unless you need more than one instance at a time, it is **strongly** recommended
 to reuse an existing instance via the `reset` method. This reuses the existing datasets in memory,
-avoiding de-allocating and re-allocating, which is extremely costly in terms of performance.
+avoiding de-allocating and re-allocating, which is extremely costly in terms of performance. Here's
+an example of iterating over the lines in a file:
 
+```zig
+    // Initialize the single Zigstr for re-use, outside of the loop.
+    var str = try Zigstr.init(allocator, "");
+    defer str.deinit();
+
+    var buf: [1024]u8 = undefined;
+
+    while (try buf_reader.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+        // Re-use the Zigstr in the loop, avoiding costly allocations.
+        try str.reset(line);
+
+        // do stuff with str...
+    }
+```
+
+### General Usage
 
 ```zig
 const Zigstr = @import("Ziglyph").Zigstr;
