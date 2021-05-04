@@ -48,9 +48,14 @@ pub fn deinit(self: *Self) void {
     self.spacing.deinit();
 }
 
-/// reinit resets the iterator with a new string.
+/// reinit reinitializes the iterator with a new string.
 pub fn reinit(self: *Self, str: []const u8) !void {
     self.cp_iter = try CodePointIterator.init(str);
+}
+
+/// reset resets the iterator to start over.
+pub fn reset(self: *Self) void {
+    self.cp_iter.reset();
 }
 
 // Special code points.

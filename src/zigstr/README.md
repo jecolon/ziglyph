@@ -1,22 +1,27 @@
 # Zigstr
 A UTF-8 string type.
 
-## Usage
+## Overview
 Zigstr tries to emphasize the clear distinction between bytes (`u8`), code points (`u21`), and
 grapheme clusters (`[]const u8`) as per the Unicode standard. Note that the term *character* is glaringly
 missing here, as it tends to produce more confusion than clarity, and in fact Unicode has no concrete 
 *character* concept, only abstract characters are broadly mentioned. The closes concrete element resembling
 a human-readable *character* is the Grapheme Cluster, which Zigstr handles as sub-slices of bytes.
 
+## Usage
+The usual pattern of `init` and `deinit` is used, but given the large datasets that are involved in
+initializing a new `Zigstr`, unless you need more than one instance at a time, it is **strongly** recommended
+to reuse an existing instance via the `reset` method. This reuses the existing datasets in memory,
+avoiding de-allocating and re-allocating, which is extremely costly in terms of performance.
+
+
 ```zig
 const Zigstr = @import("Ziglyph").Zigstr;
 
 test "Zigstr README tests" {
     var allocator = std.testing.allocator;
-    var zigstr = try Zigstr.Factory.init(allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Héllo");
+    var str = try Zigstr.init(std.testing.allocator, "Héllo");
+    defer str.deinit();
 
     // Byte count.
     expectEqual(@as(usize, 6), str.byteCount());
@@ -26,6 +31,7 @@ test "Zigstr README tests" {
     var want = [_]u21{ 'H', 0x00E9, 'l', 'l', 'o' };
 
     var i: usize = 0;
+
     while (cp_iter.next()) |cp| : (i += 1) {
         expectEqual(want[i], cp);
     }
@@ -42,22 +48,27 @@ test "Zigstr README tests" {
     const gc_want = [_][]const u8{ "H", "é", "l", "l", "o" };
 
     i = 0;
+
     while (giter.next()) |gc| : (i += 1) {
         expect(gc.eql(gc_want[i]));
     }
 
     // Collect all grapheme clusters at once.
-    expectEqual(@as(usize, 5), try str.graphemeCount());
     const gcs = try str.graphemes();
+
     for (gcs) |gc, j| {
         expect(gc.eql(gc_want[j]));
     }
+
+    expectEqual(@as(usize, 5), try str.graphemeCount());
 
     // Grapheme count.
     expectEqual(@as(usize, 5), try str.graphemeCount());
 
     // Copy
     var str2 = try str.copy();
+    defer str2.deinit();
+
     expect(str.eql(str2.bytes));
     expect(str2.eql("Héllo"));
     expect(str.sameAs(str2));
@@ -121,6 +132,8 @@ test "Zigstr README tests" {
 
     // Collect all tokens at once.
     var ts = try str.tokenize(" ");
+    defer allocator.free(ts);
+
     expectEqual(@as(usize, 2), ts.len);
     expectEqualStrings("Hello", ts[0]);
     expectEqualStrings("World", ts[1]);
@@ -135,6 +148,8 @@ test "Zigstr README tests" {
 
     // Collect all sub-strings at once.
     var ss = try str.split(" ");
+    defer allocator.free(ss);
+
     expectEqual(@as(usize, 4), ss.len);
     expectEqualStrings("", ss[0]);
     expectEqualStrings("Hello", ss[1]);
@@ -152,6 +167,7 @@ test "Zigstr README tests" {
     try str.reset("Hello");
     try str.concat(" World");
     expect(str.eql("Hello World"));
+
     var others = [_][]const u8{ " is", " the", " tradition!" };
     try str.concatAll(&others);
     expect(str.eql("Hello World is the tradition!"));
@@ -171,6 +187,7 @@ test "Zigstr README tests" {
     try str.append('o');
     expectEqual(@as(usize, 5), str.bytes.len);
     expect(str.eql("Hello"));
+
     try str.appendAll(&[_]u21{ ' ', 'W', 'o', 'r', 'l', 'd' });
     expect(str.eql("Hello World"));
 
@@ -197,11 +214,14 @@ test "Zigstr README tests" {
     try str.reset("H\u{0065}\u{0301}llo"); // Héllo
     expectEqualSlices(u8, try str.byteSlice(1, 4), "\u{0065}\u{0301}");
     expectEqualSlices(u21, try str.codePointSlice(1, 3), &[_]u21{ '\u{0065}', '\u{0301}' });
+
     const gc1 = try str.graphemeSlice(1, 2);
     expect(gc1[0].eql("\u{0065}\u{0301}"));
 
     // Substrings
     var str3 = try str.substr(1, 2);
+    defer str3.deinit();
+
     expect(str3.eql("\u{0065}\u{0301}"));
     expect(str3.eql(try str.byteSlice(1, 4)));
 
@@ -215,8 +235,10 @@ test "Zigstr README tests" {
 
     // Letter case conversion.
     try str.reset("Héllo! 123");
+
     try str.toLower();
     expect(str.eql("héllo! 123"));
+
     try str.toUpper();
     expect(str.eql("HÉLLO! 123"));
 
@@ -224,5 +246,8 @@ test "Zigstr README tests" {
     // most common case. To use fullwidth, use the Zigstr.Width component struct directly.
     try str.reset("Héllo 😊");
     expectEqual(@as(usize, 8), try str.width());
+
+    // Zigstr implements the std.fmt.format interface.
+    std.debug.print("Zigstr: {}\n", .{str});
 }
 ```

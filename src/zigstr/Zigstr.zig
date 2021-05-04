@@ -14,58 +14,66 @@ pub const Width = @import("../components/aggregate/Width.zig");
 
 const Self = @This();
 
-/// Factory creates Zigstr instances and manages memory and singleton data structures for them.
-pub const Factory = struct {
-    arena: std.heap.ArenaAllocator,
-    decomp_map: ?*DecomposeMap,
-    letter: *Letter,
-
-    pub fn init(allocator: *mem.Allocator) !Factory {
-        return Factory{
-            .arena = std.heap.ArenaAllocator.init(allocator),
-            .decomp_map = null,
-            .letter = try Letter.init(allocator),
-        };
-    }
-
-    pub fn deinit(self: *Factory) void {
-        if (self.decomp_map) |decomp_map| {
-            decomp_map.deinit();
-        }
-        self.letter.deinit();
-        self.arena.deinit();
-    }
-
-    /// new creates a new Zigstr instance.
-    pub fn new(factory: *Factory, str: []const u8) !Self { // Self is Zigstr
-        var zigstr = Self{
-            .allocator = &factory.arena.allocator,
-            .ascii_only = false,
-            .bytes = blk: {
-                var b = try factory.arena.allocator.alloc(u8, str.len);
-                mem.copy(u8, b, str);
-                break :blk b;
-            },
-            .code_points = null,
-            .cp_count = 0,
-            .factory = factory,
-            .grapheme_clusters = null,
-        };
-
-        // Validates UTF-8, sets cp_count and ascii_only.
-        try zigstr.processCodePoints();
-
-        return zigstr;
-    }
-};
-
 allocator: *mem.Allocator,
 ascii_only: bool,
 bytes: []const u8,
 code_points: ?[]u21,
 cp_count: usize,
-factory: *Factory,
+decomp_map: ?*DecomposeMap,
 grapheme_clusters: ?[]Grapheme,
+giter: ?GraphemeIterator,
+letter: *Letter,
+widths: ?*Width,
+
+/// new creates a new Zigstr instance.
+pub fn init(allocator: *mem.Allocator, str: []const u8) !Self { // Self is Zigstr
+    var zigstr = Self{
+        .allocator = allocator,
+        .ascii_only = false,
+        .bytes = blk: {
+            var b = try allocator.alloc(u8, str.len);
+            mem.copy(u8, b, str);
+            break :blk b;
+        },
+        .code_points = null,
+        .cp_count = 0,
+        .decomp_map = null,
+        .grapheme_clusters = null,
+        .giter = null,
+        .letter = try Letter.init(allocator),
+        .widths = null,
+    };
+
+    // Validates UTF-8, sets cp_count and ascii_only.
+    try zigstr.processCodePoints();
+
+    return zigstr;
+}
+
+pub fn deinit(self: *Self) void {
+    self.letter.deinit();
+    self.allocator.free(self.bytes);
+
+    if (self.code_points) |code_points| {
+        self.allocator.free(code_points);
+    }
+
+    if (self.decomp_map) |decomp_map| {
+        decomp_map.deinit();
+    }
+
+    if (self.giter) |*giter| {
+        giter.deinit();
+    }
+
+    if (self.grapheme_clusters) |gcs| {
+        self.allocator.free(gcs);
+    }
+
+    if (self.widths) |widths| {
+        widths.deinit();
+    }
+}
 
 /// reset this Zigstr with `str` as its new content.
 pub fn reset(self: *Self, str: []const u8) !void {
@@ -76,6 +84,10 @@ pub fn reset(self: *Self, str: []const u8) !void {
     // Free and reset old content.
     if (self.code_points) |code_points| {
         self.allocator.free(code_points);
+    }
+
+    if (self.giter) |*giter| {
+        try giter.reinit(bytes);
     }
 
     if (self.grapheme_clusters) |gcs| {
@@ -157,8 +169,14 @@ const expectEqualSlices = std.testing.expectEqualSlices;
 
 /// graphemeIter returns a grapheme cluster iterator based on the bytes of this Zigstr. Each grapheme
 /// can be composed of multiple code points, so the next method returns a slice of bytes.
-pub fn graphemeIter(self: Self) !GraphemeIterator {
-    return GraphemeIterator.init(self.allocator, self.bytes);
+pub fn graphemeIter(self: *Self) !*GraphemeIterator {
+    if (self.giter) |*giter| {
+        giter.reset();
+        return giter;
+    } else {
+        self.giter = try GraphemeIterator.init(self.allocator, self.bytes);
+        return &self.giter.?;
+    }
 }
 
 /// graphemes returns the grapheme clusters that make up this Zigstr.
@@ -168,7 +186,6 @@ pub fn graphemes(self: *Self) ![]Grapheme {
 
     // Cache miss, generate.
     var giter = try self.graphemeIter();
-    defer giter.deinit();
     var gcs = std.ArrayList(Grapheme).init(self.allocator);
     defer gcs.deinit();
 
@@ -196,7 +213,7 @@ const expectEqualStrings = std.testing.expectEqualStrings;
 
 /// copy a Zigstr to a new Zigstr. Don't forget to to `deinit` the returned Zigstr!
 pub fn copy(self: Self) !Self {
-    return self.factory.new(self.bytes);
+    return init(self.allocator, self.bytes);
 }
 
 /// sameAs convenience method to test exact byte equality of two Zigstrs.
@@ -253,9 +270,9 @@ pub fn eqlBy(self: *Self, other: []const u8, mode: CmpMode) !bool {
 }
 
 fn eqlIgnoreCase(self: *Self, other: []const u8) !bool {
-    const cf_a = try self.factory.letter.fold_map.caseFoldStr(self.allocator, self.bytes);
+    const cf_a = try self.letter.fold_map.caseFoldStr(self.allocator, self.bytes);
     defer self.allocator.free(cf_a);
-    const cf_b = try self.factory.letter.fold_map.caseFoldStr(self.allocator, other);
+    const cf_b = try self.letter.fold_map.caseFoldStr(self.allocator, other);
     defer self.allocator.free(cf_b);
 
     return mem.eql(u8, cf_a, cf_b);
@@ -265,11 +282,11 @@ fn eqlNorm(self: *Self, other: []const u8) !bool {
     var arena = std.heap.ArenaAllocator.init(self.allocator);
     defer arena.deinit();
 
-    if (self.factory.decomp_map == null) {
-        self.factory.decomp_map = try DecomposeMap.init(self.factory.arena.child_allocator);
+    if (self.decomp_map == null) {
+        self.decomp_map = try DecomposeMap.init(self.allocator);
     }
-    const norm_a = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .KD, self.bytes);
-    const norm_b = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .KD, other);
+    const norm_a = try self.decomp_map.?.normalizeTo(&arena.allocator, .KD, self.bytes);
+    const norm_b = try self.decomp_map.?.normalizeTo(&arena.allocator, .KD, other);
 
     return mem.eql(u8, norm_a, norm_b);
 }
@@ -278,21 +295,21 @@ fn eqlNormIgnore(self: *Self, other: []const u8) !bool {
     var arena = std.heap.ArenaAllocator.init(self.allocator);
     defer arena.deinit();
 
-    if (self.factory.decomp_map == null) {
-        self.factory.decomp_map = try DecomposeMap.init(self.factory.arena.child_allocator);
+    if (self.decomp_map == null) {
+        self.decomp_map = try DecomposeMap.init(self.allocator);
     }
     // The long winding road of normalized caseless matching...
     // NFKD(CaseFold(NFKD(CaseFold(NFD(str)))))
-    var norm_a = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .D, self.bytes);
-    var cf_a = try self.factory.letter.fold_map.caseFoldStr(&arena.allocator, norm_a);
-    norm_a = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_a);
-    cf_a = try self.factory.letter.fold_map.caseFoldStr(&arena.allocator, norm_a);
-    norm_a = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_a);
-    var norm_b = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .D, other);
-    var cf_b = try self.factory.letter.fold_map.caseFoldStr(&arena.allocator, norm_b);
-    norm_b = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_b);
-    cf_b = try self.factory.letter.fold_map.caseFoldStr(&arena.allocator, norm_b);
-    norm_b = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_b);
+    var norm_a = try self.decomp_map.?.normalizeTo(&arena.allocator, .D, self.bytes);
+    var cf_a = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_a);
+    norm_a = try self.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_a);
+    cf_a = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_a);
+    norm_a = try self.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_a);
+    var norm_b = try self.decomp_map.?.normalizeTo(&arena.allocator, .D, other);
+    var cf_b = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_b);
+    norm_b = try self.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_b);
+    cf_b = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_b);
+    norm_b = try self.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_b);
 
     return mem.eql(u8, norm_a, norm_b);
 }
@@ -546,7 +563,7 @@ pub fn graphemeSlice(self: *Self, start: usize, end: usize) ![]Grapheme {
 pub fn substr(self: *Self, start: usize, end: usize) !Self {
     if (self.ascii_only) {
         if (start >= self.bytes.len or end > self.bytes.len) return error.IndexOutOfBounds;
-        return self.factory.new(self.bytes[start..end]);
+        return init(self.allocator, self.bytes[start..end]);
     }
 
     const gcs = try self.graphemes();
@@ -558,7 +575,7 @@ pub fn substr(self: *Self, start: usize, end: usize) !Self {
         try bytes.appendSlice(gcs[i].bytes);
     }
 
-    return self.factory.new(bytes.items);
+    return init(self.allocator, bytes.items);
 }
 
 /// processCodePoints performs some house-keeping and accounting on the code points that make up this
@@ -607,7 +624,7 @@ pub fn processCodePoints(self: *Self) !void {
 /// isLower detects if all the code points in this Zigstr are lowercase.
 pub fn isLower(self: *Self) !bool {
     for (try self.codePoints()) |cp| {
-        if (!self.factory.letter.isLower(cp)) return false;
+        if (!self.letter.isLower(cp)) return false;
     }
 
     return true;
@@ -620,7 +637,7 @@ pub fn toLower(self: *Self) !void {
 
     var buf: [4]u8 = undefined;
     for (try self.codePoints()) |cp| {
-        const lcp = self.factory.letter.toLower(cp);
+        const lcp = self.letter.toLower(cp);
         const len = try unicode.utf8Encode(lcp, &buf);
         try bytes.appendSlice(buf[0..len]);
     }
@@ -631,7 +648,7 @@ pub fn toLower(self: *Self) !void {
 /// isUpper detects if all the code points in this Zigstr are uppercase.
 pub fn isUpper(self: *Self) !bool {
     for (try self.codePoints()) |cp| {
-        if (!self.factory.letter.isUpper(cp)) return false;
+        if (!self.letter.isUpper(cp)) return false;
     }
 
     return true;
@@ -644,7 +661,7 @@ pub fn toUpper(self: *Self) !void {
 
     var buf: [4]u8 = undefined;
     for (try self.codePoints()) |cp| {
-        const lcp = self.factory.letter.toUpper(cp);
+        const lcp = self.letter.toUpper(cp);
         const len = try unicode.utf8Encode(lcp, &buf);
         try bytes.appendSlice(buf[0..len]);
     }
@@ -658,17 +675,16 @@ pub fn format(self: Self, comptime fmt: []const u8, options: std.fmt.FormatOptio
 }
 
 /// width returns the cells (or columns) this Zigstr would occupy in a fixed-width context.
-pub fn width(self: Self) !usize {
-    var widths = try Width.init(self.allocator);
-    defer widths.deinit();
-    return widths.strWidth(self.bytes, .half);
+pub fn width(self: *Self) !usize {
+    if (self.widths == null) {
+        self.widths = try Width.init(self.allocator);
+    }
+    return self.widths.?.strWidth(self.bytes, .half);
 }
 
 test "Zigstr code points" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Héllo");
+    var str = try init(std.testing.allocator, "Héllo");
+    defer str.deinit();
 
     var cp_iter = try str.codePointIter();
     var want = [_]u21{ 'H', 0x00E9, 'l', 'l', 'o' };
@@ -684,13 +700,10 @@ test "Zigstr code points" {
 }
 
 test "Zigstr graphemes" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Héllo");
+    var str = try init(std.testing.allocator, "Héllo");
+    defer str.deinit();
 
     var giter = try str.graphemeIter();
-    defer giter.deinit();
     var want = [_][]const u8{ "H", "é", "l", "l", "o" };
     var i: usize = 0;
     while (giter.next()) |gc| : (i += 1) {
@@ -708,11 +721,11 @@ test "Zigstr graphemes" {
 }
 
 test "Zigstr copy" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
+    var str1 = try init(std.testing.allocator, "Zig");
+    defer str1.deinit();
 
-    var str1 = try zigstr.new("Zig");
     var str2 = try str1.copy();
+    defer str2.deinit();
 
     expect(str1.eql(str2.bytes));
     expect(str2.eql("Zig"));
@@ -720,10 +733,8 @@ test "Zigstr copy" {
 }
 
 test "Zigstr eql" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("foo");
+    var str = try init(std.testing.allocator, "foo");
+    defer str.deinit();
 
     expect(str.eql("foo")); // exact
     expect(!str.eql("fooo")); // lengths
@@ -750,40 +761,32 @@ test "Zigstr isAsciiStr" {
 }
 
 test "Zigstr trimLeft" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("   Hello");
+    var str = try init(std.testing.allocator, "    Hello");
+    defer str.deinit();
 
     try str.trimLeft(" ");
     expect(str.eql("Hello"));
 }
 
 test "Zigstr trimRight" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello   ");
+    var str = try init(std.testing.allocator, "Hello    ");
+    defer str.deinit();
 
     try str.trimRight(" ");
     expect(str.eql("Hello"));
 }
 
 test "Zigstr trim" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("   Hello   ");
+    var str = try init(std.testing.allocator, "   Hello   ");
+    defer str.deinit();
 
     try str.trim(" ");
     expect(str.eql("Hello"));
 }
 
 test "Zigstr indexOf" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello");
+    var str = try init(std.testing.allocator, "Hello");
+    defer str.deinit();
 
     expectEqual(str.indexOf("l"), 2);
     expectEqual(str.indexOf("z"), null);
@@ -792,20 +795,16 @@ test "Zigstr indexOf" {
 }
 
 test "Zigstr lastIndexOf" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello");
+    var str = try init(std.testing.allocator, "Hello");
+    defer str.deinit();
 
     expectEqual(str.lastIndexOf("l"), 3);
     expectEqual(str.lastIndexOf("z"), null);
 }
 
 test "Zigstr count" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello");
+    var str = try init(std.testing.allocator, "Hello");
+    defer str.deinit();
 
     expectEqual(str.count("l"), 2);
     expectEqual(str.count("ll"), 1);
@@ -813,10 +812,9 @@ test "Zigstr count" {
 }
 
 test "Zigstr tokenize" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new(" Hello World ");
+    var allocator = std.testing.allocator;
+    var str = try init(allocator, " Hello World ");
+    defer str.deinit();
 
     var iter = str.tokenIter(" ");
     expectEqualStrings("Hello", iter.next().?);
@@ -824,16 +822,16 @@ test "Zigstr tokenize" {
     expect(iter.next() == null);
 
     var ts = try str.tokenize(" ");
+    defer allocator.free(ts);
     expectEqual(@as(usize, 2), ts.len);
     expectEqualStrings("Hello", ts[0]);
     expectEqualStrings("World", ts[1]);
 }
 
 test "Zigstr split" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new(" Hello World ");
+    var allocator = std.testing.allocator;
+    var str = try init(allocator, " Hello World ");
+    defer str.deinit();
 
     var iter = str.splitIter(" ");
     expectEqualStrings("", iter.next().?);
@@ -843,6 +841,7 @@ test "Zigstr split" {
     expect(iter.next() == null);
 
     var ss = try str.split(" ");
+    defer allocator.free(ss);
     expectEqual(@as(usize, 4), ss.len);
     expectEqualStrings("", ss[0]);
     expectEqualStrings("Hello", ss[1]);
@@ -851,20 +850,16 @@ test "Zigstr split" {
 }
 
 test "Zigstr startsWith" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello World ");
+    var str = try init(std.testing.allocator, "Hello World");
+    defer str.deinit();
 
     expect(str.startsWith("Hell"));
     expect(!str.startsWith("Zig"));
 }
 
 test "Zigstr endsWith" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello World");
+    var str = try init(std.testing.allocator, "Hello World");
+    defer str.deinit();
 
     expect(str.endsWith("World"));
     expect(!str.endsWith("Zig"));
@@ -878,10 +873,8 @@ test "Zigstr join" {
 }
 
 test "Zigstr concat" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello");
+    var str = try init(std.testing.allocator, "Hello");
+    defer str.deinit();
 
     try str.concat(" World");
     expectEqualStrings("Hello World", str.bytes);
@@ -891,10 +884,8 @@ test "Zigstr concat" {
 }
 
 test "Zigstr replace" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello");
+    var str = try init(std.testing.allocator, "Hello");
+    defer str.deinit();
 
     var replacements = try str.replace("l", "z");
     expectEqual(@as(usize, 2), replacements);
@@ -906,10 +897,8 @@ test "Zigstr replace" {
 }
 
 test "Zigstr append" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hell");
+    var str = try init(std.testing.allocator, "Hell");
+    defer str.deinit();
 
     try str.append('o');
     expectEqual(@as(usize, 5), str.bytes.len);
@@ -920,10 +909,8 @@ test "Zigstr append" {
 }
 
 test "Zigstr chomp" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hello\n");
+    var str = try init(std.testing.allocator, "Hello\n");
+    defer str.deinit();
 
     try str.chomp();
     expectEqual(@as(usize, 5), str.bytes.len);
@@ -941,10 +928,8 @@ test "Zigstr chomp" {
 }
 
 test "Zigstr xAt" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("H\u{0065}\u{0301}llo");
+    var str = try init(std.testing.allocator, "H\u{0065}\u{0301}llo");
+    defer str.deinit();
 
     expectEqual(try str.byteAt(2), 0x00CC);
     expectError(error.IndexOutOfBounds, str.byteAt(7));
@@ -955,10 +940,8 @@ test "Zigstr xAt" {
 }
 
 test "Zigstr extractions" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("H\u{0065}\u{0301}llo");
+    var str = try init(std.testing.allocator, "H\u{0065}\u{0301}llo");
+    defer str.deinit();
 
     // Slices
     expectEqualSlices(u8, try str.byteSlice(1, 4), "\u{0065}\u{0301}");
@@ -967,15 +950,14 @@ test "Zigstr extractions" {
     expect(gc1[0].eql("\u{0065}\u{0301}"));
     // Substrings
     var str2 = try str.substr(1, 2);
+    defer str2.deinit();
     expect(str2.eql("\u{0065}\u{0301}"));
     expect(str2.eql(try str.byteSlice(1, 4)));
 }
 
 test "Zigstr casing" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Héllo! 123");
+    var str = try init(std.testing.allocator, "Héllo! 123");
+    defer str.deinit();
 
     expect(!try str.isLower());
     expect(!try str.isUpper());
@@ -988,19 +970,15 @@ test "Zigstr casing" {
 }
 
 test "Zigstr format" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Hi, I'm a Zigstr! 😊");
+    var str = try init(std.testing.allocator, "Héllo 😊");
+    defer str.deinit();
 
     std.debug.print("{}\n", .{str});
 }
 
 test "Zigstr width" {
-    var zigstr = try Factory.init(std.testing.allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Héllo 😊");
+    var str = try init(std.testing.allocator, "Héllo 😊");
+    defer str.deinit();
 
     expectEqual(@as(usize, 8), try str.width());
 }

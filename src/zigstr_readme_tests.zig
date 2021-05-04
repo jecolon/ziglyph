@@ -8,10 +8,8 @@ const Zigstr = @import("zigstr/Zigstr.zig");
 
 test "Zigstr README tests" {
     var allocator = std.testing.allocator;
-    var zigstr = try Zigstr.Factory.init(allocator);
-    defer zigstr.deinit();
-
-    var str = try zigstr.new("Héllo");
+    var str = try Zigstr.init(std.testing.allocator, "Héllo");
+    defer str.deinit();
 
     // Byte count.
     expectEqual(@as(usize, 6), str.byteCount());
@@ -53,6 +51,7 @@ test "Zigstr README tests" {
 
     // Copy
     var str2 = try str.copy();
+    defer str2.deinit();
     expect(str.eql(str2.bytes));
     expect(str2.eql("Héllo"));
     expect(str.sameAs(str2));
@@ -116,6 +115,7 @@ test "Zigstr README tests" {
 
     // Collect all tokens at once.
     var ts = try str.tokenize(" ");
+    defer allocator.free(ts);
     expectEqual(@as(usize, 2), ts.len);
     expectEqualStrings("Hello", ts[0]);
     expectEqualStrings("World", ts[1]);
@@ -130,6 +130,7 @@ test "Zigstr README tests" {
 
     // Collect all sub-strings at once.
     var ss = try str.split(" ");
+    defer allocator.free(ss);
     expectEqual(@as(usize, 4), ss.len);
     expectEqualStrings("", ss[0]);
     expectEqualStrings("Hello", ss[1]);
@@ -197,6 +198,7 @@ test "Zigstr README tests" {
 
     // Substrings
     var str3 = try str.substr(1, 2);
+    defer str3.deinit();
     expect(str3.eql("\u{0065}\u{0301}"));
     expect(str3.eql(try str.byteSlice(1, 4)));
 
@@ -219,4 +221,7 @@ test "Zigstr README tests" {
     // most common case. To use fullwidth, use the Zigstr.Width component struct directly.
     try str.reset("Héllo 😊");
     expectEqual(@as(usize, 8), try str.width());
+
+    // Zigstr implements the std.fmt.format interface.
+    std.debug.print("Zigstr: {}\n", .{str});
 }
