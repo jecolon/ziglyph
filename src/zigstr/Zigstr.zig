@@ -17,26 +17,22 @@ const Self = @This();
 /// Factory creates Zigstr instances and manages memory and singleton data structures for them.
 pub const Factory = struct {
     arena: std.heap.ArenaAllocator,
-    decomp_map: *DecomposeMap,
-    giter: GraphemeIterator,
+    decomp_map: ?*DecomposeMap,
     letter: *Letter,
-    width: *Width,
 
     pub fn init(allocator: *mem.Allocator) !Factory {
         return Factory{
             .arena = std.heap.ArenaAllocator.init(allocator),
-            .decomp_map = try DecomposeMap.init(allocator),
-            .giter = try GraphemeIterator.init(allocator, ""),
+            .decomp_map = null,
             .letter = try Letter.init(allocator),
-            .width = try Width.init(allocator),
         };
     }
 
     pub fn deinit(self: *Factory) void {
-        self.decomp_map.deinit();
-        self.giter.deinit();
+        if (self.decomp_map) |decomp_map| {
+            decomp_map.deinit();
+        }
         self.letter.deinit();
-        self.width.deinit();
         self.arena.deinit();
     }
 
@@ -52,9 +48,7 @@ pub const Factory = struct {
             },
             .code_points = null,
             .cp_count = 0,
-            .decomp_map = factory.decomp_map,
             .factory = factory,
-            .letter = factory.letter,
             .grapheme_clusters = null,
         };
 
@@ -70,9 +64,7 @@ ascii_only: bool,
 bytes: []const u8,
 code_points: ?[]u21,
 cp_count: usize,
-decomp_map: *DecomposeMap,
 factory: *Factory,
-letter: *Letter,
 grapheme_clusters: ?[]Grapheme,
 
 /// reset this Zigstr with `str` as its new content.
@@ -165,9 +157,8 @@ const expectEqualSlices = std.testing.expectEqualSlices;
 
 /// graphemeIter returns a grapheme cluster iterator based on the bytes of this Zigstr. Each grapheme
 /// can be composed of multiple code points, so the next method returns a slice of bytes.
-pub fn graphemeIter(self: Self) !*GraphemeIterator {
-    try self.factory.giter.reinit(self.bytes);
-    return &self.factory.giter;
+pub fn graphemeIter(self: Self) !GraphemeIterator {
+    return GraphemeIterator.init(self.allocator, self.bytes);
 }
 
 /// graphemes returns the grapheme clusters that make up this Zigstr.
@@ -177,6 +168,7 @@ pub fn graphemes(self: *Self) ![]Grapheme {
 
     // Cache miss, generate.
     var giter = try self.graphemeIter();
+    defer giter.deinit();
     var gcs = std.ArrayList(Grapheme).init(self.allocator);
     defer gcs.deinit();
 
@@ -261,9 +253,9 @@ pub fn eqlBy(self: *Self, other: []const u8, mode: CmpMode) !bool {
 }
 
 fn eqlIgnoreCase(self: *Self, other: []const u8) !bool {
-    const cf_a = try self.letter.fold_map.caseFoldStr(self.allocator, self.bytes);
+    const cf_a = try self.factory.letter.fold_map.caseFoldStr(self.allocator, self.bytes);
     defer self.allocator.free(cf_a);
-    const cf_b = try self.letter.fold_map.caseFoldStr(self.allocator, other);
+    const cf_b = try self.factory.letter.fold_map.caseFoldStr(self.allocator, other);
     defer self.allocator.free(cf_b);
 
     return mem.eql(u8, cf_a, cf_b);
@@ -273,8 +265,11 @@ fn eqlNorm(self: *Self, other: []const u8) !bool {
     var arena = std.heap.ArenaAllocator.init(self.allocator);
     defer arena.deinit();
 
-    const norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .KD, self.bytes);
-    const norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .KD, other);
+    if (self.factory.decomp_map == null) {
+        self.factory.decomp_map = try DecomposeMap.init(self.factory.arena.child_allocator);
+    }
+    const norm_a = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .KD, self.bytes);
+    const norm_b = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .KD, other);
 
     return mem.eql(u8, norm_a, norm_b);
 }
@@ -283,18 +278,21 @@ fn eqlNormIgnore(self: *Self, other: []const u8) !bool {
     var arena = std.heap.ArenaAllocator.init(self.allocator);
     defer arena.deinit();
 
+    if (self.factory.decomp_map == null) {
+        self.factory.decomp_map = try DecomposeMap.init(self.factory.arena.child_allocator);
+    }
     // The long winding road of normalized caseless matching...
     // NFKD(CaseFold(NFKD(CaseFold(NFD(str)))))
-    var norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .D, self.bytes);
-    var cf_a = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_a);
-    norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .KD, cf_a);
-    cf_a = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_a);
-    norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .KD, cf_a);
-    var norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .D, other);
-    var cf_b = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_b);
-    norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .KD, cf_b);
-    cf_b = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_b);
-    norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .KD, cf_b);
+    var norm_a = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .D, self.bytes);
+    var cf_a = try self.factory.letter.fold_map.caseFoldStr(&arena.allocator, norm_a);
+    norm_a = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_a);
+    cf_a = try self.factory.letter.fold_map.caseFoldStr(&arena.allocator, norm_a);
+    norm_a = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_a);
+    var norm_b = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .D, other);
+    var cf_b = try self.factory.letter.fold_map.caseFoldStr(&arena.allocator, norm_b);
+    norm_b = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_b);
+    cf_b = try self.factory.letter.fold_map.caseFoldStr(&arena.allocator, norm_b);
+    norm_b = try self.factory.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_b);
 
     return mem.eql(u8, norm_a, norm_b);
 }
@@ -661,7 +659,9 @@ pub fn format(self: Self, comptime fmt: []const u8, options: std.fmt.FormatOptio
 
 /// width returns the cells (or columns) this Zigstr would occupy in a fixed-width context.
 pub fn width(self: Self) !usize {
-    return self.factory.width.strWidth(self.bytes, .half);
+    var widths = try Width.init(self.allocator);
+    defer widths.deinit();
+    return widths.strWidth(self.bytes, .half);
 }
 
 test "Zigstr code points" {
@@ -690,6 +690,7 @@ test "Zigstr graphemes" {
     var str = try zigstr.new("Héllo");
 
     var giter = try str.graphemeIter();
+    defer giter.deinit();
     var want = [_][]const u8{ "H", "é", "l", "l", "o" };
     var i: usize = 0;
     while (giter.next()) |gc| : (i += 1) {
