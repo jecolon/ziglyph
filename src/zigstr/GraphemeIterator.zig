@@ -14,39 +14,31 @@ pub const Prepend = @import("../components.zig").Prepend;
 pub const Regional = @import("../components.zig").Regional;
 pub const Spacing = @import("../components.zig").Spacing;
 
-control: *Control,
+control: Control,
 cp_iter: CodePointIterator,
-extend: *Extend,
-extpic: *ExtPic,
-hangul_map: *HangulMap,
-prepend: *Prepend,
-regional: *Regional,
-spacing: *Spacing,
+extend: Extend,
+extpic: ExtPic,
+hangul_map: HangulMap,
+prepend: Prepend,
+regional: Regional,
+spacing: Spacing,
 
 const Self = @This();
 
 pub fn init(allocator: *mem.Allocator, str: []const u8) !Self {
     return Self{
-        .control = try Control.init(allocator),
+        .control = Control{},
         .cp_iter = try CodePointIterator.init(str),
-        .extend = try Extend.init(allocator),
-        .extpic = try ExtPic.init(allocator),
-        .hangul_map = try HangulMap.init(allocator),
-        .prepend = try Prepend.init(allocator),
-        .regional = try Regional.init(allocator),
-        .spacing = try Spacing.init(allocator),
+        .extend = Extend{},
+        .extpic = ExtPic{},
+        .hangul_map = HangulMap{},
+        .prepend = Prepend{},
+        .regional = Regional{},
+        .spacing = Spacing{},
     };
 }
 
-pub fn deinit(self: *Self) void {
-    self.control.deinit();
-    self.extend.deinit();
-    self.extpic.deinit();
-    self.hangul_map.deinit();
-    self.prepend.deinit();
-    self.regional.deinit();
-    self.spacing.deinit();
-}
+pub fn deinit(self: *Self) void {}
 
 /// reinit reinitializes the iterator with a new string.
 pub fn reinit(self: *Self, str: []const u8) !void {
@@ -234,10 +226,10 @@ fn fullAdvance(self: *Self) void {
         _ = self.cp_iter.next();
         self.fullAdvance();
     } else if (self.extend.isExtend(ncp)) {
-        self.lexRun(self.extend.*, Extend.isExtend);
+        self.lexRun(self.extend, Extend.isExtend);
         self.fullAdvance();
     } else if (self.spacing.isSpacingMark(ncp)) {
-        self.lexRun(self.spacing.*, Spacing.isSpacingMark);
+        self.lexRun(self.spacing, Spacing.isSpacingMark);
         self.fullAdvance();
     }
 }

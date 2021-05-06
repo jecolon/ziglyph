@@ -1,21 +1,13 @@
-}
+
 
 pub fn deinit(self: *Self) void {
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
-            self.map.deinit();
-            self.ccc_map.deinit();
-            self.hangul_map.deinit();
             self.allocator.destroy(s.instance);
             singleton = null;
         }
     }
-}
-
-/// mapping retrieves the decomposition mapping for a code point as per the UCD.
-pub fn mapping(self: Self, cp: u21) Decomposed {
-    return if (self.map.get(cp)) |dc| dc else .{ .same = cp };
 }
 
 /// codePointTo takes a code point and returns a sequence of code points that represent its conversion 

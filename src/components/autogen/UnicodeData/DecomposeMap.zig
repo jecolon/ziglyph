@@ -9,29 +9,9 @@ const unicode = std.unicode;
 const CccMap = @import("../DerivedCombiningClass/CccMap.zig");
 const HangulMap = @import("../HangulSyllableType/HangulMap.zig");
 
-/// Decomposed is the result of a code point full decomposition. It can be one of:
-/// * .src: Sorce code point.
-/// * .same : Default canonical decomposition to the code point itself.
-/// * .single : Singleton canonical decomposition to a different single code point.
-/// * .canon : Canonical decomposition, which always results in two code points.
-/// * .compat : Compatibility decomposition, which can results in at most 18 code points.
-pub const Decomposed = union(enum) {
-    src: u21,
-    same: u21,
-    single: u21,
-    canon: [2]u21,
-    compat: []const u21,
-};
-
-pub const Form = enum {
-    D, // Canonical Decomposition
-    KD, // Compatibility Decomposition
-};
-
 allocator: *mem.Allocator,
-ccc_map: *CccMap,
-hangul_map: *HangulMap,
-map: std.AutoHashMap(u21, Decomposed),
+ccc_map: CccMap,
+hangul_map: HangulMap,
 
 const Self = @This();
 
@@ -52,12 +32,9 @@ pub fn init(allocator: *mem.Allocator) !*Self {
 
     instance.* = Self{
         .allocator = allocator,
-        .ccc_map = try CccMap.init(allocator),
-        .hangul_map = try HangulMap.init(allocator),
-        .map = std.AutoHashMap(u21, Decomposed).init(allocator),
+        .ccc_map = CccMap{},
+        .hangul_map = HangulMap{},
     };
-
-    try instance.addEntries();
 
     singleton = Singleton{
         .instance = instance,
@@ -67,6882 +44,6902 @@ pub fn init(allocator: *mem.Allocator) !*Self {
     return instance;
 }
 
-fn addEntries(self: *Self) !void {
-    try self.map.put(0x00A0, .{ .compat = &[_]u21{
+/// Decomposed is the result of a code point full decomposition. It can be one of:
+/// * .src: Sorce code point.
+/// * .same : Default canonical decomposition to the code point itself.
+/// * .single : Singleton canonical decomposition to a different single code point.
+/// * .canon : Canonical decomposition, which always results in two code points.
+/// * .compat : Compatibility decomposition, which can results in at most 18 code points.
+pub const Decomposed = union(enum) {
+    src: u21,
+    same: u21,
+    single: u21,
+    canon: [2]u21,
+    compat: []const u21,
+};
+
+pub const Form = enum {
+    D, // Canonical Decomposition
+    KD, // Compatibility Decomposition
+};
+
+/// mapping retrieves the decomposition mapping for a code point as per the UCD.
+pub fn mapping(self: Self, cp: u21) Decomposed {
+    if (cp == 0x00A0) return .{ .compat = &[_]u21{
         0x0020,
-    } });
-    try self.map.put(0x00A8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x00A8) return .{ .compat = &[_]u21{
         0x0020,
         0x0308,
-    } });
-    try self.map.put(0x00AA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x00AA) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x00AF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x00AF) return .{ .compat = &[_]u21{
         0x0020,
         0x0304,
-    } });
-    try self.map.put(0x00B2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x00B2) return .{ .compat = &[_]u21{
         0x0032,
-    } });
-    try self.map.put(0x00B3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x00B3) return .{ .compat = &[_]u21{
         0x0033,
-    } });
-    try self.map.put(0x00B4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x00B4) return .{ .compat = &[_]u21{
         0x0020,
         0x0301,
-    } });
-    try self.map.put(0x00B5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x00B5) return .{ .compat = &[_]u21{
         0x03BC,
-    } });
-    try self.map.put(0x00B8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x00B8) return .{ .compat = &[_]u21{
         0x0020,
         0x0327,
-    } });
-    try self.map.put(0x00B9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x00B9) return .{ .compat = &[_]u21{
         0x0031,
-    } });
-    try self.map.put(0x00BA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x00BA) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x00BC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x00BC) return .{ .compat = &[_]u21{
         0x0031,
         0x2044,
         0x0034,
-    } });
-    try self.map.put(0x00BD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x00BD) return .{ .compat = &[_]u21{
         0x0031,
         0x2044,
         0x0032,
-    } });
-    try self.map.put(0x00BE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x00BE) return .{ .compat = &[_]u21{
         0x0033,
         0x2044,
         0x0034,
-    } });
-    try self.map.put(0x00C0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00C0) return .{ .canon = [2]u21{
         0x0041,
         0x0300,
-    } });
-    try self.map.put(0x00C1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00C1) return .{ .canon = [2]u21{
         0x0041,
         0x0301,
-    } });
-    try self.map.put(0x00C2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00C2) return .{ .canon = [2]u21{
         0x0041,
         0x0302,
-    } });
-    try self.map.put(0x00C3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00C3) return .{ .canon = [2]u21{
         0x0041,
         0x0303,
-    } });
-    try self.map.put(0x00C4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00C4) return .{ .canon = [2]u21{
         0x0041,
         0x0308,
-    } });
-    try self.map.put(0x00C5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00C5) return .{ .canon = [2]u21{
         0x0041,
         0x030A,
-    } });
-    try self.map.put(0x00C7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00C7) return .{ .canon = [2]u21{
         0x0043,
         0x0327,
-    } });
-    try self.map.put(0x00C8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00C8) return .{ .canon = [2]u21{
         0x0045,
         0x0300,
-    } });
-    try self.map.put(0x00C9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00C9) return .{ .canon = [2]u21{
         0x0045,
         0x0301,
-    } });
-    try self.map.put(0x00CA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00CA) return .{ .canon = [2]u21{
         0x0045,
         0x0302,
-    } });
-    try self.map.put(0x00CB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00CB) return .{ .canon = [2]u21{
         0x0045,
         0x0308,
-    } });
-    try self.map.put(0x00CC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00CC) return .{ .canon = [2]u21{
         0x0049,
         0x0300,
-    } });
-    try self.map.put(0x00CD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00CD) return .{ .canon = [2]u21{
         0x0049,
         0x0301,
-    } });
-    try self.map.put(0x00CE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00CE) return .{ .canon = [2]u21{
         0x0049,
         0x0302,
-    } });
-    try self.map.put(0x00CF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00CF) return .{ .canon = [2]u21{
         0x0049,
         0x0308,
-    } });
-    try self.map.put(0x00D1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00D1) return .{ .canon = [2]u21{
         0x004E,
         0x0303,
-    } });
-    try self.map.put(0x00D2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00D2) return .{ .canon = [2]u21{
         0x004F,
         0x0300,
-    } });
-    try self.map.put(0x00D3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00D3) return .{ .canon = [2]u21{
         0x004F,
         0x0301,
-    } });
-    try self.map.put(0x00D4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00D4) return .{ .canon = [2]u21{
         0x004F,
         0x0302,
-    } });
-    try self.map.put(0x00D5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00D5) return .{ .canon = [2]u21{
         0x004F,
         0x0303,
-    } });
-    try self.map.put(0x00D6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00D6) return .{ .canon = [2]u21{
         0x004F,
         0x0308,
-    } });
-    try self.map.put(0x00D9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00D9) return .{ .canon = [2]u21{
         0x0055,
         0x0300,
-    } });
-    try self.map.put(0x00DA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00DA) return .{ .canon = [2]u21{
         0x0055,
         0x0301,
-    } });
-    try self.map.put(0x00DB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00DB) return .{ .canon = [2]u21{
         0x0055,
         0x0302,
-    } });
-    try self.map.put(0x00DC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00DC) return .{ .canon = [2]u21{
         0x0055,
         0x0308,
-    } });
-    try self.map.put(0x00DD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00DD) return .{ .canon = [2]u21{
         0x0059,
         0x0301,
-    } });
-    try self.map.put(0x00E0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00E0) return .{ .canon = [2]u21{
         0x0061,
         0x0300,
-    } });
-    try self.map.put(0x00E1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00E1) return .{ .canon = [2]u21{
         0x0061,
         0x0301,
-    } });
-    try self.map.put(0x00E2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00E2) return .{ .canon = [2]u21{
         0x0061,
         0x0302,
-    } });
-    try self.map.put(0x00E3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00E3) return .{ .canon = [2]u21{
         0x0061,
         0x0303,
-    } });
-    try self.map.put(0x00E4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00E4) return .{ .canon = [2]u21{
         0x0061,
         0x0308,
-    } });
-    try self.map.put(0x00E5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00E5) return .{ .canon = [2]u21{
         0x0061,
         0x030A,
-    } });
-    try self.map.put(0x00E7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00E7) return .{ .canon = [2]u21{
         0x0063,
         0x0327,
-    } });
-    try self.map.put(0x00E8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00E8) return .{ .canon = [2]u21{
         0x0065,
         0x0300,
-    } });
-    try self.map.put(0x00E9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00E9) return .{ .canon = [2]u21{
         0x0065,
         0x0301,
-    } });
-    try self.map.put(0x00EA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00EA) return .{ .canon = [2]u21{
         0x0065,
         0x0302,
-    } });
-    try self.map.put(0x00EB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00EB) return .{ .canon = [2]u21{
         0x0065,
         0x0308,
-    } });
-    try self.map.put(0x00EC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00EC) return .{ .canon = [2]u21{
         0x0069,
         0x0300,
-    } });
-    try self.map.put(0x00ED, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00ED) return .{ .canon = [2]u21{
         0x0069,
         0x0301,
-    } });
-    try self.map.put(0x00EE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00EE) return .{ .canon = [2]u21{
         0x0069,
         0x0302,
-    } });
-    try self.map.put(0x00EF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00EF) return .{ .canon = [2]u21{
         0x0069,
         0x0308,
-    } });
-    try self.map.put(0x00F1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00F1) return .{ .canon = [2]u21{
         0x006E,
         0x0303,
-    } });
-    try self.map.put(0x00F2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00F2) return .{ .canon = [2]u21{
         0x006F,
         0x0300,
-    } });
-    try self.map.put(0x00F3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00F3) return .{ .canon = [2]u21{
         0x006F,
         0x0301,
-    } });
-    try self.map.put(0x00F4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00F4) return .{ .canon = [2]u21{
         0x006F,
         0x0302,
-    } });
-    try self.map.put(0x00F5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00F5) return .{ .canon = [2]u21{
         0x006F,
         0x0303,
-    } });
-    try self.map.put(0x00F6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00F6) return .{ .canon = [2]u21{
         0x006F,
         0x0308,
-    } });
-    try self.map.put(0x00F9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00F9) return .{ .canon = [2]u21{
         0x0075,
         0x0300,
-    } });
-    try self.map.put(0x00FA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00FA) return .{ .canon = [2]u21{
         0x0075,
         0x0301,
-    } });
-    try self.map.put(0x00FB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00FB) return .{ .canon = [2]u21{
         0x0075,
         0x0302,
-    } });
-    try self.map.put(0x00FC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00FC) return .{ .canon = [2]u21{
         0x0075,
         0x0308,
-    } });
-    try self.map.put(0x00FD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00FD) return .{ .canon = [2]u21{
         0x0079,
         0x0301,
-    } });
-    try self.map.put(0x00FF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x00FF) return .{ .canon = [2]u21{
         0x0079,
         0x0308,
-    } });
-    try self.map.put(0x0100, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0100) return .{ .canon = [2]u21{
         0x0041,
         0x0304,
-    } });
-    try self.map.put(0x0101, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0101) return .{ .canon = [2]u21{
         0x0061,
         0x0304,
-    } });
-    try self.map.put(0x0102, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0102) return .{ .canon = [2]u21{
         0x0041,
         0x0306,
-    } });
-    try self.map.put(0x0103, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0103) return .{ .canon = [2]u21{
         0x0061,
         0x0306,
-    } });
-    try self.map.put(0x0104, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0104) return .{ .canon = [2]u21{
         0x0041,
         0x0328,
-    } });
-    try self.map.put(0x0105, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0105) return .{ .canon = [2]u21{
         0x0061,
         0x0328,
-    } });
-    try self.map.put(0x0106, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0106) return .{ .canon = [2]u21{
         0x0043,
         0x0301,
-    } });
-    try self.map.put(0x0107, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0107) return .{ .canon = [2]u21{
         0x0063,
         0x0301,
-    } });
-    try self.map.put(0x0108, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0108) return .{ .canon = [2]u21{
         0x0043,
         0x0302,
-    } });
-    try self.map.put(0x0109, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0109) return .{ .canon = [2]u21{
         0x0063,
         0x0302,
-    } });
-    try self.map.put(0x010A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x010A) return .{ .canon = [2]u21{
         0x0043,
         0x0307,
-    } });
-    try self.map.put(0x010B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x010B) return .{ .canon = [2]u21{
         0x0063,
         0x0307,
-    } });
-    try self.map.put(0x010C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x010C) return .{ .canon = [2]u21{
         0x0043,
         0x030C,
-    } });
-    try self.map.put(0x010D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x010D) return .{ .canon = [2]u21{
         0x0063,
         0x030C,
-    } });
-    try self.map.put(0x010E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x010E) return .{ .canon = [2]u21{
         0x0044,
         0x030C,
-    } });
-    try self.map.put(0x010F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x010F) return .{ .canon = [2]u21{
         0x0064,
         0x030C,
-    } });
-    try self.map.put(0x0112, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0112) return .{ .canon = [2]u21{
         0x0045,
         0x0304,
-    } });
-    try self.map.put(0x0113, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0113) return .{ .canon = [2]u21{
         0x0065,
         0x0304,
-    } });
-    try self.map.put(0x0114, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0114) return .{ .canon = [2]u21{
         0x0045,
         0x0306,
-    } });
-    try self.map.put(0x0115, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0115) return .{ .canon = [2]u21{
         0x0065,
         0x0306,
-    } });
-    try self.map.put(0x0116, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0116) return .{ .canon = [2]u21{
         0x0045,
         0x0307,
-    } });
-    try self.map.put(0x0117, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0117) return .{ .canon = [2]u21{
         0x0065,
         0x0307,
-    } });
-    try self.map.put(0x0118, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0118) return .{ .canon = [2]u21{
         0x0045,
         0x0328,
-    } });
-    try self.map.put(0x0119, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0119) return .{ .canon = [2]u21{
         0x0065,
         0x0328,
-    } });
-    try self.map.put(0x011A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x011A) return .{ .canon = [2]u21{
         0x0045,
         0x030C,
-    } });
-    try self.map.put(0x011B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x011B) return .{ .canon = [2]u21{
         0x0065,
         0x030C,
-    } });
-    try self.map.put(0x011C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x011C) return .{ .canon = [2]u21{
         0x0047,
         0x0302,
-    } });
-    try self.map.put(0x011D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x011D) return .{ .canon = [2]u21{
         0x0067,
         0x0302,
-    } });
-    try self.map.put(0x011E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x011E) return .{ .canon = [2]u21{
         0x0047,
         0x0306,
-    } });
-    try self.map.put(0x011F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x011F) return .{ .canon = [2]u21{
         0x0067,
         0x0306,
-    } });
-    try self.map.put(0x0120, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0120) return .{ .canon = [2]u21{
         0x0047,
         0x0307,
-    } });
-    try self.map.put(0x0121, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0121) return .{ .canon = [2]u21{
         0x0067,
         0x0307,
-    } });
-    try self.map.put(0x0122, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0122) return .{ .canon = [2]u21{
         0x0047,
         0x0327,
-    } });
-    try self.map.put(0x0123, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0123) return .{ .canon = [2]u21{
         0x0067,
         0x0327,
-    } });
-    try self.map.put(0x0124, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0124) return .{ .canon = [2]u21{
         0x0048,
         0x0302,
-    } });
-    try self.map.put(0x0125, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0125) return .{ .canon = [2]u21{
         0x0068,
         0x0302,
-    } });
-    try self.map.put(0x0128, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0128) return .{ .canon = [2]u21{
         0x0049,
         0x0303,
-    } });
-    try self.map.put(0x0129, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0129) return .{ .canon = [2]u21{
         0x0069,
         0x0303,
-    } });
-    try self.map.put(0x012A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x012A) return .{ .canon = [2]u21{
         0x0049,
         0x0304,
-    } });
-    try self.map.put(0x012B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x012B) return .{ .canon = [2]u21{
         0x0069,
         0x0304,
-    } });
-    try self.map.put(0x012C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x012C) return .{ .canon = [2]u21{
         0x0049,
         0x0306,
-    } });
-    try self.map.put(0x012D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x012D) return .{ .canon = [2]u21{
         0x0069,
         0x0306,
-    } });
-    try self.map.put(0x012E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x012E) return .{ .canon = [2]u21{
         0x0049,
         0x0328,
-    } });
-    try self.map.put(0x012F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x012F) return .{ .canon = [2]u21{
         0x0069,
         0x0328,
-    } });
-    try self.map.put(0x0130, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0130) return .{ .canon = [2]u21{
         0x0049,
         0x0307,
-    } });
-    try self.map.put(0x0132, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0132) return .{ .compat = &[_]u21{
         0x0049,
         0x004A,
-    } });
-    try self.map.put(0x0133, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0133) return .{ .compat = &[_]u21{
         0x0069,
         0x006A,
-    } });
-    try self.map.put(0x0134, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0134) return .{ .canon = [2]u21{
         0x004A,
         0x0302,
-    } });
-    try self.map.put(0x0135, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0135) return .{ .canon = [2]u21{
         0x006A,
         0x0302,
-    } });
-    try self.map.put(0x0136, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0136) return .{ .canon = [2]u21{
         0x004B,
         0x0327,
-    } });
-    try self.map.put(0x0137, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0137) return .{ .canon = [2]u21{
         0x006B,
         0x0327,
-    } });
-    try self.map.put(0x0139, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0139) return .{ .canon = [2]u21{
         0x004C,
         0x0301,
-    } });
-    try self.map.put(0x013A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x013A) return .{ .canon = [2]u21{
         0x006C,
         0x0301,
-    } });
-    try self.map.put(0x013B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x013B) return .{ .canon = [2]u21{
         0x004C,
         0x0327,
-    } });
-    try self.map.put(0x013C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x013C) return .{ .canon = [2]u21{
         0x006C,
         0x0327,
-    } });
-    try self.map.put(0x013D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x013D) return .{ .canon = [2]u21{
         0x004C,
         0x030C,
-    } });
-    try self.map.put(0x013E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x013E) return .{ .canon = [2]u21{
         0x006C,
         0x030C,
-    } });
-    try self.map.put(0x013F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x013F) return .{ .compat = &[_]u21{
         0x004C,
         0x00B7,
-    } });
-    try self.map.put(0x0140, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0140) return .{ .compat = &[_]u21{
         0x006C,
         0x00B7,
-    } });
-    try self.map.put(0x0143, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0143) return .{ .canon = [2]u21{
         0x004E,
         0x0301,
-    } });
-    try self.map.put(0x0144, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0144) return .{ .canon = [2]u21{
         0x006E,
         0x0301,
-    } });
-    try self.map.put(0x0145, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0145) return .{ .canon = [2]u21{
         0x004E,
         0x0327,
-    } });
-    try self.map.put(0x0146, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0146) return .{ .canon = [2]u21{
         0x006E,
         0x0327,
-    } });
-    try self.map.put(0x0147, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0147) return .{ .canon = [2]u21{
         0x004E,
         0x030C,
-    } });
-    try self.map.put(0x0148, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0148) return .{ .canon = [2]u21{
         0x006E,
         0x030C,
-    } });
-    try self.map.put(0x0149, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0149) return .{ .compat = &[_]u21{
         0x02BC,
         0x006E,
-    } });
-    try self.map.put(0x014C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x014C) return .{ .canon = [2]u21{
         0x004F,
         0x0304,
-    } });
-    try self.map.put(0x014D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x014D) return .{ .canon = [2]u21{
         0x006F,
         0x0304,
-    } });
-    try self.map.put(0x014E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x014E) return .{ .canon = [2]u21{
         0x004F,
         0x0306,
-    } });
-    try self.map.put(0x014F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x014F) return .{ .canon = [2]u21{
         0x006F,
         0x0306,
-    } });
-    try self.map.put(0x0150, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0150) return .{ .canon = [2]u21{
         0x004F,
         0x030B,
-    } });
-    try self.map.put(0x0151, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0151) return .{ .canon = [2]u21{
         0x006F,
         0x030B,
-    } });
-    try self.map.put(0x0154, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0154) return .{ .canon = [2]u21{
         0x0052,
         0x0301,
-    } });
-    try self.map.put(0x0155, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0155) return .{ .canon = [2]u21{
         0x0072,
         0x0301,
-    } });
-    try self.map.put(0x0156, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0156) return .{ .canon = [2]u21{
         0x0052,
         0x0327,
-    } });
-    try self.map.put(0x0157, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0157) return .{ .canon = [2]u21{
         0x0072,
         0x0327,
-    } });
-    try self.map.put(0x0158, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0158) return .{ .canon = [2]u21{
         0x0052,
         0x030C,
-    } });
-    try self.map.put(0x0159, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0159) return .{ .canon = [2]u21{
         0x0072,
         0x030C,
-    } });
-    try self.map.put(0x015A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x015A) return .{ .canon = [2]u21{
         0x0053,
         0x0301,
-    } });
-    try self.map.put(0x015B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x015B) return .{ .canon = [2]u21{
         0x0073,
         0x0301,
-    } });
-    try self.map.put(0x015C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x015C) return .{ .canon = [2]u21{
         0x0053,
         0x0302,
-    } });
-    try self.map.put(0x015D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x015D) return .{ .canon = [2]u21{
         0x0073,
         0x0302,
-    } });
-    try self.map.put(0x015E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x015E) return .{ .canon = [2]u21{
         0x0053,
         0x0327,
-    } });
-    try self.map.put(0x015F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x015F) return .{ .canon = [2]u21{
         0x0073,
         0x0327,
-    } });
-    try self.map.put(0x0160, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0160) return .{ .canon = [2]u21{
         0x0053,
         0x030C,
-    } });
-    try self.map.put(0x0161, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0161) return .{ .canon = [2]u21{
         0x0073,
         0x030C,
-    } });
-    try self.map.put(0x0162, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0162) return .{ .canon = [2]u21{
         0x0054,
         0x0327,
-    } });
-    try self.map.put(0x0163, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0163) return .{ .canon = [2]u21{
         0x0074,
         0x0327,
-    } });
-    try self.map.put(0x0164, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0164) return .{ .canon = [2]u21{
         0x0054,
         0x030C,
-    } });
-    try self.map.put(0x0165, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0165) return .{ .canon = [2]u21{
         0x0074,
         0x030C,
-    } });
-    try self.map.put(0x0168, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0168) return .{ .canon = [2]u21{
         0x0055,
         0x0303,
-    } });
-    try self.map.put(0x0169, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0169) return .{ .canon = [2]u21{
         0x0075,
         0x0303,
-    } });
-    try self.map.put(0x016A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x016A) return .{ .canon = [2]u21{
         0x0055,
         0x0304,
-    } });
-    try self.map.put(0x016B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x016B) return .{ .canon = [2]u21{
         0x0075,
         0x0304,
-    } });
-    try self.map.put(0x016C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x016C) return .{ .canon = [2]u21{
         0x0055,
         0x0306,
-    } });
-    try self.map.put(0x016D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x016D) return .{ .canon = [2]u21{
         0x0075,
         0x0306,
-    } });
-    try self.map.put(0x016E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x016E) return .{ .canon = [2]u21{
         0x0055,
         0x030A,
-    } });
-    try self.map.put(0x016F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x016F) return .{ .canon = [2]u21{
         0x0075,
         0x030A,
-    } });
-    try self.map.put(0x0170, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0170) return .{ .canon = [2]u21{
         0x0055,
         0x030B,
-    } });
-    try self.map.put(0x0171, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0171) return .{ .canon = [2]u21{
         0x0075,
         0x030B,
-    } });
-    try self.map.put(0x0172, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0172) return .{ .canon = [2]u21{
         0x0055,
         0x0328,
-    } });
-    try self.map.put(0x0173, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0173) return .{ .canon = [2]u21{
         0x0075,
         0x0328,
-    } });
-    try self.map.put(0x0174, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0174) return .{ .canon = [2]u21{
         0x0057,
         0x0302,
-    } });
-    try self.map.put(0x0175, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0175) return .{ .canon = [2]u21{
         0x0077,
         0x0302,
-    } });
-    try self.map.put(0x0176, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0176) return .{ .canon = [2]u21{
         0x0059,
         0x0302,
-    } });
-    try self.map.put(0x0177, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0177) return .{ .canon = [2]u21{
         0x0079,
         0x0302,
-    } });
-    try self.map.put(0x0178, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0178) return .{ .canon = [2]u21{
         0x0059,
         0x0308,
-    } });
-    try self.map.put(0x0179, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0179) return .{ .canon = [2]u21{
         0x005A,
         0x0301,
-    } });
-    try self.map.put(0x017A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x017A) return .{ .canon = [2]u21{
         0x007A,
         0x0301,
-    } });
-    try self.map.put(0x017B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x017B) return .{ .canon = [2]u21{
         0x005A,
         0x0307,
-    } });
-    try self.map.put(0x017C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x017C) return .{ .canon = [2]u21{
         0x007A,
         0x0307,
-    } });
-    try self.map.put(0x017D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x017D) return .{ .canon = [2]u21{
         0x005A,
         0x030C,
-    } });
-    try self.map.put(0x017E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x017E) return .{ .canon = [2]u21{
         0x007A,
         0x030C,
-    } });
-    try self.map.put(0x017F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x017F) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x01A0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01A0) return .{ .canon = [2]u21{
         0x004F,
         0x031B,
-    } });
-    try self.map.put(0x01A1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01A1) return .{ .canon = [2]u21{
         0x006F,
         0x031B,
-    } });
-    try self.map.put(0x01AF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01AF) return .{ .canon = [2]u21{
         0x0055,
         0x031B,
-    } });
-    try self.map.put(0x01B0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01B0) return .{ .canon = [2]u21{
         0x0075,
         0x031B,
-    } });
-    try self.map.put(0x01C4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x01C4) return .{ .compat = &[_]u21{
         0x0044,
         0x017D,
-    } });
-    try self.map.put(0x01C5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x01C5) return .{ .compat = &[_]u21{
         0x0044,
         0x017E,
-    } });
-    try self.map.put(0x01C6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x01C6) return .{ .compat = &[_]u21{
         0x0064,
         0x017E,
-    } });
-    try self.map.put(0x01C7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x01C7) return .{ .compat = &[_]u21{
         0x004C,
         0x004A,
-    } });
-    try self.map.put(0x01C8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x01C8) return .{ .compat = &[_]u21{
         0x004C,
         0x006A,
-    } });
-    try self.map.put(0x01C9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x01C9) return .{ .compat = &[_]u21{
         0x006C,
         0x006A,
-    } });
-    try self.map.put(0x01CA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x01CA) return .{ .compat = &[_]u21{
         0x004E,
         0x004A,
-    } });
-    try self.map.put(0x01CB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x01CB) return .{ .compat = &[_]u21{
         0x004E,
         0x006A,
-    } });
-    try self.map.put(0x01CC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x01CC) return .{ .compat = &[_]u21{
         0x006E,
         0x006A,
-    } });
-    try self.map.put(0x01CD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01CD) return .{ .canon = [2]u21{
         0x0041,
         0x030C,
-    } });
-    try self.map.put(0x01CE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01CE) return .{ .canon = [2]u21{
         0x0061,
         0x030C,
-    } });
-    try self.map.put(0x01CF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01CF) return .{ .canon = [2]u21{
         0x0049,
         0x030C,
-    } });
-    try self.map.put(0x01D0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01D0) return .{ .canon = [2]u21{
         0x0069,
         0x030C,
-    } });
-    try self.map.put(0x01D1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01D1) return .{ .canon = [2]u21{
         0x004F,
         0x030C,
-    } });
-    try self.map.put(0x01D2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01D2) return .{ .canon = [2]u21{
         0x006F,
         0x030C,
-    } });
-    try self.map.put(0x01D3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01D3) return .{ .canon = [2]u21{
         0x0055,
         0x030C,
-    } });
-    try self.map.put(0x01D4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01D4) return .{ .canon = [2]u21{
         0x0075,
         0x030C,
-    } });
-    try self.map.put(0x01D5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01D5) return .{ .canon = [2]u21{
         0x00DC,
         0x0304,
-    } });
-    try self.map.put(0x01D6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01D6) return .{ .canon = [2]u21{
         0x00FC,
         0x0304,
-    } });
-    try self.map.put(0x01D7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01D7) return .{ .canon = [2]u21{
         0x00DC,
         0x0301,
-    } });
-    try self.map.put(0x01D8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01D8) return .{ .canon = [2]u21{
         0x00FC,
         0x0301,
-    } });
-    try self.map.put(0x01D9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01D9) return .{ .canon = [2]u21{
         0x00DC,
         0x030C,
-    } });
-    try self.map.put(0x01DA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01DA) return .{ .canon = [2]u21{
         0x00FC,
         0x030C,
-    } });
-    try self.map.put(0x01DB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01DB) return .{ .canon = [2]u21{
         0x00DC,
         0x0300,
-    } });
-    try self.map.put(0x01DC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01DC) return .{ .canon = [2]u21{
         0x00FC,
         0x0300,
-    } });
-    try self.map.put(0x01DE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01DE) return .{ .canon = [2]u21{
         0x00C4,
         0x0304,
-    } });
-    try self.map.put(0x01DF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01DF) return .{ .canon = [2]u21{
         0x00E4,
         0x0304,
-    } });
-    try self.map.put(0x01E0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01E0) return .{ .canon = [2]u21{
         0x0226,
         0x0304,
-    } });
-    try self.map.put(0x01E1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01E1) return .{ .canon = [2]u21{
         0x0227,
         0x0304,
-    } });
-    try self.map.put(0x01E2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01E2) return .{ .canon = [2]u21{
         0x00C6,
         0x0304,
-    } });
-    try self.map.put(0x01E3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01E3) return .{ .canon = [2]u21{
         0x00E6,
         0x0304,
-    } });
-    try self.map.put(0x01E6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01E6) return .{ .canon = [2]u21{
         0x0047,
         0x030C,
-    } });
-    try self.map.put(0x01E7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01E7) return .{ .canon = [2]u21{
         0x0067,
         0x030C,
-    } });
-    try self.map.put(0x01E8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01E8) return .{ .canon = [2]u21{
         0x004B,
         0x030C,
-    } });
-    try self.map.put(0x01E9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01E9) return .{ .canon = [2]u21{
         0x006B,
         0x030C,
-    } });
-    try self.map.put(0x01EA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01EA) return .{ .canon = [2]u21{
         0x004F,
         0x0328,
-    } });
-    try self.map.put(0x01EB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01EB) return .{ .canon = [2]u21{
         0x006F,
         0x0328,
-    } });
-    try self.map.put(0x01EC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01EC) return .{ .canon = [2]u21{
         0x01EA,
         0x0304,
-    } });
-    try self.map.put(0x01ED, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01ED) return .{ .canon = [2]u21{
         0x01EB,
         0x0304,
-    } });
-    try self.map.put(0x01EE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01EE) return .{ .canon = [2]u21{
         0x01B7,
         0x030C,
-    } });
-    try self.map.put(0x01EF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01EF) return .{ .canon = [2]u21{
         0x0292,
         0x030C,
-    } });
-    try self.map.put(0x01F0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01F0) return .{ .canon = [2]u21{
         0x006A,
         0x030C,
-    } });
-    try self.map.put(0x01F1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x01F1) return .{ .compat = &[_]u21{
         0x0044,
         0x005A,
-    } });
-    try self.map.put(0x01F2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x01F2) return .{ .compat = &[_]u21{
         0x0044,
         0x007A,
-    } });
-    try self.map.put(0x01F3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x01F3) return .{ .compat = &[_]u21{
         0x0064,
         0x007A,
-    } });
-    try self.map.put(0x01F4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01F4) return .{ .canon = [2]u21{
         0x0047,
         0x0301,
-    } });
-    try self.map.put(0x01F5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01F5) return .{ .canon = [2]u21{
         0x0067,
         0x0301,
-    } });
-    try self.map.put(0x01F8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01F8) return .{ .canon = [2]u21{
         0x004E,
         0x0300,
-    } });
-    try self.map.put(0x01F9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01F9) return .{ .canon = [2]u21{
         0x006E,
         0x0300,
-    } });
-    try self.map.put(0x01FA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01FA) return .{ .canon = [2]u21{
         0x00C5,
         0x0301,
-    } });
-    try self.map.put(0x01FB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01FB) return .{ .canon = [2]u21{
         0x00E5,
         0x0301,
-    } });
-    try self.map.put(0x01FC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01FC) return .{ .canon = [2]u21{
         0x00C6,
         0x0301,
-    } });
-    try self.map.put(0x01FD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01FD) return .{ .canon = [2]u21{
         0x00E6,
         0x0301,
-    } });
-    try self.map.put(0x01FE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01FE) return .{ .canon = [2]u21{
         0x00D8,
         0x0301,
-    } });
-    try self.map.put(0x01FF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x01FF) return .{ .canon = [2]u21{
         0x00F8,
         0x0301,
-    } });
-    try self.map.put(0x0200, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0200) return .{ .canon = [2]u21{
         0x0041,
         0x030F,
-    } });
-    try self.map.put(0x0201, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0201) return .{ .canon = [2]u21{
         0x0061,
         0x030F,
-    } });
-    try self.map.put(0x0202, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0202) return .{ .canon = [2]u21{
         0x0041,
         0x0311,
-    } });
-    try self.map.put(0x0203, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0203) return .{ .canon = [2]u21{
         0x0061,
         0x0311,
-    } });
-    try self.map.put(0x0204, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0204) return .{ .canon = [2]u21{
         0x0045,
         0x030F,
-    } });
-    try self.map.put(0x0205, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0205) return .{ .canon = [2]u21{
         0x0065,
         0x030F,
-    } });
-    try self.map.put(0x0206, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0206) return .{ .canon = [2]u21{
         0x0045,
         0x0311,
-    } });
-    try self.map.put(0x0207, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0207) return .{ .canon = [2]u21{
         0x0065,
         0x0311,
-    } });
-    try self.map.put(0x0208, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0208) return .{ .canon = [2]u21{
         0x0049,
         0x030F,
-    } });
-    try self.map.put(0x0209, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0209) return .{ .canon = [2]u21{
         0x0069,
         0x030F,
-    } });
-    try self.map.put(0x020A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x020A) return .{ .canon = [2]u21{
         0x0049,
         0x0311,
-    } });
-    try self.map.put(0x020B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x020B) return .{ .canon = [2]u21{
         0x0069,
         0x0311,
-    } });
-    try self.map.put(0x020C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x020C) return .{ .canon = [2]u21{
         0x004F,
         0x030F,
-    } });
-    try self.map.put(0x020D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x020D) return .{ .canon = [2]u21{
         0x006F,
         0x030F,
-    } });
-    try self.map.put(0x020E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x020E) return .{ .canon = [2]u21{
         0x004F,
         0x0311,
-    } });
-    try self.map.put(0x020F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x020F) return .{ .canon = [2]u21{
         0x006F,
         0x0311,
-    } });
-    try self.map.put(0x0210, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0210) return .{ .canon = [2]u21{
         0x0052,
         0x030F,
-    } });
-    try self.map.put(0x0211, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0211) return .{ .canon = [2]u21{
         0x0072,
         0x030F,
-    } });
-    try self.map.put(0x0212, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0212) return .{ .canon = [2]u21{
         0x0052,
         0x0311,
-    } });
-    try self.map.put(0x0213, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0213) return .{ .canon = [2]u21{
         0x0072,
         0x0311,
-    } });
-    try self.map.put(0x0214, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0214) return .{ .canon = [2]u21{
         0x0055,
         0x030F,
-    } });
-    try self.map.put(0x0215, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0215) return .{ .canon = [2]u21{
         0x0075,
         0x030F,
-    } });
-    try self.map.put(0x0216, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0216) return .{ .canon = [2]u21{
         0x0055,
         0x0311,
-    } });
-    try self.map.put(0x0217, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0217) return .{ .canon = [2]u21{
         0x0075,
         0x0311,
-    } });
-    try self.map.put(0x0218, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0218) return .{ .canon = [2]u21{
         0x0053,
         0x0326,
-    } });
-    try self.map.put(0x0219, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0219) return .{ .canon = [2]u21{
         0x0073,
         0x0326,
-    } });
-    try self.map.put(0x021A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x021A) return .{ .canon = [2]u21{
         0x0054,
         0x0326,
-    } });
-    try self.map.put(0x021B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x021B) return .{ .canon = [2]u21{
         0x0074,
         0x0326,
-    } });
-    try self.map.put(0x021E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x021E) return .{ .canon = [2]u21{
         0x0048,
         0x030C,
-    } });
-    try self.map.put(0x021F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x021F) return .{ .canon = [2]u21{
         0x0068,
         0x030C,
-    } });
-    try self.map.put(0x0226, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0226) return .{ .canon = [2]u21{
         0x0041,
         0x0307,
-    } });
-    try self.map.put(0x0227, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0227) return .{ .canon = [2]u21{
         0x0061,
         0x0307,
-    } });
-    try self.map.put(0x0228, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0228) return .{ .canon = [2]u21{
         0x0045,
         0x0327,
-    } });
-    try self.map.put(0x0229, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0229) return .{ .canon = [2]u21{
         0x0065,
         0x0327,
-    } });
-    try self.map.put(0x022A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x022A) return .{ .canon = [2]u21{
         0x00D6,
         0x0304,
-    } });
-    try self.map.put(0x022B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x022B) return .{ .canon = [2]u21{
         0x00F6,
         0x0304,
-    } });
-    try self.map.put(0x022C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x022C) return .{ .canon = [2]u21{
         0x00D5,
         0x0304,
-    } });
-    try self.map.put(0x022D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x022D) return .{ .canon = [2]u21{
         0x00F5,
         0x0304,
-    } });
-    try self.map.put(0x022E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x022E) return .{ .canon = [2]u21{
         0x004F,
         0x0307,
-    } });
-    try self.map.put(0x022F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x022F) return .{ .canon = [2]u21{
         0x006F,
         0x0307,
-    } });
-    try self.map.put(0x0230, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0230) return .{ .canon = [2]u21{
         0x022E,
         0x0304,
-    } });
-    try self.map.put(0x0231, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0231) return .{ .canon = [2]u21{
         0x022F,
         0x0304,
-    } });
-    try self.map.put(0x0232, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0232) return .{ .canon = [2]u21{
         0x0059,
         0x0304,
-    } });
-    try self.map.put(0x0233, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0233) return .{ .canon = [2]u21{
         0x0079,
         0x0304,
-    } });
-    try self.map.put(0x02B0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02B0) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x02B1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02B1) return .{ .compat = &[_]u21{
         0x0266,
-    } });
-    try self.map.put(0x02B2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02B2) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x02B3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02B3) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x02B4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02B4) return .{ .compat = &[_]u21{
         0x0279,
-    } });
-    try self.map.put(0x02B5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02B5) return .{ .compat = &[_]u21{
         0x027B,
-    } });
-    try self.map.put(0x02B6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02B6) return .{ .compat = &[_]u21{
         0x0281,
-    } });
-    try self.map.put(0x02B7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02B7) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0x02B8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02B8) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0x02D8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02D8) return .{ .compat = &[_]u21{
         0x0020,
         0x0306,
-    } });
-    try self.map.put(0x02D9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02D9) return .{ .compat = &[_]u21{
         0x0020,
         0x0307,
-    } });
-    try self.map.put(0x02DA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02DA) return .{ .compat = &[_]u21{
         0x0020,
         0x030A,
-    } });
-    try self.map.put(0x02DB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02DB) return .{ .compat = &[_]u21{
         0x0020,
         0x0328,
-    } });
-    try self.map.put(0x02DC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02DC) return .{ .compat = &[_]u21{
         0x0020,
         0x0303,
-    } });
-    try self.map.put(0x02DD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02DD) return .{ .compat = &[_]u21{
         0x0020,
         0x030B,
-    } });
-    try self.map.put(0x02E0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02E0) return .{ .compat = &[_]u21{
         0x0263,
-    } });
-    try self.map.put(0x02E1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02E1) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x02E2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02E2) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x02E3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02E3) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x02E4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x02E4) return .{ .compat = &[_]u21{
         0x0295,
-    } });
-    try self.map.put(0x0340, .{ .single = 0x0300 });
-    try self.map.put(0x0341, .{ .single = 0x0301 });
-    try self.map.put(0x0343, .{ .single = 0x0313 });
-    try self.map.put(0x0344, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0340) return .{ .single = 0x0300 };
+    if (cp == 0x0341) return .{ .single = 0x0301 };
+    if (cp == 0x0343) return .{ .single = 0x0313 };
+    if (cp == 0x0344) return .{ .canon = [2]u21{
         0x0308,
         0x0301,
-    } });
-    try self.map.put(0x0374, .{ .single = 0x02B9 });
-    try self.map.put(0x037A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0374) return .{ .single = 0x02B9 };
+    if (cp == 0x037A) return .{ .compat = &[_]u21{
         0x0020,
         0x0345,
-    } });
-    try self.map.put(0x037E, .{ .single = 0x003B });
-    try self.map.put(0x0384, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x037E) return .{ .single = 0x003B };
+    if (cp == 0x0384) return .{ .compat = &[_]u21{
         0x0020,
         0x0301,
-    } });
-    try self.map.put(0x0385, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0385) return .{ .canon = [2]u21{
         0x00A8,
         0x0301,
-    } });
-    try self.map.put(0x0386, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0386) return .{ .canon = [2]u21{
         0x0391,
         0x0301,
-    } });
-    try self.map.put(0x0387, .{ .single = 0x00B7 });
-    try self.map.put(0x0388, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0387) return .{ .single = 0x00B7 };
+    if (cp == 0x0388) return .{ .canon = [2]u21{
         0x0395,
         0x0301,
-    } });
-    try self.map.put(0x0389, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0389) return .{ .canon = [2]u21{
         0x0397,
         0x0301,
-    } });
-    try self.map.put(0x038A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x038A) return .{ .canon = [2]u21{
         0x0399,
         0x0301,
-    } });
-    try self.map.put(0x038C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x038C) return .{ .canon = [2]u21{
         0x039F,
         0x0301,
-    } });
-    try self.map.put(0x038E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x038E) return .{ .canon = [2]u21{
         0x03A5,
         0x0301,
-    } });
-    try self.map.put(0x038F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x038F) return .{ .canon = [2]u21{
         0x03A9,
         0x0301,
-    } });
-    try self.map.put(0x0390, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0390) return .{ .canon = [2]u21{
         0x03CA,
         0x0301,
-    } });
-    try self.map.put(0x03AA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x03AA) return .{ .canon = [2]u21{
         0x0399,
         0x0308,
-    } });
-    try self.map.put(0x03AB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x03AB) return .{ .canon = [2]u21{
         0x03A5,
         0x0308,
-    } });
-    try self.map.put(0x03AC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x03AC) return .{ .canon = [2]u21{
         0x03B1,
         0x0301,
-    } });
-    try self.map.put(0x03AD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x03AD) return .{ .canon = [2]u21{
         0x03B5,
         0x0301,
-    } });
-    try self.map.put(0x03AE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x03AE) return .{ .canon = [2]u21{
         0x03B7,
         0x0301,
-    } });
-    try self.map.put(0x03AF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x03AF) return .{ .canon = [2]u21{
         0x03B9,
         0x0301,
-    } });
-    try self.map.put(0x03B0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x03B0) return .{ .canon = [2]u21{
         0x03CB,
         0x0301,
-    } });
-    try self.map.put(0x03CA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x03CA) return .{ .canon = [2]u21{
         0x03B9,
         0x0308,
-    } });
-    try self.map.put(0x03CB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x03CB) return .{ .canon = [2]u21{
         0x03C5,
         0x0308,
-    } });
-    try self.map.put(0x03CC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x03CC) return .{ .canon = [2]u21{
         0x03BF,
         0x0301,
-    } });
-    try self.map.put(0x03CD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x03CD) return .{ .canon = [2]u21{
         0x03C5,
         0x0301,
-    } });
-    try self.map.put(0x03CE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x03CE) return .{ .canon = [2]u21{
         0x03C9,
         0x0301,
-    } });
-    try self.map.put(0x03D0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x03D0) return .{ .compat = &[_]u21{
         0x03B2,
-    } });
-    try self.map.put(0x03D1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x03D1) return .{ .compat = &[_]u21{
         0x03B8,
-    } });
-    try self.map.put(0x03D2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x03D2) return .{ .compat = &[_]u21{
         0x03A5,
-    } });
-    try self.map.put(0x03D3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x03D3) return .{ .canon = [2]u21{
         0x03D2,
         0x0301,
-    } });
-    try self.map.put(0x03D4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x03D4) return .{ .canon = [2]u21{
         0x03D2,
         0x0308,
-    } });
-    try self.map.put(0x03D5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x03D5) return .{ .compat = &[_]u21{
         0x03C6,
-    } });
-    try self.map.put(0x03D6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x03D6) return .{ .compat = &[_]u21{
         0x03C0,
-    } });
-    try self.map.put(0x03F0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x03F0) return .{ .compat = &[_]u21{
         0x03BA,
-    } });
-    try self.map.put(0x03F1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x03F1) return .{ .compat = &[_]u21{
         0x03C1,
-    } });
-    try self.map.put(0x03F2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x03F2) return .{ .compat = &[_]u21{
         0x03C2,
-    } });
-    try self.map.put(0x03F4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x03F4) return .{ .compat = &[_]u21{
         0x0398,
-    } });
-    try self.map.put(0x03F5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x03F5) return .{ .compat = &[_]u21{
         0x03B5,
-    } });
-    try self.map.put(0x03F9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x03F9) return .{ .compat = &[_]u21{
         0x03A3,
-    } });
-    try self.map.put(0x0400, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0400) return .{ .canon = [2]u21{
         0x0415,
         0x0300,
-    } });
-    try self.map.put(0x0401, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0401) return .{ .canon = [2]u21{
         0x0415,
         0x0308,
-    } });
-    try self.map.put(0x0403, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0403) return .{ .canon = [2]u21{
         0x0413,
         0x0301,
-    } });
-    try self.map.put(0x0407, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0407) return .{ .canon = [2]u21{
         0x0406,
         0x0308,
-    } });
-    try self.map.put(0x040C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x040C) return .{ .canon = [2]u21{
         0x041A,
         0x0301,
-    } });
-    try self.map.put(0x040D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x040D) return .{ .canon = [2]u21{
         0x0418,
         0x0300,
-    } });
-    try self.map.put(0x040E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x040E) return .{ .canon = [2]u21{
         0x0423,
         0x0306,
-    } });
-    try self.map.put(0x0419, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0419) return .{ .canon = [2]u21{
         0x0418,
         0x0306,
-    } });
-    try self.map.put(0x0439, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0439) return .{ .canon = [2]u21{
         0x0438,
         0x0306,
-    } });
-    try self.map.put(0x0450, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0450) return .{ .canon = [2]u21{
         0x0435,
         0x0300,
-    } });
-    try self.map.put(0x0451, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0451) return .{ .canon = [2]u21{
         0x0435,
         0x0308,
-    } });
-    try self.map.put(0x0453, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0453) return .{ .canon = [2]u21{
         0x0433,
         0x0301,
-    } });
-    try self.map.put(0x0457, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0457) return .{ .canon = [2]u21{
         0x0456,
         0x0308,
-    } });
-    try self.map.put(0x045C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x045C) return .{ .canon = [2]u21{
         0x043A,
         0x0301,
-    } });
-    try self.map.put(0x045D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x045D) return .{ .canon = [2]u21{
         0x0438,
         0x0300,
-    } });
-    try self.map.put(0x045E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x045E) return .{ .canon = [2]u21{
         0x0443,
         0x0306,
-    } });
-    try self.map.put(0x0476, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0476) return .{ .canon = [2]u21{
         0x0474,
         0x030F,
-    } });
-    try self.map.put(0x0477, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0477) return .{ .canon = [2]u21{
         0x0475,
         0x030F,
-    } });
-    try self.map.put(0x04C1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04C1) return .{ .canon = [2]u21{
         0x0416,
         0x0306,
-    } });
-    try self.map.put(0x04C2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04C2) return .{ .canon = [2]u21{
         0x0436,
         0x0306,
-    } });
-    try self.map.put(0x04D0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04D0) return .{ .canon = [2]u21{
         0x0410,
         0x0306,
-    } });
-    try self.map.put(0x04D1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04D1) return .{ .canon = [2]u21{
         0x0430,
         0x0306,
-    } });
-    try self.map.put(0x04D2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04D2) return .{ .canon = [2]u21{
         0x0410,
         0x0308,
-    } });
-    try self.map.put(0x04D3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04D3) return .{ .canon = [2]u21{
         0x0430,
         0x0308,
-    } });
-    try self.map.put(0x04D6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04D6) return .{ .canon = [2]u21{
         0x0415,
         0x0306,
-    } });
-    try self.map.put(0x04D7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04D7) return .{ .canon = [2]u21{
         0x0435,
         0x0306,
-    } });
-    try self.map.put(0x04DA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04DA) return .{ .canon = [2]u21{
         0x04D8,
         0x0308,
-    } });
-    try self.map.put(0x04DB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04DB) return .{ .canon = [2]u21{
         0x04D9,
         0x0308,
-    } });
-    try self.map.put(0x04DC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04DC) return .{ .canon = [2]u21{
         0x0416,
         0x0308,
-    } });
-    try self.map.put(0x04DD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04DD) return .{ .canon = [2]u21{
         0x0436,
         0x0308,
-    } });
-    try self.map.put(0x04DE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04DE) return .{ .canon = [2]u21{
         0x0417,
         0x0308,
-    } });
-    try self.map.put(0x04DF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04DF) return .{ .canon = [2]u21{
         0x0437,
         0x0308,
-    } });
-    try self.map.put(0x04E2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04E2) return .{ .canon = [2]u21{
         0x0418,
         0x0304,
-    } });
-    try self.map.put(0x04E3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04E3) return .{ .canon = [2]u21{
         0x0438,
         0x0304,
-    } });
-    try self.map.put(0x04E4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04E4) return .{ .canon = [2]u21{
         0x0418,
         0x0308,
-    } });
-    try self.map.put(0x04E5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04E5) return .{ .canon = [2]u21{
         0x0438,
         0x0308,
-    } });
-    try self.map.put(0x04E6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04E6) return .{ .canon = [2]u21{
         0x041E,
         0x0308,
-    } });
-    try self.map.put(0x04E7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04E7) return .{ .canon = [2]u21{
         0x043E,
         0x0308,
-    } });
-    try self.map.put(0x04EA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04EA) return .{ .canon = [2]u21{
         0x04E8,
         0x0308,
-    } });
-    try self.map.put(0x04EB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04EB) return .{ .canon = [2]u21{
         0x04E9,
         0x0308,
-    } });
-    try self.map.put(0x04EC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04EC) return .{ .canon = [2]u21{
         0x042D,
         0x0308,
-    } });
-    try self.map.put(0x04ED, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04ED) return .{ .canon = [2]u21{
         0x044D,
         0x0308,
-    } });
-    try self.map.put(0x04EE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04EE) return .{ .canon = [2]u21{
         0x0423,
         0x0304,
-    } });
-    try self.map.put(0x04EF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04EF) return .{ .canon = [2]u21{
         0x0443,
         0x0304,
-    } });
-    try self.map.put(0x04F0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04F0) return .{ .canon = [2]u21{
         0x0423,
         0x0308,
-    } });
-    try self.map.put(0x04F1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04F1) return .{ .canon = [2]u21{
         0x0443,
         0x0308,
-    } });
-    try self.map.put(0x04F2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04F2) return .{ .canon = [2]u21{
         0x0423,
         0x030B,
-    } });
-    try self.map.put(0x04F3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04F3) return .{ .canon = [2]u21{
         0x0443,
         0x030B,
-    } });
-    try self.map.put(0x04F4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04F4) return .{ .canon = [2]u21{
         0x0427,
         0x0308,
-    } });
-    try self.map.put(0x04F5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04F5) return .{ .canon = [2]u21{
         0x0447,
         0x0308,
-    } });
-    try self.map.put(0x04F8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04F8) return .{ .canon = [2]u21{
         0x042B,
         0x0308,
-    } });
-    try self.map.put(0x04F9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x04F9) return .{ .canon = [2]u21{
         0x044B,
         0x0308,
-    } });
-    try self.map.put(0x0587, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0587) return .{ .compat = &[_]u21{
         0x0565,
         0x0582,
-    } });
-    try self.map.put(0x0622, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0622) return .{ .canon = [2]u21{
         0x0627,
         0x0653,
-    } });
-    try self.map.put(0x0623, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0623) return .{ .canon = [2]u21{
         0x0627,
         0x0654,
-    } });
-    try self.map.put(0x0624, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0624) return .{ .canon = [2]u21{
         0x0648,
         0x0654,
-    } });
-    try self.map.put(0x0625, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0625) return .{ .canon = [2]u21{
         0x0627,
         0x0655,
-    } });
-    try self.map.put(0x0626, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0626) return .{ .canon = [2]u21{
         0x064A,
         0x0654,
-    } });
-    try self.map.put(0x0675, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0675) return .{ .compat = &[_]u21{
         0x0627,
         0x0674,
-    } });
-    try self.map.put(0x0676, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0676) return .{ .compat = &[_]u21{
         0x0648,
         0x0674,
-    } });
-    try self.map.put(0x0677, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0677) return .{ .compat = &[_]u21{
         0x06C7,
         0x0674,
-    } });
-    try self.map.put(0x0678, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0678) return .{ .compat = &[_]u21{
         0x064A,
         0x0674,
-    } });
-    try self.map.put(0x06C0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x06C0) return .{ .canon = [2]u21{
         0x06D5,
         0x0654,
-    } });
-    try self.map.put(0x06C2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x06C2) return .{ .canon = [2]u21{
         0x06C1,
         0x0654,
-    } });
-    try self.map.put(0x06D3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x06D3) return .{ .canon = [2]u21{
         0x06D2,
         0x0654,
-    } });
-    try self.map.put(0x0929, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0929) return .{ .canon = [2]u21{
         0x0928,
         0x093C,
-    } });
-    try self.map.put(0x0931, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0931) return .{ .canon = [2]u21{
         0x0930,
         0x093C,
-    } });
-    try self.map.put(0x0934, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0934) return .{ .canon = [2]u21{
         0x0933,
         0x093C,
-    } });
-    try self.map.put(0x0958, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0958) return .{ .canon = [2]u21{
         0x0915,
         0x093C,
-    } });
-    try self.map.put(0x0959, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0959) return .{ .canon = [2]u21{
         0x0916,
         0x093C,
-    } });
-    try self.map.put(0x095A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x095A) return .{ .canon = [2]u21{
         0x0917,
         0x093C,
-    } });
-    try self.map.put(0x095B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x095B) return .{ .canon = [2]u21{
         0x091C,
         0x093C,
-    } });
-    try self.map.put(0x095C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x095C) return .{ .canon = [2]u21{
         0x0921,
         0x093C,
-    } });
-    try self.map.put(0x095D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x095D) return .{ .canon = [2]u21{
         0x0922,
         0x093C,
-    } });
-    try self.map.put(0x095E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x095E) return .{ .canon = [2]u21{
         0x092B,
         0x093C,
-    } });
-    try self.map.put(0x095F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x095F) return .{ .canon = [2]u21{
         0x092F,
         0x093C,
-    } });
-    try self.map.put(0x09CB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x09CB) return .{ .canon = [2]u21{
         0x09C7,
         0x09BE,
-    } });
-    try self.map.put(0x09CC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x09CC) return .{ .canon = [2]u21{
         0x09C7,
         0x09D7,
-    } });
-    try self.map.put(0x09DC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x09DC) return .{ .canon = [2]u21{
         0x09A1,
         0x09BC,
-    } });
-    try self.map.put(0x09DD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x09DD) return .{ .canon = [2]u21{
         0x09A2,
         0x09BC,
-    } });
-    try self.map.put(0x09DF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x09DF) return .{ .canon = [2]u21{
         0x09AF,
         0x09BC,
-    } });
-    try self.map.put(0x0A33, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0A33) return .{ .canon = [2]u21{
         0x0A32,
         0x0A3C,
-    } });
-    try self.map.put(0x0A36, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0A36) return .{ .canon = [2]u21{
         0x0A38,
         0x0A3C,
-    } });
-    try self.map.put(0x0A59, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0A59) return .{ .canon = [2]u21{
         0x0A16,
         0x0A3C,
-    } });
-    try self.map.put(0x0A5A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0A5A) return .{ .canon = [2]u21{
         0x0A17,
         0x0A3C,
-    } });
-    try self.map.put(0x0A5B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0A5B) return .{ .canon = [2]u21{
         0x0A1C,
         0x0A3C,
-    } });
-    try self.map.put(0x0A5E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0A5E) return .{ .canon = [2]u21{
         0x0A2B,
         0x0A3C,
-    } });
-    try self.map.put(0x0B48, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0B48) return .{ .canon = [2]u21{
         0x0B47,
         0x0B56,
-    } });
-    try self.map.put(0x0B4B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0B4B) return .{ .canon = [2]u21{
         0x0B47,
         0x0B3E,
-    } });
-    try self.map.put(0x0B4C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0B4C) return .{ .canon = [2]u21{
         0x0B47,
         0x0B57,
-    } });
-    try self.map.put(0x0B5C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0B5C) return .{ .canon = [2]u21{
         0x0B21,
         0x0B3C,
-    } });
-    try self.map.put(0x0B5D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0B5D) return .{ .canon = [2]u21{
         0x0B22,
         0x0B3C,
-    } });
-    try self.map.put(0x0B94, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0B94) return .{ .canon = [2]u21{
         0x0B92,
         0x0BD7,
-    } });
-    try self.map.put(0x0BCA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0BCA) return .{ .canon = [2]u21{
         0x0BC6,
         0x0BBE,
-    } });
-    try self.map.put(0x0BCB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0BCB) return .{ .canon = [2]u21{
         0x0BC7,
         0x0BBE,
-    } });
-    try self.map.put(0x0BCC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0BCC) return .{ .canon = [2]u21{
         0x0BC6,
         0x0BD7,
-    } });
-    try self.map.put(0x0C48, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0C48) return .{ .canon = [2]u21{
         0x0C46,
         0x0C56,
-    } });
-    try self.map.put(0x0CC0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0CC0) return .{ .canon = [2]u21{
         0x0CBF,
         0x0CD5,
-    } });
-    try self.map.put(0x0CC7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0CC7) return .{ .canon = [2]u21{
         0x0CC6,
         0x0CD5,
-    } });
-    try self.map.put(0x0CC8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0CC8) return .{ .canon = [2]u21{
         0x0CC6,
         0x0CD6,
-    } });
-    try self.map.put(0x0CCA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0CCA) return .{ .canon = [2]u21{
         0x0CC6,
         0x0CC2,
-    } });
-    try self.map.put(0x0CCB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0CCB) return .{ .canon = [2]u21{
         0x0CCA,
         0x0CD5,
-    } });
-    try self.map.put(0x0D4A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0D4A) return .{ .canon = [2]u21{
         0x0D46,
         0x0D3E,
-    } });
-    try self.map.put(0x0D4B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0D4B) return .{ .canon = [2]u21{
         0x0D47,
         0x0D3E,
-    } });
-    try self.map.put(0x0D4C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0D4C) return .{ .canon = [2]u21{
         0x0D46,
         0x0D57,
-    } });
-    try self.map.put(0x0DDA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0DDA) return .{ .canon = [2]u21{
         0x0DD9,
         0x0DCA,
-    } });
-    try self.map.put(0x0DDC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0DDC) return .{ .canon = [2]u21{
         0x0DD9,
         0x0DCF,
-    } });
-    try self.map.put(0x0DDD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0DDD) return .{ .canon = [2]u21{
         0x0DDC,
         0x0DCA,
-    } });
-    try self.map.put(0x0DDE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0DDE) return .{ .canon = [2]u21{
         0x0DD9,
         0x0DDF,
-    } });
-    try self.map.put(0x0E33, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0E33) return .{ .compat = &[_]u21{
         0x0E4D,
         0x0E32,
-    } });
-    try self.map.put(0x0EB3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0EB3) return .{ .compat = &[_]u21{
         0x0ECD,
         0x0EB2,
-    } });
-    try self.map.put(0x0EDC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0EDC) return .{ .compat = &[_]u21{
         0x0EAB,
         0x0E99,
-    } });
-    try self.map.put(0x0EDD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0EDD) return .{ .compat = &[_]u21{
         0x0EAB,
         0x0EA1,
-    } });
-    try self.map.put(0x0F0C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0F0C) return .{ .compat = &[_]u21{
         0x0F0B,
-    } });
-    try self.map.put(0x0F43, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0F43) return .{ .canon = [2]u21{
         0x0F42,
         0x0FB7,
-    } });
-    try self.map.put(0x0F4D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0F4D) return .{ .canon = [2]u21{
         0x0F4C,
         0x0FB7,
-    } });
-    try self.map.put(0x0F52, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0F52) return .{ .canon = [2]u21{
         0x0F51,
         0x0FB7,
-    } });
-    try self.map.put(0x0F57, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0F57) return .{ .canon = [2]u21{
         0x0F56,
         0x0FB7,
-    } });
-    try self.map.put(0x0F5C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0F5C) return .{ .canon = [2]u21{
         0x0F5B,
         0x0FB7,
-    } });
-    try self.map.put(0x0F69, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0F69) return .{ .canon = [2]u21{
         0x0F40,
         0x0FB5,
-    } });
-    try self.map.put(0x0F73, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0F73) return .{ .canon = [2]u21{
         0x0F71,
         0x0F72,
-    } });
-    try self.map.put(0x0F75, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0F75) return .{ .canon = [2]u21{
         0x0F71,
         0x0F74,
-    } });
-    try self.map.put(0x0F76, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0F76) return .{ .canon = [2]u21{
         0x0FB2,
         0x0F80,
-    } });
-    try self.map.put(0x0F77, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0F77) return .{ .compat = &[_]u21{
         0x0FB2,
         0x0F81,
-    } });
-    try self.map.put(0x0F78, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0F78) return .{ .canon = [2]u21{
         0x0FB3,
         0x0F80,
-    } });
-    try self.map.put(0x0F79, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x0F79) return .{ .compat = &[_]u21{
         0x0FB3,
         0x0F81,
-    } });
-    try self.map.put(0x0F81, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0F81) return .{ .canon = [2]u21{
         0x0F71,
         0x0F80,
-    } });
-    try self.map.put(0x0F93, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0F93) return .{ .canon = [2]u21{
         0x0F92,
         0x0FB7,
-    } });
-    try self.map.put(0x0F9D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0F9D) return .{ .canon = [2]u21{
         0x0F9C,
         0x0FB7,
-    } });
-    try self.map.put(0x0FA2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0FA2) return .{ .canon = [2]u21{
         0x0FA1,
         0x0FB7,
-    } });
-    try self.map.put(0x0FA7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0FA7) return .{ .canon = [2]u21{
         0x0FA6,
         0x0FB7,
-    } });
-    try self.map.put(0x0FAC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0FAC) return .{ .canon = [2]u21{
         0x0FAB,
         0x0FB7,
-    } });
-    try self.map.put(0x0FB9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x0FB9) return .{ .canon = [2]u21{
         0x0F90,
         0x0FB5,
-    } });
-    try self.map.put(0x1026, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1026) return .{ .canon = [2]u21{
         0x1025,
         0x102E,
-    } });
-    try self.map.put(0x10FC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x10FC) return .{ .compat = &[_]u21{
         0x10DC,
-    } });
-    try self.map.put(0x1B06, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1B06) return .{ .canon = [2]u21{
         0x1B05,
         0x1B35,
-    } });
-    try self.map.put(0x1B08, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1B08) return .{ .canon = [2]u21{
         0x1B07,
         0x1B35,
-    } });
-    try self.map.put(0x1B0A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1B0A) return .{ .canon = [2]u21{
         0x1B09,
         0x1B35,
-    } });
-    try self.map.put(0x1B0C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1B0C) return .{ .canon = [2]u21{
         0x1B0B,
         0x1B35,
-    } });
-    try self.map.put(0x1B0E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1B0E) return .{ .canon = [2]u21{
         0x1B0D,
         0x1B35,
-    } });
-    try self.map.put(0x1B12, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1B12) return .{ .canon = [2]u21{
         0x1B11,
         0x1B35,
-    } });
-    try self.map.put(0x1B3B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1B3B) return .{ .canon = [2]u21{
         0x1B3A,
         0x1B35,
-    } });
-    try self.map.put(0x1B3D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1B3D) return .{ .canon = [2]u21{
         0x1B3C,
         0x1B35,
-    } });
-    try self.map.put(0x1B40, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1B40) return .{ .canon = [2]u21{
         0x1B3E,
         0x1B35,
-    } });
-    try self.map.put(0x1B41, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1B41) return .{ .canon = [2]u21{
         0x1B3F,
         0x1B35,
-    } });
-    try self.map.put(0x1B43, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1B43) return .{ .canon = [2]u21{
         0x1B42,
         0x1B35,
-    } });
-    try self.map.put(0x1D2C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D2C) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x1D2D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D2D) return .{ .compat = &[_]u21{
         0x00C6,
-    } });
-    try self.map.put(0x1D2E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D2E) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x1D30, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D30) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x1D31, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D31) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x1D32, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D32) return .{ .compat = &[_]u21{
         0x018E,
-    } });
-    try self.map.put(0x1D33, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D33) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x1D34, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D34) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x1D35, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D35) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x1D36, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D36) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x1D37, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D37) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x1D38, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D38) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x1D39, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D39) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x1D3A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D3A) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x1D3C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D3C) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x1D3D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D3D) return .{ .compat = &[_]u21{
         0x0222,
-    } });
-    try self.map.put(0x1D3E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D3E) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x1D3F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D3F) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x1D40, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D40) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x1D41, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D41) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x1D42, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D42) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x1D43, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D43) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x1D44, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D44) return .{ .compat = &[_]u21{
         0x0250,
-    } });
-    try self.map.put(0x1D45, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D45) return .{ .compat = &[_]u21{
         0x0251,
-    } });
-    try self.map.put(0x1D46, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D46) return .{ .compat = &[_]u21{
         0x1D02,
-    } });
-    try self.map.put(0x1D47, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D47) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0x1D48, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D48) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x1D49, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D49) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x1D4A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4A) return .{ .compat = &[_]u21{
         0x0259,
-    } });
-    try self.map.put(0x1D4B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4B) return .{ .compat = &[_]u21{
         0x025B,
-    } });
-    try self.map.put(0x1D4C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4C) return .{ .compat = &[_]u21{
         0x025C,
-    } });
-    try self.map.put(0x1D4D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4D) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0x1D4F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4F) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x1D50, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D50) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x1D51, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D51) return .{ .compat = &[_]u21{
         0x014B,
-    } });
-    try self.map.put(0x1D52, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D52) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x1D53, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D53) return .{ .compat = &[_]u21{
         0x0254,
-    } });
-    try self.map.put(0x1D54, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D54) return .{ .compat = &[_]u21{
         0x1D16,
-    } });
-    try self.map.put(0x1D55, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D55) return .{ .compat = &[_]u21{
         0x1D17,
-    } });
-    try self.map.put(0x1D56, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D56) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x1D57, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D57) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x1D58, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D58) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x1D59, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D59) return .{ .compat = &[_]u21{
         0x1D1D,
-    } });
-    try self.map.put(0x1D5A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5A) return .{ .compat = &[_]u21{
         0x026F,
-    } });
-    try self.map.put(0x1D5B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5B) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x1D5C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5C) return .{ .compat = &[_]u21{
         0x1D25,
-    } });
-    try self.map.put(0x1D5D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5D) return .{ .compat = &[_]u21{
         0x03B2,
-    } });
-    try self.map.put(0x1D5E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5E) return .{ .compat = &[_]u21{
         0x03B3,
-    } });
-    try self.map.put(0x1D5F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5F) return .{ .compat = &[_]u21{
         0x03B4,
-    } });
-    try self.map.put(0x1D60, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D60) return .{ .compat = &[_]u21{
         0x03C6,
-    } });
-    try self.map.put(0x1D61, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D61) return .{ .compat = &[_]u21{
         0x03C7,
-    } });
-    try self.map.put(0x1D62, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D62) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x1D63, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D63) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x1D64, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D64) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x1D65, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D65) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x1D66, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D66) return .{ .compat = &[_]u21{
         0x03B2,
-    } });
-    try self.map.put(0x1D67, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D67) return .{ .compat = &[_]u21{
         0x03B3,
-    } });
-    try self.map.put(0x1D68, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D68) return .{ .compat = &[_]u21{
         0x03C1,
-    } });
-    try self.map.put(0x1D69, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D69) return .{ .compat = &[_]u21{
         0x03C6,
-    } });
-    try self.map.put(0x1D6A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6A) return .{ .compat = &[_]u21{
         0x03C7,
-    } });
-    try self.map.put(0x1D78, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D78) return .{ .compat = &[_]u21{
         0x043D,
-    } });
-    try self.map.put(0x1D9B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D9B) return .{ .compat = &[_]u21{
         0x0252,
-    } });
-    try self.map.put(0x1D9C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D9C) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x1D9D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D9D) return .{ .compat = &[_]u21{
         0x0255,
-    } });
-    try self.map.put(0x1D9E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D9E) return .{ .compat = &[_]u21{
         0x00F0,
-    } });
-    try self.map.put(0x1D9F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D9F) return .{ .compat = &[_]u21{
         0x025C,
-    } });
-    try self.map.put(0x1DA0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DA0) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0x1DA1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DA1) return .{ .compat = &[_]u21{
         0x025F,
-    } });
-    try self.map.put(0x1DA2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DA2) return .{ .compat = &[_]u21{
         0x0261,
-    } });
-    try self.map.put(0x1DA3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DA3) return .{ .compat = &[_]u21{
         0x0265,
-    } });
-    try self.map.put(0x1DA4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DA4) return .{ .compat = &[_]u21{
         0x0268,
-    } });
-    try self.map.put(0x1DA5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DA5) return .{ .compat = &[_]u21{
         0x0269,
-    } });
-    try self.map.put(0x1DA6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DA6) return .{ .compat = &[_]u21{
         0x026A,
-    } });
-    try self.map.put(0x1DA7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DA7) return .{ .compat = &[_]u21{
         0x1D7B,
-    } });
-    try self.map.put(0x1DA8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DA8) return .{ .compat = &[_]u21{
         0x029D,
-    } });
-    try self.map.put(0x1DA9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DA9) return .{ .compat = &[_]u21{
         0x026D,
-    } });
-    try self.map.put(0x1DAA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DAA) return .{ .compat = &[_]u21{
         0x1D85,
-    } });
-    try self.map.put(0x1DAB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DAB) return .{ .compat = &[_]u21{
         0x029F,
-    } });
-    try self.map.put(0x1DAC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DAC) return .{ .compat = &[_]u21{
         0x0271,
-    } });
-    try self.map.put(0x1DAD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DAD) return .{ .compat = &[_]u21{
         0x0270,
-    } });
-    try self.map.put(0x1DAE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DAE) return .{ .compat = &[_]u21{
         0x0272,
-    } });
-    try self.map.put(0x1DAF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DAF) return .{ .compat = &[_]u21{
         0x0273,
-    } });
-    try self.map.put(0x1DB0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DB0) return .{ .compat = &[_]u21{
         0x0274,
-    } });
-    try self.map.put(0x1DB1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DB1) return .{ .compat = &[_]u21{
         0x0275,
-    } });
-    try self.map.put(0x1DB2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DB2) return .{ .compat = &[_]u21{
         0x0278,
-    } });
-    try self.map.put(0x1DB3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DB3) return .{ .compat = &[_]u21{
         0x0282,
-    } });
-    try self.map.put(0x1DB4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DB4) return .{ .compat = &[_]u21{
         0x0283,
-    } });
-    try self.map.put(0x1DB5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DB5) return .{ .compat = &[_]u21{
         0x01AB,
-    } });
-    try self.map.put(0x1DB6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DB6) return .{ .compat = &[_]u21{
         0x0289,
-    } });
-    try self.map.put(0x1DB7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DB7) return .{ .compat = &[_]u21{
         0x028A,
-    } });
-    try self.map.put(0x1DB8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DB8) return .{ .compat = &[_]u21{
         0x1D1C,
-    } });
-    try self.map.put(0x1DB9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DB9) return .{ .compat = &[_]u21{
         0x028B,
-    } });
-    try self.map.put(0x1DBA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DBA) return .{ .compat = &[_]u21{
         0x028C,
-    } });
-    try self.map.put(0x1DBB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DBB) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0x1DBC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DBC) return .{ .compat = &[_]u21{
         0x0290,
-    } });
-    try self.map.put(0x1DBD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DBD) return .{ .compat = &[_]u21{
         0x0291,
-    } });
-    try self.map.put(0x1DBE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DBE) return .{ .compat = &[_]u21{
         0x0292,
-    } });
-    try self.map.put(0x1DBF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1DBF) return .{ .compat = &[_]u21{
         0x03B8,
-    } });
-    try self.map.put(0x1E00, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E00) return .{ .canon = [2]u21{
         0x0041,
         0x0325,
-    } });
-    try self.map.put(0x1E01, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E01) return .{ .canon = [2]u21{
         0x0061,
         0x0325,
-    } });
-    try self.map.put(0x1E02, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E02) return .{ .canon = [2]u21{
         0x0042,
         0x0307,
-    } });
-    try self.map.put(0x1E03, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E03) return .{ .canon = [2]u21{
         0x0062,
         0x0307,
-    } });
-    try self.map.put(0x1E04, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E04) return .{ .canon = [2]u21{
         0x0042,
         0x0323,
-    } });
-    try self.map.put(0x1E05, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E05) return .{ .canon = [2]u21{
         0x0062,
         0x0323,
-    } });
-    try self.map.put(0x1E06, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E06) return .{ .canon = [2]u21{
         0x0042,
         0x0331,
-    } });
-    try self.map.put(0x1E07, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E07) return .{ .canon = [2]u21{
         0x0062,
         0x0331,
-    } });
-    try self.map.put(0x1E08, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E08) return .{ .canon = [2]u21{
         0x00C7,
         0x0301,
-    } });
-    try self.map.put(0x1E09, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E09) return .{ .canon = [2]u21{
         0x00E7,
         0x0301,
-    } });
-    try self.map.put(0x1E0A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E0A) return .{ .canon = [2]u21{
         0x0044,
         0x0307,
-    } });
-    try self.map.put(0x1E0B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E0B) return .{ .canon = [2]u21{
         0x0064,
         0x0307,
-    } });
-    try self.map.put(0x1E0C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E0C) return .{ .canon = [2]u21{
         0x0044,
         0x0323,
-    } });
-    try self.map.put(0x1E0D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E0D) return .{ .canon = [2]u21{
         0x0064,
         0x0323,
-    } });
-    try self.map.put(0x1E0E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E0E) return .{ .canon = [2]u21{
         0x0044,
         0x0331,
-    } });
-    try self.map.put(0x1E0F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E0F) return .{ .canon = [2]u21{
         0x0064,
         0x0331,
-    } });
-    try self.map.put(0x1E10, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E10) return .{ .canon = [2]u21{
         0x0044,
         0x0327,
-    } });
-    try self.map.put(0x1E11, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E11) return .{ .canon = [2]u21{
         0x0064,
         0x0327,
-    } });
-    try self.map.put(0x1E12, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E12) return .{ .canon = [2]u21{
         0x0044,
         0x032D,
-    } });
-    try self.map.put(0x1E13, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E13) return .{ .canon = [2]u21{
         0x0064,
         0x032D,
-    } });
-    try self.map.put(0x1E14, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E14) return .{ .canon = [2]u21{
         0x0112,
         0x0300,
-    } });
-    try self.map.put(0x1E15, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E15) return .{ .canon = [2]u21{
         0x0113,
         0x0300,
-    } });
-    try self.map.put(0x1E16, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E16) return .{ .canon = [2]u21{
         0x0112,
         0x0301,
-    } });
-    try self.map.put(0x1E17, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E17) return .{ .canon = [2]u21{
         0x0113,
         0x0301,
-    } });
-    try self.map.put(0x1E18, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E18) return .{ .canon = [2]u21{
         0x0045,
         0x032D,
-    } });
-    try self.map.put(0x1E19, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E19) return .{ .canon = [2]u21{
         0x0065,
         0x032D,
-    } });
-    try self.map.put(0x1E1A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E1A) return .{ .canon = [2]u21{
         0x0045,
         0x0330,
-    } });
-    try self.map.put(0x1E1B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E1B) return .{ .canon = [2]u21{
         0x0065,
         0x0330,
-    } });
-    try self.map.put(0x1E1C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E1C) return .{ .canon = [2]u21{
         0x0228,
         0x0306,
-    } });
-    try self.map.put(0x1E1D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E1D) return .{ .canon = [2]u21{
         0x0229,
         0x0306,
-    } });
-    try self.map.put(0x1E1E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E1E) return .{ .canon = [2]u21{
         0x0046,
         0x0307,
-    } });
-    try self.map.put(0x1E1F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E1F) return .{ .canon = [2]u21{
         0x0066,
         0x0307,
-    } });
-    try self.map.put(0x1E20, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E20) return .{ .canon = [2]u21{
         0x0047,
         0x0304,
-    } });
-    try self.map.put(0x1E21, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E21) return .{ .canon = [2]u21{
         0x0067,
         0x0304,
-    } });
-    try self.map.put(0x1E22, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E22) return .{ .canon = [2]u21{
         0x0048,
         0x0307,
-    } });
-    try self.map.put(0x1E23, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E23) return .{ .canon = [2]u21{
         0x0068,
         0x0307,
-    } });
-    try self.map.put(0x1E24, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E24) return .{ .canon = [2]u21{
         0x0048,
         0x0323,
-    } });
-    try self.map.put(0x1E25, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E25) return .{ .canon = [2]u21{
         0x0068,
         0x0323,
-    } });
-    try self.map.put(0x1E26, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E26) return .{ .canon = [2]u21{
         0x0048,
         0x0308,
-    } });
-    try self.map.put(0x1E27, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E27) return .{ .canon = [2]u21{
         0x0068,
         0x0308,
-    } });
-    try self.map.put(0x1E28, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E28) return .{ .canon = [2]u21{
         0x0048,
         0x0327,
-    } });
-    try self.map.put(0x1E29, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E29) return .{ .canon = [2]u21{
         0x0068,
         0x0327,
-    } });
-    try self.map.put(0x1E2A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E2A) return .{ .canon = [2]u21{
         0x0048,
         0x032E,
-    } });
-    try self.map.put(0x1E2B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E2B) return .{ .canon = [2]u21{
         0x0068,
         0x032E,
-    } });
-    try self.map.put(0x1E2C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E2C) return .{ .canon = [2]u21{
         0x0049,
         0x0330,
-    } });
-    try self.map.put(0x1E2D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E2D) return .{ .canon = [2]u21{
         0x0069,
         0x0330,
-    } });
-    try self.map.put(0x1E2E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E2E) return .{ .canon = [2]u21{
         0x00CF,
         0x0301,
-    } });
-    try self.map.put(0x1E2F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E2F) return .{ .canon = [2]u21{
         0x00EF,
         0x0301,
-    } });
-    try self.map.put(0x1E30, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E30) return .{ .canon = [2]u21{
         0x004B,
         0x0301,
-    } });
-    try self.map.put(0x1E31, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E31) return .{ .canon = [2]u21{
         0x006B,
         0x0301,
-    } });
-    try self.map.put(0x1E32, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E32) return .{ .canon = [2]u21{
         0x004B,
         0x0323,
-    } });
-    try self.map.put(0x1E33, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E33) return .{ .canon = [2]u21{
         0x006B,
         0x0323,
-    } });
-    try self.map.put(0x1E34, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E34) return .{ .canon = [2]u21{
         0x004B,
         0x0331,
-    } });
-    try self.map.put(0x1E35, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E35) return .{ .canon = [2]u21{
         0x006B,
         0x0331,
-    } });
-    try self.map.put(0x1E36, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E36) return .{ .canon = [2]u21{
         0x004C,
         0x0323,
-    } });
-    try self.map.put(0x1E37, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E37) return .{ .canon = [2]u21{
         0x006C,
         0x0323,
-    } });
-    try self.map.put(0x1E38, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E38) return .{ .canon = [2]u21{
         0x1E36,
         0x0304,
-    } });
-    try self.map.put(0x1E39, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E39) return .{ .canon = [2]u21{
         0x1E37,
         0x0304,
-    } });
-    try self.map.put(0x1E3A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E3A) return .{ .canon = [2]u21{
         0x004C,
         0x0331,
-    } });
-    try self.map.put(0x1E3B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E3B) return .{ .canon = [2]u21{
         0x006C,
         0x0331,
-    } });
-    try self.map.put(0x1E3C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E3C) return .{ .canon = [2]u21{
         0x004C,
         0x032D,
-    } });
-    try self.map.put(0x1E3D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E3D) return .{ .canon = [2]u21{
         0x006C,
         0x032D,
-    } });
-    try self.map.put(0x1E3E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E3E) return .{ .canon = [2]u21{
         0x004D,
         0x0301,
-    } });
-    try self.map.put(0x1E3F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E3F) return .{ .canon = [2]u21{
         0x006D,
         0x0301,
-    } });
-    try self.map.put(0x1E40, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E40) return .{ .canon = [2]u21{
         0x004D,
         0x0307,
-    } });
-    try self.map.put(0x1E41, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E41) return .{ .canon = [2]u21{
         0x006D,
         0x0307,
-    } });
-    try self.map.put(0x1E42, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E42) return .{ .canon = [2]u21{
         0x004D,
         0x0323,
-    } });
-    try self.map.put(0x1E43, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E43) return .{ .canon = [2]u21{
         0x006D,
         0x0323,
-    } });
-    try self.map.put(0x1E44, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E44) return .{ .canon = [2]u21{
         0x004E,
         0x0307,
-    } });
-    try self.map.put(0x1E45, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E45) return .{ .canon = [2]u21{
         0x006E,
         0x0307,
-    } });
-    try self.map.put(0x1E46, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E46) return .{ .canon = [2]u21{
         0x004E,
         0x0323,
-    } });
-    try self.map.put(0x1E47, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E47) return .{ .canon = [2]u21{
         0x006E,
         0x0323,
-    } });
-    try self.map.put(0x1E48, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E48) return .{ .canon = [2]u21{
         0x004E,
         0x0331,
-    } });
-    try self.map.put(0x1E49, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E49) return .{ .canon = [2]u21{
         0x006E,
         0x0331,
-    } });
-    try self.map.put(0x1E4A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E4A) return .{ .canon = [2]u21{
         0x004E,
         0x032D,
-    } });
-    try self.map.put(0x1E4B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E4B) return .{ .canon = [2]u21{
         0x006E,
         0x032D,
-    } });
-    try self.map.put(0x1E4C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E4C) return .{ .canon = [2]u21{
         0x00D5,
         0x0301,
-    } });
-    try self.map.put(0x1E4D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E4D) return .{ .canon = [2]u21{
         0x00F5,
         0x0301,
-    } });
-    try self.map.put(0x1E4E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E4E) return .{ .canon = [2]u21{
         0x00D5,
         0x0308,
-    } });
-    try self.map.put(0x1E4F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E4F) return .{ .canon = [2]u21{
         0x00F5,
         0x0308,
-    } });
-    try self.map.put(0x1E50, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E50) return .{ .canon = [2]u21{
         0x014C,
         0x0300,
-    } });
-    try self.map.put(0x1E51, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E51) return .{ .canon = [2]u21{
         0x014D,
         0x0300,
-    } });
-    try self.map.put(0x1E52, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E52) return .{ .canon = [2]u21{
         0x014C,
         0x0301,
-    } });
-    try self.map.put(0x1E53, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E53) return .{ .canon = [2]u21{
         0x014D,
         0x0301,
-    } });
-    try self.map.put(0x1E54, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E54) return .{ .canon = [2]u21{
         0x0050,
         0x0301,
-    } });
-    try self.map.put(0x1E55, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E55) return .{ .canon = [2]u21{
         0x0070,
         0x0301,
-    } });
-    try self.map.put(0x1E56, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E56) return .{ .canon = [2]u21{
         0x0050,
         0x0307,
-    } });
-    try self.map.put(0x1E57, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E57) return .{ .canon = [2]u21{
         0x0070,
         0x0307,
-    } });
-    try self.map.put(0x1E58, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E58) return .{ .canon = [2]u21{
         0x0052,
         0x0307,
-    } });
-    try self.map.put(0x1E59, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E59) return .{ .canon = [2]u21{
         0x0072,
         0x0307,
-    } });
-    try self.map.put(0x1E5A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E5A) return .{ .canon = [2]u21{
         0x0052,
         0x0323,
-    } });
-    try self.map.put(0x1E5B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E5B) return .{ .canon = [2]u21{
         0x0072,
         0x0323,
-    } });
-    try self.map.put(0x1E5C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E5C) return .{ .canon = [2]u21{
         0x1E5A,
         0x0304,
-    } });
-    try self.map.put(0x1E5D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E5D) return .{ .canon = [2]u21{
         0x1E5B,
         0x0304,
-    } });
-    try self.map.put(0x1E5E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E5E) return .{ .canon = [2]u21{
         0x0052,
         0x0331,
-    } });
-    try self.map.put(0x1E5F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E5F) return .{ .canon = [2]u21{
         0x0072,
         0x0331,
-    } });
-    try self.map.put(0x1E60, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E60) return .{ .canon = [2]u21{
         0x0053,
         0x0307,
-    } });
-    try self.map.put(0x1E61, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E61) return .{ .canon = [2]u21{
         0x0073,
         0x0307,
-    } });
-    try self.map.put(0x1E62, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E62) return .{ .canon = [2]u21{
         0x0053,
         0x0323,
-    } });
-    try self.map.put(0x1E63, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E63) return .{ .canon = [2]u21{
         0x0073,
         0x0323,
-    } });
-    try self.map.put(0x1E64, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E64) return .{ .canon = [2]u21{
         0x015A,
         0x0307,
-    } });
-    try self.map.put(0x1E65, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E65) return .{ .canon = [2]u21{
         0x015B,
         0x0307,
-    } });
-    try self.map.put(0x1E66, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E66) return .{ .canon = [2]u21{
         0x0160,
         0x0307,
-    } });
-    try self.map.put(0x1E67, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E67) return .{ .canon = [2]u21{
         0x0161,
         0x0307,
-    } });
-    try self.map.put(0x1E68, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E68) return .{ .canon = [2]u21{
         0x1E62,
         0x0307,
-    } });
-    try self.map.put(0x1E69, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E69) return .{ .canon = [2]u21{
         0x1E63,
         0x0307,
-    } });
-    try self.map.put(0x1E6A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E6A) return .{ .canon = [2]u21{
         0x0054,
         0x0307,
-    } });
-    try self.map.put(0x1E6B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E6B) return .{ .canon = [2]u21{
         0x0074,
         0x0307,
-    } });
-    try self.map.put(0x1E6C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E6C) return .{ .canon = [2]u21{
         0x0054,
         0x0323,
-    } });
-    try self.map.put(0x1E6D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E6D) return .{ .canon = [2]u21{
         0x0074,
         0x0323,
-    } });
-    try self.map.put(0x1E6E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E6E) return .{ .canon = [2]u21{
         0x0054,
         0x0331,
-    } });
-    try self.map.put(0x1E6F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E6F) return .{ .canon = [2]u21{
         0x0074,
         0x0331,
-    } });
-    try self.map.put(0x1E70, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E70) return .{ .canon = [2]u21{
         0x0054,
         0x032D,
-    } });
-    try self.map.put(0x1E71, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E71) return .{ .canon = [2]u21{
         0x0074,
         0x032D,
-    } });
-    try self.map.put(0x1E72, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E72) return .{ .canon = [2]u21{
         0x0055,
         0x0324,
-    } });
-    try self.map.put(0x1E73, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E73) return .{ .canon = [2]u21{
         0x0075,
         0x0324,
-    } });
-    try self.map.put(0x1E74, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E74) return .{ .canon = [2]u21{
         0x0055,
         0x0330,
-    } });
-    try self.map.put(0x1E75, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E75) return .{ .canon = [2]u21{
         0x0075,
         0x0330,
-    } });
-    try self.map.put(0x1E76, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E76) return .{ .canon = [2]u21{
         0x0055,
         0x032D,
-    } });
-    try self.map.put(0x1E77, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E77) return .{ .canon = [2]u21{
         0x0075,
         0x032D,
-    } });
-    try self.map.put(0x1E78, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E78) return .{ .canon = [2]u21{
         0x0168,
         0x0301,
-    } });
-    try self.map.put(0x1E79, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E79) return .{ .canon = [2]u21{
         0x0169,
         0x0301,
-    } });
-    try self.map.put(0x1E7A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E7A) return .{ .canon = [2]u21{
         0x016A,
         0x0308,
-    } });
-    try self.map.put(0x1E7B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E7B) return .{ .canon = [2]u21{
         0x016B,
         0x0308,
-    } });
-    try self.map.put(0x1E7C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E7C) return .{ .canon = [2]u21{
         0x0056,
         0x0303,
-    } });
-    try self.map.put(0x1E7D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E7D) return .{ .canon = [2]u21{
         0x0076,
         0x0303,
-    } });
-    try self.map.put(0x1E7E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E7E) return .{ .canon = [2]u21{
         0x0056,
         0x0323,
-    } });
-    try self.map.put(0x1E7F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E7F) return .{ .canon = [2]u21{
         0x0076,
         0x0323,
-    } });
-    try self.map.put(0x1E80, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E80) return .{ .canon = [2]u21{
         0x0057,
         0x0300,
-    } });
-    try self.map.put(0x1E81, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E81) return .{ .canon = [2]u21{
         0x0077,
         0x0300,
-    } });
-    try self.map.put(0x1E82, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E82) return .{ .canon = [2]u21{
         0x0057,
         0x0301,
-    } });
-    try self.map.put(0x1E83, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E83) return .{ .canon = [2]u21{
         0x0077,
         0x0301,
-    } });
-    try self.map.put(0x1E84, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E84) return .{ .canon = [2]u21{
         0x0057,
         0x0308,
-    } });
-    try self.map.put(0x1E85, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E85) return .{ .canon = [2]u21{
         0x0077,
         0x0308,
-    } });
-    try self.map.put(0x1E86, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E86) return .{ .canon = [2]u21{
         0x0057,
         0x0307,
-    } });
-    try self.map.put(0x1E87, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E87) return .{ .canon = [2]u21{
         0x0077,
         0x0307,
-    } });
-    try self.map.put(0x1E88, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E88) return .{ .canon = [2]u21{
         0x0057,
         0x0323,
-    } });
-    try self.map.put(0x1E89, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E89) return .{ .canon = [2]u21{
         0x0077,
         0x0323,
-    } });
-    try self.map.put(0x1E8A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E8A) return .{ .canon = [2]u21{
         0x0058,
         0x0307,
-    } });
-    try self.map.put(0x1E8B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E8B) return .{ .canon = [2]u21{
         0x0078,
         0x0307,
-    } });
-    try self.map.put(0x1E8C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E8C) return .{ .canon = [2]u21{
         0x0058,
         0x0308,
-    } });
-    try self.map.put(0x1E8D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E8D) return .{ .canon = [2]u21{
         0x0078,
         0x0308,
-    } });
-    try self.map.put(0x1E8E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E8E) return .{ .canon = [2]u21{
         0x0059,
         0x0307,
-    } });
-    try self.map.put(0x1E8F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E8F) return .{ .canon = [2]u21{
         0x0079,
         0x0307,
-    } });
-    try self.map.put(0x1E90, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E90) return .{ .canon = [2]u21{
         0x005A,
         0x0302,
-    } });
-    try self.map.put(0x1E91, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E91) return .{ .canon = [2]u21{
         0x007A,
         0x0302,
-    } });
-    try self.map.put(0x1E92, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E92) return .{ .canon = [2]u21{
         0x005A,
         0x0323,
-    } });
-    try self.map.put(0x1E93, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E93) return .{ .canon = [2]u21{
         0x007A,
         0x0323,
-    } });
-    try self.map.put(0x1E94, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E94) return .{ .canon = [2]u21{
         0x005A,
         0x0331,
-    } });
-    try self.map.put(0x1E95, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E95) return .{ .canon = [2]u21{
         0x007A,
         0x0331,
-    } });
-    try self.map.put(0x1E96, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E96) return .{ .canon = [2]u21{
         0x0068,
         0x0331,
-    } });
-    try self.map.put(0x1E97, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E97) return .{ .canon = [2]u21{
         0x0074,
         0x0308,
-    } });
-    try self.map.put(0x1E98, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E98) return .{ .canon = [2]u21{
         0x0077,
         0x030A,
-    } });
-    try self.map.put(0x1E99, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E99) return .{ .canon = [2]u21{
         0x0079,
         0x030A,
-    } });
-    try self.map.put(0x1E9A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1E9A) return .{ .compat = &[_]u21{
         0x0061,
         0x02BE,
-    } });
-    try self.map.put(0x1E9B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1E9B) return .{ .canon = [2]u21{
         0x017F,
         0x0307,
-    } });
-    try self.map.put(0x1EA0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EA0) return .{ .canon = [2]u21{
         0x0041,
         0x0323,
-    } });
-    try self.map.put(0x1EA1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EA1) return .{ .canon = [2]u21{
         0x0061,
         0x0323,
-    } });
-    try self.map.put(0x1EA2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EA2) return .{ .canon = [2]u21{
         0x0041,
         0x0309,
-    } });
-    try self.map.put(0x1EA3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EA3) return .{ .canon = [2]u21{
         0x0061,
         0x0309,
-    } });
-    try self.map.put(0x1EA4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EA4) return .{ .canon = [2]u21{
         0x00C2,
         0x0301,
-    } });
-    try self.map.put(0x1EA5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EA5) return .{ .canon = [2]u21{
         0x00E2,
         0x0301,
-    } });
-    try self.map.put(0x1EA6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EA6) return .{ .canon = [2]u21{
         0x00C2,
         0x0300,
-    } });
-    try self.map.put(0x1EA7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EA7) return .{ .canon = [2]u21{
         0x00E2,
         0x0300,
-    } });
-    try self.map.put(0x1EA8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EA8) return .{ .canon = [2]u21{
         0x00C2,
         0x0309,
-    } });
-    try self.map.put(0x1EA9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EA9) return .{ .canon = [2]u21{
         0x00E2,
         0x0309,
-    } });
-    try self.map.put(0x1EAA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EAA) return .{ .canon = [2]u21{
         0x00C2,
         0x0303,
-    } });
-    try self.map.put(0x1EAB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EAB) return .{ .canon = [2]u21{
         0x00E2,
         0x0303,
-    } });
-    try self.map.put(0x1EAC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EAC) return .{ .canon = [2]u21{
         0x1EA0,
         0x0302,
-    } });
-    try self.map.put(0x1EAD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EAD) return .{ .canon = [2]u21{
         0x1EA1,
         0x0302,
-    } });
-    try self.map.put(0x1EAE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EAE) return .{ .canon = [2]u21{
         0x0102,
         0x0301,
-    } });
-    try self.map.put(0x1EAF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EAF) return .{ .canon = [2]u21{
         0x0103,
         0x0301,
-    } });
-    try self.map.put(0x1EB0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EB0) return .{ .canon = [2]u21{
         0x0102,
         0x0300,
-    } });
-    try self.map.put(0x1EB1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EB1) return .{ .canon = [2]u21{
         0x0103,
         0x0300,
-    } });
-    try self.map.put(0x1EB2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EB2) return .{ .canon = [2]u21{
         0x0102,
         0x0309,
-    } });
-    try self.map.put(0x1EB3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EB3) return .{ .canon = [2]u21{
         0x0103,
         0x0309,
-    } });
-    try self.map.put(0x1EB4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EB4) return .{ .canon = [2]u21{
         0x0102,
         0x0303,
-    } });
-    try self.map.put(0x1EB5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EB5) return .{ .canon = [2]u21{
         0x0103,
         0x0303,
-    } });
-    try self.map.put(0x1EB6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EB6) return .{ .canon = [2]u21{
         0x1EA0,
         0x0306,
-    } });
-    try self.map.put(0x1EB7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EB7) return .{ .canon = [2]u21{
         0x1EA1,
         0x0306,
-    } });
-    try self.map.put(0x1EB8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EB8) return .{ .canon = [2]u21{
         0x0045,
         0x0323,
-    } });
-    try self.map.put(0x1EB9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EB9) return .{ .canon = [2]u21{
         0x0065,
         0x0323,
-    } });
-    try self.map.put(0x1EBA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EBA) return .{ .canon = [2]u21{
         0x0045,
         0x0309,
-    } });
-    try self.map.put(0x1EBB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EBB) return .{ .canon = [2]u21{
         0x0065,
         0x0309,
-    } });
-    try self.map.put(0x1EBC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EBC) return .{ .canon = [2]u21{
         0x0045,
         0x0303,
-    } });
-    try self.map.put(0x1EBD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EBD) return .{ .canon = [2]u21{
         0x0065,
         0x0303,
-    } });
-    try self.map.put(0x1EBE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EBE) return .{ .canon = [2]u21{
         0x00CA,
         0x0301,
-    } });
-    try self.map.put(0x1EBF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EBF) return .{ .canon = [2]u21{
         0x00EA,
         0x0301,
-    } });
-    try self.map.put(0x1EC0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EC0) return .{ .canon = [2]u21{
         0x00CA,
         0x0300,
-    } });
-    try self.map.put(0x1EC1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EC1) return .{ .canon = [2]u21{
         0x00EA,
         0x0300,
-    } });
-    try self.map.put(0x1EC2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EC2) return .{ .canon = [2]u21{
         0x00CA,
         0x0309,
-    } });
-    try self.map.put(0x1EC3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EC3) return .{ .canon = [2]u21{
         0x00EA,
         0x0309,
-    } });
-    try self.map.put(0x1EC4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EC4) return .{ .canon = [2]u21{
         0x00CA,
         0x0303,
-    } });
-    try self.map.put(0x1EC5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EC5) return .{ .canon = [2]u21{
         0x00EA,
         0x0303,
-    } });
-    try self.map.put(0x1EC6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EC6) return .{ .canon = [2]u21{
         0x1EB8,
         0x0302,
-    } });
-    try self.map.put(0x1EC7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EC7) return .{ .canon = [2]u21{
         0x1EB9,
         0x0302,
-    } });
-    try self.map.put(0x1EC8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EC8) return .{ .canon = [2]u21{
         0x0049,
         0x0309,
-    } });
-    try self.map.put(0x1EC9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EC9) return .{ .canon = [2]u21{
         0x0069,
         0x0309,
-    } });
-    try self.map.put(0x1ECA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ECA) return .{ .canon = [2]u21{
         0x0049,
         0x0323,
-    } });
-    try self.map.put(0x1ECB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ECB) return .{ .canon = [2]u21{
         0x0069,
         0x0323,
-    } });
-    try self.map.put(0x1ECC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ECC) return .{ .canon = [2]u21{
         0x004F,
         0x0323,
-    } });
-    try self.map.put(0x1ECD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ECD) return .{ .canon = [2]u21{
         0x006F,
         0x0323,
-    } });
-    try self.map.put(0x1ECE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ECE) return .{ .canon = [2]u21{
         0x004F,
         0x0309,
-    } });
-    try self.map.put(0x1ECF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ECF) return .{ .canon = [2]u21{
         0x006F,
         0x0309,
-    } });
-    try self.map.put(0x1ED0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ED0) return .{ .canon = [2]u21{
         0x00D4,
         0x0301,
-    } });
-    try self.map.put(0x1ED1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ED1) return .{ .canon = [2]u21{
         0x00F4,
         0x0301,
-    } });
-    try self.map.put(0x1ED2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ED2) return .{ .canon = [2]u21{
         0x00D4,
         0x0300,
-    } });
-    try self.map.put(0x1ED3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ED3) return .{ .canon = [2]u21{
         0x00F4,
         0x0300,
-    } });
-    try self.map.put(0x1ED4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ED4) return .{ .canon = [2]u21{
         0x00D4,
         0x0309,
-    } });
-    try self.map.put(0x1ED5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ED5) return .{ .canon = [2]u21{
         0x00F4,
         0x0309,
-    } });
-    try self.map.put(0x1ED6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ED6) return .{ .canon = [2]u21{
         0x00D4,
         0x0303,
-    } });
-    try self.map.put(0x1ED7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ED7) return .{ .canon = [2]u21{
         0x00F4,
         0x0303,
-    } });
-    try self.map.put(0x1ED8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ED8) return .{ .canon = [2]u21{
         0x1ECC,
         0x0302,
-    } });
-    try self.map.put(0x1ED9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1ED9) return .{ .canon = [2]u21{
         0x1ECD,
         0x0302,
-    } });
-    try self.map.put(0x1EDA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EDA) return .{ .canon = [2]u21{
         0x01A0,
         0x0301,
-    } });
-    try self.map.put(0x1EDB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EDB) return .{ .canon = [2]u21{
         0x01A1,
         0x0301,
-    } });
-    try self.map.put(0x1EDC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EDC) return .{ .canon = [2]u21{
         0x01A0,
         0x0300,
-    } });
-    try self.map.put(0x1EDD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EDD) return .{ .canon = [2]u21{
         0x01A1,
         0x0300,
-    } });
-    try self.map.put(0x1EDE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EDE) return .{ .canon = [2]u21{
         0x01A0,
         0x0309,
-    } });
-    try self.map.put(0x1EDF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EDF) return .{ .canon = [2]u21{
         0x01A1,
         0x0309,
-    } });
-    try self.map.put(0x1EE0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EE0) return .{ .canon = [2]u21{
         0x01A0,
         0x0303,
-    } });
-    try self.map.put(0x1EE1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EE1) return .{ .canon = [2]u21{
         0x01A1,
         0x0303,
-    } });
-    try self.map.put(0x1EE2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EE2) return .{ .canon = [2]u21{
         0x01A0,
         0x0323,
-    } });
-    try self.map.put(0x1EE3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EE3) return .{ .canon = [2]u21{
         0x01A1,
         0x0323,
-    } });
-    try self.map.put(0x1EE4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EE4) return .{ .canon = [2]u21{
         0x0055,
         0x0323,
-    } });
-    try self.map.put(0x1EE5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EE5) return .{ .canon = [2]u21{
         0x0075,
         0x0323,
-    } });
-    try self.map.put(0x1EE6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EE6) return .{ .canon = [2]u21{
         0x0055,
         0x0309,
-    } });
-    try self.map.put(0x1EE7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EE7) return .{ .canon = [2]u21{
         0x0075,
         0x0309,
-    } });
-    try self.map.put(0x1EE8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EE8) return .{ .canon = [2]u21{
         0x01AF,
         0x0301,
-    } });
-    try self.map.put(0x1EE9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EE9) return .{ .canon = [2]u21{
         0x01B0,
         0x0301,
-    } });
-    try self.map.put(0x1EEA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EEA) return .{ .canon = [2]u21{
         0x01AF,
         0x0300,
-    } });
-    try self.map.put(0x1EEB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EEB) return .{ .canon = [2]u21{
         0x01B0,
         0x0300,
-    } });
-    try self.map.put(0x1EEC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EEC) return .{ .canon = [2]u21{
         0x01AF,
         0x0309,
-    } });
-    try self.map.put(0x1EED, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EED) return .{ .canon = [2]u21{
         0x01B0,
         0x0309,
-    } });
-    try self.map.put(0x1EEE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EEE) return .{ .canon = [2]u21{
         0x01AF,
         0x0303,
-    } });
-    try self.map.put(0x1EEF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EEF) return .{ .canon = [2]u21{
         0x01B0,
         0x0303,
-    } });
-    try self.map.put(0x1EF0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EF0) return .{ .canon = [2]u21{
         0x01AF,
         0x0323,
-    } });
-    try self.map.put(0x1EF1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EF1) return .{ .canon = [2]u21{
         0x01B0,
         0x0323,
-    } });
-    try self.map.put(0x1EF2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EF2) return .{ .canon = [2]u21{
         0x0059,
         0x0300,
-    } });
-    try self.map.put(0x1EF3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EF3) return .{ .canon = [2]u21{
         0x0079,
         0x0300,
-    } });
-    try self.map.put(0x1EF4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EF4) return .{ .canon = [2]u21{
         0x0059,
         0x0323,
-    } });
-    try self.map.put(0x1EF5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EF5) return .{ .canon = [2]u21{
         0x0079,
         0x0323,
-    } });
-    try self.map.put(0x1EF6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EF6) return .{ .canon = [2]u21{
         0x0059,
         0x0309,
-    } });
-    try self.map.put(0x1EF7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EF7) return .{ .canon = [2]u21{
         0x0079,
         0x0309,
-    } });
-    try self.map.put(0x1EF8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EF8) return .{ .canon = [2]u21{
         0x0059,
         0x0303,
-    } });
-    try self.map.put(0x1EF9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1EF9) return .{ .canon = [2]u21{
         0x0079,
         0x0303,
-    } });
-    try self.map.put(0x1F00, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F00) return .{ .canon = [2]u21{
         0x03B1,
         0x0313,
-    } });
-    try self.map.put(0x1F01, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F01) return .{ .canon = [2]u21{
         0x03B1,
         0x0314,
-    } });
-    try self.map.put(0x1F02, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F02) return .{ .canon = [2]u21{
         0x1F00,
         0x0300,
-    } });
-    try self.map.put(0x1F03, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F03) return .{ .canon = [2]u21{
         0x1F01,
         0x0300,
-    } });
-    try self.map.put(0x1F04, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F04) return .{ .canon = [2]u21{
         0x1F00,
         0x0301,
-    } });
-    try self.map.put(0x1F05, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F05) return .{ .canon = [2]u21{
         0x1F01,
         0x0301,
-    } });
-    try self.map.put(0x1F06, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F06) return .{ .canon = [2]u21{
         0x1F00,
         0x0342,
-    } });
-    try self.map.put(0x1F07, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F07) return .{ .canon = [2]u21{
         0x1F01,
         0x0342,
-    } });
-    try self.map.put(0x1F08, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F08) return .{ .canon = [2]u21{
         0x0391,
         0x0313,
-    } });
-    try self.map.put(0x1F09, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F09) return .{ .canon = [2]u21{
         0x0391,
         0x0314,
-    } });
-    try self.map.put(0x1F0A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F0A) return .{ .canon = [2]u21{
         0x1F08,
         0x0300,
-    } });
-    try self.map.put(0x1F0B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F0B) return .{ .canon = [2]u21{
         0x1F09,
         0x0300,
-    } });
-    try self.map.put(0x1F0C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F0C) return .{ .canon = [2]u21{
         0x1F08,
         0x0301,
-    } });
-    try self.map.put(0x1F0D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F0D) return .{ .canon = [2]u21{
         0x1F09,
         0x0301,
-    } });
-    try self.map.put(0x1F0E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F0E) return .{ .canon = [2]u21{
         0x1F08,
         0x0342,
-    } });
-    try self.map.put(0x1F0F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F0F) return .{ .canon = [2]u21{
         0x1F09,
         0x0342,
-    } });
-    try self.map.put(0x1F10, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F10) return .{ .canon = [2]u21{
         0x03B5,
         0x0313,
-    } });
-    try self.map.put(0x1F11, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F11) return .{ .canon = [2]u21{
         0x03B5,
         0x0314,
-    } });
-    try self.map.put(0x1F12, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F12) return .{ .canon = [2]u21{
         0x1F10,
         0x0300,
-    } });
-    try self.map.put(0x1F13, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F13) return .{ .canon = [2]u21{
         0x1F11,
         0x0300,
-    } });
-    try self.map.put(0x1F14, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F14) return .{ .canon = [2]u21{
         0x1F10,
         0x0301,
-    } });
-    try self.map.put(0x1F15, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F15) return .{ .canon = [2]u21{
         0x1F11,
         0x0301,
-    } });
-    try self.map.put(0x1F18, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F18) return .{ .canon = [2]u21{
         0x0395,
         0x0313,
-    } });
-    try self.map.put(0x1F19, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F19) return .{ .canon = [2]u21{
         0x0395,
         0x0314,
-    } });
-    try self.map.put(0x1F1A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F1A) return .{ .canon = [2]u21{
         0x1F18,
         0x0300,
-    } });
-    try self.map.put(0x1F1B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F1B) return .{ .canon = [2]u21{
         0x1F19,
         0x0300,
-    } });
-    try self.map.put(0x1F1C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F1C) return .{ .canon = [2]u21{
         0x1F18,
         0x0301,
-    } });
-    try self.map.put(0x1F1D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F1D) return .{ .canon = [2]u21{
         0x1F19,
         0x0301,
-    } });
-    try self.map.put(0x1F20, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F20) return .{ .canon = [2]u21{
         0x03B7,
         0x0313,
-    } });
-    try self.map.put(0x1F21, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F21) return .{ .canon = [2]u21{
         0x03B7,
         0x0314,
-    } });
-    try self.map.put(0x1F22, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F22) return .{ .canon = [2]u21{
         0x1F20,
         0x0300,
-    } });
-    try self.map.put(0x1F23, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F23) return .{ .canon = [2]u21{
         0x1F21,
         0x0300,
-    } });
-    try self.map.put(0x1F24, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F24) return .{ .canon = [2]u21{
         0x1F20,
         0x0301,
-    } });
-    try self.map.put(0x1F25, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F25) return .{ .canon = [2]u21{
         0x1F21,
         0x0301,
-    } });
-    try self.map.put(0x1F26, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F26) return .{ .canon = [2]u21{
         0x1F20,
         0x0342,
-    } });
-    try self.map.put(0x1F27, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F27) return .{ .canon = [2]u21{
         0x1F21,
         0x0342,
-    } });
-    try self.map.put(0x1F28, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F28) return .{ .canon = [2]u21{
         0x0397,
         0x0313,
-    } });
-    try self.map.put(0x1F29, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F29) return .{ .canon = [2]u21{
         0x0397,
         0x0314,
-    } });
-    try self.map.put(0x1F2A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F2A) return .{ .canon = [2]u21{
         0x1F28,
         0x0300,
-    } });
-    try self.map.put(0x1F2B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F2B) return .{ .canon = [2]u21{
         0x1F29,
         0x0300,
-    } });
-    try self.map.put(0x1F2C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F2C) return .{ .canon = [2]u21{
         0x1F28,
         0x0301,
-    } });
-    try self.map.put(0x1F2D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F2D) return .{ .canon = [2]u21{
         0x1F29,
         0x0301,
-    } });
-    try self.map.put(0x1F2E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F2E) return .{ .canon = [2]u21{
         0x1F28,
         0x0342,
-    } });
-    try self.map.put(0x1F2F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F2F) return .{ .canon = [2]u21{
         0x1F29,
         0x0342,
-    } });
-    try self.map.put(0x1F30, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F30) return .{ .canon = [2]u21{
         0x03B9,
         0x0313,
-    } });
-    try self.map.put(0x1F31, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F31) return .{ .canon = [2]u21{
         0x03B9,
         0x0314,
-    } });
-    try self.map.put(0x1F32, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F32) return .{ .canon = [2]u21{
         0x1F30,
         0x0300,
-    } });
-    try self.map.put(0x1F33, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F33) return .{ .canon = [2]u21{
         0x1F31,
         0x0300,
-    } });
-    try self.map.put(0x1F34, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F34) return .{ .canon = [2]u21{
         0x1F30,
         0x0301,
-    } });
-    try self.map.put(0x1F35, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F35) return .{ .canon = [2]u21{
         0x1F31,
         0x0301,
-    } });
-    try self.map.put(0x1F36, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F36) return .{ .canon = [2]u21{
         0x1F30,
         0x0342,
-    } });
-    try self.map.put(0x1F37, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F37) return .{ .canon = [2]u21{
         0x1F31,
         0x0342,
-    } });
-    try self.map.put(0x1F38, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F38) return .{ .canon = [2]u21{
         0x0399,
         0x0313,
-    } });
-    try self.map.put(0x1F39, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F39) return .{ .canon = [2]u21{
         0x0399,
         0x0314,
-    } });
-    try self.map.put(0x1F3A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F3A) return .{ .canon = [2]u21{
         0x1F38,
         0x0300,
-    } });
-    try self.map.put(0x1F3B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F3B) return .{ .canon = [2]u21{
         0x1F39,
         0x0300,
-    } });
-    try self.map.put(0x1F3C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F3C) return .{ .canon = [2]u21{
         0x1F38,
         0x0301,
-    } });
-    try self.map.put(0x1F3D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F3D) return .{ .canon = [2]u21{
         0x1F39,
         0x0301,
-    } });
-    try self.map.put(0x1F3E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F3E) return .{ .canon = [2]u21{
         0x1F38,
         0x0342,
-    } });
-    try self.map.put(0x1F3F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F3F) return .{ .canon = [2]u21{
         0x1F39,
         0x0342,
-    } });
-    try self.map.put(0x1F40, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F40) return .{ .canon = [2]u21{
         0x03BF,
         0x0313,
-    } });
-    try self.map.put(0x1F41, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F41) return .{ .canon = [2]u21{
         0x03BF,
         0x0314,
-    } });
-    try self.map.put(0x1F42, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F42) return .{ .canon = [2]u21{
         0x1F40,
         0x0300,
-    } });
-    try self.map.put(0x1F43, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F43) return .{ .canon = [2]u21{
         0x1F41,
         0x0300,
-    } });
-    try self.map.put(0x1F44, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F44) return .{ .canon = [2]u21{
         0x1F40,
         0x0301,
-    } });
-    try self.map.put(0x1F45, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F45) return .{ .canon = [2]u21{
         0x1F41,
         0x0301,
-    } });
-    try self.map.put(0x1F48, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F48) return .{ .canon = [2]u21{
         0x039F,
         0x0313,
-    } });
-    try self.map.put(0x1F49, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F49) return .{ .canon = [2]u21{
         0x039F,
         0x0314,
-    } });
-    try self.map.put(0x1F4A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F4A) return .{ .canon = [2]u21{
         0x1F48,
         0x0300,
-    } });
-    try self.map.put(0x1F4B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F4B) return .{ .canon = [2]u21{
         0x1F49,
         0x0300,
-    } });
-    try self.map.put(0x1F4C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F4C) return .{ .canon = [2]u21{
         0x1F48,
         0x0301,
-    } });
-    try self.map.put(0x1F4D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F4D) return .{ .canon = [2]u21{
         0x1F49,
         0x0301,
-    } });
-    try self.map.put(0x1F50, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F50) return .{ .canon = [2]u21{
         0x03C5,
         0x0313,
-    } });
-    try self.map.put(0x1F51, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F51) return .{ .canon = [2]u21{
         0x03C5,
         0x0314,
-    } });
-    try self.map.put(0x1F52, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F52) return .{ .canon = [2]u21{
         0x1F50,
         0x0300,
-    } });
-    try self.map.put(0x1F53, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F53) return .{ .canon = [2]u21{
         0x1F51,
         0x0300,
-    } });
-    try self.map.put(0x1F54, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F54) return .{ .canon = [2]u21{
         0x1F50,
         0x0301,
-    } });
-    try self.map.put(0x1F55, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F55) return .{ .canon = [2]u21{
         0x1F51,
         0x0301,
-    } });
-    try self.map.put(0x1F56, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F56) return .{ .canon = [2]u21{
         0x1F50,
         0x0342,
-    } });
-    try self.map.put(0x1F57, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F57) return .{ .canon = [2]u21{
         0x1F51,
         0x0342,
-    } });
-    try self.map.put(0x1F59, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F59) return .{ .canon = [2]u21{
         0x03A5,
         0x0314,
-    } });
-    try self.map.put(0x1F5B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F5B) return .{ .canon = [2]u21{
         0x1F59,
         0x0300,
-    } });
-    try self.map.put(0x1F5D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F5D) return .{ .canon = [2]u21{
         0x1F59,
         0x0301,
-    } });
-    try self.map.put(0x1F5F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F5F) return .{ .canon = [2]u21{
         0x1F59,
         0x0342,
-    } });
-    try self.map.put(0x1F60, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F60) return .{ .canon = [2]u21{
         0x03C9,
         0x0313,
-    } });
-    try self.map.put(0x1F61, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F61) return .{ .canon = [2]u21{
         0x03C9,
         0x0314,
-    } });
-    try self.map.put(0x1F62, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F62) return .{ .canon = [2]u21{
         0x1F60,
         0x0300,
-    } });
-    try self.map.put(0x1F63, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F63) return .{ .canon = [2]u21{
         0x1F61,
         0x0300,
-    } });
-    try self.map.put(0x1F64, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F64) return .{ .canon = [2]u21{
         0x1F60,
         0x0301,
-    } });
-    try self.map.put(0x1F65, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F65) return .{ .canon = [2]u21{
         0x1F61,
         0x0301,
-    } });
-    try self.map.put(0x1F66, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F66) return .{ .canon = [2]u21{
         0x1F60,
         0x0342,
-    } });
-    try self.map.put(0x1F67, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F67) return .{ .canon = [2]u21{
         0x1F61,
         0x0342,
-    } });
-    try self.map.put(0x1F68, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F68) return .{ .canon = [2]u21{
         0x03A9,
         0x0313,
-    } });
-    try self.map.put(0x1F69, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F69) return .{ .canon = [2]u21{
         0x03A9,
         0x0314,
-    } });
-    try self.map.put(0x1F6A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F6A) return .{ .canon = [2]u21{
         0x1F68,
         0x0300,
-    } });
-    try self.map.put(0x1F6B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F6B) return .{ .canon = [2]u21{
         0x1F69,
         0x0300,
-    } });
-    try self.map.put(0x1F6C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F6C) return .{ .canon = [2]u21{
         0x1F68,
         0x0301,
-    } });
-    try self.map.put(0x1F6D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F6D) return .{ .canon = [2]u21{
         0x1F69,
         0x0301,
-    } });
-    try self.map.put(0x1F6E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F6E) return .{ .canon = [2]u21{
         0x1F68,
         0x0342,
-    } });
-    try self.map.put(0x1F6F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F6F) return .{ .canon = [2]u21{
         0x1F69,
         0x0342,
-    } });
-    try self.map.put(0x1F70, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F70) return .{ .canon = [2]u21{
         0x03B1,
         0x0300,
-    } });
-    try self.map.put(0x1F71, .{ .single = 0x03AC });
-    try self.map.put(0x1F72, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F71) return .{ .single = 0x03AC };
+    if (cp == 0x1F72) return .{ .canon = [2]u21{
         0x03B5,
         0x0300,
-    } });
-    try self.map.put(0x1F73, .{ .single = 0x03AD });
-    try self.map.put(0x1F74, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F73) return .{ .single = 0x03AD };
+    if (cp == 0x1F74) return .{ .canon = [2]u21{
         0x03B7,
         0x0300,
-    } });
-    try self.map.put(0x1F75, .{ .single = 0x03AE });
-    try self.map.put(0x1F76, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F75) return .{ .single = 0x03AE };
+    if (cp == 0x1F76) return .{ .canon = [2]u21{
         0x03B9,
         0x0300,
-    } });
-    try self.map.put(0x1F77, .{ .single = 0x03AF });
-    try self.map.put(0x1F78, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F77) return .{ .single = 0x03AF };
+    if (cp == 0x1F78) return .{ .canon = [2]u21{
         0x03BF,
         0x0300,
-    } });
-    try self.map.put(0x1F79, .{ .single = 0x03CC });
-    try self.map.put(0x1F7A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F79) return .{ .single = 0x03CC };
+    if (cp == 0x1F7A) return .{ .canon = [2]u21{
         0x03C5,
         0x0300,
-    } });
-    try self.map.put(0x1F7B, .{ .single = 0x03CD });
-    try self.map.put(0x1F7C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F7B) return .{ .single = 0x03CD };
+    if (cp == 0x1F7C) return .{ .canon = [2]u21{
         0x03C9,
         0x0300,
-    } });
-    try self.map.put(0x1F7D, .{ .single = 0x03CE });
-    try self.map.put(0x1F80, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F7D) return .{ .single = 0x03CE };
+    if (cp == 0x1F80) return .{ .canon = [2]u21{
         0x1F00,
         0x0345,
-    } });
-    try self.map.put(0x1F81, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F81) return .{ .canon = [2]u21{
         0x1F01,
         0x0345,
-    } });
-    try self.map.put(0x1F82, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F82) return .{ .canon = [2]u21{
         0x1F02,
         0x0345,
-    } });
-    try self.map.put(0x1F83, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F83) return .{ .canon = [2]u21{
         0x1F03,
         0x0345,
-    } });
-    try self.map.put(0x1F84, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F84) return .{ .canon = [2]u21{
         0x1F04,
         0x0345,
-    } });
-    try self.map.put(0x1F85, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F85) return .{ .canon = [2]u21{
         0x1F05,
         0x0345,
-    } });
-    try self.map.put(0x1F86, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F86) return .{ .canon = [2]u21{
         0x1F06,
         0x0345,
-    } });
-    try self.map.put(0x1F87, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F87) return .{ .canon = [2]u21{
         0x1F07,
         0x0345,
-    } });
-    try self.map.put(0x1F88, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F88) return .{ .canon = [2]u21{
         0x1F08,
         0x0345,
-    } });
-    try self.map.put(0x1F89, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F89) return .{ .canon = [2]u21{
         0x1F09,
         0x0345,
-    } });
-    try self.map.put(0x1F8A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F8A) return .{ .canon = [2]u21{
         0x1F0A,
         0x0345,
-    } });
-    try self.map.put(0x1F8B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F8B) return .{ .canon = [2]u21{
         0x1F0B,
         0x0345,
-    } });
-    try self.map.put(0x1F8C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F8C) return .{ .canon = [2]u21{
         0x1F0C,
         0x0345,
-    } });
-    try self.map.put(0x1F8D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F8D) return .{ .canon = [2]u21{
         0x1F0D,
         0x0345,
-    } });
-    try self.map.put(0x1F8E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F8E) return .{ .canon = [2]u21{
         0x1F0E,
         0x0345,
-    } });
-    try self.map.put(0x1F8F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F8F) return .{ .canon = [2]u21{
         0x1F0F,
         0x0345,
-    } });
-    try self.map.put(0x1F90, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F90) return .{ .canon = [2]u21{
         0x1F20,
         0x0345,
-    } });
-    try self.map.put(0x1F91, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F91) return .{ .canon = [2]u21{
         0x1F21,
         0x0345,
-    } });
-    try self.map.put(0x1F92, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F92) return .{ .canon = [2]u21{
         0x1F22,
         0x0345,
-    } });
-    try self.map.put(0x1F93, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F93) return .{ .canon = [2]u21{
         0x1F23,
         0x0345,
-    } });
-    try self.map.put(0x1F94, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F94) return .{ .canon = [2]u21{
         0x1F24,
         0x0345,
-    } });
-    try self.map.put(0x1F95, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F95) return .{ .canon = [2]u21{
         0x1F25,
         0x0345,
-    } });
-    try self.map.put(0x1F96, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F96) return .{ .canon = [2]u21{
         0x1F26,
         0x0345,
-    } });
-    try self.map.put(0x1F97, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F97) return .{ .canon = [2]u21{
         0x1F27,
         0x0345,
-    } });
-    try self.map.put(0x1F98, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F98) return .{ .canon = [2]u21{
         0x1F28,
         0x0345,
-    } });
-    try self.map.put(0x1F99, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F99) return .{ .canon = [2]u21{
         0x1F29,
         0x0345,
-    } });
-    try self.map.put(0x1F9A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F9A) return .{ .canon = [2]u21{
         0x1F2A,
         0x0345,
-    } });
-    try self.map.put(0x1F9B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F9B) return .{ .canon = [2]u21{
         0x1F2B,
         0x0345,
-    } });
-    try self.map.put(0x1F9C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F9C) return .{ .canon = [2]u21{
         0x1F2C,
         0x0345,
-    } });
-    try self.map.put(0x1F9D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F9D) return .{ .canon = [2]u21{
         0x1F2D,
         0x0345,
-    } });
-    try self.map.put(0x1F9E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F9E) return .{ .canon = [2]u21{
         0x1F2E,
         0x0345,
-    } });
-    try self.map.put(0x1F9F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1F9F) return .{ .canon = [2]u21{
         0x1F2F,
         0x0345,
-    } });
-    try self.map.put(0x1FA0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FA0) return .{ .canon = [2]u21{
         0x1F60,
         0x0345,
-    } });
-    try self.map.put(0x1FA1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FA1) return .{ .canon = [2]u21{
         0x1F61,
         0x0345,
-    } });
-    try self.map.put(0x1FA2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FA2) return .{ .canon = [2]u21{
         0x1F62,
         0x0345,
-    } });
-    try self.map.put(0x1FA3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FA3) return .{ .canon = [2]u21{
         0x1F63,
         0x0345,
-    } });
-    try self.map.put(0x1FA4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FA4) return .{ .canon = [2]u21{
         0x1F64,
         0x0345,
-    } });
-    try self.map.put(0x1FA5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FA5) return .{ .canon = [2]u21{
         0x1F65,
         0x0345,
-    } });
-    try self.map.put(0x1FA6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FA6) return .{ .canon = [2]u21{
         0x1F66,
         0x0345,
-    } });
-    try self.map.put(0x1FA7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FA7) return .{ .canon = [2]u21{
         0x1F67,
         0x0345,
-    } });
-    try self.map.put(0x1FA8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FA8) return .{ .canon = [2]u21{
         0x1F68,
         0x0345,
-    } });
-    try self.map.put(0x1FA9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FA9) return .{ .canon = [2]u21{
         0x1F69,
         0x0345,
-    } });
-    try self.map.put(0x1FAA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FAA) return .{ .canon = [2]u21{
         0x1F6A,
         0x0345,
-    } });
-    try self.map.put(0x1FAB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FAB) return .{ .canon = [2]u21{
         0x1F6B,
         0x0345,
-    } });
-    try self.map.put(0x1FAC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FAC) return .{ .canon = [2]u21{
         0x1F6C,
         0x0345,
-    } });
-    try self.map.put(0x1FAD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FAD) return .{ .canon = [2]u21{
         0x1F6D,
         0x0345,
-    } });
-    try self.map.put(0x1FAE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FAE) return .{ .canon = [2]u21{
         0x1F6E,
         0x0345,
-    } });
-    try self.map.put(0x1FAF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FAF) return .{ .canon = [2]u21{
         0x1F6F,
         0x0345,
-    } });
-    try self.map.put(0x1FB0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FB0) return .{ .canon = [2]u21{
         0x03B1,
         0x0306,
-    } });
-    try self.map.put(0x1FB1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FB1) return .{ .canon = [2]u21{
         0x03B1,
         0x0304,
-    } });
-    try self.map.put(0x1FB2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FB2) return .{ .canon = [2]u21{
         0x1F70,
         0x0345,
-    } });
-    try self.map.put(0x1FB3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FB3) return .{ .canon = [2]u21{
         0x03B1,
         0x0345,
-    } });
-    try self.map.put(0x1FB4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FB4) return .{ .canon = [2]u21{
         0x03AC,
         0x0345,
-    } });
-    try self.map.put(0x1FB6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FB6) return .{ .canon = [2]u21{
         0x03B1,
         0x0342,
-    } });
-    try self.map.put(0x1FB7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FB7) return .{ .canon = [2]u21{
         0x1FB6,
         0x0345,
-    } });
-    try self.map.put(0x1FB8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FB8) return .{ .canon = [2]u21{
         0x0391,
         0x0306,
-    } });
-    try self.map.put(0x1FB9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FB9) return .{ .canon = [2]u21{
         0x0391,
         0x0304,
-    } });
-    try self.map.put(0x1FBA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FBA) return .{ .canon = [2]u21{
         0x0391,
         0x0300,
-    } });
-    try self.map.put(0x1FBB, .{ .single = 0x0386 });
-    try self.map.put(0x1FBC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FBB) return .{ .single = 0x0386 };
+    if (cp == 0x1FBC) return .{ .canon = [2]u21{
         0x0391,
         0x0345,
-    } });
-    try self.map.put(0x1FBD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1FBD) return .{ .compat = &[_]u21{
         0x0020,
         0x0313,
-    } });
-    try self.map.put(0x1FBE, .{ .single = 0x03B9 });
-    try self.map.put(0x1FBF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1FBE) return .{ .single = 0x03B9 };
+    if (cp == 0x1FBF) return .{ .compat = &[_]u21{
         0x0020,
         0x0313,
-    } });
-    try self.map.put(0x1FC0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1FC0) return .{ .compat = &[_]u21{
         0x0020,
         0x0342,
-    } });
-    try self.map.put(0x1FC1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FC1) return .{ .canon = [2]u21{
         0x00A8,
         0x0342,
-    } });
-    try self.map.put(0x1FC2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FC2) return .{ .canon = [2]u21{
         0x1F74,
         0x0345,
-    } });
-    try self.map.put(0x1FC3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FC3) return .{ .canon = [2]u21{
         0x03B7,
         0x0345,
-    } });
-    try self.map.put(0x1FC4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FC4) return .{ .canon = [2]u21{
         0x03AE,
         0x0345,
-    } });
-    try self.map.put(0x1FC6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FC6) return .{ .canon = [2]u21{
         0x03B7,
         0x0342,
-    } });
-    try self.map.put(0x1FC7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FC7) return .{ .canon = [2]u21{
         0x1FC6,
         0x0345,
-    } });
-    try self.map.put(0x1FC8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FC8) return .{ .canon = [2]u21{
         0x0395,
         0x0300,
-    } });
-    try self.map.put(0x1FC9, .{ .single = 0x0388 });
-    try self.map.put(0x1FCA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FC9) return .{ .single = 0x0388 };
+    if (cp == 0x1FCA) return .{ .canon = [2]u21{
         0x0397,
         0x0300,
-    } });
-    try self.map.put(0x1FCB, .{ .single = 0x0389 });
-    try self.map.put(0x1FCC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FCB) return .{ .single = 0x0389 };
+    if (cp == 0x1FCC) return .{ .canon = [2]u21{
         0x0397,
         0x0345,
-    } });
-    try self.map.put(0x1FCD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FCD) return .{ .canon = [2]u21{
         0x1FBF,
         0x0300,
-    } });
-    try self.map.put(0x1FCE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FCE) return .{ .canon = [2]u21{
         0x1FBF,
         0x0301,
-    } });
-    try self.map.put(0x1FCF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FCF) return .{ .canon = [2]u21{
         0x1FBF,
         0x0342,
-    } });
-    try self.map.put(0x1FD0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FD0) return .{ .canon = [2]u21{
         0x03B9,
         0x0306,
-    } });
-    try self.map.put(0x1FD1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FD1) return .{ .canon = [2]u21{
         0x03B9,
         0x0304,
-    } });
-    try self.map.put(0x1FD2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FD2) return .{ .canon = [2]u21{
         0x03CA,
         0x0300,
-    } });
-    try self.map.put(0x1FD3, .{ .single = 0x0390 });
-    try self.map.put(0x1FD6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FD3) return .{ .single = 0x0390 };
+    if (cp == 0x1FD6) return .{ .canon = [2]u21{
         0x03B9,
         0x0342,
-    } });
-    try self.map.put(0x1FD7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FD7) return .{ .canon = [2]u21{
         0x03CA,
         0x0342,
-    } });
-    try self.map.put(0x1FD8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FD8) return .{ .canon = [2]u21{
         0x0399,
         0x0306,
-    } });
-    try self.map.put(0x1FD9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FD9) return .{ .canon = [2]u21{
         0x0399,
         0x0304,
-    } });
-    try self.map.put(0x1FDA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FDA) return .{ .canon = [2]u21{
         0x0399,
         0x0300,
-    } });
-    try self.map.put(0x1FDB, .{ .single = 0x038A });
-    try self.map.put(0x1FDD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FDB) return .{ .single = 0x038A };
+    if (cp == 0x1FDD) return .{ .canon = [2]u21{
         0x1FFE,
         0x0300,
-    } });
-    try self.map.put(0x1FDE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FDE) return .{ .canon = [2]u21{
         0x1FFE,
         0x0301,
-    } });
-    try self.map.put(0x1FDF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FDF) return .{ .canon = [2]u21{
         0x1FFE,
         0x0342,
-    } });
-    try self.map.put(0x1FE0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FE0) return .{ .canon = [2]u21{
         0x03C5,
         0x0306,
-    } });
-    try self.map.put(0x1FE1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FE1) return .{ .canon = [2]u21{
         0x03C5,
         0x0304,
-    } });
-    try self.map.put(0x1FE2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FE2) return .{ .canon = [2]u21{
         0x03CB,
         0x0300,
-    } });
-    try self.map.put(0x1FE3, .{ .single = 0x03B0 });
-    try self.map.put(0x1FE4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FE3) return .{ .single = 0x03B0 };
+    if (cp == 0x1FE4) return .{ .canon = [2]u21{
         0x03C1,
         0x0313,
-    } });
-    try self.map.put(0x1FE5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FE5) return .{ .canon = [2]u21{
         0x03C1,
         0x0314,
-    } });
-    try self.map.put(0x1FE6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FE6) return .{ .canon = [2]u21{
         0x03C5,
         0x0342,
-    } });
-    try self.map.put(0x1FE7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FE7) return .{ .canon = [2]u21{
         0x03CB,
         0x0342,
-    } });
-    try self.map.put(0x1FE8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FE8) return .{ .canon = [2]u21{
         0x03A5,
         0x0306,
-    } });
-    try self.map.put(0x1FE9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FE9) return .{ .canon = [2]u21{
         0x03A5,
         0x0304,
-    } });
-    try self.map.put(0x1FEA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FEA) return .{ .canon = [2]u21{
         0x03A5,
         0x0300,
-    } });
-    try self.map.put(0x1FEB, .{ .single = 0x038E });
-    try self.map.put(0x1FEC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FEB) return .{ .single = 0x038E };
+    if (cp == 0x1FEC) return .{ .canon = [2]u21{
         0x03A1,
         0x0314,
-    } });
-    try self.map.put(0x1FED, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FED) return .{ .canon = [2]u21{
         0x00A8,
         0x0300,
-    } });
-    try self.map.put(0x1FEE, .{ .single = 0x0385 });
-    try self.map.put(0x1FEF, .{ .single = 0x0060 });
-    try self.map.put(0x1FF2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FEE) return .{ .single = 0x0385 };
+    if (cp == 0x1FEF) return .{ .single = 0x0060 };
+    if (cp == 0x1FF2) return .{ .canon = [2]u21{
         0x1F7C,
         0x0345,
-    } });
-    try self.map.put(0x1FF3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FF3) return .{ .canon = [2]u21{
         0x03C9,
         0x0345,
-    } });
-    try self.map.put(0x1FF4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FF4) return .{ .canon = [2]u21{
         0x03CE,
         0x0345,
-    } });
-    try self.map.put(0x1FF6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FF6) return .{ .canon = [2]u21{
         0x03C9,
         0x0342,
-    } });
-    try self.map.put(0x1FF7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FF7) return .{ .canon = [2]u21{
         0x1FF6,
         0x0345,
-    } });
-    try self.map.put(0x1FF8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FF8) return .{ .canon = [2]u21{
         0x039F,
         0x0300,
-    } });
-    try self.map.put(0x1FF9, .{ .single = 0x038C });
-    try self.map.put(0x1FFA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FF9) return .{ .single = 0x038C };
+    if (cp == 0x1FFA) return .{ .canon = [2]u21{
         0x03A9,
         0x0300,
-    } });
-    try self.map.put(0x1FFB, .{ .single = 0x038F });
-    try self.map.put(0x1FFC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1FFB) return .{ .single = 0x038F };
+    if (cp == 0x1FFC) return .{ .canon = [2]u21{
         0x03A9,
         0x0345,
-    } });
-    try self.map.put(0x1FFD, .{ .single = 0x00B4 });
-    try self.map.put(0x1FFE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1FFD) return .{ .single = 0x00B4 };
+    if (cp == 0x1FFE) return .{ .compat = &[_]u21{
         0x0020,
         0x0314,
-    } });
-    try self.map.put(0x2000, .{ .single = 0x2002 });
-    try self.map.put(0x2001, .{ .single = 0x2003 });
-    try self.map.put(0x2002, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2000) return .{ .single = 0x2002 };
+    if (cp == 0x2001) return .{ .single = 0x2003 };
+    if (cp == 0x2002) return .{ .compat = &[_]u21{
         0x0020,
-    } });
-    try self.map.put(0x2003, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2003) return .{ .compat = &[_]u21{
         0x0020,
-    } });
-    try self.map.put(0x2004, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2004) return .{ .compat = &[_]u21{
         0x0020,
-    } });
-    try self.map.put(0x2005, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2005) return .{ .compat = &[_]u21{
         0x0020,
-    } });
-    try self.map.put(0x2006, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2006) return .{ .compat = &[_]u21{
         0x0020,
-    } });
-    try self.map.put(0x2007, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2007) return .{ .compat = &[_]u21{
         0x0020,
-    } });
-    try self.map.put(0x2008, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2008) return .{ .compat = &[_]u21{
         0x0020,
-    } });
-    try self.map.put(0x2009, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2009) return .{ .compat = &[_]u21{
         0x0020,
-    } });
-    try self.map.put(0x200A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x200A) return .{ .compat = &[_]u21{
         0x0020,
-    } });
-    try self.map.put(0x2011, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2011) return .{ .compat = &[_]u21{
         0x2010,
-    } });
-    try self.map.put(0x2017, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2017) return .{ .compat = &[_]u21{
         0x0020,
         0x0333,
-    } });
-    try self.map.put(0x2024, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2024) return .{ .compat = &[_]u21{
         0x002E,
-    } });
-    try self.map.put(0x2025, .{ .compat = &[_]u21{
-        0x002E,
-        0x002E,
-    } });
-    try self.map.put(0x2026, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2025) return .{ .compat = &[_]u21{
         0x002E,
         0x002E,
+    } };
+    if (cp == 0x2026) return .{ .compat = &[_]u21{
         0x002E,
-    } });
-    try self.map.put(0x202F, .{ .compat = &[_]u21{
+        0x002E,
+        0x002E,
+    } };
+    if (cp == 0x202F) return .{ .compat = &[_]u21{
         0x0020,
-    } });
-    try self.map.put(0x2033, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2033) return .{ .compat = &[_]u21{
         0x2032,
         0x2032,
-    } });
-    try self.map.put(0x2034, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2034) return .{ .compat = &[_]u21{
         0x2032,
         0x2032,
         0x2032,
-    } });
-    try self.map.put(0x2036, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2036) return .{ .compat = &[_]u21{
         0x2035,
         0x2035,
-    } });
-    try self.map.put(0x2037, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2037) return .{ .compat = &[_]u21{
         0x2035,
         0x2035,
         0x2035,
-    } });
-    try self.map.put(0x203C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x203C) return .{ .compat = &[_]u21{
         0x0021,
         0x0021,
-    } });
-    try self.map.put(0x203E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x203E) return .{ .compat = &[_]u21{
         0x0020,
         0x0305,
-    } });
-    try self.map.put(0x2047, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2047) return .{ .compat = &[_]u21{
         0x003F,
         0x003F,
-    } });
-    try self.map.put(0x2048, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2048) return .{ .compat = &[_]u21{
         0x003F,
         0x0021,
-    } });
-    try self.map.put(0x2049, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2049) return .{ .compat = &[_]u21{
         0x0021,
         0x003F,
-    } });
-    try self.map.put(0x2057, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2057) return .{ .compat = &[_]u21{
         0x2032,
         0x2032,
         0x2032,
         0x2032,
-    } });
-    try self.map.put(0x205F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x205F) return .{ .compat = &[_]u21{
         0x0020,
-    } });
-    try self.map.put(0x2070, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2070) return .{ .compat = &[_]u21{
         0x0030,
-    } });
-    try self.map.put(0x2071, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2071) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x2074, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2074) return .{ .compat = &[_]u21{
         0x0034,
-    } });
-    try self.map.put(0x2075, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2075) return .{ .compat = &[_]u21{
         0x0035,
-    } });
-    try self.map.put(0x2076, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2076) return .{ .compat = &[_]u21{
         0x0036,
-    } });
-    try self.map.put(0x2077, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2077) return .{ .compat = &[_]u21{
         0x0037,
-    } });
-    try self.map.put(0x2078, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2078) return .{ .compat = &[_]u21{
         0x0038,
-    } });
-    try self.map.put(0x2079, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2079) return .{ .compat = &[_]u21{
         0x0039,
-    } });
-    try self.map.put(0x207A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x207A) return .{ .compat = &[_]u21{
         0x002B,
-    } });
-    try self.map.put(0x207B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x207B) return .{ .compat = &[_]u21{
         0x2212,
-    } });
-    try self.map.put(0x207C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x207C) return .{ .compat = &[_]u21{
         0x003D,
-    } });
-    try self.map.put(0x207D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x207D) return .{ .compat = &[_]u21{
         0x0028,
-    } });
-    try self.map.put(0x207E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x207E) return .{ .compat = &[_]u21{
         0x0029,
-    } });
-    try self.map.put(0x207F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x207F) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x2080, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2080) return .{ .compat = &[_]u21{
         0x0030,
-    } });
-    try self.map.put(0x2081, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2081) return .{ .compat = &[_]u21{
         0x0031,
-    } });
-    try self.map.put(0x2082, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2082) return .{ .compat = &[_]u21{
         0x0032,
-    } });
-    try self.map.put(0x2083, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2083) return .{ .compat = &[_]u21{
         0x0033,
-    } });
-    try self.map.put(0x2084, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2084) return .{ .compat = &[_]u21{
         0x0034,
-    } });
-    try self.map.put(0x2085, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2085) return .{ .compat = &[_]u21{
         0x0035,
-    } });
-    try self.map.put(0x2086, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2086) return .{ .compat = &[_]u21{
         0x0036,
-    } });
-    try self.map.put(0x2087, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2087) return .{ .compat = &[_]u21{
         0x0037,
-    } });
-    try self.map.put(0x2088, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2088) return .{ .compat = &[_]u21{
         0x0038,
-    } });
-    try self.map.put(0x2089, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2089) return .{ .compat = &[_]u21{
         0x0039,
-    } });
-    try self.map.put(0x208A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x208A) return .{ .compat = &[_]u21{
         0x002B,
-    } });
-    try self.map.put(0x208B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x208B) return .{ .compat = &[_]u21{
         0x2212,
-    } });
-    try self.map.put(0x208C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x208C) return .{ .compat = &[_]u21{
         0x003D,
-    } });
-    try self.map.put(0x208D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x208D) return .{ .compat = &[_]u21{
         0x0028,
-    } });
-    try self.map.put(0x208E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x208E) return .{ .compat = &[_]u21{
         0x0029,
-    } });
-    try self.map.put(0x2090, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2090) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x2091, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2091) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x2092, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2092) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x2093, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2093) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x2094, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2094) return .{ .compat = &[_]u21{
         0x0259,
-    } });
-    try self.map.put(0x2095, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2095) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x2096, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2096) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x2097, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2097) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x2098, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2098) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x2099, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2099) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x209A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x209A) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x209B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x209B) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x209C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x209C) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x20A8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x20A8) return .{ .compat = &[_]u21{
         0x0052,
         0x0073,
-    } });
-    try self.map.put(0x2100, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2100) return .{ .compat = &[_]u21{
         0x0061,
         0x002F,
         0x0063,
-    } });
-    try self.map.put(0x2101, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2101) return .{ .compat = &[_]u21{
         0x0061,
         0x002F,
         0x0073,
-    } });
-    try self.map.put(0x2102, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2102) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x2103, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2103) return .{ .compat = &[_]u21{
         0x00B0,
         0x0043,
-    } });
-    try self.map.put(0x2105, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2105) return .{ .compat = &[_]u21{
         0x0063,
         0x002F,
         0x006F,
-    } });
-    try self.map.put(0x2106, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2106) return .{ .compat = &[_]u21{
         0x0063,
         0x002F,
         0x0075,
-    } });
-    try self.map.put(0x2107, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2107) return .{ .compat = &[_]u21{
         0x0190,
-    } });
-    try self.map.put(0x2109, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2109) return .{ .compat = &[_]u21{
         0x00B0,
         0x0046,
-    } });
-    try self.map.put(0x210A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x210A) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0x210B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x210B) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x210C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x210C) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x210D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x210D) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x210E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x210E) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x210F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x210F) return .{ .compat = &[_]u21{
         0x0127,
-    } });
-    try self.map.put(0x2110, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2110) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x2111, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2111) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x2112, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2112) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x2113, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2113) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x2115, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2115) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x2116, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2116) return .{ .compat = &[_]u21{
         0x004E,
         0x006F,
-    } });
-    try self.map.put(0x2119, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2119) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x211A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x211A) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0x211B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x211B) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x211C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x211C) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x211D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x211D) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x2120, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2120) return .{ .compat = &[_]u21{
         0x0053,
         0x004D,
-    } });
-    try self.map.put(0x2121, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2121) return .{ .compat = &[_]u21{
         0x0054,
         0x0045,
         0x004C,
-    } });
-    try self.map.put(0x2122, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2122) return .{ .compat = &[_]u21{
         0x0054,
         0x004D,
-    } });
-    try self.map.put(0x2124, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2124) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0x2126, .{ .single = 0x03A9 });
-    try self.map.put(0x2128, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2126) return .{ .single = 0x03A9 };
+    if (cp == 0x2128) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0x212A, .{ .single = 0x004B });
-    try self.map.put(0x212B, .{ .single = 0x00C5 });
-    try self.map.put(0x212C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x212A) return .{ .single = 0x004B };
+    if (cp == 0x212B) return .{ .single = 0x00C5 };
+    if (cp == 0x212C) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x212D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x212D) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x212F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x212F) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x2130, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2130) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x2131, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2131) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0x2133, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2133) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x2134, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2134) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x2135, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2135) return .{ .compat = &[_]u21{
         0x05D0,
-    } });
-    try self.map.put(0x2136, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2136) return .{ .compat = &[_]u21{
         0x05D1,
-    } });
-    try self.map.put(0x2137, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2137) return .{ .compat = &[_]u21{
         0x05D2,
-    } });
-    try self.map.put(0x2138, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2138) return .{ .compat = &[_]u21{
         0x05D3,
-    } });
-    try self.map.put(0x2139, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2139) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x213B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x213B) return .{ .compat = &[_]u21{
         0x0046,
         0x0041,
         0x0058,
-    } });
-    try self.map.put(0x213C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x213C) return .{ .compat = &[_]u21{
         0x03C0,
-    } });
-    try self.map.put(0x213D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x213D) return .{ .compat = &[_]u21{
         0x03B3,
-    } });
-    try self.map.put(0x213E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x213E) return .{ .compat = &[_]u21{
         0x0393,
-    } });
-    try self.map.put(0x213F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x213F) return .{ .compat = &[_]u21{
         0x03A0,
-    } });
-    try self.map.put(0x2140, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2140) return .{ .compat = &[_]u21{
         0x2211,
-    } });
-    try self.map.put(0x2145, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2145) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x2146, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2146) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x2147, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2147) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x2148, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2148) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x2149, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2149) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x2150, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2150) return .{ .compat = &[_]u21{
         0x0031,
         0x2044,
         0x0037,
-    } });
-    try self.map.put(0x2151, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2151) return .{ .compat = &[_]u21{
         0x0031,
         0x2044,
         0x0039,
-    } });
-    try self.map.put(0x2152, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2152) return .{ .compat = &[_]u21{
         0x0031,
         0x2044,
         0x0031,
         0x0030,
-    } });
-    try self.map.put(0x2153, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2153) return .{ .compat = &[_]u21{
         0x0031,
         0x2044,
         0x0033,
-    } });
-    try self.map.put(0x2154, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2154) return .{ .compat = &[_]u21{
         0x0032,
         0x2044,
         0x0033,
-    } });
-    try self.map.put(0x2155, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2155) return .{ .compat = &[_]u21{
         0x0031,
         0x2044,
         0x0035,
-    } });
-    try self.map.put(0x2156, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2156) return .{ .compat = &[_]u21{
         0x0032,
         0x2044,
         0x0035,
-    } });
-    try self.map.put(0x2157, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2157) return .{ .compat = &[_]u21{
         0x0033,
         0x2044,
         0x0035,
-    } });
-    try self.map.put(0x2158, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2158) return .{ .compat = &[_]u21{
         0x0034,
         0x2044,
         0x0035,
-    } });
-    try self.map.put(0x2159, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2159) return .{ .compat = &[_]u21{
         0x0031,
         0x2044,
         0x0036,
-    } });
-    try self.map.put(0x215A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x215A) return .{ .compat = &[_]u21{
         0x0035,
         0x2044,
         0x0036,
-    } });
-    try self.map.put(0x215B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x215B) return .{ .compat = &[_]u21{
         0x0031,
         0x2044,
         0x0038,
-    } });
-    try self.map.put(0x215C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x215C) return .{ .compat = &[_]u21{
         0x0033,
         0x2044,
         0x0038,
-    } });
-    try self.map.put(0x215D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x215D) return .{ .compat = &[_]u21{
         0x0035,
         0x2044,
         0x0038,
-    } });
-    try self.map.put(0x215E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x215E) return .{ .compat = &[_]u21{
         0x0037,
         0x2044,
         0x0038,
-    } });
-    try self.map.put(0x215F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x215F) return .{ .compat = &[_]u21{
         0x0031,
         0x2044,
-    } });
-    try self.map.put(0x2160, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2160) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x2161, .{ .compat = &[_]u21{
-        0x0049,
-        0x0049,
-    } });
-    try self.map.put(0x2162, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2161) return .{ .compat = &[_]u21{
         0x0049,
         0x0049,
+    } };
+    if (cp == 0x2162) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x2163, .{ .compat = &[_]u21{
+        0x0049,
+        0x0049,
+    } };
+    if (cp == 0x2163) return .{ .compat = &[_]u21{
         0x0049,
         0x0056,
-    } });
-    try self.map.put(0x2164, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2164) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x2165, .{ .compat = &[_]u21{
-        0x0056,
-        0x0049,
-    } });
-    try self.map.put(0x2166, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2165) return .{ .compat = &[_]u21{
         0x0056,
         0x0049,
-        0x0049,
-    } });
-    try self.map.put(0x2167, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2166) return .{ .compat = &[_]u21{
         0x0056,
         0x0049,
         0x0049,
+    } };
+    if (cp == 0x2167) return .{ .compat = &[_]u21{
+        0x0056,
         0x0049,
-    } });
-    try self.map.put(0x2168, .{ .compat = &[_]u21{
+        0x0049,
+        0x0049,
+    } };
+    if (cp == 0x2168) return .{ .compat = &[_]u21{
         0x0049,
         0x0058,
-    } });
-    try self.map.put(0x2169, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2169) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x216A, .{ .compat = &[_]u21{
-        0x0058,
-        0x0049,
-    } });
-    try self.map.put(0x216B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x216A) return .{ .compat = &[_]u21{
         0x0058,
         0x0049,
+    } };
+    if (cp == 0x216B) return .{ .compat = &[_]u21{
+        0x0058,
         0x0049,
-    } });
-    try self.map.put(0x216C, .{ .compat = &[_]u21{
+        0x0049,
+    } };
+    if (cp == 0x216C) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x216D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x216D) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x216E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x216E) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x216F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x216F) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x2170, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2170) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x2171, .{ .compat = &[_]u21{
-        0x0069,
-        0x0069,
-    } });
-    try self.map.put(0x2172, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2171) return .{ .compat = &[_]u21{
         0x0069,
         0x0069,
+    } };
+    if (cp == 0x2172) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x2173, .{ .compat = &[_]u21{
+        0x0069,
+        0x0069,
+    } };
+    if (cp == 0x2173) return .{ .compat = &[_]u21{
         0x0069,
         0x0076,
-    } });
-    try self.map.put(0x2174, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2174) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x2175, .{ .compat = &[_]u21{
-        0x0076,
-        0x0069,
-    } });
-    try self.map.put(0x2176, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2175) return .{ .compat = &[_]u21{
         0x0076,
         0x0069,
-        0x0069,
-    } });
-    try self.map.put(0x2177, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2176) return .{ .compat = &[_]u21{
         0x0076,
         0x0069,
         0x0069,
+    } };
+    if (cp == 0x2177) return .{ .compat = &[_]u21{
+        0x0076,
         0x0069,
-    } });
-    try self.map.put(0x2178, .{ .compat = &[_]u21{
+        0x0069,
+        0x0069,
+    } };
+    if (cp == 0x2178) return .{ .compat = &[_]u21{
         0x0069,
         0x0078,
-    } });
-    try self.map.put(0x2179, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2179) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x217A, .{ .compat = &[_]u21{
-        0x0078,
-        0x0069,
-    } });
-    try self.map.put(0x217B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x217A) return .{ .compat = &[_]u21{
         0x0078,
         0x0069,
+    } };
+    if (cp == 0x217B) return .{ .compat = &[_]u21{
+        0x0078,
         0x0069,
-    } });
-    try self.map.put(0x217C, .{ .compat = &[_]u21{
+        0x0069,
+    } };
+    if (cp == 0x217C) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x217D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x217D) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x217E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x217E) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x217F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x217F) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x2189, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2189) return .{ .compat = &[_]u21{
         0x0030,
         0x2044,
         0x0033,
-    } });
-    try self.map.put(0x219A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x219A) return .{ .canon = [2]u21{
         0x2190,
         0x0338,
-    } });
-    try self.map.put(0x219B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x219B) return .{ .canon = [2]u21{
         0x2192,
         0x0338,
-    } });
-    try self.map.put(0x21AE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x21AE) return .{ .canon = [2]u21{
         0x2194,
         0x0338,
-    } });
-    try self.map.put(0x21CD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x21CD) return .{ .canon = [2]u21{
         0x21D0,
         0x0338,
-    } });
-    try self.map.put(0x21CE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x21CE) return .{ .canon = [2]u21{
         0x21D4,
         0x0338,
-    } });
-    try self.map.put(0x21CF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x21CF) return .{ .canon = [2]u21{
         0x21D2,
         0x0338,
-    } });
-    try self.map.put(0x2204, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2204) return .{ .canon = [2]u21{
         0x2203,
         0x0338,
-    } });
-    try self.map.put(0x2209, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2209) return .{ .canon = [2]u21{
         0x2208,
         0x0338,
-    } });
-    try self.map.put(0x220C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x220C) return .{ .canon = [2]u21{
         0x220B,
         0x0338,
-    } });
-    try self.map.put(0x2224, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2224) return .{ .canon = [2]u21{
         0x2223,
         0x0338,
-    } });
-    try self.map.put(0x2226, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2226) return .{ .canon = [2]u21{
         0x2225,
         0x0338,
-    } });
-    try self.map.put(0x222C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x222C) return .{ .compat = &[_]u21{
         0x222B,
         0x222B,
-    } });
-    try self.map.put(0x222D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x222D) return .{ .compat = &[_]u21{
         0x222B,
         0x222B,
         0x222B,
-    } });
-    try self.map.put(0x222F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x222F) return .{ .compat = &[_]u21{
         0x222E,
         0x222E,
-    } });
-    try self.map.put(0x2230, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2230) return .{ .compat = &[_]u21{
         0x222E,
         0x222E,
         0x222E,
-    } });
-    try self.map.put(0x2241, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2241) return .{ .canon = [2]u21{
         0x223C,
         0x0338,
-    } });
-    try self.map.put(0x2244, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2244) return .{ .canon = [2]u21{
         0x2243,
         0x0338,
-    } });
-    try self.map.put(0x2247, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2247) return .{ .canon = [2]u21{
         0x2245,
         0x0338,
-    } });
-    try self.map.put(0x2249, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2249) return .{ .canon = [2]u21{
         0x2248,
         0x0338,
-    } });
-    try self.map.put(0x2260, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2260) return .{ .canon = [2]u21{
         0x003D,
         0x0338,
-    } });
-    try self.map.put(0x2262, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2262) return .{ .canon = [2]u21{
         0x2261,
         0x0338,
-    } });
-    try self.map.put(0x226D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x226D) return .{ .canon = [2]u21{
         0x224D,
         0x0338,
-    } });
-    try self.map.put(0x226E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x226E) return .{ .canon = [2]u21{
         0x003C,
         0x0338,
-    } });
-    try self.map.put(0x226F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x226F) return .{ .canon = [2]u21{
         0x003E,
         0x0338,
-    } });
-    try self.map.put(0x2270, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2270) return .{ .canon = [2]u21{
         0x2264,
         0x0338,
-    } });
-    try self.map.put(0x2271, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2271) return .{ .canon = [2]u21{
         0x2265,
         0x0338,
-    } });
-    try self.map.put(0x2274, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2274) return .{ .canon = [2]u21{
         0x2272,
         0x0338,
-    } });
-    try self.map.put(0x2275, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2275) return .{ .canon = [2]u21{
         0x2273,
         0x0338,
-    } });
-    try self.map.put(0x2278, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2278) return .{ .canon = [2]u21{
         0x2276,
         0x0338,
-    } });
-    try self.map.put(0x2279, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2279) return .{ .canon = [2]u21{
         0x2277,
         0x0338,
-    } });
-    try self.map.put(0x2280, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2280) return .{ .canon = [2]u21{
         0x227A,
         0x0338,
-    } });
-    try self.map.put(0x2281, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2281) return .{ .canon = [2]u21{
         0x227B,
         0x0338,
-    } });
-    try self.map.put(0x2284, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2284) return .{ .canon = [2]u21{
         0x2282,
         0x0338,
-    } });
-    try self.map.put(0x2285, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2285) return .{ .canon = [2]u21{
         0x2283,
         0x0338,
-    } });
-    try self.map.put(0x2288, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2288) return .{ .canon = [2]u21{
         0x2286,
         0x0338,
-    } });
-    try self.map.put(0x2289, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2289) return .{ .canon = [2]u21{
         0x2287,
         0x0338,
-    } });
-    try self.map.put(0x22AC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x22AC) return .{ .canon = [2]u21{
         0x22A2,
         0x0338,
-    } });
-    try self.map.put(0x22AD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x22AD) return .{ .canon = [2]u21{
         0x22A8,
         0x0338,
-    } });
-    try self.map.put(0x22AE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x22AE) return .{ .canon = [2]u21{
         0x22A9,
         0x0338,
-    } });
-    try self.map.put(0x22AF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x22AF) return .{ .canon = [2]u21{
         0x22AB,
         0x0338,
-    } });
-    try self.map.put(0x22E0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x22E0) return .{ .canon = [2]u21{
         0x227C,
         0x0338,
-    } });
-    try self.map.put(0x22E1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x22E1) return .{ .canon = [2]u21{
         0x227D,
         0x0338,
-    } });
-    try self.map.put(0x22E2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x22E2) return .{ .canon = [2]u21{
         0x2291,
         0x0338,
-    } });
-    try self.map.put(0x22E3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x22E3) return .{ .canon = [2]u21{
         0x2292,
         0x0338,
-    } });
-    try self.map.put(0x22EA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x22EA) return .{ .canon = [2]u21{
         0x22B2,
         0x0338,
-    } });
-    try self.map.put(0x22EB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x22EB) return .{ .canon = [2]u21{
         0x22B3,
         0x0338,
-    } });
-    try self.map.put(0x22EC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x22EC) return .{ .canon = [2]u21{
         0x22B4,
         0x0338,
-    } });
-    try self.map.put(0x22ED, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x22ED) return .{ .canon = [2]u21{
         0x22B5,
         0x0338,
-    } });
-    try self.map.put(0x2329, .{ .single = 0x3008 });
-    try self.map.put(0x232A, .{ .single = 0x3009 });
-    try self.map.put(0x2460, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2329) return .{ .single = 0x3008 };
+    if (cp == 0x232A) return .{ .single = 0x3009 };
+    if (cp == 0x2460) return .{ .compat = &[_]u21{
         0x0031,
-    } });
-    try self.map.put(0x2461, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2461) return .{ .compat = &[_]u21{
         0x0032,
-    } });
-    try self.map.put(0x2462, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2462) return .{ .compat = &[_]u21{
         0x0033,
-    } });
-    try self.map.put(0x2463, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2463) return .{ .compat = &[_]u21{
         0x0034,
-    } });
-    try self.map.put(0x2464, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2464) return .{ .compat = &[_]u21{
         0x0035,
-    } });
-    try self.map.put(0x2465, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2465) return .{ .compat = &[_]u21{
         0x0036,
-    } });
-    try self.map.put(0x2466, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2466) return .{ .compat = &[_]u21{
         0x0037,
-    } });
-    try self.map.put(0x2467, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2467) return .{ .compat = &[_]u21{
         0x0038,
-    } });
-    try self.map.put(0x2468, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2468) return .{ .compat = &[_]u21{
         0x0039,
-    } });
-    try self.map.put(0x2469, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2469) return .{ .compat = &[_]u21{
         0x0031,
         0x0030,
-    } });
-    try self.map.put(0x246A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x246A) return .{ .compat = &[_]u21{
         0x0031,
         0x0031,
-    } });
-    try self.map.put(0x246B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x246B) return .{ .compat = &[_]u21{
         0x0031,
         0x0032,
-    } });
-    try self.map.put(0x246C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x246C) return .{ .compat = &[_]u21{
         0x0031,
         0x0033,
-    } });
-    try self.map.put(0x246D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x246D) return .{ .compat = &[_]u21{
         0x0031,
         0x0034,
-    } });
-    try self.map.put(0x246E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x246E) return .{ .compat = &[_]u21{
         0x0031,
         0x0035,
-    } });
-    try self.map.put(0x246F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x246F) return .{ .compat = &[_]u21{
         0x0031,
         0x0036,
-    } });
-    try self.map.put(0x2470, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2470) return .{ .compat = &[_]u21{
         0x0031,
         0x0037,
-    } });
-    try self.map.put(0x2471, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2471) return .{ .compat = &[_]u21{
         0x0031,
         0x0038,
-    } });
-    try self.map.put(0x2472, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2472) return .{ .compat = &[_]u21{
         0x0031,
         0x0039,
-    } });
-    try self.map.put(0x2473, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2473) return .{ .compat = &[_]u21{
         0x0032,
         0x0030,
-    } });
-    try self.map.put(0x2474, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2474) return .{ .compat = &[_]u21{
         0x0028,
         0x0031,
         0x0029,
-    } });
-    try self.map.put(0x2475, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2475) return .{ .compat = &[_]u21{
         0x0028,
         0x0032,
         0x0029,
-    } });
-    try self.map.put(0x2476, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2476) return .{ .compat = &[_]u21{
         0x0028,
         0x0033,
         0x0029,
-    } });
-    try self.map.put(0x2477, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2477) return .{ .compat = &[_]u21{
         0x0028,
         0x0034,
         0x0029,
-    } });
-    try self.map.put(0x2478, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2478) return .{ .compat = &[_]u21{
         0x0028,
         0x0035,
         0x0029,
-    } });
-    try self.map.put(0x2479, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2479) return .{ .compat = &[_]u21{
         0x0028,
         0x0036,
         0x0029,
-    } });
-    try self.map.put(0x247A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x247A) return .{ .compat = &[_]u21{
         0x0028,
         0x0037,
         0x0029,
-    } });
-    try self.map.put(0x247B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x247B) return .{ .compat = &[_]u21{
         0x0028,
         0x0038,
         0x0029,
-    } });
-    try self.map.put(0x247C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x247C) return .{ .compat = &[_]u21{
         0x0028,
         0x0039,
         0x0029,
-    } });
-    try self.map.put(0x247D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x247D) return .{ .compat = &[_]u21{
         0x0028,
         0x0031,
         0x0030,
         0x0029,
-    } });
-    try self.map.put(0x247E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x247E) return .{ .compat = &[_]u21{
         0x0028,
         0x0031,
         0x0031,
         0x0029,
-    } });
-    try self.map.put(0x247F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x247F) return .{ .compat = &[_]u21{
         0x0028,
         0x0031,
         0x0032,
         0x0029,
-    } });
-    try self.map.put(0x2480, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2480) return .{ .compat = &[_]u21{
         0x0028,
         0x0031,
         0x0033,
         0x0029,
-    } });
-    try self.map.put(0x2481, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2481) return .{ .compat = &[_]u21{
         0x0028,
         0x0031,
         0x0034,
         0x0029,
-    } });
-    try self.map.put(0x2482, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2482) return .{ .compat = &[_]u21{
         0x0028,
         0x0031,
         0x0035,
         0x0029,
-    } });
-    try self.map.put(0x2483, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2483) return .{ .compat = &[_]u21{
         0x0028,
         0x0031,
         0x0036,
         0x0029,
-    } });
-    try self.map.put(0x2484, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2484) return .{ .compat = &[_]u21{
         0x0028,
         0x0031,
         0x0037,
         0x0029,
-    } });
-    try self.map.put(0x2485, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2485) return .{ .compat = &[_]u21{
         0x0028,
         0x0031,
         0x0038,
         0x0029,
-    } });
-    try self.map.put(0x2486, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2486) return .{ .compat = &[_]u21{
         0x0028,
         0x0031,
         0x0039,
         0x0029,
-    } });
-    try self.map.put(0x2487, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2487) return .{ .compat = &[_]u21{
         0x0028,
         0x0032,
         0x0030,
         0x0029,
-    } });
-    try self.map.put(0x2488, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2488) return .{ .compat = &[_]u21{
         0x0031,
         0x002E,
-    } });
-    try self.map.put(0x2489, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2489) return .{ .compat = &[_]u21{
         0x0032,
         0x002E,
-    } });
-    try self.map.put(0x248A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x248A) return .{ .compat = &[_]u21{
         0x0033,
         0x002E,
-    } });
-    try self.map.put(0x248B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x248B) return .{ .compat = &[_]u21{
         0x0034,
         0x002E,
-    } });
-    try self.map.put(0x248C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x248C) return .{ .compat = &[_]u21{
         0x0035,
         0x002E,
-    } });
-    try self.map.put(0x248D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x248D) return .{ .compat = &[_]u21{
         0x0036,
         0x002E,
-    } });
-    try self.map.put(0x248E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x248E) return .{ .compat = &[_]u21{
         0x0037,
         0x002E,
-    } });
-    try self.map.put(0x248F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x248F) return .{ .compat = &[_]u21{
         0x0038,
         0x002E,
-    } });
-    try self.map.put(0x2490, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2490) return .{ .compat = &[_]u21{
         0x0039,
         0x002E,
-    } });
-    try self.map.put(0x2491, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2491) return .{ .compat = &[_]u21{
         0x0031,
         0x0030,
         0x002E,
-    } });
-    try self.map.put(0x2492, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2492) return .{ .compat = &[_]u21{
         0x0031,
         0x0031,
         0x002E,
-    } });
-    try self.map.put(0x2493, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2493) return .{ .compat = &[_]u21{
         0x0031,
         0x0032,
         0x002E,
-    } });
-    try self.map.put(0x2494, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2494) return .{ .compat = &[_]u21{
         0x0031,
         0x0033,
         0x002E,
-    } });
-    try self.map.put(0x2495, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2495) return .{ .compat = &[_]u21{
         0x0031,
         0x0034,
         0x002E,
-    } });
-    try self.map.put(0x2496, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2496) return .{ .compat = &[_]u21{
         0x0031,
         0x0035,
         0x002E,
-    } });
-    try self.map.put(0x2497, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2497) return .{ .compat = &[_]u21{
         0x0031,
         0x0036,
         0x002E,
-    } });
-    try self.map.put(0x2498, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2498) return .{ .compat = &[_]u21{
         0x0031,
         0x0037,
         0x002E,
-    } });
-    try self.map.put(0x2499, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2499) return .{ .compat = &[_]u21{
         0x0031,
         0x0038,
         0x002E,
-    } });
-    try self.map.put(0x249A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x249A) return .{ .compat = &[_]u21{
         0x0031,
         0x0039,
         0x002E,
-    } });
-    try self.map.put(0x249B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x249B) return .{ .compat = &[_]u21{
         0x0032,
         0x0030,
         0x002E,
-    } });
-    try self.map.put(0x249C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x249C) return .{ .compat = &[_]u21{
         0x0028,
         0x0061,
         0x0029,
-    } });
-    try self.map.put(0x249D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x249D) return .{ .compat = &[_]u21{
         0x0028,
         0x0062,
         0x0029,
-    } });
-    try self.map.put(0x249E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x249E) return .{ .compat = &[_]u21{
         0x0028,
         0x0063,
         0x0029,
-    } });
-    try self.map.put(0x249F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x249F) return .{ .compat = &[_]u21{
         0x0028,
         0x0064,
         0x0029,
-    } });
-    try self.map.put(0x24A0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24A0) return .{ .compat = &[_]u21{
         0x0028,
         0x0065,
         0x0029,
-    } });
-    try self.map.put(0x24A1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24A1) return .{ .compat = &[_]u21{
         0x0028,
         0x0066,
         0x0029,
-    } });
-    try self.map.put(0x24A2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24A2) return .{ .compat = &[_]u21{
         0x0028,
         0x0067,
         0x0029,
-    } });
-    try self.map.put(0x24A3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24A3) return .{ .compat = &[_]u21{
         0x0028,
         0x0068,
         0x0029,
-    } });
-    try self.map.put(0x24A4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24A4) return .{ .compat = &[_]u21{
         0x0028,
         0x0069,
         0x0029,
-    } });
-    try self.map.put(0x24A5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24A5) return .{ .compat = &[_]u21{
         0x0028,
         0x006A,
         0x0029,
-    } });
-    try self.map.put(0x24A6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24A6) return .{ .compat = &[_]u21{
         0x0028,
         0x006B,
         0x0029,
-    } });
-    try self.map.put(0x24A7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24A7) return .{ .compat = &[_]u21{
         0x0028,
         0x006C,
         0x0029,
-    } });
-    try self.map.put(0x24A8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24A8) return .{ .compat = &[_]u21{
         0x0028,
         0x006D,
         0x0029,
-    } });
-    try self.map.put(0x24A9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24A9) return .{ .compat = &[_]u21{
         0x0028,
         0x006E,
         0x0029,
-    } });
-    try self.map.put(0x24AA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24AA) return .{ .compat = &[_]u21{
         0x0028,
         0x006F,
         0x0029,
-    } });
-    try self.map.put(0x24AB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24AB) return .{ .compat = &[_]u21{
         0x0028,
         0x0070,
         0x0029,
-    } });
-    try self.map.put(0x24AC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24AC) return .{ .compat = &[_]u21{
         0x0028,
         0x0071,
         0x0029,
-    } });
-    try self.map.put(0x24AD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24AD) return .{ .compat = &[_]u21{
         0x0028,
         0x0072,
         0x0029,
-    } });
-    try self.map.put(0x24AE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24AE) return .{ .compat = &[_]u21{
         0x0028,
         0x0073,
         0x0029,
-    } });
-    try self.map.put(0x24AF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24AF) return .{ .compat = &[_]u21{
         0x0028,
         0x0074,
         0x0029,
-    } });
-    try self.map.put(0x24B0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24B0) return .{ .compat = &[_]u21{
         0x0028,
         0x0075,
         0x0029,
-    } });
-    try self.map.put(0x24B1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24B1) return .{ .compat = &[_]u21{
         0x0028,
         0x0076,
         0x0029,
-    } });
-    try self.map.put(0x24B2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24B2) return .{ .compat = &[_]u21{
         0x0028,
         0x0077,
         0x0029,
-    } });
-    try self.map.put(0x24B3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24B3) return .{ .compat = &[_]u21{
         0x0028,
         0x0078,
         0x0029,
-    } });
-    try self.map.put(0x24B4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24B4) return .{ .compat = &[_]u21{
         0x0028,
         0x0079,
         0x0029,
-    } });
-    try self.map.put(0x24B5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24B5) return .{ .compat = &[_]u21{
         0x0028,
         0x007A,
         0x0029,
-    } });
-    try self.map.put(0x24B6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24B6) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x24B7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24B7) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x24B8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24B8) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x24B9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24B9) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x24BA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24BA) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x24BB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24BB) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0x24BC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24BC) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x24BD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24BD) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x24BE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24BE) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x24BF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24BF) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x24C0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24C0) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x24C1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24C1) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x24C2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24C2) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x24C3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24C3) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x24C4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24C4) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x24C5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24C5) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x24C6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24C6) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0x24C7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24C7) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x24C8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24C8) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0x24C9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24C9) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x24CA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24CA) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x24CB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24CB) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x24CC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24CC) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x24CD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24CD) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x24CE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24CE) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0x24CF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24CF) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0x24D0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24D0) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x24D1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24D1) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0x24D2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24D2) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x24D3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24D3) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x24D4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24D4) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x24D5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24D5) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0x24D6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24D6) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0x24D7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24D7) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x24D8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24D8) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x24D9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24D9) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x24DA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24DA) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x24DB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24DB) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x24DC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24DC) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x24DD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24DD) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x24DE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24DE) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x24DF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24DF) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x24E0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24E0) return .{ .compat = &[_]u21{
         0x0071,
-    } });
-    try self.map.put(0x24E1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24E1) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x24E2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24E2) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x24E3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24E3) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x24E4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24E4) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x24E5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24E5) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x24E6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24E6) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0x24E7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24E7) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x24E8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24E8) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0x24E9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24E9) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0x24EA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x24EA) return .{ .compat = &[_]u21{
         0x0030,
-    } });
-    try self.map.put(0x2A0C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2A0C) return .{ .compat = &[_]u21{
         0x222B,
         0x222B,
         0x222B,
         0x222B,
-    } });
-    try self.map.put(0x2A74, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2A74) return .{ .compat = &[_]u21{
         0x003A,
         0x003A,
         0x003D,
-    } });
-    try self.map.put(0x2A75, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2A75) return .{ .compat = &[_]u21{
         0x003D,
         0x003D,
-    } });
-    try self.map.put(0x2A76, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2A76) return .{ .compat = &[_]u21{
         0x003D,
         0x003D,
         0x003D,
-    } });
-    try self.map.put(0x2ADC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x2ADC) return .{ .canon = [2]u21{
         0x2ADD,
         0x0338,
-    } });
-    try self.map.put(0x2C7C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2C7C) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x2C7D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2C7D) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x2D6F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2D6F) return .{ .compat = &[_]u21{
         0x2D61,
-    } });
-    try self.map.put(0x2E9F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2E9F) return .{ .compat = &[_]u21{
         0x6BCD,
-    } });
-    try self.map.put(0x2EF3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2EF3) return .{ .compat = &[_]u21{
         0x9F9F,
-    } });
-    try self.map.put(0x2F00, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F00) return .{ .compat = &[_]u21{
         0x4E00,
-    } });
-    try self.map.put(0x2F01, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F01) return .{ .compat = &[_]u21{
         0x4E28,
-    } });
-    try self.map.put(0x2F02, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F02) return .{ .compat = &[_]u21{
         0x4E36,
-    } });
-    try self.map.put(0x2F03, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F03) return .{ .compat = &[_]u21{
         0x4E3F,
-    } });
-    try self.map.put(0x2F04, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F04) return .{ .compat = &[_]u21{
         0x4E59,
-    } });
-    try self.map.put(0x2F05, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F05) return .{ .compat = &[_]u21{
         0x4E85,
-    } });
-    try self.map.put(0x2F06, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F06) return .{ .compat = &[_]u21{
         0x4E8C,
-    } });
-    try self.map.put(0x2F07, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F07) return .{ .compat = &[_]u21{
         0x4EA0,
-    } });
-    try self.map.put(0x2F08, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F08) return .{ .compat = &[_]u21{
         0x4EBA,
-    } });
-    try self.map.put(0x2F09, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F09) return .{ .compat = &[_]u21{
         0x513F,
-    } });
-    try self.map.put(0x2F0A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F0A) return .{ .compat = &[_]u21{
         0x5165,
-    } });
-    try self.map.put(0x2F0B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F0B) return .{ .compat = &[_]u21{
         0x516B,
-    } });
-    try self.map.put(0x2F0C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F0C) return .{ .compat = &[_]u21{
         0x5182,
-    } });
-    try self.map.put(0x2F0D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F0D) return .{ .compat = &[_]u21{
         0x5196,
-    } });
-    try self.map.put(0x2F0E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F0E) return .{ .compat = &[_]u21{
         0x51AB,
-    } });
-    try self.map.put(0x2F0F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F0F) return .{ .compat = &[_]u21{
         0x51E0,
-    } });
-    try self.map.put(0x2F10, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F10) return .{ .compat = &[_]u21{
         0x51F5,
-    } });
-    try self.map.put(0x2F11, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F11) return .{ .compat = &[_]u21{
         0x5200,
-    } });
-    try self.map.put(0x2F12, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F12) return .{ .compat = &[_]u21{
         0x529B,
-    } });
-    try self.map.put(0x2F13, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F13) return .{ .compat = &[_]u21{
         0x52F9,
-    } });
-    try self.map.put(0x2F14, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F14) return .{ .compat = &[_]u21{
         0x5315,
-    } });
-    try self.map.put(0x2F15, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F15) return .{ .compat = &[_]u21{
         0x531A,
-    } });
-    try self.map.put(0x2F16, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F16) return .{ .compat = &[_]u21{
         0x5338,
-    } });
-    try self.map.put(0x2F17, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F17) return .{ .compat = &[_]u21{
         0x5341,
-    } });
-    try self.map.put(0x2F18, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F18) return .{ .compat = &[_]u21{
         0x535C,
-    } });
-    try self.map.put(0x2F19, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F19) return .{ .compat = &[_]u21{
         0x5369,
-    } });
-    try self.map.put(0x2F1A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F1A) return .{ .compat = &[_]u21{
         0x5382,
-    } });
-    try self.map.put(0x2F1B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F1B) return .{ .compat = &[_]u21{
         0x53B6,
-    } });
-    try self.map.put(0x2F1C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F1C) return .{ .compat = &[_]u21{
         0x53C8,
-    } });
-    try self.map.put(0x2F1D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F1D) return .{ .compat = &[_]u21{
         0x53E3,
-    } });
-    try self.map.put(0x2F1E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F1E) return .{ .compat = &[_]u21{
         0x56D7,
-    } });
-    try self.map.put(0x2F1F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F1F) return .{ .compat = &[_]u21{
         0x571F,
-    } });
-    try self.map.put(0x2F20, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F20) return .{ .compat = &[_]u21{
         0x58EB,
-    } });
-    try self.map.put(0x2F21, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F21) return .{ .compat = &[_]u21{
         0x5902,
-    } });
-    try self.map.put(0x2F22, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F22) return .{ .compat = &[_]u21{
         0x590A,
-    } });
-    try self.map.put(0x2F23, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F23) return .{ .compat = &[_]u21{
         0x5915,
-    } });
-    try self.map.put(0x2F24, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F24) return .{ .compat = &[_]u21{
         0x5927,
-    } });
-    try self.map.put(0x2F25, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F25) return .{ .compat = &[_]u21{
         0x5973,
-    } });
-    try self.map.put(0x2F26, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F26) return .{ .compat = &[_]u21{
         0x5B50,
-    } });
-    try self.map.put(0x2F27, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F27) return .{ .compat = &[_]u21{
         0x5B80,
-    } });
-    try self.map.put(0x2F28, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F28) return .{ .compat = &[_]u21{
         0x5BF8,
-    } });
-    try self.map.put(0x2F29, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F29) return .{ .compat = &[_]u21{
         0x5C0F,
-    } });
-    try self.map.put(0x2F2A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F2A) return .{ .compat = &[_]u21{
         0x5C22,
-    } });
-    try self.map.put(0x2F2B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F2B) return .{ .compat = &[_]u21{
         0x5C38,
-    } });
-    try self.map.put(0x2F2C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F2C) return .{ .compat = &[_]u21{
         0x5C6E,
-    } });
-    try self.map.put(0x2F2D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F2D) return .{ .compat = &[_]u21{
         0x5C71,
-    } });
-    try self.map.put(0x2F2E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F2E) return .{ .compat = &[_]u21{
         0x5DDB,
-    } });
-    try self.map.put(0x2F2F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F2F) return .{ .compat = &[_]u21{
         0x5DE5,
-    } });
-    try self.map.put(0x2F30, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F30) return .{ .compat = &[_]u21{
         0x5DF1,
-    } });
-    try self.map.put(0x2F31, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F31) return .{ .compat = &[_]u21{
         0x5DFE,
-    } });
-    try self.map.put(0x2F32, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F32) return .{ .compat = &[_]u21{
         0x5E72,
-    } });
-    try self.map.put(0x2F33, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F33) return .{ .compat = &[_]u21{
         0x5E7A,
-    } });
-    try self.map.put(0x2F34, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F34) return .{ .compat = &[_]u21{
         0x5E7F,
-    } });
-    try self.map.put(0x2F35, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F35) return .{ .compat = &[_]u21{
         0x5EF4,
-    } });
-    try self.map.put(0x2F36, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F36) return .{ .compat = &[_]u21{
         0x5EFE,
-    } });
-    try self.map.put(0x2F37, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F37) return .{ .compat = &[_]u21{
         0x5F0B,
-    } });
-    try self.map.put(0x2F38, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F38) return .{ .compat = &[_]u21{
         0x5F13,
-    } });
-    try self.map.put(0x2F39, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F39) return .{ .compat = &[_]u21{
         0x5F50,
-    } });
-    try self.map.put(0x2F3A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F3A) return .{ .compat = &[_]u21{
         0x5F61,
-    } });
-    try self.map.put(0x2F3B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F3B) return .{ .compat = &[_]u21{
         0x5F73,
-    } });
-    try self.map.put(0x2F3C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F3C) return .{ .compat = &[_]u21{
         0x5FC3,
-    } });
-    try self.map.put(0x2F3D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F3D) return .{ .compat = &[_]u21{
         0x6208,
-    } });
-    try self.map.put(0x2F3E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F3E) return .{ .compat = &[_]u21{
         0x6236,
-    } });
-    try self.map.put(0x2F3F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F3F) return .{ .compat = &[_]u21{
         0x624B,
-    } });
-    try self.map.put(0x2F40, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F40) return .{ .compat = &[_]u21{
         0x652F,
-    } });
-    try self.map.put(0x2F41, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F41) return .{ .compat = &[_]u21{
         0x6534,
-    } });
-    try self.map.put(0x2F42, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F42) return .{ .compat = &[_]u21{
         0x6587,
-    } });
-    try self.map.put(0x2F43, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F43) return .{ .compat = &[_]u21{
         0x6597,
-    } });
-    try self.map.put(0x2F44, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F44) return .{ .compat = &[_]u21{
         0x65A4,
-    } });
-    try self.map.put(0x2F45, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F45) return .{ .compat = &[_]u21{
         0x65B9,
-    } });
-    try self.map.put(0x2F46, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F46) return .{ .compat = &[_]u21{
         0x65E0,
-    } });
-    try self.map.put(0x2F47, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F47) return .{ .compat = &[_]u21{
         0x65E5,
-    } });
-    try self.map.put(0x2F48, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F48) return .{ .compat = &[_]u21{
         0x66F0,
-    } });
-    try self.map.put(0x2F49, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F49) return .{ .compat = &[_]u21{
         0x6708,
-    } });
-    try self.map.put(0x2F4A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F4A) return .{ .compat = &[_]u21{
         0x6728,
-    } });
-    try self.map.put(0x2F4B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F4B) return .{ .compat = &[_]u21{
         0x6B20,
-    } });
-    try self.map.put(0x2F4C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F4C) return .{ .compat = &[_]u21{
         0x6B62,
-    } });
-    try self.map.put(0x2F4D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F4D) return .{ .compat = &[_]u21{
         0x6B79,
-    } });
-    try self.map.put(0x2F4E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F4E) return .{ .compat = &[_]u21{
         0x6BB3,
-    } });
-    try self.map.put(0x2F4F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F4F) return .{ .compat = &[_]u21{
         0x6BCB,
-    } });
-    try self.map.put(0x2F50, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F50) return .{ .compat = &[_]u21{
         0x6BD4,
-    } });
-    try self.map.put(0x2F51, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F51) return .{ .compat = &[_]u21{
         0x6BDB,
-    } });
-    try self.map.put(0x2F52, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F52) return .{ .compat = &[_]u21{
         0x6C0F,
-    } });
-    try self.map.put(0x2F53, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F53) return .{ .compat = &[_]u21{
         0x6C14,
-    } });
-    try self.map.put(0x2F54, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F54) return .{ .compat = &[_]u21{
         0x6C34,
-    } });
-    try self.map.put(0x2F55, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F55) return .{ .compat = &[_]u21{
         0x706B,
-    } });
-    try self.map.put(0x2F56, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F56) return .{ .compat = &[_]u21{
         0x722A,
-    } });
-    try self.map.put(0x2F57, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F57) return .{ .compat = &[_]u21{
         0x7236,
-    } });
-    try self.map.put(0x2F58, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F58) return .{ .compat = &[_]u21{
         0x723B,
-    } });
-    try self.map.put(0x2F59, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F59) return .{ .compat = &[_]u21{
         0x723F,
-    } });
-    try self.map.put(0x2F5A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F5A) return .{ .compat = &[_]u21{
         0x7247,
-    } });
-    try self.map.put(0x2F5B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F5B) return .{ .compat = &[_]u21{
         0x7259,
-    } });
-    try self.map.put(0x2F5C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F5C) return .{ .compat = &[_]u21{
         0x725B,
-    } });
-    try self.map.put(0x2F5D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F5D) return .{ .compat = &[_]u21{
         0x72AC,
-    } });
-    try self.map.put(0x2F5E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F5E) return .{ .compat = &[_]u21{
         0x7384,
-    } });
-    try self.map.put(0x2F5F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F5F) return .{ .compat = &[_]u21{
         0x7389,
-    } });
-    try self.map.put(0x2F60, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F60) return .{ .compat = &[_]u21{
         0x74DC,
-    } });
-    try self.map.put(0x2F61, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F61) return .{ .compat = &[_]u21{
         0x74E6,
-    } });
-    try self.map.put(0x2F62, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F62) return .{ .compat = &[_]u21{
         0x7518,
-    } });
-    try self.map.put(0x2F63, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F63) return .{ .compat = &[_]u21{
         0x751F,
-    } });
-    try self.map.put(0x2F64, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F64) return .{ .compat = &[_]u21{
         0x7528,
-    } });
-    try self.map.put(0x2F65, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F65) return .{ .compat = &[_]u21{
         0x7530,
-    } });
-    try self.map.put(0x2F66, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F66) return .{ .compat = &[_]u21{
         0x758B,
-    } });
-    try self.map.put(0x2F67, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F67) return .{ .compat = &[_]u21{
         0x7592,
-    } });
-    try self.map.put(0x2F68, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F68) return .{ .compat = &[_]u21{
         0x7676,
-    } });
-    try self.map.put(0x2F69, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F69) return .{ .compat = &[_]u21{
         0x767D,
-    } });
-    try self.map.put(0x2F6A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F6A) return .{ .compat = &[_]u21{
         0x76AE,
-    } });
-    try self.map.put(0x2F6B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F6B) return .{ .compat = &[_]u21{
         0x76BF,
-    } });
-    try self.map.put(0x2F6C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F6C) return .{ .compat = &[_]u21{
         0x76EE,
-    } });
-    try self.map.put(0x2F6D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F6D) return .{ .compat = &[_]u21{
         0x77DB,
-    } });
-    try self.map.put(0x2F6E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F6E) return .{ .compat = &[_]u21{
         0x77E2,
-    } });
-    try self.map.put(0x2F6F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F6F) return .{ .compat = &[_]u21{
         0x77F3,
-    } });
-    try self.map.put(0x2F70, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F70) return .{ .compat = &[_]u21{
         0x793A,
-    } });
-    try self.map.put(0x2F71, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F71) return .{ .compat = &[_]u21{
         0x79B8,
-    } });
-    try self.map.put(0x2F72, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F72) return .{ .compat = &[_]u21{
         0x79BE,
-    } });
-    try self.map.put(0x2F73, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F73) return .{ .compat = &[_]u21{
         0x7A74,
-    } });
-    try self.map.put(0x2F74, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F74) return .{ .compat = &[_]u21{
         0x7ACB,
-    } });
-    try self.map.put(0x2F75, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F75) return .{ .compat = &[_]u21{
         0x7AF9,
-    } });
-    try self.map.put(0x2F76, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F76) return .{ .compat = &[_]u21{
         0x7C73,
-    } });
-    try self.map.put(0x2F77, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F77) return .{ .compat = &[_]u21{
         0x7CF8,
-    } });
-    try self.map.put(0x2F78, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F78) return .{ .compat = &[_]u21{
         0x7F36,
-    } });
-    try self.map.put(0x2F79, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F79) return .{ .compat = &[_]u21{
         0x7F51,
-    } });
-    try self.map.put(0x2F7A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F7A) return .{ .compat = &[_]u21{
         0x7F8A,
-    } });
-    try self.map.put(0x2F7B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F7B) return .{ .compat = &[_]u21{
         0x7FBD,
-    } });
-    try self.map.put(0x2F7C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F7C) return .{ .compat = &[_]u21{
         0x8001,
-    } });
-    try self.map.put(0x2F7D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F7D) return .{ .compat = &[_]u21{
         0x800C,
-    } });
-    try self.map.put(0x2F7E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F7E) return .{ .compat = &[_]u21{
         0x8012,
-    } });
-    try self.map.put(0x2F7F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F7F) return .{ .compat = &[_]u21{
         0x8033,
-    } });
-    try self.map.put(0x2F80, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F80) return .{ .compat = &[_]u21{
         0x807F,
-    } });
-    try self.map.put(0x2F81, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F81) return .{ .compat = &[_]u21{
         0x8089,
-    } });
-    try self.map.put(0x2F82, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F82) return .{ .compat = &[_]u21{
         0x81E3,
-    } });
-    try self.map.put(0x2F83, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F83) return .{ .compat = &[_]u21{
         0x81EA,
-    } });
-    try self.map.put(0x2F84, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F84) return .{ .compat = &[_]u21{
         0x81F3,
-    } });
-    try self.map.put(0x2F85, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F85) return .{ .compat = &[_]u21{
         0x81FC,
-    } });
-    try self.map.put(0x2F86, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F86) return .{ .compat = &[_]u21{
         0x820C,
-    } });
-    try self.map.put(0x2F87, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F87) return .{ .compat = &[_]u21{
         0x821B,
-    } });
-    try self.map.put(0x2F88, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F88) return .{ .compat = &[_]u21{
         0x821F,
-    } });
-    try self.map.put(0x2F89, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F89) return .{ .compat = &[_]u21{
         0x826E,
-    } });
-    try self.map.put(0x2F8A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F8A) return .{ .compat = &[_]u21{
         0x8272,
-    } });
-    try self.map.put(0x2F8B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F8B) return .{ .compat = &[_]u21{
         0x8278,
-    } });
-    try self.map.put(0x2F8C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F8C) return .{ .compat = &[_]u21{
         0x864D,
-    } });
-    try self.map.put(0x2F8D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F8D) return .{ .compat = &[_]u21{
         0x866B,
-    } });
-    try self.map.put(0x2F8E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F8E) return .{ .compat = &[_]u21{
         0x8840,
-    } });
-    try self.map.put(0x2F8F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F8F) return .{ .compat = &[_]u21{
         0x884C,
-    } });
-    try self.map.put(0x2F90, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F90) return .{ .compat = &[_]u21{
         0x8863,
-    } });
-    try self.map.put(0x2F91, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F91) return .{ .compat = &[_]u21{
         0x897E,
-    } });
-    try self.map.put(0x2F92, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F92) return .{ .compat = &[_]u21{
         0x898B,
-    } });
-    try self.map.put(0x2F93, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F93) return .{ .compat = &[_]u21{
         0x89D2,
-    } });
-    try self.map.put(0x2F94, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F94) return .{ .compat = &[_]u21{
         0x8A00,
-    } });
-    try self.map.put(0x2F95, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F95) return .{ .compat = &[_]u21{
         0x8C37,
-    } });
-    try self.map.put(0x2F96, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F96) return .{ .compat = &[_]u21{
         0x8C46,
-    } });
-    try self.map.put(0x2F97, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F97) return .{ .compat = &[_]u21{
         0x8C55,
-    } });
-    try self.map.put(0x2F98, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F98) return .{ .compat = &[_]u21{
         0x8C78,
-    } });
-    try self.map.put(0x2F99, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F99) return .{ .compat = &[_]u21{
         0x8C9D,
-    } });
-    try self.map.put(0x2F9A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F9A) return .{ .compat = &[_]u21{
         0x8D64,
-    } });
-    try self.map.put(0x2F9B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F9B) return .{ .compat = &[_]u21{
         0x8D70,
-    } });
-    try self.map.put(0x2F9C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F9C) return .{ .compat = &[_]u21{
         0x8DB3,
-    } });
-    try self.map.put(0x2F9D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F9D) return .{ .compat = &[_]u21{
         0x8EAB,
-    } });
-    try self.map.put(0x2F9E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F9E) return .{ .compat = &[_]u21{
         0x8ECA,
-    } });
-    try self.map.put(0x2F9F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2F9F) return .{ .compat = &[_]u21{
         0x8F9B,
-    } });
-    try self.map.put(0x2FA0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FA0) return .{ .compat = &[_]u21{
         0x8FB0,
-    } });
-    try self.map.put(0x2FA1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FA1) return .{ .compat = &[_]u21{
         0x8FB5,
-    } });
-    try self.map.put(0x2FA2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FA2) return .{ .compat = &[_]u21{
         0x9091,
-    } });
-    try self.map.put(0x2FA3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FA3) return .{ .compat = &[_]u21{
         0x9149,
-    } });
-    try self.map.put(0x2FA4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FA4) return .{ .compat = &[_]u21{
         0x91C6,
-    } });
-    try self.map.put(0x2FA5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FA5) return .{ .compat = &[_]u21{
         0x91CC,
-    } });
-    try self.map.put(0x2FA6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FA6) return .{ .compat = &[_]u21{
         0x91D1,
-    } });
-    try self.map.put(0x2FA7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FA7) return .{ .compat = &[_]u21{
         0x9577,
-    } });
-    try self.map.put(0x2FA8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FA8) return .{ .compat = &[_]u21{
         0x9580,
-    } });
-    try self.map.put(0x2FA9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FA9) return .{ .compat = &[_]u21{
         0x961C,
-    } });
-    try self.map.put(0x2FAA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FAA) return .{ .compat = &[_]u21{
         0x96B6,
-    } });
-    try self.map.put(0x2FAB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FAB) return .{ .compat = &[_]u21{
         0x96B9,
-    } });
-    try self.map.put(0x2FAC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FAC) return .{ .compat = &[_]u21{
         0x96E8,
-    } });
-    try self.map.put(0x2FAD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FAD) return .{ .compat = &[_]u21{
         0x9751,
-    } });
-    try self.map.put(0x2FAE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FAE) return .{ .compat = &[_]u21{
         0x975E,
-    } });
-    try self.map.put(0x2FAF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FAF) return .{ .compat = &[_]u21{
         0x9762,
-    } });
-    try self.map.put(0x2FB0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FB0) return .{ .compat = &[_]u21{
         0x9769,
-    } });
-    try self.map.put(0x2FB1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FB1) return .{ .compat = &[_]u21{
         0x97CB,
-    } });
-    try self.map.put(0x2FB2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FB2) return .{ .compat = &[_]u21{
         0x97ED,
-    } });
-    try self.map.put(0x2FB3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FB3) return .{ .compat = &[_]u21{
         0x97F3,
-    } });
-    try self.map.put(0x2FB4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FB4) return .{ .compat = &[_]u21{
         0x9801,
-    } });
-    try self.map.put(0x2FB5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FB5) return .{ .compat = &[_]u21{
         0x98A8,
-    } });
-    try self.map.put(0x2FB6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FB6) return .{ .compat = &[_]u21{
         0x98DB,
-    } });
-    try self.map.put(0x2FB7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FB7) return .{ .compat = &[_]u21{
         0x98DF,
-    } });
-    try self.map.put(0x2FB8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FB8) return .{ .compat = &[_]u21{
         0x9996,
-    } });
-    try self.map.put(0x2FB9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FB9) return .{ .compat = &[_]u21{
         0x9999,
-    } });
-    try self.map.put(0x2FBA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FBA) return .{ .compat = &[_]u21{
         0x99AC,
-    } });
-    try self.map.put(0x2FBB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FBB) return .{ .compat = &[_]u21{
         0x9AA8,
-    } });
-    try self.map.put(0x2FBC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FBC) return .{ .compat = &[_]u21{
         0x9AD8,
-    } });
-    try self.map.put(0x2FBD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FBD) return .{ .compat = &[_]u21{
         0x9ADF,
-    } });
-    try self.map.put(0x2FBE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FBE) return .{ .compat = &[_]u21{
         0x9B25,
-    } });
-    try self.map.put(0x2FBF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FBF) return .{ .compat = &[_]u21{
         0x9B2F,
-    } });
-    try self.map.put(0x2FC0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FC0) return .{ .compat = &[_]u21{
         0x9B32,
-    } });
-    try self.map.put(0x2FC1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FC1) return .{ .compat = &[_]u21{
         0x9B3C,
-    } });
-    try self.map.put(0x2FC2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FC2) return .{ .compat = &[_]u21{
         0x9B5A,
-    } });
-    try self.map.put(0x2FC3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FC3) return .{ .compat = &[_]u21{
         0x9CE5,
-    } });
-    try self.map.put(0x2FC4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FC4) return .{ .compat = &[_]u21{
         0x9E75,
-    } });
-    try self.map.put(0x2FC5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FC5) return .{ .compat = &[_]u21{
         0x9E7F,
-    } });
-    try self.map.put(0x2FC6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FC6) return .{ .compat = &[_]u21{
         0x9EA5,
-    } });
-    try self.map.put(0x2FC7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FC7) return .{ .compat = &[_]u21{
         0x9EBB,
-    } });
-    try self.map.put(0x2FC8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FC8) return .{ .compat = &[_]u21{
         0x9EC3,
-    } });
-    try self.map.put(0x2FC9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FC9) return .{ .compat = &[_]u21{
         0x9ECD,
-    } });
-    try self.map.put(0x2FCA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FCA) return .{ .compat = &[_]u21{
         0x9ED1,
-    } });
-    try self.map.put(0x2FCB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FCB) return .{ .compat = &[_]u21{
         0x9EF9,
-    } });
-    try self.map.put(0x2FCC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FCC) return .{ .compat = &[_]u21{
         0x9EFD,
-    } });
-    try self.map.put(0x2FCD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FCD) return .{ .compat = &[_]u21{
         0x9F0E,
-    } });
-    try self.map.put(0x2FCE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FCE) return .{ .compat = &[_]u21{
         0x9F13,
-    } });
-    try self.map.put(0x2FCF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FCF) return .{ .compat = &[_]u21{
         0x9F20,
-    } });
-    try self.map.put(0x2FD0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FD0) return .{ .compat = &[_]u21{
         0x9F3B,
-    } });
-    try self.map.put(0x2FD1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FD1) return .{ .compat = &[_]u21{
         0x9F4A,
-    } });
-    try self.map.put(0x2FD2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FD2) return .{ .compat = &[_]u21{
         0x9F52,
-    } });
-    try self.map.put(0x2FD3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FD3) return .{ .compat = &[_]u21{
         0x9F8D,
-    } });
-    try self.map.put(0x2FD4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FD4) return .{ .compat = &[_]u21{
         0x9F9C,
-    } });
-    try self.map.put(0x2FD5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x2FD5) return .{ .compat = &[_]u21{
         0x9FA0,
-    } });
-    try self.map.put(0x3000, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3000) return .{ .compat = &[_]u21{
         0x0020,
-    } });
-    try self.map.put(0x3036, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3036) return .{ .compat = &[_]u21{
         0x3012,
-    } });
-    try self.map.put(0x3038, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3038) return .{ .compat = &[_]u21{
         0x5341,
-    } });
-    try self.map.put(0x3039, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3039) return .{ .compat = &[_]u21{
         0x5344,
-    } });
-    try self.map.put(0x303A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x303A) return .{ .compat = &[_]u21{
         0x5345,
-    } });
-    try self.map.put(0x304C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x304C) return .{ .canon = [2]u21{
         0x304B,
         0x3099,
-    } });
-    try self.map.put(0x304E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x304E) return .{ .canon = [2]u21{
         0x304D,
         0x3099,
-    } });
-    try self.map.put(0x3050, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3050) return .{ .canon = [2]u21{
         0x304F,
         0x3099,
-    } });
-    try self.map.put(0x3052, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3052) return .{ .canon = [2]u21{
         0x3051,
         0x3099,
-    } });
-    try self.map.put(0x3054, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3054) return .{ .canon = [2]u21{
         0x3053,
         0x3099,
-    } });
-    try self.map.put(0x3056, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3056) return .{ .canon = [2]u21{
         0x3055,
         0x3099,
-    } });
-    try self.map.put(0x3058, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3058) return .{ .canon = [2]u21{
         0x3057,
         0x3099,
-    } });
-    try self.map.put(0x305A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x305A) return .{ .canon = [2]u21{
         0x3059,
         0x3099,
-    } });
-    try self.map.put(0x305C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x305C) return .{ .canon = [2]u21{
         0x305B,
         0x3099,
-    } });
-    try self.map.put(0x305E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x305E) return .{ .canon = [2]u21{
         0x305D,
         0x3099,
-    } });
-    try self.map.put(0x3060, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3060) return .{ .canon = [2]u21{
         0x305F,
         0x3099,
-    } });
-    try self.map.put(0x3062, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3062) return .{ .canon = [2]u21{
         0x3061,
         0x3099,
-    } });
-    try self.map.put(0x3065, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3065) return .{ .canon = [2]u21{
         0x3064,
         0x3099,
-    } });
-    try self.map.put(0x3067, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3067) return .{ .canon = [2]u21{
         0x3066,
         0x3099,
-    } });
-    try self.map.put(0x3069, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3069) return .{ .canon = [2]u21{
         0x3068,
         0x3099,
-    } });
-    try self.map.put(0x3070, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3070) return .{ .canon = [2]u21{
         0x306F,
         0x3099,
-    } });
-    try self.map.put(0x3071, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3071) return .{ .canon = [2]u21{
         0x306F,
         0x309A,
-    } });
-    try self.map.put(0x3073, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3073) return .{ .canon = [2]u21{
         0x3072,
         0x3099,
-    } });
-    try self.map.put(0x3074, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3074) return .{ .canon = [2]u21{
         0x3072,
         0x309A,
-    } });
-    try self.map.put(0x3076, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3076) return .{ .canon = [2]u21{
         0x3075,
         0x3099,
-    } });
-    try self.map.put(0x3077, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3077) return .{ .canon = [2]u21{
         0x3075,
         0x309A,
-    } });
-    try self.map.put(0x3079, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3079) return .{ .canon = [2]u21{
         0x3078,
         0x3099,
-    } });
-    try self.map.put(0x307A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x307A) return .{ .canon = [2]u21{
         0x3078,
         0x309A,
-    } });
-    try self.map.put(0x307C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x307C) return .{ .canon = [2]u21{
         0x307B,
         0x3099,
-    } });
-    try self.map.put(0x307D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x307D) return .{ .canon = [2]u21{
         0x307B,
         0x309A,
-    } });
-    try self.map.put(0x3094, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x3094) return .{ .canon = [2]u21{
         0x3046,
         0x3099,
-    } });
-    try self.map.put(0x309B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x309B) return .{ .compat = &[_]u21{
         0x0020,
         0x3099,
-    } });
-    try self.map.put(0x309C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x309C) return .{ .compat = &[_]u21{
         0x0020,
         0x309A,
-    } });
-    try self.map.put(0x309E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x309E) return .{ .canon = [2]u21{
         0x309D,
         0x3099,
-    } });
-    try self.map.put(0x309F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x309F) return .{ .compat = &[_]u21{
         0x3088,
         0x308A,
-    } });
-    try self.map.put(0x30AC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30AC) return .{ .canon = [2]u21{
         0x30AB,
         0x3099,
-    } });
-    try self.map.put(0x30AE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30AE) return .{ .canon = [2]u21{
         0x30AD,
         0x3099,
-    } });
-    try self.map.put(0x30B0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30B0) return .{ .canon = [2]u21{
         0x30AF,
         0x3099,
-    } });
-    try self.map.put(0x30B2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30B2) return .{ .canon = [2]u21{
         0x30B1,
         0x3099,
-    } });
-    try self.map.put(0x30B4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30B4) return .{ .canon = [2]u21{
         0x30B3,
         0x3099,
-    } });
-    try self.map.put(0x30B6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30B6) return .{ .canon = [2]u21{
         0x30B5,
         0x3099,
-    } });
-    try self.map.put(0x30B8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30B8) return .{ .canon = [2]u21{
         0x30B7,
         0x3099,
-    } });
-    try self.map.put(0x30BA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30BA) return .{ .canon = [2]u21{
         0x30B9,
         0x3099,
-    } });
-    try self.map.put(0x30BC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30BC) return .{ .canon = [2]u21{
         0x30BB,
         0x3099,
-    } });
-    try self.map.put(0x30BE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30BE) return .{ .canon = [2]u21{
         0x30BD,
         0x3099,
-    } });
-    try self.map.put(0x30C0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30C0) return .{ .canon = [2]u21{
         0x30BF,
         0x3099,
-    } });
-    try self.map.put(0x30C2, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30C2) return .{ .canon = [2]u21{
         0x30C1,
         0x3099,
-    } });
-    try self.map.put(0x30C5, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30C5) return .{ .canon = [2]u21{
         0x30C4,
         0x3099,
-    } });
-    try self.map.put(0x30C7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30C7) return .{ .canon = [2]u21{
         0x30C6,
         0x3099,
-    } });
-    try self.map.put(0x30C9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30C9) return .{ .canon = [2]u21{
         0x30C8,
         0x3099,
-    } });
-    try self.map.put(0x30D0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30D0) return .{ .canon = [2]u21{
         0x30CF,
         0x3099,
-    } });
-    try self.map.put(0x30D1, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30D1) return .{ .canon = [2]u21{
         0x30CF,
         0x309A,
-    } });
-    try self.map.put(0x30D3, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30D3) return .{ .canon = [2]u21{
         0x30D2,
         0x3099,
-    } });
-    try self.map.put(0x30D4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30D4) return .{ .canon = [2]u21{
         0x30D2,
         0x309A,
-    } });
-    try self.map.put(0x30D6, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30D6) return .{ .canon = [2]u21{
         0x30D5,
         0x3099,
-    } });
-    try self.map.put(0x30D7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30D7) return .{ .canon = [2]u21{
         0x30D5,
         0x309A,
-    } });
-    try self.map.put(0x30D9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30D9) return .{ .canon = [2]u21{
         0x30D8,
         0x3099,
-    } });
-    try self.map.put(0x30DA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30DA) return .{ .canon = [2]u21{
         0x30D8,
         0x309A,
-    } });
-    try self.map.put(0x30DC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30DC) return .{ .canon = [2]u21{
         0x30DB,
         0x3099,
-    } });
-    try self.map.put(0x30DD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30DD) return .{ .canon = [2]u21{
         0x30DB,
         0x309A,
-    } });
-    try self.map.put(0x30F4, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30F4) return .{ .canon = [2]u21{
         0x30A6,
         0x3099,
-    } });
-    try self.map.put(0x30F7, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30F7) return .{ .canon = [2]u21{
         0x30EF,
         0x3099,
-    } });
-    try self.map.put(0x30F8, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30F8) return .{ .canon = [2]u21{
         0x30F0,
         0x3099,
-    } });
-    try self.map.put(0x30F9, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30F9) return .{ .canon = [2]u21{
         0x30F1,
         0x3099,
-    } });
-    try self.map.put(0x30FA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30FA) return .{ .canon = [2]u21{
         0x30F2,
         0x3099,
-    } });
-    try self.map.put(0x30FE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x30FE) return .{ .canon = [2]u21{
         0x30FD,
         0x3099,
-    } });
-    try self.map.put(0x30FF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x30FF) return .{ .compat = &[_]u21{
         0x30B3,
         0x30C8,
-    } });
-    try self.map.put(0x3131, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3131) return .{ .compat = &[_]u21{
         0x1100,
-    } });
-    try self.map.put(0x3132, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3132) return .{ .compat = &[_]u21{
         0x1101,
-    } });
-    try self.map.put(0x3133, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3133) return .{ .compat = &[_]u21{
         0x11AA,
-    } });
-    try self.map.put(0x3134, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3134) return .{ .compat = &[_]u21{
         0x1102,
-    } });
-    try self.map.put(0x3135, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3135) return .{ .compat = &[_]u21{
         0x11AC,
-    } });
-    try self.map.put(0x3136, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3136) return .{ .compat = &[_]u21{
         0x11AD,
-    } });
-    try self.map.put(0x3137, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3137) return .{ .compat = &[_]u21{
         0x1103,
-    } });
-    try self.map.put(0x3138, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3138) return .{ .compat = &[_]u21{
         0x1104,
-    } });
-    try self.map.put(0x3139, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3139) return .{ .compat = &[_]u21{
         0x1105,
-    } });
-    try self.map.put(0x313A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x313A) return .{ .compat = &[_]u21{
         0x11B0,
-    } });
-    try self.map.put(0x313B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x313B) return .{ .compat = &[_]u21{
         0x11B1,
-    } });
-    try self.map.put(0x313C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x313C) return .{ .compat = &[_]u21{
         0x11B2,
-    } });
-    try self.map.put(0x313D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x313D) return .{ .compat = &[_]u21{
         0x11B3,
-    } });
-    try self.map.put(0x313E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x313E) return .{ .compat = &[_]u21{
         0x11B4,
-    } });
-    try self.map.put(0x313F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x313F) return .{ .compat = &[_]u21{
         0x11B5,
-    } });
-    try self.map.put(0x3140, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3140) return .{ .compat = &[_]u21{
         0x111A,
-    } });
-    try self.map.put(0x3141, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3141) return .{ .compat = &[_]u21{
         0x1106,
-    } });
-    try self.map.put(0x3142, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3142) return .{ .compat = &[_]u21{
         0x1107,
-    } });
-    try self.map.put(0x3143, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3143) return .{ .compat = &[_]u21{
         0x1108,
-    } });
-    try self.map.put(0x3144, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3144) return .{ .compat = &[_]u21{
         0x1121,
-    } });
-    try self.map.put(0x3145, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3145) return .{ .compat = &[_]u21{
         0x1109,
-    } });
-    try self.map.put(0x3146, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3146) return .{ .compat = &[_]u21{
         0x110A,
-    } });
-    try self.map.put(0x3147, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3147) return .{ .compat = &[_]u21{
         0x110B,
-    } });
-    try self.map.put(0x3148, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3148) return .{ .compat = &[_]u21{
         0x110C,
-    } });
-    try self.map.put(0x3149, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3149) return .{ .compat = &[_]u21{
         0x110D,
-    } });
-    try self.map.put(0x314A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x314A) return .{ .compat = &[_]u21{
         0x110E,
-    } });
-    try self.map.put(0x314B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x314B) return .{ .compat = &[_]u21{
         0x110F,
-    } });
-    try self.map.put(0x314C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x314C) return .{ .compat = &[_]u21{
         0x1110,
-    } });
-    try self.map.put(0x314D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x314D) return .{ .compat = &[_]u21{
         0x1111,
-    } });
-    try self.map.put(0x314E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x314E) return .{ .compat = &[_]u21{
         0x1112,
-    } });
-    try self.map.put(0x314F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x314F) return .{ .compat = &[_]u21{
         0x1161,
-    } });
-    try self.map.put(0x3150, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3150) return .{ .compat = &[_]u21{
         0x1162,
-    } });
-    try self.map.put(0x3151, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3151) return .{ .compat = &[_]u21{
         0x1163,
-    } });
-    try self.map.put(0x3152, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3152) return .{ .compat = &[_]u21{
         0x1164,
-    } });
-    try self.map.put(0x3153, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3153) return .{ .compat = &[_]u21{
         0x1165,
-    } });
-    try self.map.put(0x3154, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3154) return .{ .compat = &[_]u21{
         0x1166,
-    } });
-    try self.map.put(0x3155, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3155) return .{ .compat = &[_]u21{
         0x1167,
-    } });
-    try self.map.put(0x3156, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3156) return .{ .compat = &[_]u21{
         0x1168,
-    } });
-    try self.map.put(0x3157, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3157) return .{ .compat = &[_]u21{
         0x1169,
-    } });
-    try self.map.put(0x3158, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3158) return .{ .compat = &[_]u21{
         0x116A,
-    } });
-    try self.map.put(0x3159, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3159) return .{ .compat = &[_]u21{
         0x116B,
-    } });
-    try self.map.put(0x315A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x315A) return .{ .compat = &[_]u21{
         0x116C,
-    } });
-    try self.map.put(0x315B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x315B) return .{ .compat = &[_]u21{
         0x116D,
-    } });
-    try self.map.put(0x315C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x315C) return .{ .compat = &[_]u21{
         0x116E,
-    } });
-    try self.map.put(0x315D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x315D) return .{ .compat = &[_]u21{
         0x116F,
-    } });
-    try self.map.put(0x315E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x315E) return .{ .compat = &[_]u21{
         0x1170,
-    } });
-    try self.map.put(0x315F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x315F) return .{ .compat = &[_]u21{
         0x1171,
-    } });
-    try self.map.put(0x3160, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3160) return .{ .compat = &[_]u21{
         0x1172,
-    } });
-    try self.map.put(0x3161, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3161) return .{ .compat = &[_]u21{
         0x1173,
-    } });
-    try self.map.put(0x3162, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3162) return .{ .compat = &[_]u21{
         0x1174,
-    } });
-    try self.map.put(0x3163, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3163) return .{ .compat = &[_]u21{
         0x1175,
-    } });
-    try self.map.put(0x3164, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3164) return .{ .compat = &[_]u21{
         0x1160,
-    } });
-    try self.map.put(0x3165, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3165) return .{ .compat = &[_]u21{
         0x1114,
-    } });
-    try self.map.put(0x3166, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3166) return .{ .compat = &[_]u21{
         0x1115,
-    } });
-    try self.map.put(0x3167, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3167) return .{ .compat = &[_]u21{
         0x11C7,
-    } });
-    try self.map.put(0x3168, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3168) return .{ .compat = &[_]u21{
         0x11C8,
-    } });
-    try self.map.put(0x3169, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3169) return .{ .compat = &[_]u21{
         0x11CC,
-    } });
-    try self.map.put(0x316A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x316A) return .{ .compat = &[_]u21{
         0x11CE,
-    } });
-    try self.map.put(0x316B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x316B) return .{ .compat = &[_]u21{
         0x11D3,
-    } });
-    try self.map.put(0x316C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x316C) return .{ .compat = &[_]u21{
         0x11D7,
-    } });
-    try self.map.put(0x316D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x316D) return .{ .compat = &[_]u21{
         0x11D9,
-    } });
-    try self.map.put(0x316E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x316E) return .{ .compat = &[_]u21{
         0x111C,
-    } });
-    try self.map.put(0x316F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x316F) return .{ .compat = &[_]u21{
         0x11DD,
-    } });
-    try self.map.put(0x3170, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3170) return .{ .compat = &[_]u21{
         0x11DF,
-    } });
-    try self.map.put(0x3171, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3171) return .{ .compat = &[_]u21{
         0x111D,
-    } });
-    try self.map.put(0x3172, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3172) return .{ .compat = &[_]u21{
         0x111E,
-    } });
-    try self.map.put(0x3173, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3173) return .{ .compat = &[_]u21{
         0x1120,
-    } });
-    try self.map.put(0x3174, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3174) return .{ .compat = &[_]u21{
         0x1122,
-    } });
-    try self.map.put(0x3175, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3175) return .{ .compat = &[_]u21{
         0x1123,
-    } });
-    try self.map.put(0x3176, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3176) return .{ .compat = &[_]u21{
         0x1127,
-    } });
-    try self.map.put(0x3177, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3177) return .{ .compat = &[_]u21{
         0x1129,
-    } });
-    try self.map.put(0x3178, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3178) return .{ .compat = &[_]u21{
         0x112B,
-    } });
-    try self.map.put(0x3179, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3179) return .{ .compat = &[_]u21{
         0x112C,
-    } });
-    try self.map.put(0x317A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x317A) return .{ .compat = &[_]u21{
         0x112D,
-    } });
-    try self.map.put(0x317B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x317B) return .{ .compat = &[_]u21{
         0x112E,
-    } });
-    try self.map.put(0x317C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x317C) return .{ .compat = &[_]u21{
         0x112F,
-    } });
-    try self.map.put(0x317D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x317D) return .{ .compat = &[_]u21{
         0x1132,
-    } });
-    try self.map.put(0x317E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x317E) return .{ .compat = &[_]u21{
         0x1136,
-    } });
-    try self.map.put(0x317F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x317F) return .{ .compat = &[_]u21{
         0x1140,
-    } });
-    try self.map.put(0x3180, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3180) return .{ .compat = &[_]u21{
         0x1147,
-    } });
-    try self.map.put(0x3181, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3181) return .{ .compat = &[_]u21{
         0x114C,
-    } });
-    try self.map.put(0x3182, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3182) return .{ .compat = &[_]u21{
         0x11F1,
-    } });
-    try self.map.put(0x3183, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3183) return .{ .compat = &[_]u21{
         0x11F2,
-    } });
-    try self.map.put(0x3184, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3184) return .{ .compat = &[_]u21{
         0x1157,
-    } });
-    try self.map.put(0x3185, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3185) return .{ .compat = &[_]u21{
         0x1158,
-    } });
-    try self.map.put(0x3186, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3186) return .{ .compat = &[_]u21{
         0x1159,
-    } });
-    try self.map.put(0x3187, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3187) return .{ .compat = &[_]u21{
         0x1184,
-    } });
-    try self.map.put(0x3188, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3188) return .{ .compat = &[_]u21{
         0x1185,
-    } });
-    try self.map.put(0x3189, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3189) return .{ .compat = &[_]u21{
         0x1188,
-    } });
-    try self.map.put(0x318A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x318A) return .{ .compat = &[_]u21{
         0x1191,
-    } });
-    try self.map.put(0x318B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x318B) return .{ .compat = &[_]u21{
         0x1192,
-    } });
-    try self.map.put(0x318C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x318C) return .{ .compat = &[_]u21{
         0x1194,
-    } });
-    try self.map.put(0x318D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x318D) return .{ .compat = &[_]u21{
         0x119E,
-    } });
-    try self.map.put(0x318E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x318E) return .{ .compat = &[_]u21{
         0x11A1,
-    } });
-    try self.map.put(0x3192, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3192) return .{ .compat = &[_]u21{
         0x4E00,
-    } });
-    try self.map.put(0x3193, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3193) return .{ .compat = &[_]u21{
         0x4E8C,
-    } });
-    try self.map.put(0x3194, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3194) return .{ .compat = &[_]u21{
         0x4E09,
-    } });
-    try self.map.put(0x3195, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3195) return .{ .compat = &[_]u21{
         0x56DB,
-    } });
-    try self.map.put(0x3196, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3196) return .{ .compat = &[_]u21{
         0x4E0A,
-    } });
-    try self.map.put(0x3197, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3197) return .{ .compat = &[_]u21{
         0x4E2D,
-    } });
-    try self.map.put(0x3198, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3198) return .{ .compat = &[_]u21{
         0x4E0B,
-    } });
-    try self.map.put(0x3199, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3199) return .{ .compat = &[_]u21{
         0x7532,
-    } });
-    try self.map.put(0x319A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x319A) return .{ .compat = &[_]u21{
         0x4E59,
-    } });
-    try self.map.put(0x319B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x319B) return .{ .compat = &[_]u21{
         0x4E19,
-    } });
-    try self.map.put(0x319C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x319C) return .{ .compat = &[_]u21{
         0x4E01,
-    } });
-    try self.map.put(0x319D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x319D) return .{ .compat = &[_]u21{
         0x5929,
-    } });
-    try self.map.put(0x319E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x319E) return .{ .compat = &[_]u21{
         0x5730,
-    } });
-    try self.map.put(0x319F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x319F) return .{ .compat = &[_]u21{
         0x4EBA,
-    } });
-    try self.map.put(0x3200, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3200) return .{ .compat = &[_]u21{
         0x0028,
         0x1100,
         0x0029,
-    } });
-    try self.map.put(0x3201, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3201) return .{ .compat = &[_]u21{
         0x0028,
         0x1102,
         0x0029,
-    } });
-    try self.map.put(0x3202, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3202) return .{ .compat = &[_]u21{
         0x0028,
         0x1103,
         0x0029,
-    } });
-    try self.map.put(0x3203, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3203) return .{ .compat = &[_]u21{
         0x0028,
         0x1105,
         0x0029,
-    } });
-    try self.map.put(0x3204, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3204) return .{ .compat = &[_]u21{
         0x0028,
         0x1106,
         0x0029,
-    } });
-    try self.map.put(0x3205, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3205) return .{ .compat = &[_]u21{
         0x0028,
         0x1107,
         0x0029,
-    } });
-    try self.map.put(0x3206, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3206) return .{ .compat = &[_]u21{
         0x0028,
         0x1109,
         0x0029,
-    } });
-    try self.map.put(0x3207, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3207) return .{ .compat = &[_]u21{
         0x0028,
         0x110B,
         0x0029,
-    } });
-    try self.map.put(0x3208, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3208) return .{ .compat = &[_]u21{
         0x0028,
         0x110C,
         0x0029,
-    } });
-    try self.map.put(0x3209, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3209) return .{ .compat = &[_]u21{
         0x0028,
         0x110E,
         0x0029,
-    } });
-    try self.map.put(0x320A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x320A) return .{ .compat = &[_]u21{
         0x0028,
         0x110F,
         0x0029,
-    } });
-    try self.map.put(0x320B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x320B) return .{ .compat = &[_]u21{
         0x0028,
         0x1110,
         0x0029,
-    } });
-    try self.map.put(0x320C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x320C) return .{ .compat = &[_]u21{
         0x0028,
         0x1111,
         0x0029,
-    } });
-    try self.map.put(0x320D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x320D) return .{ .compat = &[_]u21{
         0x0028,
         0x1112,
         0x0029,
-    } });
-    try self.map.put(0x320E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x320E) return .{ .compat = &[_]u21{
         0x0028,
         0x1100,
         0x1161,
         0x0029,
-    } });
-    try self.map.put(0x320F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x320F) return .{ .compat = &[_]u21{
         0x0028,
         0x1102,
         0x1161,
         0x0029,
-    } });
-    try self.map.put(0x3210, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3210) return .{ .compat = &[_]u21{
         0x0028,
         0x1103,
         0x1161,
         0x0029,
-    } });
-    try self.map.put(0x3211, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3211) return .{ .compat = &[_]u21{
         0x0028,
         0x1105,
         0x1161,
         0x0029,
-    } });
-    try self.map.put(0x3212, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3212) return .{ .compat = &[_]u21{
         0x0028,
         0x1106,
         0x1161,
         0x0029,
-    } });
-    try self.map.put(0x3213, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3213) return .{ .compat = &[_]u21{
         0x0028,
         0x1107,
         0x1161,
         0x0029,
-    } });
-    try self.map.put(0x3214, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3214) return .{ .compat = &[_]u21{
         0x0028,
         0x1109,
         0x1161,
         0x0029,
-    } });
-    try self.map.put(0x3215, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3215) return .{ .compat = &[_]u21{
         0x0028,
         0x110B,
         0x1161,
         0x0029,
-    } });
-    try self.map.put(0x3216, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3216) return .{ .compat = &[_]u21{
         0x0028,
         0x110C,
         0x1161,
         0x0029,
-    } });
-    try self.map.put(0x3217, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3217) return .{ .compat = &[_]u21{
         0x0028,
         0x110E,
         0x1161,
         0x0029,
-    } });
-    try self.map.put(0x3218, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3218) return .{ .compat = &[_]u21{
         0x0028,
         0x110F,
         0x1161,
         0x0029,
-    } });
-    try self.map.put(0x3219, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3219) return .{ .compat = &[_]u21{
         0x0028,
         0x1110,
         0x1161,
         0x0029,
-    } });
-    try self.map.put(0x321A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x321A) return .{ .compat = &[_]u21{
         0x0028,
         0x1111,
         0x1161,
         0x0029,
-    } });
-    try self.map.put(0x321B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x321B) return .{ .compat = &[_]u21{
         0x0028,
         0x1112,
         0x1161,
         0x0029,
-    } });
-    try self.map.put(0x321C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x321C) return .{ .compat = &[_]u21{
         0x0028,
         0x110C,
         0x116E,
         0x0029,
-    } });
-    try self.map.put(0x321D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x321D) return .{ .compat = &[_]u21{
         0x0028,
         0x110B,
         0x1169,
@@ -6950,5128 +6947,5128 @@ fn addEntries(self: *Self) !void {
         0x1165,
         0x11AB,
         0x0029,
-    } });
-    try self.map.put(0x321E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x321E) return .{ .compat = &[_]u21{
         0x0028,
         0x110B,
         0x1169,
         0x1112,
         0x116E,
         0x0029,
-    } });
-    try self.map.put(0x3220, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3220) return .{ .compat = &[_]u21{
         0x0028,
         0x4E00,
         0x0029,
-    } });
-    try self.map.put(0x3221, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3221) return .{ .compat = &[_]u21{
         0x0028,
         0x4E8C,
         0x0029,
-    } });
-    try self.map.put(0x3222, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3222) return .{ .compat = &[_]u21{
         0x0028,
         0x4E09,
         0x0029,
-    } });
-    try self.map.put(0x3223, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3223) return .{ .compat = &[_]u21{
         0x0028,
         0x56DB,
         0x0029,
-    } });
-    try self.map.put(0x3224, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3224) return .{ .compat = &[_]u21{
         0x0028,
         0x4E94,
         0x0029,
-    } });
-    try self.map.put(0x3225, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3225) return .{ .compat = &[_]u21{
         0x0028,
         0x516D,
         0x0029,
-    } });
-    try self.map.put(0x3226, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3226) return .{ .compat = &[_]u21{
         0x0028,
         0x4E03,
         0x0029,
-    } });
-    try self.map.put(0x3227, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3227) return .{ .compat = &[_]u21{
         0x0028,
         0x516B,
         0x0029,
-    } });
-    try self.map.put(0x3228, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3228) return .{ .compat = &[_]u21{
         0x0028,
         0x4E5D,
         0x0029,
-    } });
-    try self.map.put(0x3229, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3229) return .{ .compat = &[_]u21{
         0x0028,
         0x5341,
         0x0029,
-    } });
-    try self.map.put(0x322A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x322A) return .{ .compat = &[_]u21{
         0x0028,
         0x6708,
         0x0029,
-    } });
-    try self.map.put(0x322B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x322B) return .{ .compat = &[_]u21{
         0x0028,
         0x706B,
         0x0029,
-    } });
-    try self.map.put(0x322C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x322C) return .{ .compat = &[_]u21{
         0x0028,
         0x6C34,
         0x0029,
-    } });
-    try self.map.put(0x322D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x322D) return .{ .compat = &[_]u21{
         0x0028,
         0x6728,
         0x0029,
-    } });
-    try self.map.put(0x322E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x322E) return .{ .compat = &[_]u21{
         0x0028,
         0x91D1,
         0x0029,
-    } });
-    try self.map.put(0x322F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x322F) return .{ .compat = &[_]u21{
         0x0028,
         0x571F,
         0x0029,
-    } });
-    try self.map.put(0x3230, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3230) return .{ .compat = &[_]u21{
         0x0028,
         0x65E5,
         0x0029,
-    } });
-    try self.map.put(0x3231, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3231) return .{ .compat = &[_]u21{
         0x0028,
         0x682A,
         0x0029,
-    } });
-    try self.map.put(0x3232, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3232) return .{ .compat = &[_]u21{
         0x0028,
         0x6709,
         0x0029,
-    } });
-    try self.map.put(0x3233, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3233) return .{ .compat = &[_]u21{
         0x0028,
         0x793E,
         0x0029,
-    } });
-    try self.map.put(0x3234, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3234) return .{ .compat = &[_]u21{
         0x0028,
         0x540D,
         0x0029,
-    } });
-    try self.map.put(0x3235, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3235) return .{ .compat = &[_]u21{
         0x0028,
         0x7279,
         0x0029,
-    } });
-    try self.map.put(0x3236, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3236) return .{ .compat = &[_]u21{
         0x0028,
         0x8CA1,
         0x0029,
-    } });
-    try self.map.put(0x3237, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3237) return .{ .compat = &[_]u21{
         0x0028,
         0x795D,
         0x0029,
-    } });
-    try self.map.put(0x3238, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3238) return .{ .compat = &[_]u21{
         0x0028,
         0x52B4,
         0x0029,
-    } });
-    try self.map.put(0x3239, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3239) return .{ .compat = &[_]u21{
         0x0028,
         0x4EE3,
         0x0029,
-    } });
-    try self.map.put(0x323A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x323A) return .{ .compat = &[_]u21{
         0x0028,
         0x547C,
         0x0029,
-    } });
-    try self.map.put(0x323B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x323B) return .{ .compat = &[_]u21{
         0x0028,
         0x5B66,
         0x0029,
-    } });
-    try self.map.put(0x323C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x323C) return .{ .compat = &[_]u21{
         0x0028,
         0x76E3,
         0x0029,
-    } });
-    try self.map.put(0x323D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x323D) return .{ .compat = &[_]u21{
         0x0028,
         0x4F01,
         0x0029,
-    } });
-    try self.map.put(0x323E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x323E) return .{ .compat = &[_]u21{
         0x0028,
         0x8CC7,
         0x0029,
-    } });
-    try self.map.put(0x323F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x323F) return .{ .compat = &[_]u21{
         0x0028,
         0x5354,
         0x0029,
-    } });
-    try self.map.put(0x3240, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3240) return .{ .compat = &[_]u21{
         0x0028,
         0x796D,
         0x0029,
-    } });
-    try self.map.put(0x3241, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3241) return .{ .compat = &[_]u21{
         0x0028,
         0x4F11,
         0x0029,
-    } });
-    try self.map.put(0x3242, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3242) return .{ .compat = &[_]u21{
         0x0028,
         0x81EA,
         0x0029,
-    } });
-    try self.map.put(0x3243, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3243) return .{ .compat = &[_]u21{
         0x0028,
         0x81F3,
         0x0029,
-    } });
-    try self.map.put(0x3244, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3244) return .{ .compat = &[_]u21{
         0x554F,
-    } });
-    try self.map.put(0x3245, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3245) return .{ .compat = &[_]u21{
         0x5E7C,
-    } });
-    try self.map.put(0x3246, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3246) return .{ .compat = &[_]u21{
         0x6587,
-    } });
-    try self.map.put(0x3247, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3247) return .{ .compat = &[_]u21{
         0x7B8F,
-    } });
-    try self.map.put(0x3250, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3250) return .{ .compat = &[_]u21{
         0x0050,
         0x0054,
         0x0045,
-    } });
-    try self.map.put(0x3251, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3251) return .{ .compat = &[_]u21{
         0x0032,
         0x0031,
-    } });
-    try self.map.put(0x3252, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3252) return .{ .compat = &[_]u21{
         0x0032,
         0x0032,
-    } });
-    try self.map.put(0x3253, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3253) return .{ .compat = &[_]u21{
         0x0032,
         0x0033,
-    } });
-    try self.map.put(0x3254, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3254) return .{ .compat = &[_]u21{
         0x0032,
         0x0034,
-    } });
-    try self.map.put(0x3255, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3255) return .{ .compat = &[_]u21{
         0x0032,
         0x0035,
-    } });
-    try self.map.put(0x3256, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3256) return .{ .compat = &[_]u21{
         0x0032,
         0x0036,
-    } });
-    try self.map.put(0x3257, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3257) return .{ .compat = &[_]u21{
         0x0032,
         0x0037,
-    } });
-    try self.map.put(0x3258, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3258) return .{ .compat = &[_]u21{
         0x0032,
         0x0038,
-    } });
-    try self.map.put(0x3259, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3259) return .{ .compat = &[_]u21{
         0x0032,
         0x0039,
-    } });
-    try self.map.put(0x325A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x325A) return .{ .compat = &[_]u21{
         0x0033,
         0x0030,
-    } });
-    try self.map.put(0x325B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x325B) return .{ .compat = &[_]u21{
         0x0033,
         0x0031,
-    } });
-    try self.map.put(0x325C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x325C) return .{ .compat = &[_]u21{
         0x0033,
         0x0032,
-    } });
-    try self.map.put(0x325D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x325D) return .{ .compat = &[_]u21{
         0x0033,
         0x0033,
-    } });
-    try self.map.put(0x325E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x325E) return .{ .compat = &[_]u21{
         0x0033,
         0x0034,
-    } });
-    try self.map.put(0x325F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x325F) return .{ .compat = &[_]u21{
         0x0033,
         0x0035,
-    } });
-    try self.map.put(0x3260, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3260) return .{ .compat = &[_]u21{
         0x1100,
-    } });
-    try self.map.put(0x3261, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3261) return .{ .compat = &[_]u21{
         0x1102,
-    } });
-    try self.map.put(0x3262, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3262) return .{ .compat = &[_]u21{
         0x1103,
-    } });
-    try self.map.put(0x3263, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3263) return .{ .compat = &[_]u21{
         0x1105,
-    } });
-    try self.map.put(0x3264, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3264) return .{ .compat = &[_]u21{
         0x1106,
-    } });
-    try self.map.put(0x3265, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3265) return .{ .compat = &[_]u21{
         0x1107,
-    } });
-    try self.map.put(0x3266, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3266) return .{ .compat = &[_]u21{
         0x1109,
-    } });
-    try self.map.put(0x3267, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3267) return .{ .compat = &[_]u21{
         0x110B,
-    } });
-    try self.map.put(0x3268, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3268) return .{ .compat = &[_]u21{
         0x110C,
-    } });
-    try self.map.put(0x3269, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3269) return .{ .compat = &[_]u21{
         0x110E,
-    } });
-    try self.map.put(0x326A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x326A) return .{ .compat = &[_]u21{
         0x110F,
-    } });
-    try self.map.put(0x326B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x326B) return .{ .compat = &[_]u21{
         0x1110,
-    } });
-    try self.map.put(0x326C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x326C) return .{ .compat = &[_]u21{
         0x1111,
-    } });
-    try self.map.put(0x326D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x326D) return .{ .compat = &[_]u21{
         0x1112,
-    } });
-    try self.map.put(0x326E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x326E) return .{ .compat = &[_]u21{
         0x1100,
         0x1161,
-    } });
-    try self.map.put(0x326F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x326F) return .{ .compat = &[_]u21{
         0x1102,
         0x1161,
-    } });
-    try self.map.put(0x3270, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3270) return .{ .compat = &[_]u21{
         0x1103,
         0x1161,
-    } });
-    try self.map.put(0x3271, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3271) return .{ .compat = &[_]u21{
         0x1105,
         0x1161,
-    } });
-    try self.map.put(0x3272, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3272) return .{ .compat = &[_]u21{
         0x1106,
         0x1161,
-    } });
-    try self.map.put(0x3273, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3273) return .{ .compat = &[_]u21{
         0x1107,
         0x1161,
-    } });
-    try self.map.put(0x3274, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3274) return .{ .compat = &[_]u21{
         0x1109,
         0x1161,
-    } });
-    try self.map.put(0x3275, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3275) return .{ .compat = &[_]u21{
         0x110B,
         0x1161,
-    } });
-    try self.map.put(0x3276, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3276) return .{ .compat = &[_]u21{
         0x110C,
         0x1161,
-    } });
-    try self.map.put(0x3277, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3277) return .{ .compat = &[_]u21{
         0x110E,
         0x1161,
-    } });
-    try self.map.put(0x3278, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3278) return .{ .compat = &[_]u21{
         0x110F,
         0x1161,
-    } });
-    try self.map.put(0x3279, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3279) return .{ .compat = &[_]u21{
         0x1110,
         0x1161,
-    } });
-    try self.map.put(0x327A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x327A) return .{ .compat = &[_]u21{
         0x1111,
         0x1161,
-    } });
-    try self.map.put(0x327B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x327B) return .{ .compat = &[_]u21{
         0x1112,
         0x1161,
-    } });
-    try self.map.put(0x327C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x327C) return .{ .compat = &[_]u21{
         0x110E,
         0x1161,
         0x11B7,
         0x1100,
         0x1169,
-    } });
-    try self.map.put(0x327D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x327D) return .{ .compat = &[_]u21{
         0x110C,
         0x116E,
         0x110B,
         0x1174,
-    } });
-    try self.map.put(0x327E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x327E) return .{ .compat = &[_]u21{
         0x110B,
         0x116E,
-    } });
-    try self.map.put(0x3280, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3280) return .{ .compat = &[_]u21{
         0x4E00,
-    } });
-    try self.map.put(0x3281, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3281) return .{ .compat = &[_]u21{
         0x4E8C,
-    } });
-    try self.map.put(0x3282, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3282) return .{ .compat = &[_]u21{
         0x4E09,
-    } });
-    try self.map.put(0x3283, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3283) return .{ .compat = &[_]u21{
         0x56DB,
-    } });
-    try self.map.put(0x3284, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3284) return .{ .compat = &[_]u21{
         0x4E94,
-    } });
-    try self.map.put(0x3285, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3285) return .{ .compat = &[_]u21{
         0x516D,
-    } });
-    try self.map.put(0x3286, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3286) return .{ .compat = &[_]u21{
         0x4E03,
-    } });
-    try self.map.put(0x3287, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3287) return .{ .compat = &[_]u21{
         0x516B,
-    } });
-    try self.map.put(0x3288, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3288) return .{ .compat = &[_]u21{
         0x4E5D,
-    } });
-    try self.map.put(0x3289, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3289) return .{ .compat = &[_]u21{
         0x5341,
-    } });
-    try self.map.put(0x328A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x328A) return .{ .compat = &[_]u21{
         0x6708,
-    } });
-    try self.map.put(0x328B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x328B) return .{ .compat = &[_]u21{
         0x706B,
-    } });
-    try self.map.put(0x328C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x328C) return .{ .compat = &[_]u21{
         0x6C34,
-    } });
-    try self.map.put(0x328D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x328D) return .{ .compat = &[_]u21{
         0x6728,
-    } });
-    try self.map.put(0x328E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x328E) return .{ .compat = &[_]u21{
         0x91D1,
-    } });
-    try self.map.put(0x328F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x328F) return .{ .compat = &[_]u21{
         0x571F,
-    } });
-    try self.map.put(0x3290, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3290) return .{ .compat = &[_]u21{
         0x65E5,
-    } });
-    try self.map.put(0x3291, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3291) return .{ .compat = &[_]u21{
         0x682A,
-    } });
-    try self.map.put(0x3292, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3292) return .{ .compat = &[_]u21{
         0x6709,
-    } });
-    try self.map.put(0x3293, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3293) return .{ .compat = &[_]u21{
         0x793E,
-    } });
-    try self.map.put(0x3294, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3294) return .{ .compat = &[_]u21{
         0x540D,
-    } });
-    try self.map.put(0x3295, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3295) return .{ .compat = &[_]u21{
         0x7279,
-    } });
-    try self.map.put(0x3296, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3296) return .{ .compat = &[_]u21{
         0x8CA1,
-    } });
-    try self.map.put(0x3297, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3297) return .{ .compat = &[_]u21{
         0x795D,
-    } });
-    try self.map.put(0x3298, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3298) return .{ .compat = &[_]u21{
         0x52B4,
-    } });
-    try self.map.put(0x3299, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3299) return .{ .compat = &[_]u21{
         0x79D8,
-    } });
-    try self.map.put(0x329A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x329A) return .{ .compat = &[_]u21{
         0x7537,
-    } });
-    try self.map.put(0x329B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x329B) return .{ .compat = &[_]u21{
         0x5973,
-    } });
-    try self.map.put(0x329C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x329C) return .{ .compat = &[_]u21{
         0x9069,
-    } });
-    try self.map.put(0x329D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x329D) return .{ .compat = &[_]u21{
         0x512A,
-    } });
-    try self.map.put(0x329E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x329E) return .{ .compat = &[_]u21{
         0x5370,
-    } });
-    try self.map.put(0x329F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x329F) return .{ .compat = &[_]u21{
         0x6CE8,
-    } });
-    try self.map.put(0x32A0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32A0) return .{ .compat = &[_]u21{
         0x9805,
-    } });
-    try self.map.put(0x32A1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32A1) return .{ .compat = &[_]u21{
         0x4F11,
-    } });
-    try self.map.put(0x32A2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32A2) return .{ .compat = &[_]u21{
         0x5199,
-    } });
-    try self.map.put(0x32A3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32A3) return .{ .compat = &[_]u21{
         0x6B63,
-    } });
-    try self.map.put(0x32A4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32A4) return .{ .compat = &[_]u21{
         0x4E0A,
-    } });
-    try self.map.put(0x32A5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32A5) return .{ .compat = &[_]u21{
         0x4E2D,
-    } });
-    try self.map.put(0x32A6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32A6) return .{ .compat = &[_]u21{
         0x4E0B,
-    } });
-    try self.map.put(0x32A7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32A7) return .{ .compat = &[_]u21{
         0x5DE6,
-    } });
-    try self.map.put(0x32A8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32A8) return .{ .compat = &[_]u21{
         0x53F3,
-    } });
-    try self.map.put(0x32A9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32A9) return .{ .compat = &[_]u21{
         0x533B,
-    } });
-    try self.map.put(0x32AA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32AA) return .{ .compat = &[_]u21{
         0x5B97,
-    } });
-    try self.map.put(0x32AB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32AB) return .{ .compat = &[_]u21{
         0x5B66,
-    } });
-    try self.map.put(0x32AC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32AC) return .{ .compat = &[_]u21{
         0x76E3,
-    } });
-    try self.map.put(0x32AD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32AD) return .{ .compat = &[_]u21{
         0x4F01,
-    } });
-    try self.map.put(0x32AE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32AE) return .{ .compat = &[_]u21{
         0x8CC7,
-    } });
-    try self.map.put(0x32AF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32AF) return .{ .compat = &[_]u21{
         0x5354,
-    } });
-    try self.map.put(0x32B0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32B0) return .{ .compat = &[_]u21{
         0x591C,
-    } });
-    try self.map.put(0x32B1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32B1) return .{ .compat = &[_]u21{
         0x0033,
         0x0036,
-    } });
-    try self.map.put(0x32B2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32B2) return .{ .compat = &[_]u21{
         0x0033,
         0x0037,
-    } });
-    try self.map.put(0x32B3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32B3) return .{ .compat = &[_]u21{
         0x0033,
         0x0038,
-    } });
-    try self.map.put(0x32B4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32B4) return .{ .compat = &[_]u21{
         0x0033,
         0x0039,
-    } });
-    try self.map.put(0x32B5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32B5) return .{ .compat = &[_]u21{
         0x0034,
         0x0030,
-    } });
-    try self.map.put(0x32B6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32B6) return .{ .compat = &[_]u21{
         0x0034,
         0x0031,
-    } });
-    try self.map.put(0x32B7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32B7) return .{ .compat = &[_]u21{
         0x0034,
         0x0032,
-    } });
-    try self.map.put(0x32B8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32B8) return .{ .compat = &[_]u21{
         0x0034,
         0x0033,
-    } });
-    try self.map.put(0x32B9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32B9) return .{ .compat = &[_]u21{
         0x0034,
         0x0034,
-    } });
-    try self.map.put(0x32BA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32BA) return .{ .compat = &[_]u21{
         0x0034,
         0x0035,
-    } });
-    try self.map.put(0x32BB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32BB) return .{ .compat = &[_]u21{
         0x0034,
         0x0036,
-    } });
-    try self.map.put(0x32BC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32BC) return .{ .compat = &[_]u21{
         0x0034,
         0x0037,
-    } });
-    try self.map.put(0x32BD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32BD) return .{ .compat = &[_]u21{
         0x0034,
         0x0038,
-    } });
-    try self.map.put(0x32BE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32BE) return .{ .compat = &[_]u21{
         0x0034,
         0x0039,
-    } });
-    try self.map.put(0x32BF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32BF) return .{ .compat = &[_]u21{
         0x0035,
         0x0030,
-    } });
-    try self.map.put(0x32C0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32C0) return .{ .compat = &[_]u21{
         0x0031,
         0x6708,
-    } });
-    try self.map.put(0x32C1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32C1) return .{ .compat = &[_]u21{
         0x0032,
         0x6708,
-    } });
-    try self.map.put(0x32C2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32C2) return .{ .compat = &[_]u21{
         0x0033,
         0x6708,
-    } });
-    try self.map.put(0x32C3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32C3) return .{ .compat = &[_]u21{
         0x0034,
         0x6708,
-    } });
-    try self.map.put(0x32C4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32C4) return .{ .compat = &[_]u21{
         0x0035,
         0x6708,
-    } });
-    try self.map.put(0x32C5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32C5) return .{ .compat = &[_]u21{
         0x0036,
         0x6708,
-    } });
-    try self.map.put(0x32C6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32C6) return .{ .compat = &[_]u21{
         0x0037,
         0x6708,
-    } });
-    try self.map.put(0x32C7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32C7) return .{ .compat = &[_]u21{
         0x0038,
         0x6708,
-    } });
-    try self.map.put(0x32C8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32C8) return .{ .compat = &[_]u21{
         0x0039,
         0x6708,
-    } });
-    try self.map.put(0x32C9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32C9) return .{ .compat = &[_]u21{
         0x0031,
         0x0030,
         0x6708,
-    } });
-    try self.map.put(0x32CA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32CA) return .{ .compat = &[_]u21{
         0x0031,
         0x0031,
         0x6708,
-    } });
-    try self.map.put(0x32CB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32CB) return .{ .compat = &[_]u21{
         0x0031,
         0x0032,
         0x6708,
-    } });
-    try self.map.put(0x32CC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32CC) return .{ .compat = &[_]u21{
         0x0048,
         0x0067,
-    } });
-    try self.map.put(0x32CD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32CD) return .{ .compat = &[_]u21{
         0x0065,
         0x0072,
         0x0067,
-    } });
-    try self.map.put(0x32CE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32CE) return .{ .compat = &[_]u21{
         0x0065,
         0x0056,
-    } });
-    try self.map.put(0x32CF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32CF) return .{ .compat = &[_]u21{
         0x004C,
         0x0054,
         0x0044,
-    } });
-    try self.map.put(0x32D0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32D0) return .{ .compat = &[_]u21{
         0x30A2,
-    } });
-    try self.map.put(0x32D1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32D1) return .{ .compat = &[_]u21{
         0x30A4,
-    } });
-    try self.map.put(0x32D2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32D2) return .{ .compat = &[_]u21{
         0x30A6,
-    } });
-    try self.map.put(0x32D3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32D3) return .{ .compat = &[_]u21{
         0x30A8,
-    } });
-    try self.map.put(0x32D4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32D4) return .{ .compat = &[_]u21{
         0x30AA,
-    } });
-    try self.map.put(0x32D5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32D5) return .{ .compat = &[_]u21{
         0x30AB,
-    } });
-    try self.map.put(0x32D6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32D6) return .{ .compat = &[_]u21{
         0x30AD,
-    } });
-    try self.map.put(0x32D7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32D7) return .{ .compat = &[_]u21{
         0x30AF,
-    } });
-    try self.map.put(0x32D8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32D8) return .{ .compat = &[_]u21{
         0x30B1,
-    } });
-    try self.map.put(0x32D9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32D9) return .{ .compat = &[_]u21{
         0x30B3,
-    } });
-    try self.map.put(0x32DA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32DA) return .{ .compat = &[_]u21{
         0x30B5,
-    } });
-    try self.map.put(0x32DB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32DB) return .{ .compat = &[_]u21{
         0x30B7,
-    } });
-    try self.map.put(0x32DC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32DC) return .{ .compat = &[_]u21{
         0x30B9,
-    } });
-    try self.map.put(0x32DD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32DD) return .{ .compat = &[_]u21{
         0x30BB,
-    } });
-    try self.map.put(0x32DE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32DE) return .{ .compat = &[_]u21{
         0x30BD,
-    } });
-    try self.map.put(0x32DF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32DF) return .{ .compat = &[_]u21{
         0x30BF,
-    } });
-    try self.map.put(0x32E0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32E0) return .{ .compat = &[_]u21{
         0x30C1,
-    } });
-    try self.map.put(0x32E1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32E1) return .{ .compat = &[_]u21{
         0x30C4,
-    } });
-    try self.map.put(0x32E2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32E2) return .{ .compat = &[_]u21{
         0x30C6,
-    } });
-    try self.map.put(0x32E3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32E3) return .{ .compat = &[_]u21{
         0x30C8,
-    } });
-    try self.map.put(0x32E4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32E4) return .{ .compat = &[_]u21{
         0x30CA,
-    } });
-    try self.map.put(0x32E5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32E5) return .{ .compat = &[_]u21{
         0x30CB,
-    } });
-    try self.map.put(0x32E6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32E6) return .{ .compat = &[_]u21{
         0x30CC,
-    } });
-    try self.map.put(0x32E7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32E7) return .{ .compat = &[_]u21{
         0x30CD,
-    } });
-    try self.map.put(0x32E8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32E8) return .{ .compat = &[_]u21{
         0x30CE,
-    } });
-    try self.map.put(0x32E9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32E9) return .{ .compat = &[_]u21{
         0x30CF,
-    } });
-    try self.map.put(0x32EA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32EA) return .{ .compat = &[_]u21{
         0x30D2,
-    } });
-    try self.map.put(0x32EB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32EB) return .{ .compat = &[_]u21{
         0x30D5,
-    } });
-    try self.map.put(0x32EC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32EC) return .{ .compat = &[_]u21{
         0x30D8,
-    } });
-    try self.map.put(0x32ED, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32ED) return .{ .compat = &[_]u21{
         0x30DB,
-    } });
-    try self.map.put(0x32EE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32EE) return .{ .compat = &[_]u21{
         0x30DE,
-    } });
-    try self.map.put(0x32EF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32EF) return .{ .compat = &[_]u21{
         0x30DF,
-    } });
-    try self.map.put(0x32F0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32F0) return .{ .compat = &[_]u21{
         0x30E0,
-    } });
-    try self.map.put(0x32F1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32F1) return .{ .compat = &[_]u21{
         0x30E1,
-    } });
-    try self.map.put(0x32F2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32F2) return .{ .compat = &[_]u21{
         0x30E2,
-    } });
-    try self.map.put(0x32F3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32F3) return .{ .compat = &[_]u21{
         0x30E4,
-    } });
-    try self.map.put(0x32F4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32F4) return .{ .compat = &[_]u21{
         0x30E6,
-    } });
-    try self.map.put(0x32F5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32F5) return .{ .compat = &[_]u21{
         0x30E8,
-    } });
-    try self.map.put(0x32F6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32F6) return .{ .compat = &[_]u21{
         0x30E9,
-    } });
-    try self.map.put(0x32F7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32F7) return .{ .compat = &[_]u21{
         0x30EA,
-    } });
-    try self.map.put(0x32F8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32F8) return .{ .compat = &[_]u21{
         0x30EB,
-    } });
-    try self.map.put(0x32F9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32F9) return .{ .compat = &[_]u21{
         0x30EC,
-    } });
-    try self.map.put(0x32FA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32FA) return .{ .compat = &[_]u21{
         0x30ED,
-    } });
-    try self.map.put(0x32FB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32FB) return .{ .compat = &[_]u21{
         0x30EF,
-    } });
-    try self.map.put(0x32FC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32FC) return .{ .compat = &[_]u21{
         0x30F0,
-    } });
-    try self.map.put(0x32FD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32FD) return .{ .compat = &[_]u21{
         0x30F1,
-    } });
-    try self.map.put(0x32FE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32FE) return .{ .compat = &[_]u21{
         0x30F2,
-    } });
-    try self.map.put(0x32FF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x32FF) return .{ .compat = &[_]u21{
         0x4EE4,
         0x548C,
-    } });
-    try self.map.put(0x3300, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3300) return .{ .compat = &[_]u21{
         0x30A2,
         0x30D1,
         0x30FC,
         0x30C8,
-    } });
-    try self.map.put(0x3301, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3301) return .{ .compat = &[_]u21{
         0x30A2,
         0x30EB,
         0x30D5,
         0x30A1,
-    } });
-    try self.map.put(0x3302, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3302) return .{ .compat = &[_]u21{
         0x30A2,
         0x30F3,
         0x30DA,
         0x30A2,
-    } });
-    try self.map.put(0x3303, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3303) return .{ .compat = &[_]u21{
         0x30A2,
         0x30FC,
         0x30EB,
-    } });
-    try self.map.put(0x3304, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3304) return .{ .compat = &[_]u21{
         0x30A4,
         0x30CB,
         0x30F3,
         0x30B0,
-    } });
-    try self.map.put(0x3305, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3305) return .{ .compat = &[_]u21{
         0x30A4,
         0x30F3,
         0x30C1,
-    } });
-    try self.map.put(0x3306, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3306) return .{ .compat = &[_]u21{
         0x30A6,
         0x30A9,
         0x30F3,
-    } });
-    try self.map.put(0x3307, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3307) return .{ .compat = &[_]u21{
         0x30A8,
         0x30B9,
         0x30AF,
         0x30FC,
         0x30C9,
-    } });
-    try self.map.put(0x3308, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3308) return .{ .compat = &[_]u21{
         0x30A8,
         0x30FC,
         0x30AB,
         0x30FC,
-    } });
-    try self.map.put(0x3309, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3309) return .{ .compat = &[_]u21{
         0x30AA,
         0x30F3,
         0x30B9,
-    } });
-    try self.map.put(0x330A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x330A) return .{ .compat = &[_]u21{
         0x30AA,
         0x30FC,
         0x30E0,
-    } });
-    try self.map.put(0x330B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x330B) return .{ .compat = &[_]u21{
         0x30AB,
         0x30A4,
         0x30EA,
-    } });
-    try self.map.put(0x330C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x330C) return .{ .compat = &[_]u21{
         0x30AB,
         0x30E9,
         0x30C3,
         0x30C8,
-    } });
-    try self.map.put(0x330D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x330D) return .{ .compat = &[_]u21{
         0x30AB,
         0x30ED,
         0x30EA,
         0x30FC,
-    } });
-    try self.map.put(0x330E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x330E) return .{ .compat = &[_]u21{
         0x30AC,
         0x30ED,
         0x30F3,
-    } });
-    try self.map.put(0x330F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x330F) return .{ .compat = &[_]u21{
         0x30AC,
         0x30F3,
         0x30DE,
-    } });
-    try self.map.put(0x3310, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3310) return .{ .compat = &[_]u21{
         0x30AE,
         0x30AC,
-    } });
-    try self.map.put(0x3311, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3311) return .{ .compat = &[_]u21{
         0x30AE,
         0x30CB,
         0x30FC,
-    } });
-    try self.map.put(0x3312, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3312) return .{ .compat = &[_]u21{
         0x30AD,
         0x30E5,
         0x30EA,
         0x30FC,
-    } });
-    try self.map.put(0x3313, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3313) return .{ .compat = &[_]u21{
         0x30AE,
         0x30EB,
         0x30C0,
         0x30FC,
-    } });
-    try self.map.put(0x3314, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3314) return .{ .compat = &[_]u21{
         0x30AD,
         0x30ED,
-    } });
-    try self.map.put(0x3315, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3315) return .{ .compat = &[_]u21{
         0x30AD,
         0x30ED,
         0x30B0,
         0x30E9,
         0x30E0,
-    } });
-    try self.map.put(0x3316, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3316) return .{ .compat = &[_]u21{
         0x30AD,
         0x30ED,
         0x30E1,
         0x30FC,
         0x30C8,
         0x30EB,
-    } });
-    try self.map.put(0x3317, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3317) return .{ .compat = &[_]u21{
         0x30AD,
         0x30ED,
         0x30EF,
         0x30C3,
         0x30C8,
-    } });
-    try self.map.put(0x3318, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3318) return .{ .compat = &[_]u21{
         0x30B0,
         0x30E9,
         0x30E0,
-    } });
-    try self.map.put(0x3319, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3319) return .{ .compat = &[_]u21{
         0x30B0,
         0x30E9,
         0x30E0,
         0x30C8,
         0x30F3,
-    } });
-    try self.map.put(0x331A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x331A) return .{ .compat = &[_]u21{
         0x30AF,
         0x30EB,
         0x30BC,
         0x30A4,
         0x30ED,
-    } });
-    try self.map.put(0x331B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x331B) return .{ .compat = &[_]u21{
         0x30AF,
         0x30ED,
         0x30FC,
         0x30CD,
-    } });
-    try self.map.put(0x331C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x331C) return .{ .compat = &[_]u21{
         0x30B1,
         0x30FC,
         0x30B9,
-    } });
-    try self.map.put(0x331D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x331D) return .{ .compat = &[_]u21{
         0x30B3,
         0x30EB,
         0x30CA,
-    } });
-    try self.map.put(0x331E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x331E) return .{ .compat = &[_]u21{
         0x30B3,
         0x30FC,
         0x30DD,
-    } });
-    try self.map.put(0x331F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x331F) return .{ .compat = &[_]u21{
         0x30B5,
         0x30A4,
         0x30AF,
         0x30EB,
-    } });
-    try self.map.put(0x3320, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3320) return .{ .compat = &[_]u21{
         0x30B5,
         0x30F3,
         0x30C1,
         0x30FC,
         0x30E0,
-    } });
-    try self.map.put(0x3321, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3321) return .{ .compat = &[_]u21{
         0x30B7,
         0x30EA,
         0x30F3,
         0x30B0,
-    } });
-    try self.map.put(0x3322, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3322) return .{ .compat = &[_]u21{
         0x30BB,
         0x30F3,
         0x30C1,
-    } });
-    try self.map.put(0x3323, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3323) return .{ .compat = &[_]u21{
         0x30BB,
         0x30F3,
         0x30C8,
-    } });
-    try self.map.put(0x3324, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3324) return .{ .compat = &[_]u21{
         0x30C0,
         0x30FC,
         0x30B9,
-    } });
-    try self.map.put(0x3325, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3325) return .{ .compat = &[_]u21{
         0x30C7,
         0x30B7,
-    } });
-    try self.map.put(0x3326, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3326) return .{ .compat = &[_]u21{
         0x30C9,
         0x30EB,
-    } });
-    try self.map.put(0x3327, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3327) return .{ .compat = &[_]u21{
         0x30C8,
         0x30F3,
-    } });
-    try self.map.put(0x3328, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3328) return .{ .compat = &[_]u21{
         0x30CA,
         0x30CE,
-    } });
-    try self.map.put(0x3329, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3329) return .{ .compat = &[_]u21{
         0x30CE,
         0x30C3,
         0x30C8,
-    } });
-    try self.map.put(0x332A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x332A) return .{ .compat = &[_]u21{
         0x30CF,
         0x30A4,
         0x30C4,
-    } });
-    try self.map.put(0x332B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x332B) return .{ .compat = &[_]u21{
         0x30D1,
         0x30FC,
         0x30BB,
         0x30F3,
         0x30C8,
-    } });
-    try self.map.put(0x332C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x332C) return .{ .compat = &[_]u21{
         0x30D1,
         0x30FC,
         0x30C4,
-    } });
-    try self.map.put(0x332D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x332D) return .{ .compat = &[_]u21{
         0x30D0,
         0x30FC,
         0x30EC,
         0x30EB,
-    } });
-    try self.map.put(0x332E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x332E) return .{ .compat = &[_]u21{
         0x30D4,
         0x30A2,
         0x30B9,
         0x30C8,
         0x30EB,
-    } });
-    try self.map.put(0x332F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x332F) return .{ .compat = &[_]u21{
         0x30D4,
         0x30AF,
         0x30EB,
-    } });
-    try self.map.put(0x3330, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3330) return .{ .compat = &[_]u21{
         0x30D4,
         0x30B3,
-    } });
-    try self.map.put(0x3331, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3331) return .{ .compat = &[_]u21{
         0x30D3,
         0x30EB,
-    } });
-    try self.map.put(0x3332, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3332) return .{ .compat = &[_]u21{
         0x30D5,
         0x30A1,
         0x30E9,
         0x30C3,
         0x30C9,
-    } });
-    try self.map.put(0x3333, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3333) return .{ .compat = &[_]u21{
         0x30D5,
         0x30A3,
         0x30FC,
         0x30C8,
-    } });
-    try self.map.put(0x3334, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3334) return .{ .compat = &[_]u21{
         0x30D6,
         0x30C3,
         0x30B7,
         0x30A7,
         0x30EB,
-    } });
-    try self.map.put(0x3335, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3335) return .{ .compat = &[_]u21{
         0x30D5,
         0x30E9,
         0x30F3,
-    } });
-    try self.map.put(0x3336, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3336) return .{ .compat = &[_]u21{
         0x30D8,
         0x30AF,
         0x30BF,
         0x30FC,
         0x30EB,
-    } });
-    try self.map.put(0x3337, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3337) return .{ .compat = &[_]u21{
         0x30DA,
         0x30BD,
-    } });
-    try self.map.put(0x3338, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3338) return .{ .compat = &[_]u21{
         0x30DA,
         0x30CB,
         0x30D2,
-    } });
-    try self.map.put(0x3339, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3339) return .{ .compat = &[_]u21{
         0x30D8,
         0x30EB,
         0x30C4,
-    } });
-    try self.map.put(0x333A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x333A) return .{ .compat = &[_]u21{
         0x30DA,
         0x30F3,
         0x30B9,
-    } });
-    try self.map.put(0x333B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x333B) return .{ .compat = &[_]u21{
         0x30DA,
         0x30FC,
         0x30B8,
-    } });
-    try self.map.put(0x333C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x333C) return .{ .compat = &[_]u21{
         0x30D9,
         0x30FC,
         0x30BF,
-    } });
-    try self.map.put(0x333D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x333D) return .{ .compat = &[_]u21{
         0x30DD,
         0x30A4,
         0x30F3,
         0x30C8,
-    } });
-    try self.map.put(0x333E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x333E) return .{ .compat = &[_]u21{
         0x30DC,
         0x30EB,
         0x30C8,
-    } });
-    try self.map.put(0x333F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x333F) return .{ .compat = &[_]u21{
         0x30DB,
         0x30F3,
-    } });
-    try self.map.put(0x3340, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3340) return .{ .compat = &[_]u21{
         0x30DD,
         0x30F3,
         0x30C9,
-    } });
-    try self.map.put(0x3341, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3341) return .{ .compat = &[_]u21{
         0x30DB,
         0x30FC,
         0x30EB,
-    } });
-    try self.map.put(0x3342, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3342) return .{ .compat = &[_]u21{
         0x30DB,
         0x30FC,
         0x30F3,
-    } });
-    try self.map.put(0x3343, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3343) return .{ .compat = &[_]u21{
         0x30DE,
         0x30A4,
         0x30AF,
         0x30ED,
-    } });
-    try self.map.put(0x3344, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3344) return .{ .compat = &[_]u21{
         0x30DE,
         0x30A4,
         0x30EB,
-    } });
-    try self.map.put(0x3345, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3345) return .{ .compat = &[_]u21{
         0x30DE,
         0x30C3,
         0x30CF,
-    } });
-    try self.map.put(0x3346, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3346) return .{ .compat = &[_]u21{
         0x30DE,
         0x30EB,
         0x30AF,
-    } });
-    try self.map.put(0x3347, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3347) return .{ .compat = &[_]u21{
         0x30DE,
         0x30F3,
         0x30B7,
         0x30E7,
         0x30F3,
-    } });
-    try self.map.put(0x3348, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3348) return .{ .compat = &[_]u21{
         0x30DF,
         0x30AF,
         0x30ED,
         0x30F3,
-    } });
-    try self.map.put(0x3349, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3349) return .{ .compat = &[_]u21{
         0x30DF,
         0x30EA,
-    } });
-    try self.map.put(0x334A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x334A) return .{ .compat = &[_]u21{
         0x30DF,
         0x30EA,
         0x30D0,
         0x30FC,
         0x30EB,
-    } });
-    try self.map.put(0x334B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x334B) return .{ .compat = &[_]u21{
         0x30E1,
         0x30AC,
-    } });
-    try self.map.put(0x334C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x334C) return .{ .compat = &[_]u21{
         0x30E1,
         0x30AC,
         0x30C8,
         0x30F3,
-    } });
-    try self.map.put(0x334D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x334D) return .{ .compat = &[_]u21{
         0x30E1,
         0x30FC,
         0x30C8,
         0x30EB,
-    } });
-    try self.map.put(0x334E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x334E) return .{ .compat = &[_]u21{
         0x30E4,
         0x30FC,
         0x30C9,
-    } });
-    try self.map.put(0x334F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x334F) return .{ .compat = &[_]u21{
         0x30E4,
         0x30FC,
         0x30EB,
-    } });
-    try self.map.put(0x3350, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3350) return .{ .compat = &[_]u21{
         0x30E6,
         0x30A2,
         0x30F3,
-    } });
-    try self.map.put(0x3351, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3351) return .{ .compat = &[_]u21{
         0x30EA,
         0x30C3,
         0x30C8,
         0x30EB,
-    } });
-    try self.map.put(0x3352, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3352) return .{ .compat = &[_]u21{
         0x30EA,
         0x30E9,
-    } });
-    try self.map.put(0x3353, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3353) return .{ .compat = &[_]u21{
         0x30EB,
         0x30D4,
         0x30FC,
-    } });
-    try self.map.put(0x3354, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3354) return .{ .compat = &[_]u21{
         0x30EB,
         0x30FC,
         0x30D6,
         0x30EB,
-    } });
-    try self.map.put(0x3355, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3355) return .{ .compat = &[_]u21{
         0x30EC,
         0x30E0,
-    } });
-    try self.map.put(0x3356, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3356) return .{ .compat = &[_]u21{
         0x30EC,
         0x30F3,
         0x30C8,
         0x30B2,
         0x30F3,
-    } });
-    try self.map.put(0x3357, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3357) return .{ .compat = &[_]u21{
         0x30EF,
         0x30C3,
         0x30C8,
-    } });
-    try self.map.put(0x3358, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3358) return .{ .compat = &[_]u21{
         0x0030,
         0x70B9,
-    } });
-    try self.map.put(0x3359, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3359) return .{ .compat = &[_]u21{
         0x0031,
         0x70B9,
-    } });
-    try self.map.put(0x335A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x335A) return .{ .compat = &[_]u21{
         0x0032,
         0x70B9,
-    } });
-    try self.map.put(0x335B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x335B) return .{ .compat = &[_]u21{
         0x0033,
         0x70B9,
-    } });
-    try self.map.put(0x335C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x335C) return .{ .compat = &[_]u21{
         0x0034,
         0x70B9,
-    } });
-    try self.map.put(0x335D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x335D) return .{ .compat = &[_]u21{
         0x0035,
         0x70B9,
-    } });
-    try self.map.put(0x335E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x335E) return .{ .compat = &[_]u21{
         0x0036,
         0x70B9,
-    } });
-    try self.map.put(0x335F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x335F) return .{ .compat = &[_]u21{
         0x0037,
         0x70B9,
-    } });
-    try self.map.put(0x3360, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3360) return .{ .compat = &[_]u21{
         0x0038,
         0x70B9,
-    } });
-    try self.map.put(0x3361, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3361) return .{ .compat = &[_]u21{
         0x0039,
         0x70B9,
-    } });
-    try self.map.put(0x3362, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3362) return .{ .compat = &[_]u21{
         0x0031,
         0x0030,
         0x70B9,
-    } });
-    try self.map.put(0x3363, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3363) return .{ .compat = &[_]u21{
         0x0031,
         0x0031,
         0x70B9,
-    } });
-    try self.map.put(0x3364, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3364) return .{ .compat = &[_]u21{
         0x0031,
         0x0032,
         0x70B9,
-    } });
-    try self.map.put(0x3365, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3365) return .{ .compat = &[_]u21{
         0x0031,
         0x0033,
         0x70B9,
-    } });
-    try self.map.put(0x3366, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3366) return .{ .compat = &[_]u21{
         0x0031,
         0x0034,
         0x70B9,
-    } });
-    try self.map.put(0x3367, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3367) return .{ .compat = &[_]u21{
         0x0031,
         0x0035,
         0x70B9,
-    } });
-    try self.map.put(0x3368, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3368) return .{ .compat = &[_]u21{
         0x0031,
         0x0036,
         0x70B9,
-    } });
-    try self.map.put(0x3369, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3369) return .{ .compat = &[_]u21{
         0x0031,
         0x0037,
         0x70B9,
-    } });
-    try self.map.put(0x336A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x336A) return .{ .compat = &[_]u21{
         0x0031,
         0x0038,
         0x70B9,
-    } });
-    try self.map.put(0x336B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x336B) return .{ .compat = &[_]u21{
         0x0031,
         0x0039,
         0x70B9,
-    } });
-    try self.map.put(0x336C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x336C) return .{ .compat = &[_]u21{
         0x0032,
         0x0030,
         0x70B9,
-    } });
-    try self.map.put(0x336D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x336D) return .{ .compat = &[_]u21{
         0x0032,
         0x0031,
         0x70B9,
-    } });
-    try self.map.put(0x336E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x336E) return .{ .compat = &[_]u21{
         0x0032,
         0x0032,
         0x70B9,
-    } });
-    try self.map.put(0x336F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x336F) return .{ .compat = &[_]u21{
         0x0032,
         0x0033,
         0x70B9,
-    } });
-    try self.map.put(0x3370, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3370) return .{ .compat = &[_]u21{
         0x0032,
         0x0034,
         0x70B9,
-    } });
-    try self.map.put(0x3371, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3371) return .{ .compat = &[_]u21{
         0x0068,
         0x0050,
         0x0061,
-    } });
-    try self.map.put(0x3372, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3372) return .{ .compat = &[_]u21{
         0x0064,
         0x0061,
-    } });
-    try self.map.put(0x3373, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3373) return .{ .compat = &[_]u21{
         0x0041,
         0x0055,
-    } });
-    try self.map.put(0x3374, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3374) return .{ .compat = &[_]u21{
         0x0062,
         0x0061,
         0x0072,
-    } });
-    try self.map.put(0x3375, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3375) return .{ .compat = &[_]u21{
         0x006F,
         0x0056,
-    } });
-    try self.map.put(0x3376, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3376) return .{ .compat = &[_]u21{
         0x0070,
         0x0063,
-    } });
-    try self.map.put(0x3377, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3377) return .{ .compat = &[_]u21{
         0x0064,
         0x006D,
-    } });
-    try self.map.put(0x3378, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3378) return .{ .compat = &[_]u21{
         0x0064,
         0x006D,
         0x00B2,
-    } });
-    try self.map.put(0x3379, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3379) return .{ .compat = &[_]u21{
         0x0064,
         0x006D,
         0x00B3,
-    } });
-    try self.map.put(0x337A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x337A) return .{ .compat = &[_]u21{
         0x0049,
         0x0055,
-    } });
-    try self.map.put(0x337B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x337B) return .{ .compat = &[_]u21{
         0x5E73,
         0x6210,
-    } });
-    try self.map.put(0x337C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x337C) return .{ .compat = &[_]u21{
         0x662D,
         0x548C,
-    } });
-    try self.map.put(0x337D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x337D) return .{ .compat = &[_]u21{
         0x5927,
         0x6B63,
-    } });
-    try self.map.put(0x337E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x337E) return .{ .compat = &[_]u21{
         0x660E,
         0x6CBB,
-    } });
-    try self.map.put(0x337F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x337F) return .{ .compat = &[_]u21{
         0x682A,
         0x5F0F,
         0x4F1A,
         0x793E,
-    } });
-    try self.map.put(0x3380, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3380) return .{ .compat = &[_]u21{
         0x0070,
         0x0041,
-    } });
-    try self.map.put(0x3381, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3381) return .{ .compat = &[_]u21{
         0x006E,
         0x0041,
-    } });
-    try self.map.put(0x3382, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3382) return .{ .compat = &[_]u21{
         0x03BC,
         0x0041,
-    } });
-    try self.map.put(0x3383, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3383) return .{ .compat = &[_]u21{
         0x006D,
         0x0041,
-    } });
-    try self.map.put(0x3384, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3384) return .{ .compat = &[_]u21{
         0x006B,
         0x0041,
-    } });
-    try self.map.put(0x3385, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3385) return .{ .compat = &[_]u21{
         0x004B,
         0x0042,
-    } });
-    try self.map.put(0x3386, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3386) return .{ .compat = &[_]u21{
         0x004D,
         0x0042,
-    } });
-    try self.map.put(0x3387, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3387) return .{ .compat = &[_]u21{
         0x0047,
         0x0042,
-    } });
-    try self.map.put(0x3388, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3388) return .{ .compat = &[_]u21{
         0x0063,
         0x0061,
         0x006C,
-    } });
-    try self.map.put(0x3389, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3389) return .{ .compat = &[_]u21{
         0x006B,
         0x0063,
         0x0061,
         0x006C,
-    } });
-    try self.map.put(0x338A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x338A) return .{ .compat = &[_]u21{
         0x0070,
         0x0046,
-    } });
-    try self.map.put(0x338B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x338B) return .{ .compat = &[_]u21{
         0x006E,
         0x0046,
-    } });
-    try self.map.put(0x338C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x338C) return .{ .compat = &[_]u21{
         0x03BC,
         0x0046,
-    } });
-    try self.map.put(0x338D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x338D) return .{ .compat = &[_]u21{
         0x03BC,
         0x0067,
-    } });
-    try self.map.put(0x338E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x338E) return .{ .compat = &[_]u21{
         0x006D,
         0x0067,
-    } });
-    try self.map.put(0x338F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x338F) return .{ .compat = &[_]u21{
         0x006B,
         0x0067,
-    } });
-    try self.map.put(0x3390, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3390) return .{ .compat = &[_]u21{
         0x0048,
         0x007A,
-    } });
-    try self.map.put(0x3391, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3391) return .{ .compat = &[_]u21{
         0x006B,
         0x0048,
         0x007A,
-    } });
-    try self.map.put(0x3392, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3392) return .{ .compat = &[_]u21{
         0x004D,
         0x0048,
         0x007A,
-    } });
-    try self.map.put(0x3393, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3393) return .{ .compat = &[_]u21{
         0x0047,
         0x0048,
         0x007A,
-    } });
-    try self.map.put(0x3394, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3394) return .{ .compat = &[_]u21{
         0x0054,
         0x0048,
         0x007A,
-    } });
-    try self.map.put(0x3395, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3395) return .{ .compat = &[_]u21{
         0x03BC,
         0x2113,
-    } });
-    try self.map.put(0x3396, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3396) return .{ .compat = &[_]u21{
         0x006D,
         0x2113,
-    } });
-    try self.map.put(0x3397, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3397) return .{ .compat = &[_]u21{
         0x0064,
         0x2113,
-    } });
-    try self.map.put(0x3398, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3398) return .{ .compat = &[_]u21{
         0x006B,
         0x2113,
-    } });
-    try self.map.put(0x3399, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x3399) return .{ .compat = &[_]u21{
         0x0066,
         0x006D,
-    } });
-    try self.map.put(0x339A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x339A) return .{ .compat = &[_]u21{
         0x006E,
         0x006D,
-    } });
-    try self.map.put(0x339B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x339B) return .{ .compat = &[_]u21{
         0x03BC,
         0x006D,
-    } });
-    try self.map.put(0x339C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x339C) return .{ .compat = &[_]u21{
         0x006D,
         0x006D,
-    } });
-    try self.map.put(0x339D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x339D) return .{ .compat = &[_]u21{
         0x0063,
         0x006D,
-    } });
-    try self.map.put(0x339E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x339E) return .{ .compat = &[_]u21{
         0x006B,
         0x006D,
-    } });
-    try self.map.put(0x339F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x339F) return .{ .compat = &[_]u21{
         0x006D,
         0x006D,
         0x00B2,
-    } });
-    try self.map.put(0x33A0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33A0) return .{ .compat = &[_]u21{
         0x0063,
         0x006D,
         0x00B2,
-    } });
-    try self.map.put(0x33A1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33A1) return .{ .compat = &[_]u21{
         0x006D,
         0x00B2,
-    } });
-    try self.map.put(0x33A2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33A2) return .{ .compat = &[_]u21{
         0x006B,
         0x006D,
         0x00B2,
-    } });
-    try self.map.put(0x33A3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33A3) return .{ .compat = &[_]u21{
         0x006D,
         0x006D,
         0x00B3,
-    } });
-    try self.map.put(0x33A4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33A4) return .{ .compat = &[_]u21{
         0x0063,
         0x006D,
         0x00B3,
-    } });
-    try self.map.put(0x33A5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33A5) return .{ .compat = &[_]u21{
         0x006D,
         0x00B3,
-    } });
-    try self.map.put(0x33A6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33A6) return .{ .compat = &[_]u21{
         0x006B,
         0x006D,
         0x00B3,
-    } });
-    try self.map.put(0x33A7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33A7) return .{ .compat = &[_]u21{
         0x006D,
         0x2215,
         0x0073,
-    } });
-    try self.map.put(0x33A8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33A8) return .{ .compat = &[_]u21{
         0x006D,
         0x2215,
         0x0073,
         0x00B2,
-    } });
-    try self.map.put(0x33A9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33A9) return .{ .compat = &[_]u21{
         0x0050,
         0x0061,
-    } });
-    try self.map.put(0x33AA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33AA) return .{ .compat = &[_]u21{
         0x006B,
         0x0050,
         0x0061,
-    } });
-    try self.map.put(0x33AB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33AB) return .{ .compat = &[_]u21{
         0x004D,
         0x0050,
         0x0061,
-    } });
-    try self.map.put(0x33AC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33AC) return .{ .compat = &[_]u21{
         0x0047,
         0x0050,
         0x0061,
-    } });
-    try self.map.put(0x33AD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33AD) return .{ .compat = &[_]u21{
         0x0072,
         0x0061,
         0x0064,
-    } });
-    try self.map.put(0x33AE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33AE) return .{ .compat = &[_]u21{
         0x0072,
         0x0061,
         0x0064,
         0x2215,
         0x0073,
-    } });
-    try self.map.put(0x33AF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33AF) return .{ .compat = &[_]u21{
         0x0072,
         0x0061,
         0x0064,
         0x2215,
         0x0073,
         0x00B2,
-    } });
-    try self.map.put(0x33B0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33B0) return .{ .compat = &[_]u21{
         0x0070,
         0x0073,
-    } });
-    try self.map.put(0x33B1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33B1) return .{ .compat = &[_]u21{
         0x006E,
         0x0073,
-    } });
-    try self.map.put(0x33B2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33B2) return .{ .compat = &[_]u21{
         0x03BC,
         0x0073,
-    } });
-    try self.map.put(0x33B3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33B3) return .{ .compat = &[_]u21{
         0x006D,
         0x0073,
-    } });
-    try self.map.put(0x33B4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33B4) return .{ .compat = &[_]u21{
         0x0070,
         0x0056,
-    } });
-    try self.map.put(0x33B5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33B5) return .{ .compat = &[_]u21{
         0x006E,
         0x0056,
-    } });
-    try self.map.put(0x33B6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33B6) return .{ .compat = &[_]u21{
         0x03BC,
         0x0056,
-    } });
-    try self.map.put(0x33B7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33B7) return .{ .compat = &[_]u21{
         0x006D,
         0x0056,
-    } });
-    try self.map.put(0x33B8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33B8) return .{ .compat = &[_]u21{
         0x006B,
         0x0056,
-    } });
-    try self.map.put(0x33B9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33B9) return .{ .compat = &[_]u21{
         0x004D,
         0x0056,
-    } });
-    try self.map.put(0x33BA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33BA) return .{ .compat = &[_]u21{
         0x0070,
         0x0057,
-    } });
-    try self.map.put(0x33BB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33BB) return .{ .compat = &[_]u21{
         0x006E,
         0x0057,
-    } });
-    try self.map.put(0x33BC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33BC) return .{ .compat = &[_]u21{
         0x03BC,
         0x0057,
-    } });
-    try self.map.put(0x33BD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33BD) return .{ .compat = &[_]u21{
         0x006D,
         0x0057,
-    } });
-    try self.map.put(0x33BE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33BE) return .{ .compat = &[_]u21{
         0x006B,
         0x0057,
-    } });
-    try self.map.put(0x33BF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33BF) return .{ .compat = &[_]u21{
         0x004D,
         0x0057,
-    } });
-    try self.map.put(0x33C0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33C0) return .{ .compat = &[_]u21{
         0x006B,
         0x03A9,
-    } });
-    try self.map.put(0x33C1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33C1) return .{ .compat = &[_]u21{
         0x004D,
         0x03A9,
-    } });
-    try self.map.put(0x33C2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33C2) return .{ .compat = &[_]u21{
         0x0061,
         0x002E,
         0x006D,
         0x002E,
-    } });
-    try self.map.put(0x33C3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33C3) return .{ .compat = &[_]u21{
         0x0042,
         0x0071,
-    } });
-    try self.map.put(0x33C4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33C4) return .{ .compat = &[_]u21{
         0x0063,
         0x0063,
-    } });
-    try self.map.put(0x33C5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33C5) return .{ .compat = &[_]u21{
         0x0063,
         0x0064,
-    } });
-    try self.map.put(0x33C6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33C6) return .{ .compat = &[_]u21{
         0x0043,
         0x2215,
         0x006B,
         0x0067,
-    } });
-    try self.map.put(0x33C7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33C7) return .{ .compat = &[_]u21{
         0x0043,
         0x006F,
         0x002E,
-    } });
-    try self.map.put(0x33C8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33C8) return .{ .compat = &[_]u21{
         0x0064,
         0x0042,
-    } });
-    try self.map.put(0x33C9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33C9) return .{ .compat = &[_]u21{
         0x0047,
         0x0079,
-    } });
-    try self.map.put(0x33CA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33CA) return .{ .compat = &[_]u21{
         0x0068,
         0x0061,
-    } });
-    try self.map.put(0x33CB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33CB) return .{ .compat = &[_]u21{
         0x0048,
         0x0050,
-    } });
-    try self.map.put(0x33CC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33CC) return .{ .compat = &[_]u21{
         0x0069,
         0x006E,
-    } });
-    try self.map.put(0x33CD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33CD) return .{ .compat = &[_]u21{
         0x004B,
         0x004B,
-    } });
-    try self.map.put(0x33CE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33CE) return .{ .compat = &[_]u21{
         0x004B,
         0x004D,
-    } });
-    try self.map.put(0x33CF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33CF) return .{ .compat = &[_]u21{
         0x006B,
         0x0074,
-    } });
-    try self.map.put(0x33D0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33D0) return .{ .compat = &[_]u21{
         0x006C,
         0x006D,
-    } });
-    try self.map.put(0x33D1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33D1) return .{ .compat = &[_]u21{
         0x006C,
         0x006E,
-    } });
-    try self.map.put(0x33D2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33D2) return .{ .compat = &[_]u21{
         0x006C,
         0x006F,
         0x0067,
-    } });
-    try self.map.put(0x33D3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33D3) return .{ .compat = &[_]u21{
         0x006C,
         0x0078,
-    } });
-    try self.map.put(0x33D4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33D4) return .{ .compat = &[_]u21{
         0x006D,
         0x0062,
-    } });
-    try self.map.put(0x33D5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33D5) return .{ .compat = &[_]u21{
         0x006D,
         0x0069,
         0x006C,
-    } });
-    try self.map.put(0x33D6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33D6) return .{ .compat = &[_]u21{
         0x006D,
         0x006F,
         0x006C,
-    } });
-    try self.map.put(0x33D7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33D7) return .{ .compat = &[_]u21{
         0x0050,
         0x0048,
-    } });
-    try self.map.put(0x33D8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33D8) return .{ .compat = &[_]u21{
         0x0070,
         0x002E,
         0x006D,
         0x002E,
-    } });
-    try self.map.put(0x33D9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33D9) return .{ .compat = &[_]u21{
         0x0050,
         0x0050,
         0x004D,
-    } });
-    try self.map.put(0x33DA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33DA) return .{ .compat = &[_]u21{
         0x0050,
         0x0052,
-    } });
-    try self.map.put(0x33DB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33DB) return .{ .compat = &[_]u21{
         0x0073,
         0x0072,
-    } });
-    try self.map.put(0x33DC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33DC) return .{ .compat = &[_]u21{
         0x0053,
         0x0076,
-    } });
-    try self.map.put(0x33DD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33DD) return .{ .compat = &[_]u21{
         0x0057,
         0x0062,
-    } });
-    try self.map.put(0x33DE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33DE) return .{ .compat = &[_]u21{
         0x0056,
         0x2215,
         0x006D,
-    } });
-    try self.map.put(0x33DF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33DF) return .{ .compat = &[_]u21{
         0x0041,
         0x2215,
         0x006D,
-    } });
-    try self.map.put(0x33E0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33E0) return .{ .compat = &[_]u21{
         0x0031,
         0x65E5,
-    } });
-    try self.map.put(0x33E1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33E1) return .{ .compat = &[_]u21{
         0x0032,
         0x65E5,
-    } });
-    try self.map.put(0x33E2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33E2) return .{ .compat = &[_]u21{
         0x0033,
         0x65E5,
-    } });
-    try self.map.put(0x33E3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33E3) return .{ .compat = &[_]u21{
         0x0034,
         0x65E5,
-    } });
-    try self.map.put(0x33E4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33E4) return .{ .compat = &[_]u21{
         0x0035,
         0x65E5,
-    } });
-    try self.map.put(0x33E5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33E5) return .{ .compat = &[_]u21{
         0x0036,
         0x65E5,
-    } });
-    try self.map.put(0x33E6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33E6) return .{ .compat = &[_]u21{
         0x0037,
         0x65E5,
-    } });
-    try self.map.put(0x33E7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33E7) return .{ .compat = &[_]u21{
         0x0038,
         0x65E5,
-    } });
-    try self.map.put(0x33E8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33E8) return .{ .compat = &[_]u21{
         0x0039,
         0x65E5,
-    } });
-    try self.map.put(0x33E9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33E9) return .{ .compat = &[_]u21{
         0x0031,
         0x0030,
         0x65E5,
-    } });
-    try self.map.put(0x33EA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33EA) return .{ .compat = &[_]u21{
         0x0031,
         0x0031,
         0x65E5,
-    } });
-    try self.map.put(0x33EB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33EB) return .{ .compat = &[_]u21{
         0x0031,
         0x0032,
         0x65E5,
-    } });
-    try self.map.put(0x33EC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33EC) return .{ .compat = &[_]u21{
         0x0031,
         0x0033,
         0x65E5,
-    } });
-    try self.map.put(0x33ED, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33ED) return .{ .compat = &[_]u21{
         0x0031,
         0x0034,
         0x65E5,
-    } });
-    try self.map.put(0x33EE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33EE) return .{ .compat = &[_]u21{
         0x0031,
         0x0035,
         0x65E5,
-    } });
-    try self.map.put(0x33EF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33EF) return .{ .compat = &[_]u21{
         0x0031,
         0x0036,
         0x65E5,
-    } });
-    try self.map.put(0x33F0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33F0) return .{ .compat = &[_]u21{
         0x0031,
         0x0037,
         0x65E5,
-    } });
-    try self.map.put(0x33F1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33F1) return .{ .compat = &[_]u21{
         0x0031,
         0x0038,
         0x65E5,
-    } });
-    try self.map.put(0x33F2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33F2) return .{ .compat = &[_]u21{
         0x0031,
         0x0039,
         0x65E5,
-    } });
-    try self.map.put(0x33F3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33F3) return .{ .compat = &[_]u21{
         0x0032,
         0x0030,
         0x65E5,
-    } });
-    try self.map.put(0x33F4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33F4) return .{ .compat = &[_]u21{
         0x0032,
         0x0031,
         0x65E5,
-    } });
-    try self.map.put(0x33F5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33F5) return .{ .compat = &[_]u21{
         0x0032,
         0x0032,
         0x65E5,
-    } });
-    try self.map.put(0x33F6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33F6) return .{ .compat = &[_]u21{
         0x0032,
         0x0033,
         0x65E5,
-    } });
-    try self.map.put(0x33F7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33F7) return .{ .compat = &[_]u21{
         0x0032,
         0x0034,
         0x65E5,
-    } });
-    try self.map.put(0x33F8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33F8) return .{ .compat = &[_]u21{
         0x0032,
         0x0035,
         0x65E5,
-    } });
-    try self.map.put(0x33F9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33F9) return .{ .compat = &[_]u21{
         0x0032,
         0x0036,
         0x65E5,
-    } });
-    try self.map.put(0x33FA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33FA) return .{ .compat = &[_]u21{
         0x0032,
         0x0037,
         0x65E5,
-    } });
-    try self.map.put(0x33FB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33FB) return .{ .compat = &[_]u21{
         0x0032,
         0x0038,
         0x65E5,
-    } });
-    try self.map.put(0x33FC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33FC) return .{ .compat = &[_]u21{
         0x0032,
         0x0039,
         0x65E5,
-    } });
-    try self.map.put(0x33FD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33FD) return .{ .compat = &[_]u21{
         0x0033,
         0x0030,
         0x65E5,
-    } });
-    try self.map.put(0x33FE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33FE) return .{ .compat = &[_]u21{
         0x0033,
         0x0031,
         0x65E5,
-    } });
-    try self.map.put(0x33FF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x33FF) return .{ .compat = &[_]u21{
         0x0067,
         0x0061,
         0x006C,
-    } });
-    try self.map.put(0xA69C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xA69C) return .{ .compat = &[_]u21{
         0x044A,
-    } });
-    try self.map.put(0xA69D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xA69D) return .{ .compat = &[_]u21{
         0x044C,
-    } });
-    try self.map.put(0xA770, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xA770) return .{ .compat = &[_]u21{
         0xA76F,
-    } });
-    try self.map.put(0xA7F8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xA7F8) return .{ .compat = &[_]u21{
         0x0126,
-    } });
-    try self.map.put(0xA7F9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xA7F9) return .{ .compat = &[_]u21{
         0x0153,
-    } });
-    try self.map.put(0xAB5C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xAB5C) return .{ .compat = &[_]u21{
         0xA727,
-    } });
-    try self.map.put(0xAB5D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xAB5D) return .{ .compat = &[_]u21{
         0xAB37,
-    } });
-    try self.map.put(0xAB5E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xAB5E) return .{ .compat = &[_]u21{
         0x026B,
-    } });
-    try self.map.put(0xAB5F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xAB5F) return .{ .compat = &[_]u21{
         0xAB52,
-    } });
-    try self.map.put(0xAB69, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xAB69) return .{ .compat = &[_]u21{
         0x028D,
-    } });
-    try self.map.put(0xF900, .{ .single = 0x8C48 });
-    try self.map.put(0xF901, .{ .single = 0x66F4 });
-    try self.map.put(0xF902, .{ .single = 0x8ECA });
-    try self.map.put(0xF903, .{ .single = 0x8CC8 });
-    try self.map.put(0xF904, .{ .single = 0x6ED1 });
-    try self.map.put(0xF905, .{ .single = 0x4E32 });
-    try self.map.put(0xF906, .{ .single = 0x53E5 });
-    try self.map.put(0xF907, .{ .single = 0x9F9C });
-    try self.map.put(0xF908, .{ .single = 0x9F9C });
-    try self.map.put(0xF909, .{ .single = 0x5951 });
-    try self.map.put(0xF90A, .{ .single = 0x91D1 });
-    try self.map.put(0xF90B, .{ .single = 0x5587 });
-    try self.map.put(0xF90C, .{ .single = 0x5948 });
-    try self.map.put(0xF90D, .{ .single = 0x61F6 });
-    try self.map.put(0xF90E, .{ .single = 0x7669 });
-    try self.map.put(0xF90F, .{ .single = 0x7F85 });
-    try self.map.put(0xF910, .{ .single = 0x863F });
-    try self.map.put(0xF911, .{ .single = 0x87BA });
-    try self.map.put(0xF912, .{ .single = 0x88F8 });
-    try self.map.put(0xF913, .{ .single = 0x908F });
-    try self.map.put(0xF914, .{ .single = 0x6A02 });
-    try self.map.put(0xF915, .{ .single = 0x6D1B });
-    try self.map.put(0xF916, .{ .single = 0x70D9 });
-    try self.map.put(0xF917, .{ .single = 0x73DE });
-    try self.map.put(0xF918, .{ .single = 0x843D });
-    try self.map.put(0xF919, .{ .single = 0x916A });
-    try self.map.put(0xF91A, .{ .single = 0x99F1 });
-    try self.map.put(0xF91B, .{ .single = 0x4E82 });
-    try self.map.put(0xF91C, .{ .single = 0x5375 });
-    try self.map.put(0xF91D, .{ .single = 0x6B04 });
-    try self.map.put(0xF91E, .{ .single = 0x721B });
-    try self.map.put(0xF91F, .{ .single = 0x862D });
-    try self.map.put(0xF920, .{ .single = 0x9E1E });
-    try self.map.put(0xF921, .{ .single = 0x5D50 });
-    try self.map.put(0xF922, .{ .single = 0x6FEB });
-    try self.map.put(0xF923, .{ .single = 0x85CD });
-    try self.map.put(0xF924, .{ .single = 0x8964 });
-    try self.map.put(0xF925, .{ .single = 0x62C9 });
-    try self.map.put(0xF926, .{ .single = 0x81D8 });
-    try self.map.put(0xF927, .{ .single = 0x881F });
-    try self.map.put(0xF928, .{ .single = 0x5ECA });
-    try self.map.put(0xF929, .{ .single = 0x6717 });
-    try self.map.put(0xF92A, .{ .single = 0x6D6A });
-    try self.map.put(0xF92B, .{ .single = 0x72FC });
-    try self.map.put(0xF92C, .{ .single = 0x90CE });
-    try self.map.put(0xF92D, .{ .single = 0x4F86 });
-    try self.map.put(0xF92E, .{ .single = 0x51B7 });
-    try self.map.put(0xF92F, .{ .single = 0x52DE });
-    try self.map.put(0xF930, .{ .single = 0x64C4 });
-    try self.map.put(0xF931, .{ .single = 0x6AD3 });
-    try self.map.put(0xF932, .{ .single = 0x7210 });
-    try self.map.put(0xF933, .{ .single = 0x76E7 });
-    try self.map.put(0xF934, .{ .single = 0x8001 });
-    try self.map.put(0xF935, .{ .single = 0x8606 });
-    try self.map.put(0xF936, .{ .single = 0x865C });
-    try self.map.put(0xF937, .{ .single = 0x8DEF });
-    try self.map.put(0xF938, .{ .single = 0x9732 });
-    try self.map.put(0xF939, .{ .single = 0x9B6F });
-    try self.map.put(0xF93A, .{ .single = 0x9DFA });
-    try self.map.put(0xF93B, .{ .single = 0x788C });
-    try self.map.put(0xF93C, .{ .single = 0x797F });
-    try self.map.put(0xF93D, .{ .single = 0x7DA0 });
-    try self.map.put(0xF93E, .{ .single = 0x83C9 });
-    try self.map.put(0xF93F, .{ .single = 0x9304 });
-    try self.map.put(0xF940, .{ .single = 0x9E7F });
-    try self.map.put(0xF941, .{ .single = 0x8AD6 });
-    try self.map.put(0xF942, .{ .single = 0x58DF });
-    try self.map.put(0xF943, .{ .single = 0x5F04 });
-    try self.map.put(0xF944, .{ .single = 0x7C60 });
-    try self.map.put(0xF945, .{ .single = 0x807E });
-    try self.map.put(0xF946, .{ .single = 0x7262 });
-    try self.map.put(0xF947, .{ .single = 0x78CA });
-    try self.map.put(0xF948, .{ .single = 0x8CC2 });
-    try self.map.put(0xF949, .{ .single = 0x96F7 });
-    try self.map.put(0xF94A, .{ .single = 0x58D8 });
-    try self.map.put(0xF94B, .{ .single = 0x5C62 });
-    try self.map.put(0xF94C, .{ .single = 0x6A13 });
-    try self.map.put(0xF94D, .{ .single = 0x6DDA });
-    try self.map.put(0xF94E, .{ .single = 0x6F0F });
-    try self.map.put(0xF94F, .{ .single = 0x7D2F });
-    try self.map.put(0xF950, .{ .single = 0x7E37 });
-    try self.map.put(0xF951, .{ .single = 0x964B });
-    try self.map.put(0xF952, .{ .single = 0x52D2 });
-    try self.map.put(0xF953, .{ .single = 0x808B });
-    try self.map.put(0xF954, .{ .single = 0x51DC });
-    try self.map.put(0xF955, .{ .single = 0x51CC });
-    try self.map.put(0xF956, .{ .single = 0x7A1C });
-    try self.map.put(0xF957, .{ .single = 0x7DBE });
-    try self.map.put(0xF958, .{ .single = 0x83F1 });
-    try self.map.put(0xF959, .{ .single = 0x9675 });
-    try self.map.put(0xF95A, .{ .single = 0x8B80 });
-    try self.map.put(0xF95B, .{ .single = 0x62CF });
-    try self.map.put(0xF95C, .{ .single = 0x6A02 });
-    try self.map.put(0xF95D, .{ .single = 0x8AFE });
-    try self.map.put(0xF95E, .{ .single = 0x4E39 });
-    try self.map.put(0xF95F, .{ .single = 0x5BE7 });
-    try self.map.put(0xF960, .{ .single = 0x6012 });
-    try self.map.put(0xF961, .{ .single = 0x7387 });
-    try self.map.put(0xF962, .{ .single = 0x7570 });
-    try self.map.put(0xF963, .{ .single = 0x5317 });
-    try self.map.put(0xF964, .{ .single = 0x78FB });
-    try self.map.put(0xF965, .{ .single = 0x4FBF });
-    try self.map.put(0xF966, .{ .single = 0x5FA9 });
-    try self.map.put(0xF967, .{ .single = 0x4E0D });
-    try self.map.put(0xF968, .{ .single = 0x6CCC });
-    try self.map.put(0xF969, .{ .single = 0x6578 });
-    try self.map.put(0xF96A, .{ .single = 0x7D22 });
-    try self.map.put(0xF96B, .{ .single = 0x53C3 });
-    try self.map.put(0xF96C, .{ .single = 0x585E });
-    try self.map.put(0xF96D, .{ .single = 0x7701 });
-    try self.map.put(0xF96E, .{ .single = 0x8449 });
-    try self.map.put(0xF96F, .{ .single = 0x8AAA });
-    try self.map.put(0xF970, .{ .single = 0x6BBA });
-    try self.map.put(0xF971, .{ .single = 0x8FB0 });
-    try self.map.put(0xF972, .{ .single = 0x6C88 });
-    try self.map.put(0xF973, .{ .single = 0x62FE });
-    try self.map.put(0xF974, .{ .single = 0x82E5 });
-    try self.map.put(0xF975, .{ .single = 0x63A0 });
-    try self.map.put(0xF976, .{ .single = 0x7565 });
-    try self.map.put(0xF977, .{ .single = 0x4EAE });
-    try self.map.put(0xF978, .{ .single = 0x5169 });
-    try self.map.put(0xF979, .{ .single = 0x51C9 });
-    try self.map.put(0xF97A, .{ .single = 0x6881 });
-    try self.map.put(0xF97B, .{ .single = 0x7CE7 });
-    try self.map.put(0xF97C, .{ .single = 0x826F });
-    try self.map.put(0xF97D, .{ .single = 0x8AD2 });
-    try self.map.put(0xF97E, .{ .single = 0x91CF });
-    try self.map.put(0xF97F, .{ .single = 0x52F5 });
-    try self.map.put(0xF980, .{ .single = 0x5442 });
-    try self.map.put(0xF981, .{ .single = 0x5973 });
-    try self.map.put(0xF982, .{ .single = 0x5EEC });
-    try self.map.put(0xF983, .{ .single = 0x65C5 });
-    try self.map.put(0xF984, .{ .single = 0x6FFE });
-    try self.map.put(0xF985, .{ .single = 0x792A });
-    try self.map.put(0xF986, .{ .single = 0x95AD });
-    try self.map.put(0xF987, .{ .single = 0x9A6A });
-    try self.map.put(0xF988, .{ .single = 0x9E97 });
-    try self.map.put(0xF989, .{ .single = 0x9ECE });
-    try self.map.put(0xF98A, .{ .single = 0x529B });
-    try self.map.put(0xF98B, .{ .single = 0x66C6 });
-    try self.map.put(0xF98C, .{ .single = 0x6B77 });
-    try self.map.put(0xF98D, .{ .single = 0x8F62 });
-    try self.map.put(0xF98E, .{ .single = 0x5E74 });
-    try self.map.put(0xF98F, .{ .single = 0x6190 });
-    try self.map.put(0xF990, .{ .single = 0x6200 });
-    try self.map.put(0xF991, .{ .single = 0x649A });
-    try self.map.put(0xF992, .{ .single = 0x6F23 });
-    try self.map.put(0xF993, .{ .single = 0x7149 });
-    try self.map.put(0xF994, .{ .single = 0x7489 });
-    try self.map.put(0xF995, .{ .single = 0x79CA });
-    try self.map.put(0xF996, .{ .single = 0x7DF4 });
-    try self.map.put(0xF997, .{ .single = 0x806F });
-    try self.map.put(0xF998, .{ .single = 0x8F26 });
-    try self.map.put(0xF999, .{ .single = 0x84EE });
-    try self.map.put(0xF99A, .{ .single = 0x9023 });
-    try self.map.put(0xF99B, .{ .single = 0x934A });
-    try self.map.put(0xF99C, .{ .single = 0x5217 });
-    try self.map.put(0xF99D, .{ .single = 0x52A3 });
-    try self.map.put(0xF99E, .{ .single = 0x54BD });
-    try self.map.put(0xF99F, .{ .single = 0x70C8 });
-    try self.map.put(0xF9A0, .{ .single = 0x88C2 });
-    try self.map.put(0xF9A1, .{ .single = 0x8AAA });
-    try self.map.put(0xF9A2, .{ .single = 0x5EC9 });
-    try self.map.put(0xF9A3, .{ .single = 0x5FF5 });
-    try self.map.put(0xF9A4, .{ .single = 0x637B });
-    try self.map.put(0xF9A5, .{ .single = 0x6BAE });
-    try self.map.put(0xF9A6, .{ .single = 0x7C3E });
-    try self.map.put(0xF9A7, .{ .single = 0x7375 });
-    try self.map.put(0xF9A8, .{ .single = 0x4EE4 });
-    try self.map.put(0xF9A9, .{ .single = 0x56F9 });
-    try self.map.put(0xF9AA, .{ .single = 0x5BE7 });
-    try self.map.put(0xF9AB, .{ .single = 0x5DBA });
-    try self.map.put(0xF9AC, .{ .single = 0x601C });
-    try self.map.put(0xF9AD, .{ .single = 0x73B2 });
-    try self.map.put(0xF9AE, .{ .single = 0x7469 });
-    try self.map.put(0xF9AF, .{ .single = 0x7F9A });
-    try self.map.put(0xF9B0, .{ .single = 0x8046 });
-    try self.map.put(0xF9B1, .{ .single = 0x9234 });
-    try self.map.put(0xF9B2, .{ .single = 0x96F6 });
-    try self.map.put(0xF9B3, .{ .single = 0x9748 });
-    try self.map.put(0xF9B4, .{ .single = 0x9818 });
-    try self.map.put(0xF9B5, .{ .single = 0x4F8B });
-    try self.map.put(0xF9B6, .{ .single = 0x79AE });
-    try self.map.put(0xF9B7, .{ .single = 0x91B4 });
-    try self.map.put(0xF9B8, .{ .single = 0x96B8 });
-    try self.map.put(0xF9B9, .{ .single = 0x60E1 });
-    try self.map.put(0xF9BA, .{ .single = 0x4E86 });
-    try self.map.put(0xF9BB, .{ .single = 0x50DA });
-    try self.map.put(0xF9BC, .{ .single = 0x5BEE });
-    try self.map.put(0xF9BD, .{ .single = 0x5C3F });
-    try self.map.put(0xF9BE, .{ .single = 0x6599 });
-    try self.map.put(0xF9BF, .{ .single = 0x6A02 });
-    try self.map.put(0xF9C0, .{ .single = 0x71CE });
-    try self.map.put(0xF9C1, .{ .single = 0x7642 });
-    try self.map.put(0xF9C2, .{ .single = 0x84FC });
-    try self.map.put(0xF9C3, .{ .single = 0x907C });
-    try self.map.put(0xF9C4, .{ .single = 0x9F8D });
-    try self.map.put(0xF9C5, .{ .single = 0x6688 });
-    try self.map.put(0xF9C6, .{ .single = 0x962E });
-    try self.map.put(0xF9C7, .{ .single = 0x5289 });
-    try self.map.put(0xF9C8, .{ .single = 0x677B });
-    try self.map.put(0xF9C9, .{ .single = 0x67F3 });
-    try self.map.put(0xF9CA, .{ .single = 0x6D41 });
-    try self.map.put(0xF9CB, .{ .single = 0x6E9C });
-    try self.map.put(0xF9CC, .{ .single = 0x7409 });
-    try self.map.put(0xF9CD, .{ .single = 0x7559 });
-    try self.map.put(0xF9CE, .{ .single = 0x786B });
-    try self.map.put(0xF9CF, .{ .single = 0x7D10 });
-    try self.map.put(0xF9D0, .{ .single = 0x985E });
-    try self.map.put(0xF9D1, .{ .single = 0x516D });
-    try self.map.put(0xF9D2, .{ .single = 0x622E });
-    try self.map.put(0xF9D3, .{ .single = 0x9678 });
-    try self.map.put(0xF9D4, .{ .single = 0x502B });
-    try self.map.put(0xF9D5, .{ .single = 0x5D19 });
-    try self.map.put(0xF9D6, .{ .single = 0x6DEA });
-    try self.map.put(0xF9D7, .{ .single = 0x8F2A });
-    try self.map.put(0xF9D8, .{ .single = 0x5F8B });
-    try self.map.put(0xF9D9, .{ .single = 0x6144 });
-    try self.map.put(0xF9DA, .{ .single = 0x6817 });
-    try self.map.put(0xF9DB, .{ .single = 0x7387 });
-    try self.map.put(0xF9DC, .{ .single = 0x9686 });
-    try self.map.put(0xF9DD, .{ .single = 0x5229 });
-    try self.map.put(0xF9DE, .{ .single = 0x540F });
-    try self.map.put(0xF9DF, .{ .single = 0x5C65 });
-    try self.map.put(0xF9E0, .{ .single = 0x6613 });
-    try self.map.put(0xF9E1, .{ .single = 0x674E });
-    try self.map.put(0xF9E2, .{ .single = 0x68A8 });
-    try self.map.put(0xF9E3, .{ .single = 0x6CE5 });
-    try self.map.put(0xF9E4, .{ .single = 0x7406 });
-    try self.map.put(0xF9E5, .{ .single = 0x75E2 });
-    try self.map.put(0xF9E6, .{ .single = 0x7F79 });
-    try self.map.put(0xF9E7, .{ .single = 0x88CF });
-    try self.map.put(0xF9E8, .{ .single = 0x88E1 });
-    try self.map.put(0xF9E9, .{ .single = 0x91CC });
-    try self.map.put(0xF9EA, .{ .single = 0x96E2 });
-    try self.map.put(0xF9EB, .{ .single = 0x533F });
-    try self.map.put(0xF9EC, .{ .single = 0x6EBA });
-    try self.map.put(0xF9ED, .{ .single = 0x541D });
-    try self.map.put(0xF9EE, .{ .single = 0x71D0 });
-    try self.map.put(0xF9EF, .{ .single = 0x7498 });
-    try self.map.put(0xF9F0, .{ .single = 0x85FA });
-    try self.map.put(0xF9F1, .{ .single = 0x96A3 });
-    try self.map.put(0xF9F2, .{ .single = 0x9C57 });
-    try self.map.put(0xF9F3, .{ .single = 0x9E9F });
-    try self.map.put(0xF9F4, .{ .single = 0x6797 });
-    try self.map.put(0xF9F5, .{ .single = 0x6DCB });
-    try self.map.put(0xF9F6, .{ .single = 0x81E8 });
-    try self.map.put(0xF9F7, .{ .single = 0x7ACB });
-    try self.map.put(0xF9F8, .{ .single = 0x7B20 });
-    try self.map.put(0xF9F9, .{ .single = 0x7C92 });
-    try self.map.put(0xF9FA, .{ .single = 0x72C0 });
-    try self.map.put(0xF9FB, .{ .single = 0x7099 });
-    try self.map.put(0xF9FC, .{ .single = 0x8B58 });
-    try self.map.put(0xF9FD, .{ .single = 0x4EC0 });
-    try self.map.put(0xF9FE, .{ .single = 0x8336 });
-    try self.map.put(0xF9FF, .{ .single = 0x523A });
-    try self.map.put(0xFA00, .{ .single = 0x5207 });
-    try self.map.put(0xFA01, .{ .single = 0x5EA6 });
-    try self.map.put(0xFA02, .{ .single = 0x62D3 });
-    try self.map.put(0xFA03, .{ .single = 0x7CD6 });
-    try self.map.put(0xFA04, .{ .single = 0x5B85 });
-    try self.map.put(0xFA05, .{ .single = 0x6D1E });
-    try self.map.put(0xFA06, .{ .single = 0x66B4 });
-    try self.map.put(0xFA07, .{ .single = 0x8F3B });
-    try self.map.put(0xFA08, .{ .single = 0x884C });
-    try self.map.put(0xFA09, .{ .single = 0x964D });
-    try self.map.put(0xFA0A, .{ .single = 0x898B });
-    try self.map.put(0xFA0B, .{ .single = 0x5ED3 });
-    try self.map.put(0xFA0C, .{ .single = 0x5140 });
-    try self.map.put(0xFA0D, .{ .single = 0x55C0 });
-    try self.map.put(0xFA10, .{ .single = 0x585A });
-    try self.map.put(0xFA12, .{ .single = 0x6674 });
-    try self.map.put(0xFA15, .{ .single = 0x51DE });
-    try self.map.put(0xFA16, .{ .single = 0x732A });
-    try self.map.put(0xFA17, .{ .single = 0x76CA });
-    try self.map.put(0xFA18, .{ .single = 0x793C });
-    try self.map.put(0xFA19, .{ .single = 0x795E });
-    try self.map.put(0xFA1A, .{ .single = 0x7965 });
-    try self.map.put(0xFA1B, .{ .single = 0x798F });
-    try self.map.put(0xFA1C, .{ .single = 0x9756 });
-    try self.map.put(0xFA1D, .{ .single = 0x7CBE });
-    try self.map.put(0xFA1E, .{ .single = 0x7FBD });
-    try self.map.put(0xFA20, .{ .single = 0x8612 });
-    try self.map.put(0xFA22, .{ .single = 0x8AF8 });
-    try self.map.put(0xFA25, .{ .single = 0x9038 });
-    try self.map.put(0xFA26, .{ .single = 0x90FD });
-    try self.map.put(0xFA2A, .{ .single = 0x98EF });
-    try self.map.put(0xFA2B, .{ .single = 0x98FC });
-    try self.map.put(0xFA2C, .{ .single = 0x9928 });
-    try self.map.put(0xFA2D, .{ .single = 0x9DB4 });
-    try self.map.put(0xFA2E, .{ .single = 0x90DE });
-    try self.map.put(0xFA2F, .{ .single = 0x96B7 });
-    try self.map.put(0xFA30, .{ .single = 0x4FAE });
-    try self.map.put(0xFA31, .{ .single = 0x50E7 });
-    try self.map.put(0xFA32, .{ .single = 0x514D });
-    try self.map.put(0xFA33, .{ .single = 0x52C9 });
-    try self.map.put(0xFA34, .{ .single = 0x52E4 });
-    try self.map.put(0xFA35, .{ .single = 0x5351 });
-    try self.map.put(0xFA36, .{ .single = 0x559D });
-    try self.map.put(0xFA37, .{ .single = 0x5606 });
-    try self.map.put(0xFA38, .{ .single = 0x5668 });
-    try self.map.put(0xFA39, .{ .single = 0x5840 });
-    try self.map.put(0xFA3A, .{ .single = 0x58A8 });
-    try self.map.put(0xFA3B, .{ .single = 0x5C64 });
-    try self.map.put(0xFA3C, .{ .single = 0x5C6E });
-    try self.map.put(0xFA3D, .{ .single = 0x6094 });
-    try self.map.put(0xFA3E, .{ .single = 0x6168 });
-    try self.map.put(0xFA3F, .{ .single = 0x618E });
-    try self.map.put(0xFA40, .{ .single = 0x61F2 });
-    try self.map.put(0xFA41, .{ .single = 0x654F });
-    try self.map.put(0xFA42, .{ .single = 0x65E2 });
-    try self.map.put(0xFA43, .{ .single = 0x6691 });
-    try self.map.put(0xFA44, .{ .single = 0x6885 });
-    try self.map.put(0xFA45, .{ .single = 0x6D77 });
-    try self.map.put(0xFA46, .{ .single = 0x6E1A });
-    try self.map.put(0xFA47, .{ .single = 0x6F22 });
-    try self.map.put(0xFA48, .{ .single = 0x716E });
-    try self.map.put(0xFA49, .{ .single = 0x722B });
-    try self.map.put(0xFA4A, .{ .single = 0x7422 });
-    try self.map.put(0xFA4B, .{ .single = 0x7891 });
-    try self.map.put(0xFA4C, .{ .single = 0x793E });
-    try self.map.put(0xFA4D, .{ .single = 0x7949 });
-    try self.map.put(0xFA4E, .{ .single = 0x7948 });
-    try self.map.put(0xFA4F, .{ .single = 0x7950 });
-    try self.map.put(0xFA50, .{ .single = 0x7956 });
-    try self.map.put(0xFA51, .{ .single = 0x795D });
-    try self.map.put(0xFA52, .{ .single = 0x798D });
-    try self.map.put(0xFA53, .{ .single = 0x798E });
-    try self.map.put(0xFA54, .{ .single = 0x7A40 });
-    try self.map.put(0xFA55, .{ .single = 0x7A81 });
-    try self.map.put(0xFA56, .{ .single = 0x7BC0 });
-    try self.map.put(0xFA57, .{ .single = 0x7DF4 });
-    try self.map.put(0xFA58, .{ .single = 0x7E09 });
-    try self.map.put(0xFA59, .{ .single = 0x7E41 });
-    try self.map.put(0xFA5A, .{ .single = 0x7F72 });
-    try self.map.put(0xFA5B, .{ .single = 0x8005 });
-    try self.map.put(0xFA5C, .{ .single = 0x81ED });
-    try self.map.put(0xFA5D, .{ .single = 0x8279 });
-    try self.map.put(0xFA5E, .{ .single = 0x8279 });
-    try self.map.put(0xFA5F, .{ .single = 0x8457 });
-    try self.map.put(0xFA60, .{ .single = 0x8910 });
-    try self.map.put(0xFA61, .{ .single = 0x8996 });
-    try self.map.put(0xFA62, .{ .single = 0x8B01 });
-    try self.map.put(0xFA63, .{ .single = 0x8B39 });
-    try self.map.put(0xFA64, .{ .single = 0x8CD3 });
-    try self.map.put(0xFA65, .{ .single = 0x8D08 });
-    try self.map.put(0xFA66, .{ .single = 0x8FB6 });
-    try self.map.put(0xFA67, .{ .single = 0x9038 });
-    try self.map.put(0xFA68, .{ .single = 0x96E3 });
-    try self.map.put(0xFA69, .{ .single = 0x97FF });
-    try self.map.put(0xFA6A, .{ .single = 0x983B });
-    try self.map.put(0xFA6B, .{ .single = 0x6075 });
-    try self.map.put(0xFA6C, .{ .single = 0x242EE });
-    try self.map.put(0xFA6D, .{ .single = 0x8218 });
-    try self.map.put(0xFA70, .{ .single = 0x4E26 });
-    try self.map.put(0xFA71, .{ .single = 0x51B5 });
-    try self.map.put(0xFA72, .{ .single = 0x5168 });
-    try self.map.put(0xFA73, .{ .single = 0x4F80 });
-    try self.map.put(0xFA74, .{ .single = 0x5145 });
-    try self.map.put(0xFA75, .{ .single = 0x5180 });
-    try self.map.put(0xFA76, .{ .single = 0x52C7 });
-    try self.map.put(0xFA77, .{ .single = 0x52FA });
-    try self.map.put(0xFA78, .{ .single = 0x559D });
-    try self.map.put(0xFA79, .{ .single = 0x5555 });
-    try self.map.put(0xFA7A, .{ .single = 0x5599 });
-    try self.map.put(0xFA7B, .{ .single = 0x55E2 });
-    try self.map.put(0xFA7C, .{ .single = 0x585A });
-    try self.map.put(0xFA7D, .{ .single = 0x58B3 });
-    try self.map.put(0xFA7E, .{ .single = 0x5944 });
-    try self.map.put(0xFA7F, .{ .single = 0x5954 });
-    try self.map.put(0xFA80, .{ .single = 0x5A62 });
-    try self.map.put(0xFA81, .{ .single = 0x5B28 });
-    try self.map.put(0xFA82, .{ .single = 0x5ED2 });
-    try self.map.put(0xFA83, .{ .single = 0x5ED9 });
-    try self.map.put(0xFA84, .{ .single = 0x5F69 });
-    try self.map.put(0xFA85, .{ .single = 0x5FAD });
-    try self.map.put(0xFA86, .{ .single = 0x60D8 });
-    try self.map.put(0xFA87, .{ .single = 0x614E });
-    try self.map.put(0xFA88, .{ .single = 0x6108 });
-    try self.map.put(0xFA89, .{ .single = 0x618E });
-    try self.map.put(0xFA8A, .{ .single = 0x6160 });
-    try self.map.put(0xFA8B, .{ .single = 0x61F2 });
-    try self.map.put(0xFA8C, .{ .single = 0x6234 });
-    try self.map.put(0xFA8D, .{ .single = 0x63C4 });
-    try self.map.put(0xFA8E, .{ .single = 0x641C });
-    try self.map.put(0xFA8F, .{ .single = 0x6452 });
-    try self.map.put(0xFA90, .{ .single = 0x6556 });
-    try self.map.put(0xFA91, .{ .single = 0x6674 });
-    try self.map.put(0xFA92, .{ .single = 0x6717 });
-    try self.map.put(0xFA93, .{ .single = 0x671B });
-    try self.map.put(0xFA94, .{ .single = 0x6756 });
-    try self.map.put(0xFA95, .{ .single = 0x6B79 });
-    try self.map.put(0xFA96, .{ .single = 0x6BBA });
-    try self.map.put(0xFA97, .{ .single = 0x6D41 });
-    try self.map.put(0xFA98, .{ .single = 0x6EDB });
-    try self.map.put(0xFA99, .{ .single = 0x6ECB });
-    try self.map.put(0xFA9A, .{ .single = 0x6F22 });
-    try self.map.put(0xFA9B, .{ .single = 0x701E });
-    try self.map.put(0xFA9C, .{ .single = 0x716E });
-    try self.map.put(0xFA9D, .{ .single = 0x77A7 });
-    try self.map.put(0xFA9E, .{ .single = 0x7235 });
-    try self.map.put(0xFA9F, .{ .single = 0x72AF });
-    try self.map.put(0xFAA0, .{ .single = 0x732A });
-    try self.map.put(0xFAA1, .{ .single = 0x7471 });
-    try self.map.put(0xFAA2, .{ .single = 0x7506 });
-    try self.map.put(0xFAA3, .{ .single = 0x753B });
-    try self.map.put(0xFAA4, .{ .single = 0x761D });
-    try self.map.put(0xFAA5, .{ .single = 0x761F });
-    try self.map.put(0xFAA6, .{ .single = 0x76CA });
-    try self.map.put(0xFAA7, .{ .single = 0x76DB });
-    try self.map.put(0xFAA8, .{ .single = 0x76F4 });
-    try self.map.put(0xFAA9, .{ .single = 0x774A });
-    try self.map.put(0xFAAA, .{ .single = 0x7740 });
-    try self.map.put(0xFAAB, .{ .single = 0x78CC });
-    try self.map.put(0xFAAC, .{ .single = 0x7AB1 });
-    try self.map.put(0xFAAD, .{ .single = 0x7BC0 });
-    try self.map.put(0xFAAE, .{ .single = 0x7C7B });
-    try self.map.put(0xFAAF, .{ .single = 0x7D5B });
-    try self.map.put(0xFAB0, .{ .single = 0x7DF4 });
-    try self.map.put(0xFAB1, .{ .single = 0x7F3E });
-    try self.map.put(0xFAB2, .{ .single = 0x8005 });
-    try self.map.put(0xFAB3, .{ .single = 0x8352 });
-    try self.map.put(0xFAB4, .{ .single = 0x83EF });
-    try self.map.put(0xFAB5, .{ .single = 0x8779 });
-    try self.map.put(0xFAB6, .{ .single = 0x8941 });
-    try self.map.put(0xFAB7, .{ .single = 0x8986 });
-    try self.map.put(0xFAB8, .{ .single = 0x8996 });
-    try self.map.put(0xFAB9, .{ .single = 0x8ABF });
-    try self.map.put(0xFABA, .{ .single = 0x8AF8 });
-    try self.map.put(0xFABB, .{ .single = 0x8ACB });
-    try self.map.put(0xFABC, .{ .single = 0x8B01 });
-    try self.map.put(0xFABD, .{ .single = 0x8AFE });
-    try self.map.put(0xFABE, .{ .single = 0x8AED });
-    try self.map.put(0xFABF, .{ .single = 0x8B39 });
-    try self.map.put(0xFAC0, .{ .single = 0x8B8A });
-    try self.map.put(0xFAC1, .{ .single = 0x8D08 });
-    try self.map.put(0xFAC2, .{ .single = 0x8F38 });
-    try self.map.put(0xFAC3, .{ .single = 0x9072 });
-    try self.map.put(0xFAC4, .{ .single = 0x9199 });
-    try self.map.put(0xFAC5, .{ .single = 0x9276 });
-    try self.map.put(0xFAC6, .{ .single = 0x967C });
-    try self.map.put(0xFAC7, .{ .single = 0x96E3 });
-    try self.map.put(0xFAC8, .{ .single = 0x9756 });
-    try self.map.put(0xFAC9, .{ .single = 0x97DB });
-    try self.map.put(0xFACA, .{ .single = 0x97FF });
-    try self.map.put(0xFACB, .{ .single = 0x980B });
-    try self.map.put(0xFACC, .{ .single = 0x983B });
-    try self.map.put(0xFACD, .{ .single = 0x9B12 });
-    try self.map.put(0xFACE, .{ .single = 0x9F9C });
-    try self.map.put(0xFACF, .{ .single = 0x2284A });
-    try self.map.put(0xFAD0, .{ .single = 0x22844 });
-    try self.map.put(0xFAD1, .{ .single = 0x233D5 });
-    try self.map.put(0xFAD2, .{ .single = 0x3B9D });
-    try self.map.put(0xFAD3, .{ .single = 0x4018 });
-    try self.map.put(0xFAD4, .{ .single = 0x4039 });
-    try self.map.put(0xFAD5, .{ .single = 0x25249 });
-    try self.map.put(0xFAD6, .{ .single = 0x25CD0 });
-    try self.map.put(0xFAD7, .{ .single = 0x27ED3 });
-    try self.map.put(0xFAD8, .{ .single = 0x9F43 });
-    try self.map.put(0xFAD9, .{ .single = 0x9F8E });
-    try self.map.put(0xFB00, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xF900) return .{ .single = 0x8C48 };
+    if (cp == 0xF901) return .{ .single = 0x66F4 };
+    if (cp == 0xF902) return .{ .single = 0x8ECA };
+    if (cp == 0xF903) return .{ .single = 0x8CC8 };
+    if (cp == 0xF904) return .{ .single = 0x6ED1 };
+    if (cp == 0xF905) return .{ .single = 0x4E32 };
+    if (cp == 0xF906) return .{ .single = 0x53E5 };
+    if (cp == 0xF907) return .{ .single = 0x9F9C };
+    if (cp == 0xF908) return .{ .single = 0x9F9C };
+    if (cp == 0xF909) return .{ .single = 0x5951 };
+    if (cp == 0xF90A) return .{ .single = 0x91D1 };
+    if (cp == 0xF90B) return .{ .single = 0x5587 };
+    if (cp == 0xF90C) return .{ .single = 0x5948 };
+    if (cp == 0xF90D) return .{ .single = 0x61F6 };
+    if (cp == 0xF90E) return .{ .single = 0x7669 };
+    if (cp == 0xF90F) return .{ .single = 0x7F85 };
+    if (cp == 0xF910) return .{ .single = 0x863F };
+    if (cp == 0xF911) return .{ .single = 0x87BA };
+    if (cp == 0xF912) return .{ .single = 0x88F8 };
+    if (cp == 0xF913) return .{ .single = 0x908F };
+    if (cp == 0xF914) return .{ .single = 0x6A02 };
+    if (cp == 0xF915) return .{ .single = 0x6D1B };
+    if (cp == 0xF916) return .{ .single = 0x70D9 };
+    if (cp == 0xF917) return .{ .single = 0x73DE };
+    if (cp == 0xF918) return .{ .single = 0x843D };
+    if (cp == 0xF919) return .{ .single = 0x916A };
+    if (cp == 0xF91A) return .{ .single = 0x99F1 };
+    if (cp == 0xF91B) return .{ .single = 0x4E82 };
+    if (cp == 0xF91C) return .{ .single = 0x5375 };
+    if (cp == 0xF91D) return .{ .single = 0x6B04 };
+    if (cp == 0xF91E) return .{ .single = 0x721B };
+    if (cp == 0xF91F) return .{ .single = 0x862D };
+    if (cp == 0xF920) return .{ .single = 0x9E1E };
+    if (cp == 0xF921) return .{ .single = 0x5D50 };
+    if (cp == 0xF922) return .{ .single = 0x6FEB };
+    if (cp == 0xF923) return .{ .single = 0x85CD };
+    if (cp == 0xF924) return .{ .single = 0x8964 };
+    if (cp == 0xF925) return .{ .single = 0x62C9 };
+    if (cp == 0xF926) return .{ .single = 0x81D8 };
+    if (cp == 0xF927) return .{ .single = 0x881F };
+    if (cp == 0xF928) return .{ .single = 0x5ECA };
+    if (cp == 0xF929) return .{ .single = 0x6717 };
+    if (cp == 0xF92A) return .{ .single = 0x6D6A };
+    if (cp == 0xF92B) return .{ .single = 0x72FC };
+    if (cp == 0xF92C) return .{ .single = 0x90CE };
+    if (cp == 0xF92D) return .{ .single = 0x4F86 };
+    if (cp == 0xF92E) return .{ .single = 0x51B7 };
+    if (cp == 0xF92F) return .{ .single = 0x52DE };
+    if (cp == 0xF930) return .{ .single = 0x64C4 };
+    if (cp == 0xF931) return .{ .single = 0x6AD3 };
+    if (cp == 0xF932) return .{ .single = 0x7210 };
+    if (cp == 0xF933) return .{ .single = 0x76E7 };
+    if (cp == 0xF934) return .{ .single = 0x8001 };
+    if (cp == 0xF935) return .{ .single = 0x8606 };
+    if (cp == 0xF936) return .{ .single = 0x865C };
+    if (cp == 0xF937) return .{ .single = 0x8DEF };
+    if (cp == 0xF938) return .{ .single = 0x9732 };
+    if (cp == 0xF939) return .{ .single = 0x9B6F };
+    if (cp == 0xF93A) return .{ .single = 0x9DFA };
+    if (cp == 0xF93B) return .{ .single = 0x788C };
+    if (cp == 0xF93C) return .{ .single = 0x797F };
+    if (cp == 0xF93D) return .{ .single = 0x7DA0 };
+    if (cp == 0xF93E) return .{ .single = 0x83C9 };
+    if (cp == 0xF93F) return .{ .single = 0x9304 };
+    if (cp == 0xF940) return .{ .single = 0x9E7F };
+    if (cp == 0xF941) return .{ .single = 0x8AD6 };
+    if (cp == 0xF942) return .{ .single = 0x58DF };
+    if (cp == 0xF943) return .{ .single = 0x5F04 };
+    if (cp == 0xF944) return .{ .single = 0x7C60 };
+    if (cp == 0xF945) return .{ .single = 0x807E };
+    if (cp == 0xF946) return .{ .single = 0x7262 };
+    if (cp == 0xF947) return .{ .single = 0x78CA };
+    if (cp == 0xF948) return .{ .single = 0x8CC2 };
+    if (cp == 0xF949) return .{ .single = 0x96F7 };
+    if (cp == 0xF94A) return .{ .single = 0x58D8 };
+    if (cp == 0xF94B) return .{ .single = 0x5C62 };
+    if (cp == 0xF94C) return .{ .single = 0x6A13 };
+    if (cp == 0xF94D) return .{ .single = 0x6DDA };
+    if (cp == 0xF94E) return .{ .single = 0x6F0F };
+    if (cp == 0xF94F) return .{ .single = 0x7D2F };
+    if (cp == 0xF950) return .{ .single = 0x7E37 };
+    if (cp == 0xF951) return .{ .single = 0x964B };
+    if (cp == 0xF952) return .{ .single = 0x52D2 };
+    if (cp == 0xF953) return .{ .single = 0x808B };
+    if (cp == 0xF954) return .{ .single = 0x51DC };
+    if (cp == 0xF955) return .{ .single = 0x51CC };
+    if (cp == 0xF956) return .{ .single = 0x7A1C };
+    if (cp == 0xF957) return .{ .single = 0x7DBE };
+    if (cp == 0xF958) return .{ .single = 0x83F1 };
+    if (cp == 0xF959) return .{ .single = 0x9675 };
+    if (cp == 0xF95A) return .{ .single = 0x8B80 };
+    if (cp == 0xF95B) return .{ .single = 0x62CF };
+    if (cp == 0xF95C) return .{ .single = 0x6A02 };
+    if (cp == 0xF95D) return .{ .single = 0x8AFE };
+    if (cp == 0xF95E) return .{ .single = 0x4E39 };
+    if (cp == 0xF95F) return .{ .single = 0x5BE7 };
+    if (cp == 0xF960) return .{ .single = 0x6012 };
+    if (cp == 0xF961) return .{ .single = 0x7387 };
+    if (cp == 0xF962) return .{ .single = 0x7570 };
+    if (cp == 0xF963) return .{ .single = 0x5317 };
+    if (cp == 0xF964) return .{ .single = 0x78FB };
+    if (cp == 0xF965) return .{ .single = 0x4FBF };
+    if (cp == 0xF966) return .{ .single = 0x5FA9 };
+    if (cp == 0xF967) return .{ .single = 0x4E0D };
+    if (cp == 0xF968) return .{ .single = 0x6CCC };
+    if (cp == 0xF969) return .{ .single = 0x6578 };
+    if (cp == 0xF96A) return .{ .single = 0x7D22 };
+    if (cp == 0xF96B) return .{ .single = 0x53C3 };
+    if (cp == 0xF96C) return .{ .single = 0x585E };
+    if (cp == 0xF96D) return .{ .single = 0x7701 };
+    if (cp == 0xF96E) return .{ .single = 0x8449 };
+    if (cp == 0xF96F) return .{ .single = 0x8AAA };
+    if (cp == 0xF970) return .{ .single = 0x6BBA };
+    if (cp == 0xF971) return .{ .single = 0x8FB0 };
+    if (cp == 0xF972) return .{ .single = 0x6C88 };
+    if (cp == 0xF973) return .{ .single = 0x62FE };
+    if (cp == 0xF974) return .{ .single = 0x82E5 };
+    if (cp == 0xF975) return .{ .single = 0x63A0 };
+    if (cp == 0xF976) return .{ .single = 0x7565 };
+    if (cp == 0xF977) return .{ .single = 0x4EAE };
+    if (cp == 0xF978) return .{ .single = 0x5169 };
+    if (cp == 0xF979) return .{ .single = 0x51C9 };
+    if (cp == 0xF97A) return .{ .single = 0x6881 };
+    if (cp == 0xF97B) return .{ .single = 0x7CE7 };
+    if (cp == 0xF97C) return .{ .single = 0x826F };
+    if (cp == 0xF97D) return .{ .single = 0x8AD2 };
+    if (cp == 0xF97E) return .{ .single = 0x91CF };
+    if (cp == 0xF97F) return .{ .single = 0x52F5 };
+    if (cp == 0xF980) return .{ .single = 0x5442 };
+    if (cp == 0xF981) return .{ .single = 0x5973 };
+    if (cp == 0xF982) return .{ .single = 0x5EEC };
+    if (cp == 0xF983) return .{ .single = 0x65C5 };
+    if (cp == 0xF984) return .{ .single = 0x6FFE };
+    if (cp == 0xF985) return .{ .single = 0x792A };
+    if (cp == 0xF986) return .{ .single = 0x95AD };
+    if (cp == 0xF987) return .{ .single = 0x9A6A };
+    if (cp == 0xF988) return .{ .single = 0x9E97 };
+    if (cp == 0xF989) return .{ .single = 0x9ECE };
+    if (cp == 0xF98A) return .{ .single = 0x529B };
+    if (cp == 0xF98B) return .{ .single = 0x66C6 };
+    if (cp == 0xF98C) return .{ .single = 0x6B77 };
+    if (cp == 0xF98D) return .{ .single = 0x8F62 };
+    if (cp == 0xF98E) return .{ .single = 0x5E74 };
+    if (cp == 0xF98F) return .{ .single = 0x6190 };
+    if (cp == 0xF990) return .{ .single = 0x6200 };
+    if (cp == 0xF991) return .{ .single = 0x649A };
+    if (cp == 0xF992) return .{ .single = 0x6F23 };
+    if (cp == 0xF993) return .{ .single = 0x7149 };
+    if (cp == 0xF994) return .{ .single = 0x7489 };
+    if (cp == 0xF995) return .{ .single = 0x79CA };
+    if (cp == 0xF996) return .{ .single = 0x7DF4 };
+    if (cp == 0xF997) return .{ .single = 0x806F };
+    if (cp == 0xF998) return .{ .single = 0x8F26 };
+    if (cp == 0xF999) return .{ .single = 0x84EE };
+    if (cp == 0xF99A) return .{ .single = 0x9023 };
+    if (cp == 0xF99B) return .{ .single = 0x934A };
+    if (cp == 0xF99C) return .{ .single = 0x5217 };
+    if (cp == 0xF99D) return .{ .single = 0x52A3 };
+    if (cp == 0xF99E) return .{ .single = 0x54BD };
+    if (cp == 0xF99F) return .{ .single = 0x70C8 };
+    if (cp == 0xF9A0) return .{ .single = 0x88C2 };
+    if (cp == 0xF9A1) return .{ .single = 0x8AAA };
+    if (cp == 0xF9A2) return .{ .single = 0x5EC9 };
+    if (cp == 0xF9A3) return .{ .single = 0x5FF5 };
+    if (cp == 0xF9A4) return .{ .single = 0x637B };
+    if (cp == 0xF9A5) return .{ .single = 0x6BAE };
+    if (cp == 0xF9A6) return .{ .single = 0x7C3E };
+    if (cp == 0xF9A7) return .{ .single = 0x7375 };
+    if (cp == 0xF9A8) return .{ .single = 0x4EE4 };
+    if (cp == 0xF9A9) return .{ .single = 0x56F9 };
+    if (cp == 0xF9AA) return .{ .single = 0x5BE7 };
+    if (cp == 0xF9AB) return .{ .single = 0x5DBA };
+    if (cp == 0xF9AC) return .{ .single = 0x601C };
+    if (cp == 0xF9AD) return .{ .single = 0x73B2 };
+    if (cp == 0xF9AE) return .{ .single = 0x7469 };
+    if (cp == 0xF9AF) return .{ .single = 0x7F9A };
+    if (cp == 0xF9B0) return .{ .single = 0x8046 };
+    if (cp == 0xF9B1) return .{ .single = 0x9234 };
+    if (cp == 0xF9B2) return .{ .single = 0x96F6 };
+    if (cp == 0xF9B3) return .{ .single = 0x9748 };
+    if (cp == 0xF9B4) return .{ .single = 0x9818 };
+    if (cp == 0xF9B5) return .{ .single = 0x4F8B };
+    if (cp == 0xF9B6) return .{ .single = 0x79AE };
+    if (cp == 0xF9B7) return .{ .single = 0x91B4 };
+    if (cp == 0xF9B8) return .{ .single = 0x96B8 };
+    if (cp == 0xF9B9) return .{ .single = 0x60E1 };
+    if (cp == 0xF9BA) return .{ .single = 0x4E86 };
+    if (cp == 0xF9BB) return .{ .single = 0x50DA };
+    if (cp == 0xF9BC) return .{ .single = 0x5BEE };
+    if (cp == 0xF9BD) return .{ .single = 0x5C3F };
+    if (cp == 0xF9BE) return .{ .single = 0x6599 };
+    if (cp == 0xF9BF) return .{ .single = 0x6A02 };
+    if (cp == 0xF9C0) return .{ .single = 0x71CE };
+    if (cp == 0xF9C1) return .{ .single = 0x7642 };
+    if (cp == 0xF9C2) return .{ .single = 0x84FC };
+    if (cp == 0xF9C3) return .{ .single = 0x907C };
+    if (cp == 0xF9C4) return .{ .single = 0x9F8D };
+    if (cp == 0xF9C5) return .{ .single = 0x6688 };
+    if (cp == 0xF9C6) return .{ .single = 0x962E };
+    if (cp == 0xF9C7) return .{ .single = 0x5289 };
+    if (cp == 0xF9C8) return .{ .single = 0x677B };
+    if (cp == 0xF9C9) return .{ .single = 0x67F3 };
+    if (cp == 0xF9CA) return .{ .single = 0x6D41 };
+    if (cp == 0xF9CB) return .{ .single = 0x6E9C };
+    if (cp == 0xF9CC) return .{ .single = 0x7409 };
+    if (cp == 0xF9CD) return .{ .single = 0x7559 };
+    if (cp == 0xF9CE) return .{ .single = 0x786B };
+    if (cp == 0xF9CF) return .{ .single = 0x7D10 };
+    if (cp == 0xF9D0) return .{ .single = 0x985E };
+    if (cp == 0xF9D1) return .{ .single = 0x516D };
+    if (cp == 0xF9D2) return .{ .single = 0x622E };
+    if (cp == 0xF9D3) return .{ .single = 0x9678 };
+    if (cp == 0xF9D4) return .{ .single = 0x502B };
+    if (cp == 0xF9D5) return .{ .single = 0x5D19 };
+    if (cp == 0xF9D6) return .{ .single = 0x6DEA };
+    if (cp == 0xF9D7) return .{ .single = 0x8F2A };
+    if (cp == 0xF9D8) return .{ .single = 0x5F8B };
+    if (cp == 0xF9D9) return .{ .single = 0x6144 };
+    if (cp == 0xF9DA) return .{ .single = 0x6817 };
+    if (cp == 0xF9DB) return .{ .single = 0x7387 };
+    if (cp == 0xF9DC) return .{ .single = 0x9686 };
+    if (cp == 0xF9DD) return .{ .single = 0x5229 };
+    if (cp == 0xF9DE) return .{ .single = 0x540F };
+    if (cp == 0xF9DF) return .{ .single = 0x5C65 };
+    if (cp == 0xF9E0) return .{ .single = 0x6613 };
+    if (cp == 0xF9E1) return .{ .single = 0x674E };
+    if (cp == 0xF9E2) return .{ .single = 0x68A8 };
+    if (cp == 0xF9E3) return .{ .single = 0x6CE5 };
+    if (cp == 0xF9E4) return .{ .single = 0x7406 };
+    if (cp == 0xF9E5) return .{ .single = 0x75E2 };
+    if (cp == 0xF9E6) return .{ .single = 0x7F79 };
+    if (cp == 0xF9E7) return .{ .single = 0x88CF };
+    if (cp == 0xF9E8) return .{ .single = 0x88E1 };
+    if (cp == 0xF9E9) return .{ .single = 0x91CC };
+    if (cp == 0xF9EA) return .{ .single = 0x96E2 };
+    if (cp == 0xF9EB) return .{ .single = 0x533F };
+    if (cp == 0xF9EC) return .{ .single = 0x6EBA };
+    if (cp == 0xF9ED) return .{ .single = 0x541D };
+    if (cp == 0xF9EE) return .{ .single = 0x71D0 };
+    if (cp == 0xF9EF) return .{ .single = 0x7498 };
+    if (cp == 0xF9F0) return .{ .single = 0x85FA };
+    if (cp == 0xF9F1) return .{ .single = 0x96A3 };
+    if (cp == 0xF9F2) return .{ .single = 0x9C57 };
+    if (cp == 0xF9F3) return .{ .single = 0x9E9F };
+    if (cp == 0xF9F4) return .{ .single = 0x6797 };
+    if (cp == 0xF9F5) return .{ .single = 0x6DCB };
+    if (cp == 0xF9F6) return .{ .single = 0x81E8 };
+    if (cp == 0xF9F7) return .{ .single = 0x7ACB };
+    if (cp == 0xF9F8) return .{ .single = 0x7B20 };
+    if (cp == 0xF9F9) return .{ .single = 0x7C92 };
+    if (cp == 0xF9FA) return .{ .single = 0x72C0 };
+    if (cp == 0xF9FB) return .{ .single = 0x7099 };
+    if (cp == 0xF9FC) return .{ .single = 0x8B58 };
+    if (cp == 0xF9FD) return .{ .single = 0x4EC0 };
+    if (cp == 0xF9FE) return .{ .single = 0x8336 };
+    if (cp == 0xF9FF) return .{ .single = 0x523A };
+    if (cp == 0xFA00) return .{ .single = 0x5207 };
+    if (cp == 0xFA01) return .{ .single = 0x5EA6 };
+    if (cp == 0xFA02) return .{ .single = 0x62D3 };
+    if (cp == 0xFA03) return .{ .single = 0x7CD6 };
+    if (cp == 0xFA04) return .{ .single = 0x5B85 };
+    if (cp == 0xFA05) return .{ .single = 0x6D1E };
+    if (cp == 0xFA06) return .{ .single = 0x66B4 };
+    if (cp == 0xFA07) return .{ .single = 0x8F3B };
+    if (cp == 0xFA08) return .{ .single = 0x884C };
+    if (cp == 0xFA09) return .{ .single = 0x964D };
+    if (cp == 0xFA0A) return .{ .single = 0x898B };
+    if (cp == 0xFA0B) return .{ .single = 0x5ED3 };
+    if (cp == 0xFA0C) return .{ .single = 0x5140 };
+    if (cp == 0xFA0D) return .{ .single = 0x55C0 };
+    if (cp == 0xFA10) return .{ .single = 0x585A };
+    if (cp == 0xFA12) return .{ .single = 0x6674 };
+    if (cp == 0xFA15) return .{ .single = 0x51DE };
+    if (cp == 0xFA16) return .{ .single = 0x732A };
+    if (cp == 0xFA17) return .{ .single = 0x76CA };
+    if (cp == 0xFA18) return .{ .single = 0x793C };
+    if (cp == 0xFA19) return .{ .single = 0x795E };
+    if (cp == 0xFA1A) return .{ .single = 0x7965 };
+    if (cp == 0xFA1B) return .{ .single = 0x798F };
+    if (cp == 0xFA1C) return .{ .single = 0x9756 };
+    if (cp == 0xFA1D) return .{ .single = 0x7CBE };
+    if (cp == 0xFA1E) return .{ .single = 0x7FBD };
+    if (cp == 0xFA20) return .{ .single = 0x8612 };
+    if (cp == 0xFA22) return .{ .single = 0x8AF8 };
+    if (cp == 0xFA25) return .{ .single = 0x9038 };
+    if (cp == 0xFA26) return .{ .single = 0x90FD };
+    if (cp == 0xFA2A) return .{ .single = 0x98EF };
+    if (cp == 0xFA2B) return .{ .single = 0x98FC };
+    if (cp == 0xFA2C) return .{ .single = 0x9928 };
+    if (cp == 0xFA2D) return .{ .single = 0x9DB4 };
+    if (cp == 0xFA2E) return .{ .single = 0x90DE };
+    if (cp == 0xFA2F) return .{ .single = 0x96B7 };
+    if (cp == 0xFA30) return .{ .single = 0x4FAE };
+    if (cp == 0xFA31) return .{ .single = 0x50E7 };
+    if (cp == 0xFA32) return .{ .single = 0x514D };
+    if (cp == 0xFA33) return .{ .single = 0x52C9 };
+    if (cp == 0xFA34) return .{ .single = 0x52E4 };
+    if (cp == 0xFA35) return .{ .single = 0x5351 };
+    if (cp == 0xFA36) return .{ .single = 0x559D };
+    if (cp == 0xFA37) return .{ .single = 0x5606 };
+    if (cp == 0xFA38) return .{ .single = 0x5668 };
+    if (cp == 0xFA39) return .{ .single = 0x5840 };
+    if (cp == 0xFA3A) return .{ .single = 0x58A8 };
+    if (cp == 0xFA3B) return .{ .single = 0x5C64 };
+    if (cp == 0xFA3C) return .{ .single = 0x5C6E };
+    if (cp == 0xFA3D) return .{ .single = 0x6094 };
+    if (cp == 0xFA3E) return .{ .single = 0x6168 };
+    if (cp == 0xFA3F) return .{ .single = 0x618E };
+    if (cp == 0xFA40) return .{ .single = 0x61F2 };
+    if (cp == 0xFA41) return .{ .single = 0x654F };
+    if (cp == 0xFA42) return .{ .single = 0x65E2 };
+    if (cp == 0xFA43) return .{ .single = 0x6691 };
+    if (cp == 0xFA44) return .{ .single = 0x6885 };
+    if (cp == 0xFA45) return .{ .single = 0x6D77 };
+    if (cp == 0xFA46) return .{ .single = 0x6E1A };
+    if (cp == 0xFA47) return .{ .single = 0x6F22 };
+    if (cp == 0xFA48) return .{ .single = 0x716E };
+    if (cp == 0xFA49) return .{ .single = 0x722B };
+    if (cp == 0xFA4A) return .{ .single = 0x7422 };
+    if (cp == 0xFA4B) return .{ .single = 0x7891 };
+    if (cp == 0xFA4C) return .{ .single = 0x793E };
+    if (cp == 0xFA4D) return .{ .single = 0x7949 };
+    if (cp == 0xFA4E) return .{ .single = 0x7948 };
+    if (cp == 0xFA4F) return .{ .single = 0x7950 };
+    if (cp == 0xFA50) return .{ .single = 0x7956 };
+    if (cp == 0xFA51) return .{ .single = 0x795D };
+    if (cp == 0xFA52) return .{ .single = 0x798D };
+    if (cp == 0xFA53) return .{ .single = 0x798E };
+    if (cp == 0xFA54) return .{ .single = 0x7A40 };
+    if (cp == 0xFA55) return .{ .single = 0x7A81 };
+    if (cp == 0xFA56) return .{ .single = 0x7BC0 };
+    if (cp == 0xFA57) return .{ .single = 0x7DF4 };
+    if (cp == 0xFA58) return .{ .single = 0x7E09 };
+    if (cp == 0xFA59) return .{ .single = 0x7E41 };
+    if (cp == 0xFA5A) return .{ .single = 0x7F72 };
+    if (cp == 0xFA5B) return .{ .single = 0x8005 };
+    if (cp == 0xFA5C) return .{ .single = 0x81ED };
+    if (cp == 0xFA5D) return .{ .single = 0x8279 };
+    if (cp == 0xFA5E) return .{ .single = 0x8279 };
+    if (cp == 0xFA5F) return .{ .single = 0x8457 };
+    if (cp == 0xFA60) return .{ .single = 0x8910 };
+    if (cp == 0xFA61) return .{ .single = 0x8996 };
+    if (cp == 0xFA62) return .{ .single = 0x8B01 };
+    if (cp == 0xFA63) return .{ .single = 0x8B39 };
+    if (cp == 0xFA64) return .{ .single = 0x8CD3 };
+    if (cp == 0xFA65) return .{ .single = 0x8D08 };
+    if (cp == 0xFA66) return .{ .single = 0x8FB6 };
+    if (cp == 0xFA67) return .{ .single = 0x9038 };
+    if (cp == 0xFA68) return .{ .single = 0x96E3 };
+    if (cp == 0xFA69) return .{ .single = 0x97FF };
+    if (cp == 0xFA6A) return .{ .single = 0x983B };
+    if (cp == 0xFA6B) return .{ .single = 0x6075 };
+    if (cp == 0xFA6C) return .{ .single = 0x242EE };
+    if (cp == 0xFA6D) return .{ .single = 0x8218 };
+    if (cp == 0xFA70) return .{ .single = 0x4E26 };
+    if (cp == 0xFA71) return .{ .single = 0x51B5 };
+    if (cp == 0xFA72) return .{ .single = 0x5168 };
+    if (cp == 0xFA73) return .{ .single = 0x4F80 };
+    if (cp == 0xFA74) return .{ .single = 0x5145 };
+    if (cp == 0xFA75) return .{ .single = 0x5180 };
+    if (cp == 0xFA76) return .{ .single = 0x52C7 };
+    if (cp == 0xFA77) return .{ .single = 0x52FA };
+    if (cp == 0xFA78) return .{ .single = 0x559D };
+    if (cp == 0xFA79) return .{ .single = 0x5555 };
+    if (cp == 0xFA7A) return .{ .single = 0x5599 };
+    if (cp == 0xFA7B) return .{ .single = 0x55E2 };
+    if (cp == 0xFA7C) return .{ .single = 0x585A };
+    if (cp == 0xFA7D) return .{ .single = 0x58B3 };
+    if (cp == 0xFA7E) return .{ .single = 0x5944 };
+    if (cp == 0xFA7F) return .{ .single = 0x5954 };
+    if (cp == 0xFA80) return .{ .single = 0x5A62 };
+    if (cp == 0xFA81) return .{ .single = 0x5B28 };
+    if (cp == 0xFA82) return .{ .single = 0x5ED2 };
+    if (cp == 0xFA83) return .{ .single = 0x5ED9 };
+    if (cp == 0xFA84) return .{ .single = 0x5F69 };
+    if (cp == 0xFA85) return .{ .single = 0x5FAD };
+    if (cp == 0xFA86) return .{ .single = 0x60D8 };
+    if (cp == 0xFA87) return .{ .single = 0x614E };
+    if (cp == 0xFA88) return .{ .single = 0x6108 };
+    if (cp == 0xFA89) return .{ .single = 0x618E };
+    if (cp == 0xFA8A) return .{ .single = 0x6160 };
+    if (cp == 0xFA8B) return .{ .single = 0x61F2 };
+    if (cp == 0xFA8C) return .{ .single = 0x6234 };
+    if (cp == 0xFA8D) return .{ .single = 0x63C4 };
+    if (cp == 0xFA8E) return .{ .single = 0x641C };
+    if (cp == 0xFA8F) return .{ .single = 0x6452 };
+    if (cp == 0xFA90) return .{ .single = 0x6556 };
+    if (cp == 0xFA91) return .{ .single = 0x6674 };
+    if (cp == 0xFA92) return .{ .single = 0x6717 };
+    if (cp == 0xFA93) return .{ .single = 0x671B };
+    if (cp == 0xFA94) return .{ .single = 0x6756 };
+    if (cp == 0xFA95) return .{ .single = 0x6B79 };
+    if (cp == 0xFA96) return .{ .single = 0x6BBA };
+    if (cp == 0xFA97) return .{ .single = 0x6D41 };
+    if (cp == 0xFA98) return .{ .single = 0x6EDB };
+    if (cp == 0xFA99) return .{ .single = 0x6ECB };
+    if (cp == 0xFA9A) return .{ .single = 0x6F22 };
+    if (cp == 0xFA9B) return .{ .single = 0x701E };
+    if (cp == 0xFA9C) return .{ .single = 0x716E };
+    if (cp == 0xFA9D) return .{ .single = 0x77A7 };
+    if (cp == 0xFA9E) return .{ .single = 0x7235 };
+    if (cp == 0xFA9F) return .{ .single = 0x72AF };
+    if (cp == 0xFAA0) return .{ .single = 0x732A };
+    if (cp == 0xFAA1) return .{ .single = 0x7471 };
+    if (cp == 0xFAA2) return .{ .single = 0x7506 };
+    if (cp == 0xFAA3) return .{ .single = 0x753B };
+    if (cp == 0xFAA4) return .{ .single = 0x761D };
+    if (cp == 0xFAA5) return .{ .single = 0x761F };
+    if (cp == 0xFAA6) return .{ .single = 0x76CA };
+    if (cp == 0xFAA7) return .{ .single = 0x76DB };
+    if (cp == 0xFAA8) return .{ .single = 0x76F4 };
+    if (cp == 0xFAA9) return .{ .single = 0x774A };
+    if (cp == 0xFAAA) return .{ .single = 0x7740 };
+    if (cp == 0xFAAB) return .{ .single = 0x78CC };
+    if (cp == 0xFAAC) return .{ .single = 0x7AB1 };
+    if (cp == 0xFAAD) return .{ .single = 0x7BC0 };
+    if (cp == 0xFAAE) return .{ .single = 0x7C7B };
+    if (cp == 0xFAAF) return .{ .single = 0x7D5B };
+    if (cp == 0xFAB0) return .{ .single = 0x7DF4 };
+    if (cp == 0xFAB1) return .{ .single = 0x7F3E };
+    if (cp == 0xFAB2) return .{ .single = 0x8005 };
+    if (cp == 0xFAB3) return .{ .single = 0x8352 };
+    if (cp == 0xFAB4) return .{ .single = 0x83EF };
+    if (cp == 0xFAB5) return .{ .single = 0x8779 };
+    if (cp == 0xFAB6) return .{ .single = 0x8941 };
+    if (cp == 0xFAB7) return .{ .single = 0x8986 };
+    if (cp == 0xFAB8) return .{ .single = 0x8996 };
+    if (cp == 0xFAB9) return .{ .single = 0x8ABF };
+    if (cp == 0xFABA) return .{ .single = 0x8AF8 };
+    if (cp == 0xFABB) return .{ .single = 0x8ACB };
+    if (cp == 0xFABC) return .{ .single = 0x8B01 };
+    if (cp == 0xFABD) return .{ .single = 0x8AFE };
+    if (cp == 0xFABE) return .{ .single = 0x8AED };
+    if (cp == 0xFABF) return .{ .single = 0x8B39 };
+    if (cp == 0xFAC0) return .{ .single = 0x8B8A };
+    if (cp == 0xFAC1) return .{ .single = 0x8D08 };
+    if (cp == 0xFAC2) return .{ .single = 0x8F38 };
+    if (cp == 0xFAC3) return .{ .single = 0x9072 };
+    if (cp == 0xFAC4) return .{ .single = 0x9199 };
+    if (cp == 0xFAC5) return .{ .single = 0x9276 };
+    if (cp == 0xFAC6) return .{ .single = 0x967C };
+    if (cp == 0xFAC7) return .{ .single = 0x96E3 };
+    if (cp == 0xFAC8) return .{ .single = 0x9756 };
+    if (cp == 0xFAC9) return .{ .single = 0x97DB };
+    if (cp == 0xFACA) return .{ .single = 0x97FF };
+    if (cp == 0xFACB) return .{ .single = 0x980B };
+    if (cp == 0xFACC) return .{ .single = 0x983B };
+    if (cp == 0xFACD) return .{ .single = 0x9B12 };
+    if (cp == 0xFACE) return .{ .single = 0x9F9C };
+    if (cp == 0xFACF) return .{ .single = 0x2284A };
+    if (cp == 0xFAD0) return .{ .single = 0x22844 };
+    if (cp == 0xFAD1) return .{ .single = 0x233D5 };
+    if (cp == 0xFAD2) return .{ .single = 0x3B9D };
+    if (cp == 0xFAD3) return .{ .single = 0x4018 };
+    if (cp == 0xFAD4) return .{ .single = 0x4039 };
+    if (cp == 0xFAD5) return .{ .single = 0x25249 };
+    if (cp == 0xFAD6) return .{ .single = 0x25CD0 };
+    if (cp == 0xFAD7) return .{ .single = 0x27ED3 };
+    if (cp == 0xFAD8) return .{ .single = 0x9F43 };
+    if (cp == 0xFAD9) return .{ .single = 0x9F8E };
+    if (cp == 0xFB00) return .{ .compat = &[_]u21{
         0x0066,
         0x0066,
-    } });
-    try self.map.put(0xFB01, .{ .compat = &[_]u21{
-        0x0066,
-        0x0069,
-    } });
-    try self.map.put(0xFB02, .{ .compat = &[_]u21{
-        0x0066,
-        0x006C,
-    } });
-    try self.map.put(0xFB03, .{ .compat = &[_]u21{
-        0x0066,
+    } };
+    if (cp == 0xFB01) return .{ .compat = &[_]u21{
         0x0066,
         0x0069,
-    } });
-    try self.map.put(0xFB04, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB02) return .{ .compat = &[_]u21{
+        0x0066,
+        0x006C,
+    } };
+    if (cp == 0xFB03) return .{ .compat = &[_]u21{
+        0x0066,
+        0x0066,
+        0x0069,
+    } };
+    if (cp == 0xFB04) return .{ .compat = &[_]u21{
         0x0066,
         0x0066,
         0x006C,
-    } });
-    try self.map.put(0xFB05, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB05) return .{ .compat = &[_]u21{
         0x017F,
         0x0074,
-    } });
-    try self.map.put(0xFB06, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB06) return .{ .compat = &[_]u21{
         0x0073,
         0x0074,
-    } });
-    try self.map.put(0xFB13, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB13) return .{ .compat = &[_]u21{
         0x0574,
         0x0576,
-    } });
-    try self.map.put(0xFB14, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB14) return .{ .compat = &[_]u21{
         0x0574,
         0x0565,
-    } });
-    try self.map.put(0xFB15, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB15) return .{ .compat = &[_]u21{
         0x0574,
         0x056B,
-    } });
-    try self.map.put(0xFB16, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB16) return .{ .compat = &[_]u21{
         0x057E,
         0x0576,
-    } });
-    try self.map.put(0xFB17, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB17) return .{ .compat = &[_]u21{
         0x0574,
         0x056D,
-    } });
-    try self.map.put(0xFB1D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB1D) return .{ .canon = [2]u21{
         0x05D9,
         0x05B4,
-    } });
-    try self.map.put(0xFB1F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB1F) return .{ .canon = [2]u21{
         0x05F2,
         0x05B7,
-    } });
-    try self.map.put(0xFB20, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB20) return .{ .compat = &[_]u21{
         0x05E2,
-    } });
-    try self.map.put(0xFB21, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB21) return .{ .compat = &[_]u21{
         0x05D0,
-    } });
-    try self.map.put(0xFB22, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB22) return .{ .compat = &[_]u21{
         0x05D3,
-    } });
-    try self.map.put(0xFB23, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB23) return .{ .compat = &[_]u21{
         0x05D4,
-    } });
-    try self.map.put(0xFB24, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB24) return .{ .compat = &[_]u21{
         0x05DB,
-    } });
-    try self.map.put(0xFB25, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB25) return .{ .compat = &[_]u21{
         0x05DC,
-    } });
-    try self.map.put(0xFB26, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB26) return .{ .compat = &[_]u21{
         0x05DD,
-    } });
-    try self.map.put(0xFB27, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB27) return .{ .compat = &[_]u21{
         0x05E8,
-    } });
-    try self.map.put(0xFB28, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB28) return .{ .compat = &[_]u21{
         0x05EA,
-    } });
-    try self.map.put(0xFB29, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB29) return .{ .compat = &[_]u21{
         0x002B,
-    } });
-    try self.map.put(0xFB2A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB2A) return .{ .canon = [2]u21{
         0x05E9,
         0x05C1,
-    } });
-    try self.map.put(0xFB2B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB2B) return .{ .canon = [2]u21{
         0x05E9,
         0x05C2,
-    } });
-    try self.map.put(0xFB2C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB2C) return .{ .canon = [2]u21{
         0xFB49,
         0x05C1,
-    } });
-    try self.map.put(0xFB2D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB2D) return .{ .canon = [2]u21{
         0xFB49,
         0x05C2,
-    } });
-    try self.map.put(0xFB2E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB2E) return .{ .canon = [2]u21{
         0x05D0,
         0x05B7,
-    } });
-    try self.map.put(0xFB2F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB2F) return .{ .canon = [2]u21{
         0x05D0,
         0x05B8,
-    } });
-    try self.map.put(0xFB30, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB30) return .{ .canon = [2]u21{
         0x05D0,
         0x05BC,
-    } });
-    try self.map.put(0xFB31, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB31) return .{ .canon = [2]u21{
         0x05D1,
         0x05BC,
-    } });
-    try self.map.put(0xFB32, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB32) return .{ .canon = [2]u21{
         0x05D2,
         0x05BC,
-    } });
-    try self.map.put(0xFB33, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB33) return .{ .canon = [2]u21{
         0x05D3,
         0x05BC,
-    } });
-    try self.map.put(0xFB34, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB34) return .{ .canon = [2]u21{
         0x05D4,
         0x05BC,
-    } });
-    try self.map.put(0xFB35, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB35) return .{ .canon = [2]u21{
         0x05D5,
         0x05BC,
-    } });
-    try self.map.put(0xFB36, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB36) return .{ .canon = [2]u21{
         0x05D6,
         0x05BC,
-    } });
-    try self.map.put(0xFB38, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB38) return .{ .canon = [2]u21{
         0x05D8,
         0x05BC,
-    } });
-    try self.map.put(0xFB39, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB39) return .{ .canon = [2]u21{
         0x05D9,
         0x05BC,
-    } });
-    try self.map.put(0xFB3A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB3A) return .{ .canon = [2]u21{
         0x05DA,
         0x05BC,
-    } });
-    try self.map.put(0xFB3B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB3B) return .{ .canon = [2]u21{
         0x05DB,
         0x05BC,
-    } });
-    try self.map.put(0xFB3C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB3C) return .{ .canon = [2]u21{
         0x05DC,
         0x05BC,
-    } });
-    try self.map.put(0xFB3E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB3E) return .{ .canon = [2]u21{
         0x05DE,
         0x05BC,
-    } });
-    try self.map.put(0xFB40, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB40) return .{ .canon = [2]u21{
         0x05E0,
         0x05BC,
-    } });
-    try self.map.put(0xFB41, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB41) return .{ .canon = [2]u21{
         0x05E1,
         0x05BC,
-    } });
-    try self.map.put(0xFB43, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB43) return .{ .canon = [2]u21{
         0x05E3,
         0x05BC,
-    } });
-    try self.map.put(0xFB44, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB44) return .{ .canon = [2]u21{
         0x05E4,
         0x05BC,
-    } });
-    try self.map.put(0xFB46, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB46) return .{ .canon = [2]u21{
         0x05E6,
         0x05BC,
-    } });
-    try self.map.put(0xFB47, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB47) return .{ .canon = [2]u21{
         0x05E7,
         0x05BC,
-    } });
-    try self.map.put(0xFB48, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB48) return .{ .canon = [2]u21{
         0x05E8,
         0x05BC,
-    } });
-    try self.map.put(0xFB49, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB49) return .{ .canon = [2]u21{
         0x05E9,
         0x05BC,
-    } });
-    try self.map.put(0xFB4A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB4A) return .{ .canon = [2]u21{
         0x05EA,
         0x05BC,
-    } });
-    try self.map.put(0xFB4B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB4B) return .{ .canon = [2]u21{
         0x05D5,
         0x05B9,
-    } });
-    try self.map.put(0xFB4C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB4C) return .{ .canon = [2]u21{
         0x05D1,
         0x05BF,
-    } });
-    try self.map.put(0xFB4D, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB4D) return .{ .canon = [2]u21{
         0x05DB,
         0x05BF,
-    } });
-    try self.map.put(0xFB4E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0xFB4E) return .{ .canon = [2]u21{
         0x05E4,
         0x05BF,
-    } });
-    try self.map.put(0xFB4F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB4F) return .{ .compat = &[_]u21{
         0x05D0,
         0x05DC,
-    } });
-    try self.map.put(0xFB50, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB50) return .{ .compat = &[_]u21{
         0x0671,
-    } });
-    try self.map.put(0xFB51, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB51) return .{ .compat = &[_]u21{
         0x0671,
-    } });
-    try self.map.put(0xFB52, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB52) return .{ .compat = &[_]u21{
         0x067B,
-    } });
-    try self.map.put(0xFB53, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB53) return .{ .compat = &[_]u21{
         0x067B,
-    } });
-    try self.map.put(0xFB54, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB54) return .{ .compat = &[_]u21{
         0x067B,
-    } });
-    try self.map.put(0xFB55, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB55) return .{ .compat = &[_]u21{
         0x067B,
-    } });
-    try self.map.put(0xFB56, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB56) return .{ .compat = &[_]u21{
         0x067E,
-    } });
-    try self.map.put(0xFB57, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB57) return .{ .compat = &[_]u21{
         0x067E,
-    } });
-    try self.map.put(0xFB58, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB58) return .{ .compat = &[_]u21{
         0x067E,
-    } });
-    try self.map.put(0xFB59, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB59) return .{ .compat = &[_]u21{
         0x067E,
-    } });
-    try self.map.put(0xFB5A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB5A) return .{ .compat = &[_]u21{
         0x0680,
-    } });
-    try self.map.put(0xFB5B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB5B) return .{ .compat = &[_]u21{
         0x0680,
-    } });
-    try self.map.put(0xFB5C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB5C) return .{ .compat = &[_]u21{
         0x0680,
-    } });
-    try self.map.put(0xFB5D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB5D) return .{ .compat = &[_]u21{
         0x0680,
-    } });
-    try self.map.put(0xFB5E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB5E) return .{ .compat = &[_]u21{
         0x067A,
-    } });
-    try self.map.put(0xFB5F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB5F) return .{ .compat = &[_]u21{
         0x067A,
-    } });
-    try self.map.put(0xFB60, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB60) return .{ .compat = &[_]u21{
         0x067A,
-    } });
-    try self.map.put(0xFB61, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB61) return .{ .compat = &[_]u21{
         0x067A,
-    } });
-    try self.map.put(0xFB62, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB62) return .{ .compat = &[_]u21{
         0x067F,
-    } });
-    try self.map.put(0xFB63, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB63) return .{ .compat = &[_]u21{
         0x067F,
-    } });
-    try self.map.put(0xFB64, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB64) return .{ .compat = &[_]u21{
         0x067F,
-    } });
-    try self.map.put(0xFB65, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB65) return .{ .compat = &[_]u21{
         0x067F,
-    } });
-    try self.map.put(0xFB66, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB66) return .{ .compat = &[_]u21{
         0x0679,
-    } });
-    try self.map.put(0xFB67, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB67) return .{ .compat = &[_]u21{
         0x0679,
-    } });
-    try self.map.put(0xFB68, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB68) return .{ .compat = &[_]u21{
         0x0679,
-    } });
-    try self.map.put(0xFB69, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB69) return .{ .compat = &[_]u21{
         0x0679,
-    } });
-    try self.map.put(0xFB6A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB6A) return .{ .compat = &[_]u21{
         0x06A4,
-    } });
-    try self.map.put(0xFB6B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB6B) return .{ .compat = &[_]u21{
         0x06A4,
-    } });
-    try self.map.put(0xFB6C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB6C) return .{ .compat = &[_]u21{
         0x06A4,
-    } });
-    try self.map.put(0xFB6D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB6D) return .{ .compat = &[_]u21{
         0x06A4,
-    } });
-    try self.map.put(0xFB6E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB6E) return .{ .compat = &[_]u21{
         0x06A6,
-    } });
-    try self.map.put(0xFB6F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB6F) return .{ .compat = &[_]u21{
         0x06A6,
-    } });
-    try self.map.put(0xFB70, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB70) return .{ .compat = &[_]u21{
         0x06A6,
-    } });
-    try self.map.put(0xFB71, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB71) return .{ .compat = &[_]u21{
         0x06A6,
-    } });
-    try self.map.put(0xFB72, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB72) return .{ .compat = &[_]u21{
         0x0684,
-    } });
-    try self.map.put(0xFB73, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB73) return .{ .compat = &[_]u21{
         0x0684,
-    } });
-    try self.map.put(0xFB74, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB74) return .{ .compat = &[_]u21{
         0x0684,
-    } });
-    try self.map.put(0xFB75, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB75) return .{ .compat = &[_]u21{
         0x0684,
-    } });
-    try self.map.put(0xFB76, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB76) return .{ .compat = &[_]u21{
         0x0683,
-    } });
-    try self.map.put(0xFB77, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB77) return .{ .compat = &[_]u21{
         0x0683,
-    } });
-    try self.map.put(0xFB78, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB78) return .{ .compat = &[_]u21{
         0x0683,
-    } });
-    try self.map.put(0xFB79, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB79) return .{ .compat = &[_]u21{
         0x0683,
-    } });
-    try self.map.put(0xFB7A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB7A) return .{ .compat = &[_]u21{
         0x0686,
-    } });
-    try self.map.put(0xFB7B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB7B) return .{ .compat = &[_]u21{
         0x0686,
-    } });
-    try self.map.put(0xFB7C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB7C) return .{ .compat = &[_]u21{
         0x0686,
-    } });
-    try self.map.put(0xFB7D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB7D) return .{ .compat = &[_]u21{
         0x0686,
-    } });
-    try self.map.put(0xFB7E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB7E) return .{ .compat = &[_]u21{
         0x0687,
-    } });
-    try self.map.put(0xFB7F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB7F) return .{ .compat = &[_]u21{
         0x0687,
-    } });
-    try self.map.put(0xFB80, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB80) return .{ .compat = &[_]u21{
         0x0687,
-    } });
-    try self.map.put(0xFB81, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB81) return .{ .compat = &[_]u21{
         0x0687,
-    } });
-    try self.map.put(0xFB82, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB82) return .{ .compat = &[_]u21{
         0x068D,
-    } });
-    try self.map.put(0xFB83, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB83) return .{ .compat = &[_]u21{
         0x068D,
-    } });
-    try self.map.put(0xFB84, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB84) return .{ .compat = &[_]u21{
         0x068C,
-    } });
-    try self.map.put(0xFB85, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB85) return .{ .compat = &[_]u21{
         0x068C,
-    } });
-    try self.map.put(0xFB86, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB86) return .{ .compat = &[_]u21{
         0x068E,
-    } });
-    try self.map.put(0xFB87, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB87) return .{ .compat = &[_]u21{
         0x068E,
-    } });
-    try self.map.put(0xFB88, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB88) return .{ .compat = &[_]u21{
         0x0688,
-    } });
-    try self.map.put(0xFB89, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB89) return .{ .compat = &[_]u21{
         0x0688,
-    } });
-    try self.map.put(0xFB8A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB8A) return .{ .compat = &[_]u21{
         0x0698,
-    } });
-    try self.map.put(0xFB8B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB8B) return .{ .compat = &[_]u21{
         0x0698,
-    } });
-    try self.map.put(0xFB8C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB8C) return .{ .compat = &[_]u21{
         0x0691,
-    } });
-    try self.map.put(0xFB8D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB8D) return .{ .compat = &[_]u21{
         0x0691,
-    } });
-    try self.map.put(0xFB8E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB8E) return .{ .compat = &[_]u21{
         0x06A9,
-    } });
-    try self.map.put(0xFB8F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB8F) return .{ .compat = &[_]u21{
         0x06A9,
-    } });
-    try self.map.put(0xFB90, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB90) return .{ .compat = &[_]u21{
         0x06A9,
-    } });
-    try self.map.put(0xFB91, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB91) return .{ .compat = &[_]u21{
         0x06A9,
-    } });
-    try self.map.put(0xFB92, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB92) return .{ .compat = &[_]u21{
         0x06AF,
-    } });
-    try self.map.put(0xFB93, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB93) return .{ .compat = &[_]u21{
         0x06AF,
-    } });
-    try self.map.put(0xFB94, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB94) return .{ .compat = &[_]u21{
         0x06AF,
-    } });
-    try self.map.put(0xFB95, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB95) return .{ .compat = &[_]u21{
         0x06AF,
-    } });
-    try self.map.put(0xFB96, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB96) return .{ .compat = &[_]u21{
         0x06B3,
-    } });
-    try self.map.put(0xFB97, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB97) return .{ .compat = &[_]u21{
         0x06B3,
-    } });
-    try self.map.put(0xFB98, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB98) return .{ .compat = &[_]u21{
         0x06B3,
-    } });
-    try self.map.put(0xFB99, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB99) return .{ .compat = &[_]u21{
         0x06B3,
-    } });
-    try self.map.put(0xFB9A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB9A) return .{ .compat = &[_]u21{
         0x06B1,
-    } });
-    try self.map.put(0xFB9B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB9B) return .{ .compat = &[_]u21{
         0x06B1,
-    } });
-    try self.map.put(0xFB9C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB9C) return .{ .compat = &[_]u21{
         0x06B1,
-    } });
-    try self.map.put(0xFB9D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB9D) return .{ .compat = &[_]u21{
         0x06B1,
-    } });
-    try self.map.put(0xFB9E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB9E) return .{ .compat = &[_]u21{
         0x06BA,
-    } });
-    try self.map.put(0xFB9F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFB9F) return .{ .compat = &[_]u21{
         0x06BA,
-    } });
-    try self.map.put(0xFBA0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBA0) return .{ .compat = &[_]u21{
         0x06BB,
-    } });
-    try self.map.put(0xFBA1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBA1) return .{ .compat = &[_]u21{
         0x06BB,
-    } });
-    try self.map.put(0xFBA2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBA2) return .{ .compat = &[_]u21{
         0x06BB,
-    } });
-    try self.map.put(0xFBA3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBA3) return .{ .compat = &[_]u21{
         0x06BB,
-    } });
-    try self.map.put(0xFBA4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBA4) return .{ .compat = &[_]u21{
         0x06C0,
-    } });
-    try self.map.put(0xFBA5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBA5) return .{ .compat = &[_]u21{
         0x06C0,
-    } });
-    try self.map.put(0xFBA6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBA6) return .{ .compat = &[_]u21{
         0x06C1,
-    } });
-    try self.map.put(0xFBA7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBA7) return .{ .compat = &[_]u21{
         0x06C1,
-    } });
-    try self.map.put(0xFBA8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBA8) return .{ .compat = &[_]u21{
         0x06C1,
-    } });
-    try self.map.put(0xFBA9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBA9) return .{ .compat = &[_]u21{
         0x06C1,
-    } });
-    try self.map.put(0xFBAA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBAA) return .{ .compat = &[_]u21{
         0x06BE,
-    } });
-    try self.map.put(0xFBAB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBAB) return .{ .compat = &[_]u21{
         0x06BE,
-    } });
-    try self.map.put(0xFBAC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBAC) return .{ .compat = &[_]u21{
         0x06BE,
-    } });
-    try self.map.put(0xFBAD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBAD) return .{ .compat = &[_]u21{
         0x06BE,
-    } });
-    try self.map.put(0xFBAE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBAE) return .{ .compat = &[_]u21{
         0x06D2,
-    } });
-    try self.map.put(0xFBAF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBAF) return .{ .compat = &[_]u21{
         0x06D2,
-    } });
-    try self.map.put(0xFBB0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBB0) return .{ .compat = &[_]u21{
         0x06D3,
-    } });
-    try self.map.put(0xFBB1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBB1) return .{ .compat = &[_]u21{
         0x06D3,
-    } });
-    try self.map.put(0xFBD3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBD3) return .{ .compat = &[_]u21{
         0x06AD,
-    } });
-    try self.map.put(0xFBD4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBD4) return .{ .compat = &[_]u21{
         0x06AD,
-    } });
-    try self.map.put(0xFBD5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBD5) return .{ .compat = &[_]u21{
         0x06AD,
-    } });
-    try self.map.put(0xFBD6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBD6) return .{ .compat = &[_]u21{
         0x06AD,
-    } });
-    try self.map.put(0xFBD7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBD7) return .{ .compat = &[_]u21{
         0x06C7,
-    } });
-    try self.map.put(0xFBD8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBD8) return .{ .compat = &[_]u21{
         0x06C7,
-    } });
-    try self.map.put(0xFBD9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBD9) return .{ .compat = &[_]u21{
         0x06C6,
-    } });
-    try self.map.put(0xFBDA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBDA) return .{ .compat = &[_]u21{
         0x06C6,
-    } });
-    try self.map.put(0xFBDB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBDB) return .{ .compat = &[_]u21{
         0x06C8,
-    } });
-    try self.map.put(0xFBDC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBDC) return .{ .compat = &[_]u21{
         0x06C8,
-    } });
-    try self.map.put(0xFBDD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBDD) return .{ .compat = &[_]u21{
         0x0677,
-    } });
-    try self.map.put(0xFBDE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBDE) return .{ .compat = &[_]u21{
         0x06CB,
-    } });
-    try self.map.put(0xFBDF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBDF) return .{ .compat = &[_]u21{
         0x06CB,
-    } });
-    try self.map.put(0xFBE0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBE0) return .{ .compat = &[_]u21{
         0x06C5,
-    } });
-    try self.map.put(0xFBE1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBE1) return .{ .compat = &[_]u21{
         0x06C5,
-    } });
-    try self.map.put(0xFBE2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBE2) return .{ .compat = &[_]u21{
         0x06C9,
-    } });
-    try self.map.put(0xFBE3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBE3) return .{ .compat = &[_]u21{
         0x06C9,
-    } });
-    try self.map.put(0xFBE4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBE4) return .{ .compat = &[_]u21{
         0x06D0,
-    } });
-    try self.map.put(0xFBE5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBE5) return .{ .compat = &[_]u21{
         0x06D0,
-    } });
-    try self.map.put(0xFBE6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBE6) return .{ .compat = &[_]u21{
         0x06D0,
-    } });
-    try self.map.put(0xFBE7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBE7) return .{ .compat = &[_]u21{
         0x06D0,
-    } });
-    try self.map.put(0xFBE8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBE8) return .{ .compat = &[_]u21{
         0x0649,
-    } });
-    try self.map.put(0xFBE9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBE9) return .{ .compat = &[_]u21{
         0x0649,
-    } });
-    try self.map.put(0xFBEA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBEA) return .{ .compat = &[_]u21{
         0x0626,
         0x0627,
-    } });
-    try self.map.put(0xFBEB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBEB) return .{ .compat = &[_]u21{
         0x0626,
         0x0627,
-    } });
-    try self.map.put(0xFBEC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBEC) return .{ .compat = &[_]u21{
         0x0626,
         0x06D5,
-    } });
-    try self.map.put(0xFBED, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBED) return .{ .compat = &[_]u21{
         0x0626,
         0x06D5,
-    } });
-    try self.map.put(0xFBEE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBEE) return .{ .compat = &[_]u21{
         0x0626,
         0x0648,
-    } });
-    try self.map.put(0xFBEF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBEF) return .{ .compat = &[_]u21{
         0x0626,
         0x0648,
-    } });
-    try self.map.put(0xFBF0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBF0) return .{ .compat = &[_]u21{
         0x0626,
         0x06C7,
-    } });
-    try self.map.put(0xFBF1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBF1) return .{ .compat = &[_]u21{
         0x0626,
         0x06C7,
-    } });
-    try self.map.put(0xFBF2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBF2) return .{ .compat = &[_]u21{
         0x0626,
         0x06C6,
-    } });
-    try self.map.put(0xFBF3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBF3) return .{ .compat = &[_]u21{
         0x0626,
         0x06C6,
-    } });
-    try self.map.put(0xFBF4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBF4) return .{ .compat = &[_]u21{
         0x0626,
         0x06C8,
-    } });
-    try self.map.put(0xFBF5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBF5) return .{ .compat = &[_]u21{
         0x0626,
         0x06C8,
-    } });
-    try self.map.put(0xFBF6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBF6) return .{ .compat = &[_]u21{
         0x0626,
         0x06D0,
-    } });
-    try self.map.put(0xFBF7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBF7) return .{ .compat = &[_]u21{
         0x0626,
         0x06D0,
-    } });
-    try self.map.put(0xFBF8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBF8) return .{ .compat = &[_]u21{
         0x0626,
         0x06D0,
-    } });
-    try self.map.put(0xFBF9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBF9) return .{ .compat = &[_]u21{
         0x0626,
         0x0649,
-    } });
-    try self.map.put(0xFBFA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBFA) return .{ .compat = &[_]u21{
         0x0626,
         0x0649,
-    } });
-    try self.map.put(0xFBFB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBFB) return .{ .compat = &[_]u21{
         0x0626,
         0x0649,
-    } });
-    try self.map.put(0xFBFC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBFC) return .{ .compat = &[_]u21{
         0x06CC,
-    } });
-    try self.map.put(0xFBFD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBFD) return .{ .compat = &[_]u21{
         0x06CC,
-    } });
-    try self.map.put(0xFBFE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBFE) return .{ .compat = &[_]u21{
         0x06CC,
-    } });
-    try self.map.put(0xFBFF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFBFF) return .{ .compat = &[_]u21{
         0x06CC,
-    } });
-    try self.map.put(0xFC00, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC00) return .{ .compat = &[_]u21{
         0x0626,
         0x062C,
-    } });
-    try self.map.put(0xFC01, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC01) return .{ .compat = &[_]u21{
         0x0626,
         0x062D,
-    } });
-    try self.map.put(0xFC02, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC02) return .{ .compat = &[_]u21{
         0x0626,
         0x0645,
-    } });
-    try self.map.put(0xFC03, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC03) return .{ .compat = &[_]u21{
         0x0626,
         0x0649,
-    } });
-    try self.map.put(0xFC04, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC04) return .{ .compat = &[_]u21{
         0x0626,
         0x064A,
-    } });
-    try self.map.put(0xFC05, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC05) return .{ .compat = &[_]u21{
         0x0628,
         0x062C,
-    } });
-    try self.map.put(0xFC06, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC06) return .{ .compat = &[_]u21{
         0x0628,
         0x062D,
-    } });
-    try self.map.put(0xFC07, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC07) return .{ .compat = &[_]u21{
         0x0628,
         0x062E,
-    } });
-    try self.map.put(0xFC08, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC08) return .{ .compat = &[_]u21{
         0x0628,
         0x0645,
-    } });
-    try self.map.put(0xFC09, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC09) return .{ .compat = &[_]u21{
         0x0628,
         0x0649,
-    } });
-    try self.map.put(0xFC0A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC0A) return .{ .compat = &[_]u21{
         0x0628,
         0x064A,
-    } });
-    try self.map.put(0xFC0B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC0B) return .{ .compat = &[_]u21{
         0x062A,
         0x062C,
-    } });
-    try self.map.put(0xFC0C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC0C) return .{ .compat = &[_]u21{
         0x062A,
         0x062D,
-    } });
-    try self.map.put(0xFC0D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC0D) return .{ .compat = &[_]u21{
         0x062A,
         0x062E,
-    } });
-    try self.map.put(0xFC0E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC0E) return .{ .compat = &[_]u21{
         0x062A,
         0x0645,
-    } });
-    try self.map.put(0xFC0F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC0F) return .{ .compat = &[_]u21{
         0x062A,
         0x0649,
-    } });
-    try self.map.put(0xFC10, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC10) return .{ .compat = &[_]u21{
         0x062A,
         0x064A,
-    } });
-    try self.map.put(0xFC11, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC11) return .{ .compat = &[_]u21{
         0x062B,
         0x062C,
-    } });
-    try self.map.put(0xFC12, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC12) return .{ .compat = &[_]u21{
         0x062B,
         0x0645,
-    } });
-    try self.map.put(0xFC13, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC13) return .{ .compat = &[_]u21{
         0x062B,
         0x0649,
-    } });
-    try self.map.put(0xFC14, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC14) return .{ .compat = &[_]u21{
         0x062B,
         0x064A,
-    } });
-    try self.map.put(0xFC15, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC15) return .{ .compat = &[_]u21{
         0x062C,
         0x062D,
-    } });
-    try self.map.put(0xFC16, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC16) return .{ .compat = &[_]u21{
         0x062C,
         0x0645,
-    } });
-    try self.map.put(0xFC17, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC17) return .{ .compat = &[_]u21{
         0x062D,
         0x062C,
-    } });
-    try self.map.put(0xFC18, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC18) return .{ .compat = &[_]u21{
         0x062D,
         0x0645,
-    } });
-    try self.map.put(0xFC19, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC19) return .{ .compat = &[_]u21{
         0x062E,
         0x062C,
-    } });
-    try self.map.put(0xFC1A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC1A) return .{ .compat = &[_]u21{
         0x062E,
         0x062D,
-    } });
-    try self.map.put(0xFC1B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC1B) return .{ .compat = &[_]u21{
         0x062E,
         0x0645,
-    } });
-    try self.map.put(0xFC1C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC1C) return .{ .compat = &[_]u21{
         0x0633,
         0x062C,
-    } });
-    try self.map.put(0xFC1D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC1D) return .{ .compat = &[_]u21{
         0x0633,
         0x062D,
-    } });
-    try self.map.put(0xFC1E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC1E) return .{ .compat = &[_]u21{
         0x0633,
         0x062E,
-    } });
-    try self.map.put(0xFC1F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC1F) return .{ .compat = &[_]u21{
         0x0633,
         0x0645,
-    } });
-    try self.map.put(0xFC20, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC20) return .{ .compat = &[_]u21{
         0x0635,
         0x062D,
-    } });
-    try self.map.put(0xFC21, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC21) return .{ .compat = &[_]u21{
         0x0635,
         0x0645,
-    } });
-    try self.map.put(0xFC22, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC22) return .{ .compat = &[_]u21{
         0x0636,
         0x062C,
-    } });
-    try self.map.put(0xFC23, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC23) return .{ .compat = &[_]u21{
         0x0636,
         0x062D,
-    } });
-    try self.map.put(0xFC24, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC24) return .{ .compat = &[_]u21{
         0x0636,
         0x062E,
-    } });
-    try self.map.put(0xFC25, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC25) return .{ .compat = &[_]u21{
         0x0636,
         0x0645,
-    } });
-    try self.map.put(0xFC26, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC26) return .{ .compat = &[_]u21{
         0x0637,
         0x062D,
-    } });
-    try self.map.put(0xFC27, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC27) return .{ .compat = &[_]u21{
         0x0637,
         0x0645,
-    } });
-    try self.map.put(0xFC28, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC28) return .{ .compat = &[_]u21{
         0x0638,
         0x0645,
-    } });
-    try self.map.put(0xFC29, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC29) return .{ .compat = &[_]u21{
         0x0639,
         0x062C,
-    } });
-    try self.map.put(0xFC2A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC2A) return .{ .compat = &[_]u21{
         0x0639,
         0x0645,
-    } });
-    try self.map.put(0xFC2B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC2B) return .{ .compat = &[_]u21{
         0x063A,
         0x062C,
-    } });
-    try self.map.put(0xFC2C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC2C) return .{ .compat = &[_]u21{
         0x063A,
         0x0645,
-    } });
-    try self.map.put(0xFC2D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC2D) return .{ .compat = &[_]u21{
         0x0641,
         0x062C,
-    } });
-    try self.map.put(0xFC2E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC2E) return .{ .compat = &[_]u21{
         0x0641,
         0x062D,
-    } });
-    try self.map.put(0xFC2F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC2F) return .{ .compat = &[_]u21{
         0x0641,
         0x062E,
-    } });
-    try self.map.put(0xFC30, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC30) return .{ .compat = &[_]u21{
         0x0641,
         0x0645,
-    } });
-    try self.map.put(0xFC31, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC31) return .{ .compat = &[_]u21{
         0x0641,
         0x0649,
-    } });
-    try self.map.put(0xFC32, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC32) return .{ .compat = &[_]u21{
         0x0641,
         0x064A,
-    } });
-    try self.map.put(0xFC33, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC33) return .{ .compat = &[_]u21{
         0x0642,
         0x062D,
-    } });
-    try self.map.put(0xFC34, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC34) return .{ .compat = &[_]u21{
         0x0642,
         0x0645,
-    } });
-    try self.map.put(0xFC35, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC35) return .{ .compat = &[_]u21{
         0x0642,
         0x0649,
-    } });
-    try self.map.put(0xFC36, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC36) return .{ .compat = &[_]u21{
         0x0642,
         0x064A,
-    } });
-    try self.map.put(0xFC37, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC37) return .{ .compat = &[_]u21{
         0x0643,
         0x0627,
-    } });
-    try self.map.put(0xFC38, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC38) return .{ .compat = &[_]u21{
         0x0643,
         0x062C,
-    } });
-    try self.map.put(0xFC39, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC39) return .{ .compat = &[_]u21{
         0x0643,
         0x062D,
-    } });
-    try self.map.put(0xFC3A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC3A) return .{ .compat = &[_]u21{
         0x0643,
         0x062E,
-    } });
-    try self.map.put(0xFC3B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC3B) return .{ .compat = &[_]u21{
         0x0643,
         0x0644,
-    } });
-    try self.map.put(0xFC3C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC3C) return .{ .compat = &[_]u21{
         0x0643,
         0x0645,
-    } });
-    try self.map.put(0xFC3D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC3D) return .{ .compat = &[_]u21{
         0x0643,
         0x0649,
-    } });
-    try self.map.put(0xFC3E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC3E) return .{ .compat = &[_]u21{
         0x0643,
         0x064A,
-    } });
-    try self.map.put(0xFC3F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC3F) return .{ .compat = &[_]u21{
         0x0644,
         0x062C,
-    } });
-    try self.map.put(0xFC40, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC40) return .{ .compat = &[_]u21{
         0x0644,
         0x062D,
-    } });
-    try self.map.put(0xFC41, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC41) return .{ .compat = &[_]u21{
         0x0644,
         0x062E,
-    } });
-    try self.map.put(0xFC42, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC42) return .{ .compat = &[_]u21{
         0x0644,
         0x0645,
-    } });
-    try self.map.put(0xFC43, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC43) return .{ .compat = &[_]u21{
         0x0644,
         0x0649,
-    } });
-    try self.map.put(0xFC44, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC44) return .{ .compat = &[_]u21{
         0x0644,
         0x064A,
-    } });
-    try self.map.put(0xFC45, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC45) return .{ .compat = &[_]u21{
         0x0645,
         0x062C,
-    } });
-    try self.map.put(0xFC46, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC46) return .{ .compat = &[_]u21{
         0x0645,
         0x062D,
-    } });
-    try self.map.put(0xFC47, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC47) return .{ .compat = &[_]u21{
         0x0645,
         0x062E,
-    } });
-    try self.map.put(0xFC48, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC48) return .{ .compat = &[_]u21{
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFC49, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC49) return .{ .compat = &[_]u21{
         0x0645,
         0x0649,
-    } });
-    try self.map.put(0xFC4A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC4A) return .{ .compat = &[_]u21{
         0x0645,
         0x064A,
-    } });
-    try self.map.put(0xFC4B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC4B) return .{ .compat = &[_]u21{
         0x0646,
         0x062C,
-    } });
-    try self.map.put(0xFC4C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC4C) return .{ .compat = &[_]u21{
         0x0646,
         0x062D,
-    } });
-    try self.map.put(0xFC4D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC4D) return .{ .compat = &[_]u21{
         0x0646,
         0x062E,
-    } });
-    try self.map.put(0xFC4E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC4E) return .{ .compat = &[_]u21{
         0x0646,
         0x0645,
-    } });
-    try self.map.put(0xFC4F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC4F) return .{ .compat = &[_]u21{
         0x0646,
         0x0649,
-    } });
-    try self.map.put(0xFC50, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC50) return .{ .compat = &[_]u21{
         0x0646,
         0x064A,
-    } });
-    try self.map.put(0xFC51, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC51) return .{ .compat = &[_]u21{
         0x0647,
         0x062C,
-    } });
-    try self.map.put(0xFC52, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC52) return .{ .compat = &[_]u21{
         0x0647,
         0x0645,
-    } });
-    try self.map.put(0xFC53, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC53) return .{ .compat = &[_]u21{
         0x0647,
         0x0649,
-    } });
-    try self.map.put(0xFC54, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC54) return .{ .compat = &[_]u21{
         0x0647,
         0x064A,
-    } });
-    try self.map.put(0xFC55, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC55) return .{ .compat = &[_]u21{
         0x064A,
         0x062C,
-    } });
-    try self.map.put(0xFC56, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC56) return .{ .compat = &[_]u21{
         0x064A,
         0x062D,
-    } });
-    try self.map.put(0xFC57, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC57) return .{ .compat = &[_]u21{
         0x064A,
         0x062E,
-    } });
-    try self.map.put(0xFC58, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC58) return .{ .compat = &[_]u21{
         0x064A,
         0x0645,
-    } });
-    try self.map.put(0xFC59, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC59) return .{ .compat = &[_]u21{
         0x064A,
         0x0649,
-    } });
-    try self.map.put(0xFC5A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC5A) return .{ .compat = &[_]u21{
         0x064A,
         0x064A,
-    } });
-    try self.map.put(0xFC5B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC5B) return .{ .compat = &[_]u21{
         0x0630,
         0x0670,
-    } });
-    try self.map.put(0xFC5C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC5C) return .{ .compat = &[_]u21{
         0x0631,
         0x0670,
-    } });
-    try self.map.put(0xFC5D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC5D) return .{ .compat = &[_]u21{
         0x0649,
         0x0670,
-    } });
-    try self.map.put(0xFC5E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC5E) return .{ .compat = &[_]u21{
         0x0020,
         0x064C,
         0x0651,
-    } });
-    try self.map.put(0xFC5F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC5F) return .{ .compat = &[_]u21{
         0x0020,
         0x064D,
         0x0651,
-    } });
-    try self.map.put(0xFC60, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC60) return .{ .compat = &[_]u21{
         0x0020,
         0x064E,
         0x0651,
-    } });
-    try self.map.put(0xFC61, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC61) return .{ .compat = &[_]u21{
         0x0020,
         0x064F,
         0x0651,
-    } });
-    try self.map.put(0xFC62, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC62) return .{ .compat = &[_]u21{
         0x0020,
         0x0650,
         0x0651,
-    } });
-    try self.map.put(0xFC63, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC63) return .{ .compat = &[_]u21{
         0x0020,
         0x0651,
         0x0670,
-    } });
-    try self.map.put(0xFC64, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC64) return .{ .compat = &[_]u21{
         0x0626,
         0x0631,
-    } });
-    try self.map.put(0xFC65, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC65) return .{ .compat = &[_]u21{
         0x0626,
         0x0632,
-    } });
-    try self.map.put(0xFC66, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC66) return .{ .compat = &[_]u21{
         0x0626,
         0x0645,
-    } });
-    try self.map.put(0xFC67, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC67) return .{ .compat = &[_]u21{
         0x0626,
         0x0646,
-    } });
-    try self.map.put(0xFC68, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC68) return .{ .compat = &[_]u21{
         0x0626,
         0x0649,
-    } });
-    try self.map.put(0xFC69, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC69) return .{ .compat = &[_]u21{
         0x0626,
         0x064A,
-    } });
-    try self.map.put(0xFC6A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC6A) return .{ .compat = &[_]u21{
         0x0628,
         0x0631,
-    } });
-    try self.map.put(0xFC6B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC6B) return .{ .compat = &[_]u21{
         0x0628,
         0x0632,
-    } });
-    try self.map.put(0xFC6C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC6C) return .{ .compat = &[_]u21{
         0x0628,
         0x0645,
-    } });
-    try self.map.put(0xFC6D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC6D) return .{ .compat = &[_]u21{
         0x0628,
         0x0646,
-    } });
-    try self.map.put(0xFC6E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC6E) return .{ .compat = &[_]u21{
         0x0628,
         0x0649,
-    } });
-    try self.map.put(0xFC6F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC6F) return .{ .compat = &[_]u21{
         0x0628,
         0x064A,
-    } });
-    try self.map.put(0xFC70, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC70) return .{ .compat = &[_]u21{
         0x062A,
         0x0631,
-    } });
-    try self.map.put(0xFC71, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC71) return .{ .compat = &[_]u21{
         0x062A,
         0x0632,
-    } });
-    try self.map.put(0xFC72, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC72) return .{ .compat = &[_]u21{
         0x062A,
         0x0645,
-    } });
-    try self.map.put(0xFC73, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC73) return .{ .compat = &[_]u21{
         0x062A,
         0x0646,
-    } });
-    try self.map.put(0xFC74, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC74) return .{ .compat = &[_]u21{
         0x062A,
         0x0649,
-    } });
-    try self.map.put(0xFC75, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC75) return .{ .compat = &[_]u21{
         0x062A,
         0x064A,
-    } });
-    try self.map.put(0xFC76, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC76) return .{ .compat = &[_]u21{
         0x062B,
         0x0631,
-    } });
-    try self.map.put(0xFC77, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC77) return .{ .compat = &[_]u21{
         0x062B,
         0x0632,
-    } });
-    try self.map.put(0xFC78, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC78) return .{ .compat = &[_]u21{
         0x062B,
         0x0645,
-    } });
-    try self.map.put(0xFC79, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC79) return .{ .compat = &[_]u21{
         0x062B,
         0x0646,
-    } });
-    try self.map.put(0xFC7A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC7A) return .{ .compat = &[_]u21{
         0x062B,
         0x0649,
-    } });
-    try self.map.put(0xFC7B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC7B) return .{ .compat = &[_]u21{
         0x062B,
         0x064A,
-    } });
-    try self.map.put(0xFC7C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC7C) return .{ .compat = &[_]u21{
         0x0641,
         0x0649,
-    } });
-    try self.map.put(0xFC7D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC7D) return .{ .compat = &[_]u21{
         0x0641,
         0x064A,
-    } });
-    try self.map.put(0xFC7E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC7E) return .{ .compat = &[_]u21{
         0x0642,
         0x0649,
-    } });
-    try self.map.put(0xFC7F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC7F) return .{ .compat = &[_]u21{
         0x0642,
         0x064A,
-    } });
-    try self.map.put(0xFC80, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC80) return .{ .compat = &[_]u21{
         0x0643,
         0x0627,
-    } });
-    try self.map.put(0xFC81, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC81) return .{ .compat = &[_]u21{
         0x0643,
         0x0644,
-    } });
-    try self.map.put(0xFC82, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC82) return .{ .compat = &[_]u21{
         0x0643,
         0x0645,
-    } });
-    try self.map.put(0xFC83, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC83) return .{ .compat = &[_]u21{
         0x0643,
         0x0649,
-    } });
-    try self.map.put(0xFC84, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC84) return .{ .compat = &[_]u21{
         0x0643,
         0x064A,
-    } });
-    try self.map.put(0xFC85, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC85) return .{ .compat = &[_]u21{
         0x0644,
         0x0645,
-    } });
-    try self.map.put(0xFC86, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC86) return .{ .compat = &[_]u21{
         0x0644,
         0x0649,
-    } });
-    try self.map.put(0xFC87, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC87) return .{ .compat = &[_]u21{
         0x0644,
         0x064A,
-    } });
-    try self.map.put(0xFC88, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC88) return .{ .compat = &[_]u21{
         0x0645,
         0x0627,
-    } });
-    try self.map.put(0xFC89, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC89) return .{ .compat = &[_]u21{
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFC8A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC8A) return .{ .compat = &[_]u21{
         0x0646,
         0x0631,
-    } });
-    try self.map.put(0xFC8B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC8B) return .{ .compat = &[_]u21{
         0x0646,
         0x0632,
-    } });
-    try self.map.put(0xFC8C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC8C) return .{ .compat = &[_]u21{
         0x0646,
         0x0645,
-    } });
-    try self.map.put(0xFC8D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC8D) return .{ .compat = &[_]u21{
         0x0646,
         0x0646,
-    } });
-    try self.map.put(0xFC8E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC8E) return .{ .compat = &[_]u21{
         0x0646,
         0x0649,
-    } });
-    try self.map.put(0xFC8F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC8F) return .{ .compat = &[_]u21{
         0x0646,
         0x064A,
-    } });
-    try self.map.put(0xFC90, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC90) return .{ .compat = &[_]u21{
         0x0649,
         0x0670,
-    } });
-    try self.map.put(0xFC91, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC91) return .{ .compat = &[_]u21{
         0x064A,
         0x0631,
-    } });
-    try self.map.put(0xFC92, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC92) return .{ .compat = &[_]u21{
         0x064A,
         0x0632,
-    } });
-    try self.map.put(0xFC93, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC93) return .{ .compat = &[_]u21{
         0x064A,
         0x0645,
-    } });
-    try self.map.put(0xFC94, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC94) return .{ .compat = &[_]u21{
         0x064A,
         0x0646,
-    } });
-    try self.map.put(0xFC95, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC95) return .{ .compat = &[_]u21{
         0x064A,
         0x0649,
-    } });
-    try self.map.put(0xFC96, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC96) return .{ .compat = &[_]u21{
         0x064A,
         0x064A,
-    } });
-    try self.map.put(0xFC97, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC97) return .{ .compat = &[_]u21{
         0x0626,
         0x062C,
-    } });
-    try self.map.put(0xFC98, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC98) return .{ .compat = &[_]u21{
         0x0626,
         0x062D,
-    } });
-    try self.map.put(0xFC99, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC99) return .{ .compat = &[_]u21{
         0x0626,
         0x062E,
-    } });
-    try self.map.put(0xFC9A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC9A) return .{ .compat = &[_]u21{
         0x0626,
         0x0645,
-    } });
-    try self.map.put(0xFC9B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC9B) return .{ .compat = &[_]u21{
         0x0626,
         0x0647,
-    } });
-    try self.map.put(0xFC9C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC9C) return .{ .compat = &[_]u21{
         0x0628,
         0x062C,
-    } });
-    try self.map.put(0xFC9D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC9D) return .{ .compat = &[_]u21{
         0x0628,
         0x062D,
-    } });
-    try self.map.put(0xFC9E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC9E) return .{ .compat = &[_]u21{
         0x0628,
         0x062E,
-    } });
-    try self.map.put(0xFC9F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFC9F) return .{ .compat = &[_]u21{
         0x0628,
         0x0645,
-    } });
-    try self.map.put(0xFCA0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCA0) return .{ .compat = &[_]u21{
         0x0628,
         0x0647,
-    } });
-    try self.map.put(0xFCA1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCA1) return .{ .compat = &[_]u21{
         0x062A,
         0x062C,
-    } });
-    try self.map.put(0xFCA2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCA2) return .{ .compat = &[_]u21{
         0x062A,
         0x062D,
-    } });
-    try self.map.put(0xFCA3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCA3) return .{ .compat = &[_]u21{
         0x062A,
         0x062E,
-    } });
-    try self.map.put(0xFCA4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCA4) return .{ .compat = &[_]u21{
         0x062A,
         0x0645,
-    } });
-    try self.map.put(0xFCA5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCA5) return .{ .compat = &[_]u21{
         0x062A,
         0x0647,
-    } });
-    try self.map.put(0xFCA6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCA6) return .{ .compat = &[_]u21{
         0x062B,
         0x0645,
-    } });
-    try self.map.put(0xFCA7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCA7) return .{ .compat = &[_]u21{
         0x062C,
         0x062D,
-    } });
-    try self.map.put(0xFCA8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCA8) return .{ .compat = &[_]u21{
         0x062C,
         0x0645,
-    } });
-    try self.map.put(0xFCA9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCA9) return .{ .compat = &[_]u21{
         0x062D,
         0x062C,
-    } });
-    try self.map.put(0xFCAA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCAA) return .{ .compat = &[_]u21{
         0x062D,
         0x0645,
-    } });
-    try self.map.put(0xFCAB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCAB) return .{ .compat = &[_]u21{
         0x062E,
         0x062C,
-    } });
-    try self.map.put(0xFCAC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCAC) return .{ .compat = &[_]u21{
         0x062E,
         0x0645,
-    } });
-    try self.map.put(0xFCAD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCAD) return .{ .compat = &[_]u21{
         0x0633,
         0x062C,
-    } });
-    try self.map.put(0xFCAE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCAE) return .{ .compat = &[_]u21{
         0x0633,
         0x062D,
-    } });
-    try self.map.put(0xFCAF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCAF) return .{ .compat = &[_]u21{
         0x0633,
         0x062E,
-    } });
-    try self.map.put(0xFCB0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCB0) return .{ .compat = &[_]u21{
         0x0633,
         0x0645,
-    } });
-    try self.map.put(0xFCB1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCB1) return .{ .compat = &[_]u21{
         0x0635,
         0x062D,
-    } });
-    try self.map.put(0xFCB2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCB2) return .{ .compat = &[_]u21{
         0x0635,
         0x062E,
-    } });
-    try self.map.put(0xFCB3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCB3) return .{ .compat = &[_]u21{
         0x0635,
         0x0645,
-    } });
-    try self.map.put(0xFCB4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCB4) return .{ .compat = &[_]u21{
         0x0636,
         0x062C,
-    } });
-    try self.map.put(0xFCB5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCB5) return .{ .compat = &[_]u21{
         0x0636,
         0x062D,
-    } });
-    try self.map.put(0xFCB6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCB6) return .{ .compat = &[_]u21{
         0x0636,
         0x062E,
-    } });
-    try self.map.put(0xFCB7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCB7) return .{ .compat = &[_]u21{
         0x0636,
         0x0645,
-    } });
-    try self.map.put(0xFCB8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCB8) return .{ .compat = &[_]u21{
         0x0637,
         0x062D,
-    } });
-    try self.map.put(0xFCB9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCB9) return .{ .compat = &[_]u21{
         0x0638,
         0x0645,
-    } });
-    try self.map.put(0xFCBA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCBA) return .{ .compat = &[_]u21{
         0x0639,
         0x062C,
-    } });
-    try self.map.put(0xFCBB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCBB) return .{ .compat = &[_]u21{
         0x0639,
         0x0645,
-    } });
-    try self.map.put(0xFCBC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCBC) return .{ .compat = &[_]u21{
         0x063A,
         0x062C,
-    } });
-    try self.map.put(0xFCBD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCBD) return .{ .compat = &[_]u21{
         0x063A,
         0x0645,
-    } });
-    try self.map.put(0xFCBE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCBE) return .{ .compat = &[_]u21{
         0x0641,
         0x062C,
-    } });
-    try self.map.put(0xFCBF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCBF) return .{ .compat = &[_]u21{
         0x0641,
         0x062D,
-    } });
-    try self.map.put(0xFCC0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCC0) return .{ .compat = &[_]u21{
         0x0641,
         0x062E,
-    } });
-    try self.map.put(0xFCC1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCC1) return .{ .compat = &[_]u21{
         0x0641,
         0x0645,
-    } });
-    try self.map.put(0xFCC2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCC2) return .{ .compat = &[_]u21{
         0x0642,
         0x062D,
-    } });
-    try self.map.put(0xFCC3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCC3) return .{ .compat = &[_]u21{
         0x0642,
         0x0645,
-    } });
-    try self.map.put(0xFCC4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCC4) return .{ .compat = &[_]u21{
         0x0643,
         0x062C,
-    } });
-    try self.map.put(0xFCC5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCC5) return .{ .compat = &[_]u21{
         0x0643,
         0x062D,
-    } });
-    try self.map.put(0xFCC6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCC6) return .{ .compat = &[_]u21{
         0x0643,
         0x062E,
-    } });
-    try self.map.put(0xFCC7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCC7) return .{ .compat = &[_]u21{
         0x0643,
         0x0644,
-    } });
-    try self.map.put(0xFCC8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCC8) return .{ .compat = &[_]u21{
         0x0643,
         0x0645,
-    } });
-    try self.map.put(0xFCC9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCC9) return .{ .compat = &[_]u21{
         0x0644,
         0x062C,
-    } });
-    try self.map.put(0xFCCA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCCA) return .{ .compat = &[_]u21{
         0x0644,
         0x062D,
-    } });
-    try self.map.put(0xFCCB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCCB) return .{ .compat = &[_]u21{
         0x0644,
         0x062E,
-    } });
-    try self.map.put(0xFCCC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCCC) return .{ .compat = &[_]u21{
         0x0644,
         0x0645,
-    } });
-    try self.map.put(0xFCCD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCCD) return .{ .compat = &[_]u21{
         0x0644,
         0x0647,
-    } });
-    try self.map.put(0xFCCE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCCE) return .{ .compat = &[_]u21{
         0x0645,
         0x062C,
-    } });
-    try self.map.put(0xFCCF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCCF) return .{ .compat = &[_]u21{
         0x0645,
         0x062D,
-    } });
-    try self.map.put(0xFCD0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCD0) return .{ .compat = &[_]u21{
         0x0645,
         0x062E,
-    } });
-    try self.map.put(0xFCD1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCD1) return .{ .compat = &[_]u21{
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFCD2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCD2) return .{ .compat = &[_]u21{
         0x0646,
         0x062C,
-    } });
-    try self.map.put(0xFCD3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCD3) return .{ .compat = &[_]u21{
         0x0646,
         0x062D,
-    } });
-    try self.map.put(0xFCD4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCD4) return .{ .compat = &[_]u21{
         0x0646,
         0x062E,
-    } });
-    try self.map.put(0xFCD5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCD5) return .{ .compat = &[_]u21{
         0x0646,
         0x0645,
-    } });
-    try self.map.put(0xFCD6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCD6) return .{ .compat = &[_]u21{
         0x0646,
         0x0647,
-    } });
-    try self.map.put(0xFCD7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCD7) return .{ .compat = &[_]u21{
         0x0647,
         0x062C,
-    } });
-    try self.map.put(0xFCD8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCD8) return .{ .compat = &[_]u21{
         0x0647,
         0x0645,
-    } });
-    try self.map.put(0xFCD9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCD9) return .{ .compat = &[_]u21{
         0x0647,
         0x0670,
-    } });
-    try self.map.put(0xFCDA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCDA) return .{ .compat = &[_]u21{
         0x064A,
         0x062C,
-    } });
-    try self.map.put(0xFCDB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCDB) return .{ .compat = &[_]u21{
         0x064A,
         0x062D,
-    } });
-    try self.map.put(0xFCDC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCDC) return .{ .compat = &[_]u21{
         0x064A,
         0x062E,
-    } });
-    try self.map.put(0xFCDD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCDD) return .{ .compat = &[_]u21{
         0x064A,
         0x0645,
-    } });
-    try self.map.put(0xFCDE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCDE) return .{ .compat = &[_]u21{
         0x064A,
         0x0647,
-    } });
-    try self.map.put(0xFCDF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCDF) return .{ .compat = &[_]u21{
         0x0626,
         0x0645,
-    } });
-    try self.map.put(0xFCE0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCE0) return .{ .compat = &[_]u21{
         0x0626,
         0x0647,
-    } });
-    try self.map.put(0xFCE1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCE1) return .{ .compat = &[_]u21{
         0x0628,
         0x0645,
-    } });
-    try self.map.put(0xFCE2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCE2) return .{ .compat = &[_]u21{
         0x0628,
         0x0647,
-    } });
-    try self.map.put(0xFCE3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCE3) return .{ .compat = &[_]u21{
         0x062A,
         0x0645,
-    } });
-    try self.map.put(0xFCE4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCE4) return .{ .compat = &[_]u21{
         0x062A,
         0x0647,
-    } });
-    try self.map.put(0xFCE5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCE5) return .{ .compat = &[_]u21{
         0x062B,
         0x0645,
-    } });
-    try self.map.put(0xFCE6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCE6) return .{ .compat = &[_]u21{
         0x062B,
         0x0647,
-    } });
-    try self.map.put(0xFCE7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCE7) return .{ .compat = &[_]u21{
         0x0633,
         0x0645,
-    } });
-    try self.map.put(0xFCE8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCE8) return .{ .compat = &[_]u21{
         0x0633,
         0x0647,
-    } });
-    try self.map.put(0xFCE9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCE9) return .{ .compat = &[_]u21{
         0x0634,
         0x0645,
-    } });
-    try self.map.put(0xFCEA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCEA) return .{ .compat = &[_]u21{
         0x0634,
         0x0647,
-    } });
-    try self.map.put(0xFCEB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCEB) return .{ .compat = &[_]u21{
         0x0643,
         0x0644,
-    } });
-    try self.map.put(0xFCEC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCEC) return .{ .compat = &[_]u21{
         0x0643,
         0x0645,
-    } });
-    try self.map.put(0xFCED, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCED) return .{ .compat = &[_]u21{
         0x0644,
         0x0645,
-    } });
-    try self.map.put(0xFCEE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCEE) return .{ .compat = &[_]u21{
         0x0646,
         0x0645,
-    } });
-    try self.map.put(0xFCEF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCEF) return .{ .compat = &[_]u21{
         0x0646,
         0x0647,
-    } });
-    try self.map.put(0xFCF0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCF0) return .{ .compat = &[_]u21{
         0x064A,
         0x0645,
-    } });
-    try self.map.put(0xFCF1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCF1) return .{ .compat = &[_]u21{
         0x064A,
         0x0647,
-    } });
-    try self.map.put(0xFCF2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCF2) return .{ .compat = &[_]u21{
         0x0640,
         0x064E,
         0x0651,
-    } });
-    try self.map.put(0xFCF3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCF3) return .{ .compat = &[_]u21{
         0x0640,
         0x064F,
         0x0651,
-    } });
-    try self.map.put(0xFCF4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCF4) return .{ .compat = &[_]u21{
         0x0640,
         0x0650,
         0x0651,
-    } });
-    try self.map.put(0xFCF5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCF5) return .{ .compat = &[_]u21{
         0x0637,
         0x0649,
-    } });
-    try self.map.put(0xFCF6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCF6) return .{ .compat = &[_]u21{
         0x0637,
         0x064A,
-    } });
-    try self.map.put(0xFCF7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCF7) return .{ .compat = &[_]u21{
         0x0639,
         0x0649,
-    } });
-    try self.map.put(0xFCF8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCF8) return .{ .compat = &[_]u21{
         0x0639,
         0x064A,
-    } });
-    try self.map.put(0xFCF9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCF9) return .{ .compat = &[_]u21{
         0x063A,
         0x0649,
-    } });
-    try self.map.put(0xFCFA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCFA) return .{ .compat = &[_]u21{
         0x063A,
         0x064A,
-    } });
-    try self.map.put(0xFCFB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCFB) return .{ .compat = &[_]u21{
         0x0633,
         0x0649,
-    } });
-    try self.map.put(0xFCFC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCFC) return .{ .compat = &[_]u21{
         0x0633,
         0x064A,
-    } });
-    try self.map.put(0xFCFD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCFD) return .{ .compat = &[_]u21{
         0x0634,
         0x0649,
-    } });
-    try self.map.put(0xFCFE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCFE) return .{ .compat = &[_]u21{
         0x0634,
         0x064A,
-    } });
-    try self.map.put(0xFCFF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFCFF) return .{ .compat = &[_]u21{
         0x062D,
         0x0649,
-    } });
-    try self.map.put(0xFD00, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD00) return .{ .compat = &[_]u21{
         0x062D,
         0x064A,
-    } });
-    try self.map.put(0xFD01, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD01) return .{ .compat = &[_]u21{
         0x062C,
         0x0649,
-    } });
-    try self.map.put(0xFD02, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD02) return .{ .compat = &[_]u21{
         0x062C,
         0x064A,
-    } });
-    try self.map.put(0xFD03, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD03) return .{ .compat = &[_]u21{
         0x062E,
         0x0649,
-    } });
-    try self.map.put(0xFD04, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD04) return .{ .compat = &[_]u21{
         0x062E,
         0x064A,
-    } });
-    try self.map.put(0xFD05, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD05) return .{ .compat = &[_]u21{
         0x0635,
         0x0649,
-    } });
-    try self.map.put(0xFD06, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD06) return .{ .compat = &[_]u21{
         0x0635,
         0x064A,
-    } });
-    try self.map.put(0xFD07, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD07) return .{ .compat = &[_]u21{
         0x0636,
         0x0649,
-    } });
-    try self.map.put(0xFD08, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD08) return .{ .compat = &[_]u21{
         0x0636,
         0x064A,
-    } });
-    try self.map.put(0xFD09, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD09) return .{ .compat = &[_]u21{
         0x0634,
         0x062C,
-    } });
-    try self.map.put(0xFD0A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD0A) return .{ .compat = &[_]u21{
         0x0634,
         0x062D,
-    } });
-    try self.map.put(0xFD0B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD0B) return .{ .compat = &[_]u21{
         0x0634,
         0x062E,
-    } });
-    try self.map.put(0xFD0C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD0C) return .{ .compat = &[_]u21{
         0x0634,
         0x0645,
-    } });
-    try self.map.put(0xFD0D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD0D) return .{ .compat = &[_]u21{
         0x0634,
         0x0631,
-    } });
-    try self.map.put(0xFD0E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD0E) return .{ .compat = &[_]u21{
         0x0633,
         0x0631,
-    } });
-    try self.map.put(0xFD0F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD0F) return .{ .compat = &[_]u21{
         0x0635,
         0x0631,
-    } });
-    try self.map.put(0xFD10, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD10) return .{ .compat = &[_]u21{
         0x0636,
         0x0631,
-    } });
-    try self.map.put(0xFD11, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD11) return .{ .compat = &[_]u21{
         0x0637,
         0x0649,
-    } });
-    try self.map.put(0xFD12, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD12) return .{ .compat = &[_]u21{
         0x0637,
         0x064A,
-    } });
-    try self.map.put(0xFD13, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD13) return .{ .compat = &[_]u21{
         0x0639,
         0x0649,
-    } });
-    try self.map.put(0xFD14, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD14) return .{ .compat = &[_]u21{
         0x0639,
         0x064A,
-    } });
-    try self.map.put(0xFD15, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD15) return .{ .compat = &[_]u21{
         0x063A,
         0x0649,
-    } });
-    try self.map.put(0xFD16, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD16) return .{ .compat = &[_]u21{
         0x063A,
         0x064A,
-    } });
-    try self.map.put(0xFD17, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD17) return .{ .compat = &[_]u21{
         0x0633,
         0x0649,
-    } });
-    try self.map.put(0xFD18, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD18) return .{ .compat = &[_]u21{
         0x0633,
         0x064A,
-    } });
-    try self.map.put(0xFD19, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD19) return .{ .compat = &[_]u21{
         0x0634,
         0x0649,
-    } });
-    try self.map.put(0xFD1A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD1A) return .{ .compat = &[_]u21{
         0x0634,
         0x064A,
-    } });
-    try self.map.put(0xFD1B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD1B) return .{ .compat = &[_]u21{
         0x062D,
         0x0649,
-    } });
-    try self.map.put(0xFD1C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD1C) return .{ .compat = &[_]u21{
         0x062D,
         0x064A,
-    } });
-    try self.map.put(0xFD1D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD1D) return .{ .compat = &[_]u21{
         0x062C,
         0x0649,
-    } });
-    try self.map.put(0xFD1E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD1E) return .{ .compat = &[_]u21{
         0x062C,
         0x064A,
-    } });
-    try self.map.put(0xFD1F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD1F) return .{ .compat = &[_]u21{
         0x062E,
         0x0649,
-    } });
-    try self.map.put(0xFD20, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD20) return .{ .compat = &[_]u21{
         0x062E,
         0x064A,
-    } });
-    try self.map.put(0xFD21, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD21) return .{ .compat = &[_]u21{
         0x0635,
         0x0649,
-    } });
-    try self.map.put(0xFD22, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD22) return .{ .compat = &[_]u21{
         0x0635,
         0x064A,
-    } });
-    try self.map.put(0xFD23, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD23) return .{ .compat = &[_]u21{
         0x0636,
         0x0649,
-    } });
-    try self.map.put(0xFD24, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD24) return .{ .compat = &[_]u21{
         0x0636,
         0x064A,
-    } });
-    try self.map.put(0xFD25, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD25) return .{ .compat = &[_]u21{
         0x0634,
         0x062C,
-    } });
-    try self.map.put(0xFD26, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD26) return .{ .compat = &[_]u21{
         0x0634,
         0x062D,
-    } });
-    try self.map.put(0xFD27, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD27) return .{ .compat = &[_]u21{
         0x0634,
         0x062E,
-    } });
-    try self.map.put(0xFD28, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD28) return .{ .compat = &[_]u21{
         0x0634,
         0x0645,
-    } });
-    try self.map.put(0xFD29, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD29) return .{ .compat = &[_]u21{
         0x0634,
         0x0631,
-    } });
-    try self.map.put(0xFD2A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD2A) return .{ .compat = &[_]u21{
         0x0633,
         0x0631,
-    } });
-    try self.map.put(0xFD2B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD2B) return .{ .compat = &[_]u21{
         0x0635,
         0x0631,
-    } });
-    try self.map.put(0xFD2C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD2C) return .{ .compat = &[_]u21{
         0x0636,
         0x0631,
-    } });
-    try self.map.put(0xFD2D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD2D) return .{ .compat = &[_]u21{
         0x0634,
         0x062C,
-    } });
-    try self.map.put(0xFD2E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD2E) return .{ .compat = &[_]u21{
         0x0634,
         0x062D,
-    } });
-    try self.map.put(0xFD2F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD2F) return .{ .compat = &[_]u21{
         0x0634,
         0x062E,
-    } });
-    try self.map.put(0xFD30, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD30) return .{ .compat = &[_]u21{
         0x0634,
         0x0645,
-    } });
-    try self.map.put(0xFD31, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD31) return .{ .compat = &[_]u21{
         0x0633,
         0x0647,
-    } });
-    try self.map.put(0xFD32, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD32) return .{ .compat = &[_]u21{
         0x0634,
         0x0647,
-    } });
-    try self.map.put(0xFD33, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD33) return .{ .compat = &[_]u21{
         0x0637,
         0x0645,
-    } });
-    try self.map.put(0xFD34, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD34) return .{ .compat = &[_]u21{
         0x0633,
         0x062C,
-    } });
-    try self.map.put(0xFD35, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD35) return .{ .compat = &[_]u21{
         0x0633,
         0x062D,
-    } });
-    try self.map.put(0xFD36, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD36) return .{ .compat = &[_]u21{
         0x0633,
         0x062E,
-    } });
-    try self.map.put(0xFD37, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD37) return .{ .compat = &[_]u21{
         0x0634,
         0x062C,
-    } });
-    try self.map.put(0xFD38, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD38) return .{ .compat = &[_]u21{
         0x0634,
         0x062D,
-    } });
-    try self.map.put(0xFD39, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD39) return .{ .compat = &[_]u21{
         0x0634,
         0x062E,
-    } });
-    try self.map.put(0xFD3A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD3A) return .{ .compat = &[_]u21{
         0x0637,
         0x0645,
-    } });
-    try self.map.put(0xFD3B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD3B) return .{ .compat = &[_]u21{
         0x0638,
         0x0645,
-    } });
-    try self.map.put(0xFD3C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD3C) return .{ .compat = &[_]u21{
         0x0627,
         0x064B,
-    } });
-    try self.map.put(0xFD3D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD3D) return .{ .compat = &[_]u21{
         0x0627,
         0x064B,
-    } });
-    try self.map.put(0xFD50, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD50) return .{ .compat = &[_]u21{
         0x062A,
         0x062C,
         0x0645,
-    } });
-    try self.map.put(0xFD51, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD51) return .{ .compat = &[_]u21{
         0x062A,
         0x062D,
         0x062C,
-    } });
-    try self.map.put(0xFD52, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD52) return .{ .compat = &[_]u21{
         0x062A,
         0x062D,
         0x062C,
-    } });
-    try self.map.put(0xFD53, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD53) return .{ .compat = &[_]u21{
         0x062A,
         0x062D,
         0x0645,
-    } });
-    try self.map.put(0xFD54, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD54) return .{ .compat = &[_]u21{
         0x062A,
         0x062E,
         0x0645,
-    } });
-    try self.map.put(0xFD55, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD55) return .{ .compat = &[_]u21{
         0x062A,
         0x0645,
         0x062C,
-    } });
-    try self.map.put(0xFD56, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD56) return .{ .compat = &[_]u21{
         0x062A,
         0x0645,
         0x062D,
-    } });
-    try self.map.put(0xFD57, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD57) return .{ .compat = &[_]u21{
         0x062A,
         0x0645,
         0x062E,
-    } });
-    try self.map.put(0xFD58, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD58) return .{ .compat = &[_]u21{
         0x062C,
         0x0645,
         0x062D,
-    } });
-    try self.map.put(0xFD59, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD59) return .{ .compat = &[_]u21{
         0x062C,
         0x0645,
         0x062D,
-    } });
-    try self.map.put(0xFD5A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD5A) return .{ .compat = &[_]u21{
         0x062D,
         0x0645,
         0x064A,
-    } });
-    try self.map.put(0xFD5B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD5B) return .{ .compat = &[_]u21{
         0x062D,
         0x0645,
         0x0649,
-    } });
-    try self.map.put(0xFD5C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD5C) return .{ .compat = &[_]u21{
         0x0633,
         0x062D,
         0x062C,
-    } });
-    try self.map.put(0xFD5D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD5D) return .{ .compat = &[_]u21{
         0x0633,
         0x062C,
         0x062D,
-    } });
-    try self.map.put(0xFD5E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD5E) return .{ .compat = &[_]u21{
         0x0633,
         0x062C,
         0x0649,
-    } });
-    try self.map.put(0xFD5F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD5F) return .{ .compat = &[_]u21{
         0x0633,
         0x0645,
         0x062D,
-    } });
-    try self.map.put(0xFD60, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD60) return .{ .compat = &[_]u21{
         0x0633,
         0x0645,
         0x062D,
-    } });
-    try self.map.put(0xFD61, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD61) return .{ .compat = &[_]u21{
         0x0633,
         0x0645,
         0x062C,
-    } });
-    try self.map.put(0xFD62, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD62) return .{ .compat = &[_]u21{
         0x0633,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFD63, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD63) return .{ .compat = &[_]u21{
         0x0633,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFD64, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD64) return .{ .compat = &[_]u21{
         0x0635,
         0x062D,
         0x062D,
-    } });
-    try self.map.put(0xFD65, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD65) return .{ .compat = &[_]u21{
         0x0635,
         0x062D,
         0x062D,
-    } });
-    try self.map.put(0xFD66, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD66) return .{ .compat = &[_]u21{
         0x0635,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFD67, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD67) return .{ .compat = &[_]u21{
         0x0634,
         0x062D,
         0x0645,
-    } });
-    try self.map.put(0xFD68, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD68) return .{ .compat = &[_]u21{
         0x0634,
         0x062D,
         0x0645,
-    } });
-    try self.map.put(0xFD69, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD69) return .{ .compat = &[_]u21{
         0x0634,
         0x062C,
         0x064A,
-    } });
-    try self.map.put(0xFD6A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD6A) return .{ .compat = &[_]u21{
         0x0634,
         0x0645,
         0x062E,
-    } });
-    try self.map.put(0xFD6B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD6B) return .{ .compat = &[_]u21{
         0x0634,
         0x0645,
         0x062E,
-    } });
-    try self.map.put(0xFD6C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD6C) return .{ .compat = &[_]u21{
         0x0634,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFD6D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD6D) return .{ .compat = &[_]u21{
         0x0634,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFD6E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD6E) return .{ .compat = &[_]u21{
         0x0636,
         0x062D,
         0x0649,
-    } });
-    try self.map.put(0xFD6F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD6F) return .{ .compat = &[_]u21{
         0x0636,
         0x062E,
         0x0645,
-    } });
-    try self.map.put(0xFD70, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD70) return .{ .compat = &[_]u21{
         0x0636,
         0x062E,
         0x0645,
-    } });
-    try self.map.put(0xFD71, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD71) return .{ .compat = &[_]u21{
         0x0637,
         0x0645,
         0x062D,
-    } });
-    try self.map.put(0xFD72, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD72) return .{ .compat = &[_]u21{
         0x0637,
         0x0645,
         0x062D,
-    } });
-    try self.map.put(0xFD73, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD73) return .{ .compat = &[_]u21{
         0x0637,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFD74, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD74) return .{ .compat = &[_]u21{
         0x0637,
         0x0645,
         0x064A,
-    } });
-    try self.map.put(0xFD75, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD75) return .{ .compat = &[_]u21{
         0x0639,
         0x062C,
         0x0645,
-    } });
-    try self.map.put(0xFD76, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD76) return .{ .compat = &[_]u21{
         0x0639,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFD77, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD77) return .{ .compat = &[_]u21{
         0x0639,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFD78, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD78) return .{ .compat = &[_]u21{
         0x0639,
         0x0645,
         0x0649,
-    } });
-    try self.map.put(0xFD79, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD79) return .{ .compat = &[_]u21{
         0x063A,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFD7A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD7A) return .{ .compat = &[_]u21{
         0x063A,
         0x0645,
         0x064A,
-    } });
-    try self.map.put(0xFD7B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD7B) return .{ .compat = &[_]u21{
         0x063A,
         0x0645,
         0x0649,
-    } });
-    try self.map.put(0xFD7C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD7C) return .{ .compat = &[_]u21{
         0x0641,
         0x062E,
         0x0645,
-    } });
-    try self.map.put(0xFD7D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD7D) return .{ .compat = &[_]u21{
         0x0641,
         0x062E,
         0x0645,
-    } });
-    try self.map.put(0xFD7E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD7E) return .{ .compat = &[_]u21{
         0x0642,
         0x0645,
         0x062D,
-    } });
-    try self.map.put(0xFD7F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD7F) return .{ .compat = &[_]u21{
         0x0642,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFD80, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD80) return .{ .compat = &[_]u21{
         0x0644,
         0x062D,
         0x0645,
-    } });
-    try self.map.put(0xFD81, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD81) return .{ .compat = &[_]u21{
         0x0644,
         0x062D,
         0x064A,
-    } });
-    try self.map.put(0xFD82, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD82) return .{ .compat = &[_]u21{
         0x0644,
         0x062D,
         0x0649,
-    } });
-    try self.map.put(0xFD83, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD83) return .{ .compat = &[_]u21{
         0x0644,
         0x062C,
         0x062C,
-    } });
-    try self.map.put(0xFD84, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD84) return .{ .compat = &[_]u21{
         0x0644,
         0x062C,
         0x062C,
-    } });
-    try self.map.put(0xFD85, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD85) return .{ .compat = &[_]u21{
         0x0644,
         0x062E,
         0x0645,
-    } });
-    try self.map.put(0xFD86, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD86) return .{ .compat = &[_]u21{
         0x0644,
         0x062E,
         0x0645,
-    } });
-    try self.map.put(0xFD87, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD87) return .{ .compat = &[_]u21{
         0x0644,
         0x0645,
         0x062D,
-    } });
-    try self.map.put(0xFD88, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD88) return .{ .compat = &[_]u21{
         0x0644,
         0x0645,
         0x062D,
-    } });
-    try self.map.put(0xFD89, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD89) return .{ .compat = &[_]u21{
         0x0645,
         0x062D,
         0x062C,
-    } });
-    try self.map.put(0xFD8A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD8A) return .{ .compat = &[_]u21{
         0x0645,
         0x062D,
         0x0645,
-    } });
-    try self.map.put(0xFD8B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD8B) return .{ .compat = &[_]u21{
         0x0645,
         0x062D,
         0x064A,
-    } });
-    try self.map.put(0xFD8C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD8C) return .{ .compat = &[_]u21{
         0x0645,
         0x062C,
         0x062D,
-    } });
-    try self.map.put(0xFD8D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD8D) return .{ .compat = &[_]u21{
         0x0645,
         0x062C,
         0x0645,
-    } });
-    try self.map.put(0xFD8E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD8E) return .{ .compat = &[_]u21{
         0x0645,
         0x062E,
         0x062C,
-    } });
-    try self.map.put(0xFD8F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD8F) return .{ .compat = &[_]u21{
         0x0645,
         0x062E,
         0x0645,
-    } });
-    try self.map.put(0xFD92, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD92) return .{ .compat = &[_]u21{
         0x0645,
         0x062C,
         0x062E,
-    } });
-    try self.map.put(0xFD93, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD93) return .{ .compat = &[_]u21{
         0x0647,
         0x0645,
         0x062C,
-    } });
-    try self.map.put(0xFD94, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD94) return .{ .compat = &[_]u21{
         0x0647,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFD95, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD95) return .{ .compat = &[_]u21{
         0x0646,
         0x062D,
         0x0645,
-    } });
-    try self.map.put(0xFD96, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD96) return .{ .compat = &[_]u21{
         0x0646,
         0x062D,
         0x0649,
-    } });
-    try self.map.put(0xFD97, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD97) return .{ .compat = &[_]u21{
         0x0646,
         0x062C,
         0x0645,
-    } });
-    try self.map.put(0xFD98, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD98) return .{ .compat = &[_]u21{
         0x0646,
         0x062C,
         0x0645,
-    } });
-    try self.map.put(0xFD99, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD99) return .{ .compat = &[_]u21{
         0x0646,
         0x062C,
         0x0649,
-    } });
-    try self.map.put(0xFD9A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD9A) return .{ .compat = &[_]u21{
         0x0646,
         0x0645,
         0x064A,
-    } });
-    try self.map.put(0xFD9B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD9B) return .{ .compat = &[_]u21{
         0x0646,
         0x0645,
         0x0649,
-    } });
-    try self.map.put(0xFD9C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD9C) return .{ .compat = &[_]u21{
         0x064A,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFD9D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD9D) return .{ .compat = &[_]u21{
         0x064A,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFD9E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD9E) return .{ .compat = &[_]u21{
         0x0628,
         0x062E,
         0x064A,
-    } });
-    try self.map.put(0xFD9F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFD9F) return .{ .compat = &[_]u21{
         0x062A,
         0x062C,
         0x064A,
-    } });
-    try self.map.put(0xFDA0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDA0) return .{ .compat = &[_]u21{
         0x062A,
         0x062C,
         0x0649,
-    } });
-    try self.map.put(0xFDA1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDA1) return .{ .compat = &[_]u21{
         0x062A,
         0x062E,
         0x064A,
-    } });
-    try self.map.put(0xFDA2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDA2) return .{ .compat = &[_]u21{
         0x062A,
         0x062E,
         0x0649,
-    } });
-    try self.map.put(0xFDA3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDA3) return .{ .compat = &[_]u21{
         0x062A,
         0x0645,
         0x064A,
-    } });
-    try self.map.put(0xFDA4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDA4) return .{ .compat = &[_]u21{
         0x062A,
         0x0645,
         0x0649,
-    } });
-    try self.map.put(0xFDA5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDA5) return .{ .compat = &[_]u21{
         0x062C,
         0x0645,
         0x064A,
-    } });
-    try self.map.put(0xFDA6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDA6) return .{ .compat = &[_]u21{
         0x062C,
         0x062D,
         0x0649,
-    } });
-    try self.map.put(0xFDA7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDA7) return .{ .compat = &[_]u21{
         0x062C,
         0x0645,
         0x0649,
-    } });
-    try self.map.put(0xFDA8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDA8) return .{ .compat = &[_]u21{
         0x0633,
         0x062E,
         0x0649,
-    } });
-    try self.map.put(0xFDA9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDA9) return .{ .compat = &[_]u21{
         0x0635,
         0x062D,
         0x064A,
-    } });
-    try self.map.put(0xFDAA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDAA) return .{ .compat = &[_]u21{
         0x0634,
         0x062D,
         0x064A,
-    } });
-    try self.map.put(0xFDAB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDAB) return .{ .compat = &[_]u21{
         0x0636,
         0x062D,
         0x064A,
-    } });
-    try self.map.put(0xFDAC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDAC) return .{ .compat = &[_]u21{
         0x0644,
         0x062C,
         0x064A,
-    } });
-    try self.map.put(0xFDAD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDAD) return .{ .compat = &[_]u21{
         0x0644,
         0x0645,
         0x064A,
-    } });
-    try self.map.put(0xFDAE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDAE) return .{ .compat = &[_]u21{
         0x064A,
         0x062D,
         0x064A,
-    } });
-    try self.map.put(0xFDAF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDAF) return .{ .compat = &[_]u21{
         0x064A,
         0x062C,
         0x064A,
-    } });
-    try self.map.put(0xFDB0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDB0) return .{ .compat = &[_]u21{
         0x064A,
         0x0645,
         0x064A,
-    } });
-    try self.map.put(0xFDB1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDB1) return .{ .compat = &[_]u21{
         0x0645,
         0x0645,
         0x064A,
-    } });
-    try self.map.put(0xFDB2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDB2) return .{ .compat = &[_]u21{
         0x0642,
         0x0645,
         0x064A,
-    } });
-    try self.map.put(0xFDB3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDB3) return .{ .compat = &[_]u21{
         0x0646,
         0x062D,
         0x064A,
-    } });
-    try self.map.put(0xFDB4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDB4) return .{ .compat = &[_]u21{
         0x0642,
         0x0645,
         0x062D,
-    } });
-    try self.map.put(0xFDB5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDB5) return .{ .compat = &[_]u21{
         0x0644,
         0x062D,
         0x0645,
-    } });
-    try self.map.put(0xFDB6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDB6) return .{ .compat = &[_]u21{
         0x0639,
         0x0645,
         0x064A,
-    } });
-    try self.map.put(0xFDB7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDB7) return .{ .compat = &[_]u21{
         0x0643,
         0x0645,
         0x064A,
-    } });
-    try self.map.put(0xFDB8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDB8) return .{ .compat = &[_]u21{
         0x0646,
         0x062C,
         0x062D,
-    } });
-    try self.map.put(0xFDB9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDB9) return .{ .compat = &[_]u21{
         0x0645,
         0x062E,
         0x064A,
-    } });
-    try self.map.put(0xFDBA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDBA) return .{ .compat = &[_]u21{
         0x0644,
         0x062C,
         0x0645,
-    } });
-    try self.map.put(0xFDBB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDBB) return .{ .compat = &[_]u21{
         0x0643,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFDBC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDBC) return .{ .compat = &[_]u21{
         0x0644,
         0x062C,
         0x0645,
-    } });
-    try self.map.put(0xFDBD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDBD) return .{ .compat = &[_]u21{
         0x0646,
         0x062C,
         0x062D,
-    } });
-    try self.map.put(0xFDBE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDBE) return .{ .compat = &[_]u21{
         0x062C,
         0x062D,
         0x064A,
-    } });
-    try self.map.put(0xFDBF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDBF) return .{ .compat = &[_]u21{
         0x062D,
         0x062C,
         0x064A,
-    } });
-    try self.map.put(0xFDC0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDC0) return .{ .compat = &[_]u21{
         0x0645,
         0x062C,
         0x064A,
-    } });
-    try self.map.put(0xFDC1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDC1) return .{ .compat = &[_]u21{
         0x0641,
         0x0645,
         0x064A,
-    } });
-    try self.map.put(0xFDC2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDC2) return .{ .compat = &[_]u21{
         0x0628,
         0x062D,
         0x064A,
-    } });
-    try self.map.put(0xFDC3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDC3) return .{ .compat = &[_]u21{
         0x0643,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFDC4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDC4) return .{ .compat = &[_]u21{
         0x0639,
         0x062C,
         0x0645,
-    } });
-    try self.map.put(0xFDC5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDC5) return .{ .compat = &[_]u21{
         0x0635,
         0x0645,
         0x0645,
-    } });
-    try self.map.put(0xFDC6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDC6) return .{ .compat = &[_]u21{
         0x0633,
         0x062E,
         0x064A,
-    } });
-    try self.map.put(0xFDC7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDC7) return .{ .compat = &[_]u21{
         0x0646,
         0x062C,
         0x064A,
-    } });
-    try self.map.put(0xFDF0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDF0) return .{ .compat = &[_]u21{
         0x0635,
         0x0644,
         0x06D2,
-    } });
-    try self.map.put(0xFDF1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDF1) return .{ .compat = &[_]u21{
         0x0642,
         0x0644,
         0x06D2,
-    } });
-    try self.map.put(0xFDF2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDF2) return .{ .compat = &[_]u21{
         0x0627,
         0x0644,
         0x0644,
         0x0647,
-    } });
-    try self.map.put(0xFDF3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDF3) return .{ .compat = &[_]u21{
         0x0627,
         0x0643,
         0x0628,
         0x0631,
-    } });
-    try self.map.put(0xFDF4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDF4) return .{ .compat = &[_]u21{
         0x0645,
         0x062D,
         0x0645,
         0x062F,
-    } });
-    try self.map.put(0xFDF5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDF5) return .{ .compat = &[_]u21{
         0x0635,
         0x0644,
         0x0639,
         0x0645,
-    } });
-    try self.map.put(0xFDF6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDF6) return .{ .compat = &[_]u21{
         0x0631,
         0x0633,
         0x0648,
         0x0644,
-    } });
-    try self.map.put(0xFDF7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDF7) return .{ .compat = &[_]u21{
         0x0639,
         0x0644,
         0x064A,
         0x0647,
-    } });
-    try self.map.put(0xFDF8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDF8) return .{ .compat = &[_]u21{
         0x0648,
         0x0633,
         0x0644,
         0x0645,
-    } });
-    try self.map.put(0xFDF9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDF9) return .{ .compat = &[_]u21{
         0x0635,
         0x0644,
         0x0649,
-    } });
-    try self.map.put(0xFDFA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDFA) return .{ .compat = &[_]u21{
         0x0635,
         0x0644,
         0x0649,
@@ -12090,8 +12087,8 @@ fn addEntries(self: *Self) !void {
         0x0633,
         0x0644,
         0x0645,
-    } });
-    try self.map.put(0xFDFB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDFB) return .{ .compat = &[_]u21{
         0x062C,
         0x0644,
         0x0020,
@@ -12100,5936 +12097,5929 @@ fn addEntries(self: *Self) !void {
         0x0627,
         0x0644,
         0x0647,
-    } });
-    try self.map.put(0xFDFC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFDFC) return .{ .compat = &[_]u21{
         0x0631,
         0x06CC,
         0x0627,
         0x0644,
-    } });
-    try self.map.put(0xFE10, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE10) return .{ .compat = &[_]u21{
         0x002C,
-    } });
-    try self.map.put(0xFE11, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE11) return .{ .compat = &[_]u21{
         0x3001,
-    } });
-    try self.map.put(0xFE12, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE12) return .{ .compat = &[_]u21{
         0x3002,
-    } });
-    try self.map.put(0xFE13, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE13) return .{ .compat = &[_]u21{
         0x003A,
-    } });
-    try self.map.put(0xFE14, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE14) return .{ .compat = &[_]u21{
         0x003B,
-    } });
-    try self.map.put(0xFE15, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE15) return .{ .compat = &[_]u21{
         0x0021,
-    } });
-    try self.map.put(0xFE16, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE16) return .{ .compat = &[_]u21{
         0x003F,
-    } });
-    try self.map.put(0xFE17, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE17) return .{ .compat = &[_]u21{
         0x3016,
-    } });
-    try self.map.put(0xFE18, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE18) return .{ .compat = &[_]u21{
         0x3017,
-    } });
-    try self.map.put(0xFE19, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE19) return .{ .compat = &[_]u21{
         0x2026,
-    } });
-    try self.map.put(0xFE30, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE30) return .{ .compat = &[_]u21{
         0x2025,
-    } });
-    try self.map.put(0xFE31, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE31) return .{ .compat = &[_]u21{
         0x2014,
-    } });
-    try self.map.put(0xFE32, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE32) return .{ .compat = &[_]u21{
         0x2013,
-    } });
-    try self.map.put(0xFE33, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE33) return .{ .compat = &[_]u21{
         0x005F,
-    } });
-    try self.map.put(0xFE34, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE34) return .{ .compat = &[_]u21{
         0x005F,
-    } });
-    try self.map.put(0xFE35, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE35) return .{ .compat = &[_]u21{
         0x0028,
-    } });
-    try self.map.put(0xFE36, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE36) return .{ .compat = &[_]u21{
         0x0029,
-    } });
-    try self.map.put(0xFE37, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE37) return .{ .compat = &[_]u21{
         0x007B,
-    } });
-    try self.map.put(0xFE38, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE38) return .{ .compat = &[_]u21{
         0x007D,
-    } });
-    try self.map.put(0xFE39, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE39) return .{ .compat = &[_]u21{
         0x3014,
-    } });
-    try self.map.put(0xFE3A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE3A) return .{ .compat = &[_]u21{
         0x3015,
-    } });
-    try self.map.put(0xFE3B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE3B) return .{ .compat = &[_]u21{
         0x3010,
-    } });
-    try self.map.put(0xFE3C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE3C) return .{ .compat = &[_]u21{
         0x3011,
-    } });
-    try self.map.put(0xFE3D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE3D) return .{ .compat = &[_]u21{
         0x300A,
-    } });
-    try self.map.put(0xFE3E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE3E) return .{ .compat = &[_]u21{
         0x300B,
-    } });
-    try self.map.put(0xFE3F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE3F) return .{ .compat = &[_]u21{
         0x3008,
-    } });
-    try self.map.put(0xFE40, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE40) return .{ .compat = &[_]u21{
         0x3009,
-    } });
-    try self.map.put(0xFE41, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE41) return .{ .compat = &[_]u21{
         0x300C,
-    } });
-    try self.map.put(0xFE42, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE42) return .{ .compat = &[_]u21{
         0x300D,
-    } });
-    try self.map.put(0xFE43, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE43) return .{ .compat = &[_]u21{
         0x300E,
-    } });
-    try self.map.put(0xFE44, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE44) return .{ .compat = &[_]u21{
         0x300F,
-    } });
-    try self.map.put(0xFE47, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE47) return .{ .compat = &[_]u21{
         0x005B,
-    } });
-    try self.map.put(0xFE48, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE48) return .{ .compat = &[_]u21{
         0x005D,
-    } });
-    try self.map.put(0xFE49, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE49) return .{ .compat = &[_]u21{
         0x203E,
-    } });
-    try self.map.put(0xFE4A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE4A) return .{ .compat = &[_]u21{
         0x203E,
-    } });
-    try self.map.put(0xFE4B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE4B) return .{ .compat = &[_]u21{
         0x203E,
-    } });
-    try self.map.put(0xFE4C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE4C) return .{ .compat = &[_]u21{
         0x203E,
-    } });
-    try self.map.put(0xFE4D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE4D) return .{ .compat = &[_]u21{
         0x005F,
-    } });
-    try self.map.put(0xFE4E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE4E) return .{ .compat = &[_]u21{
         0x005F,
-    } });
-    try self.map.put(0xFE4F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE4F) return .{ .compat = &[_]u21{
         0x005F,
-    } });
-    try self.map.put(0xFE50, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE50) return .{ .compat = &[_]u21{
         0x002C,
-    } });
-    try self.map.put(0xFE51, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE51) return .{ .compat = &[_]u21{
         0x3001,
-    } });
-    try self.map.put(0xFE52, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE52) return .{ .compat = &[_]u21{
         0x002E,
-    } });
-    try self.map.put(0xFE54, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE54) return .{ .compat = &[_]u21{
         0x003B,
-    } });
-    try self.map.put(0xFE55, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE55) return .{ .compat = &[_]u21{
         0x003A,
-    } });
-    try self.map.put(0xFE56, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE56) return .{ .compat = &[_]u21{
         0x003F,
-    } });
-    try self.map.put(0xFE57, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE57) return .{ .compat = &[_]u21{
         0x0021,
-    } });
-    try self.map.put(0xFE58, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE58) return .{ .compat = &[_]u21{
         0x2014,
-    } });
-    try self.map.put(0xFE59, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE59) return .{ .compat = &[_]u21{
         0x0028,
-    } });
-    try self.map.put(0xFE5A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE5A) return .{ .compat = &[_]u21{
         0x0029,
-    } });
-    try self.map.put(0xFE5B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE5B) return .{ .compat = &[_]u21{
         0x007B,
-    } });
-    try self.map.put(0xFE5C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE5C) return .{ .compat = &[_]u21{
         0x007D,
-    } });
-    try self.map.put(0xFE5D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE5D) return .{ .compat = &[_]u21{
         0x3014,
-    } });
-    try self.map.put(0xFE5E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE5E) return .{ .compat = &[_]u21{
         0x3015,
-    } });
-    try self.map.put(0xFE5F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE5F) return .{ .compat = &[_]u21{
         0x0023,
-    } });
-    try self.map.put(0xFE60, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE60) return .{ .compat = &[_]u21{
         0x0026,
-    } });
-    try self.map.put(0xFE61, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE61) return .{ .compat = &[_]u21{
         0x002A,
-    } });
-    try self.map.put(0xFE62, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE62) return .{ .compat = &[_]u21{
         0x002B,
-    } });
-    try self.map.put(0xFE63, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE63) return .{ .compat = &[_]u21{
         0x002D,
-    } });
-    try self.map.put(0xFE64, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE64) return .{ .compat = &[_]u21{
         0x003C,
-    } });
-    try self.map.put(0xFE65, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE65) return .{ .compat = &[_]u21{
         0x003E,
-    } });
-    try self.map.put(0xFE66, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE66) return .{ .compat = &[_]u21{
         0x003D,
-    } });
-    try self.map.put(0xFE68, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE68) return .{ .compat = &[_]u21{
         0x005C,
-    } });
-    try self.map.put(0xFE69, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE69) return .{ .compat = &[_]u21{
         0x0024,
-    } });
-    try self.map.put(0xFE6A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE6A) return .{ .compat = &[_]u21{
         0x0025,
-    } });
-    try self.map.put(0xFE6B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE6B) return .{ .compat = &[_]u21{
         0x0040,
-    } });
-    try self.map.put(0xFE70, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE70) return .{ .compat = &[_]u21{
         0x0020,
         0x064B,
-    } });
-    try self.map.put(0xFE71, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE71) return .{ .compat = &[_]u21{
         0x0640,
         0x064B,
-    } });
-    try self.map.put(0xFE72, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE72) return .{ .compat = &[_]u21{
         0x0020,
         0x064C,
-    } });
-    try self.map.put(0xFE74, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE74) return .{ .compat = &[_]u21{
         0x0020,
         0x064D,
-    } });
-    try self.map.put(0xFE76, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE76) return .{ .compat = &[_]u21{
         0x0020,
         0x064E,
-    } });
-    try self.map.put(0xFE77, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE77) return .{ .compat = &[_]u21{
         0x0640,
         0x064E,
-    } });
-    try self.map.put(0xFE78, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE78) return .{ .compat = &[_]u21{
         0x0020,
         0x064F,
-    } });
-    try self.map.put(0xFE79, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE79) return .{ .compat = &[_]u21{
         0x0640,
         0x064F,
-    } });
-    try self.map.put(0xFE7A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE7A) return .{ .compat = &[_]u21{
         0x0020,
         0x0650,
-    } });
-    try self.map.put(0xFE7B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE7B) return .{ .compat = &[_]u21{
         0x0640,
         0x0650,
-    } });
-    try self.map.put(0xFE7C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE7C) return .{ .compat = &[_]u21{
         0x0020,
         0x0651,
-    } });
-    try self.map.put(0xFE7D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE7D) return .{ .compat = &[_]u21{
         0x0640,
         0x0651,
-    } });
-    try self.map.put(0xFE7E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE7E) return .{ .compat = &[_]u21{
         0x0020,
         0x0652,
-    } });
-    try self.map.put(0xFE7F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE7F) return .{ .compat = &[_]u21{
         0x0640,
         0x0652,
-    } });
-    try self.map.put(0xFE80, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE80) return .{ .compat = &[_]u21{
         0x0621,
-    } });
-    try self.map.put(0xFE81, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE81) return .{ .compat = &[_]u21{
         0x0622,
-    } });
-    try self.map.put(0xFE82, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE82) return .{ .compat = &[_]u21{
         0x0622,
-    } });
-    try self.map.put(0xFE83, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE83) return .{ .compat = &[_]u21{
         0x0623,
-    } });
-    try self.map.put(0xFE84, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE84) return .{ .compat = &[_]u21{
         0x0623,
-    } });
-    try self.map.put(0xFE85, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE85) return .{ .compat = &[_]u21{
         0x0624,
-    } });
-    try self.map.put(0xFE86, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE86) return .{ .compat = &[_]u21{
         0x0624,
-    } });
-    try self.map.put(0xFE87, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE87) return .{ .compat = &[_]u21{
         0x0625,
-    } });
-    try self.map.put(0xFE88, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE88) return .{ .compat = &[_]u21{
         0x0625,
-    } });
-    try self.map.put(0xFE89, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE89) return .{ .compat = &[_]u21{
         0x0626,
-    } });
-    try self.map.put(0xFE8A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE8A) return .{ .compat = &[_]u21{
         0x0626,
-    } });
-    try self.map.put(0xFE8B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE8B) return .{ .compat = &[_]u21{
         0x0626,
-    } });
-    try self.map.put(0xFE8C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE8C) return .{ .compat = &[_]u21{
         0x0626,
-    } });
-    try self.map.put(0xFE8D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE8D) return .{ .compat = &[_]u21{
         0x0627,
-    } });
-    try self.map.put(0xFE8E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE8E) return .{ .compat = &[_]u21{
         0x0627,
-    } });
-    try self.map.put(0xFE8F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE8F) return .{ .compat = &[_]u21{
         0x0628,
-    } });
-    try self.map.put(0xFE90, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE90) return .{ .compat = &[_]u21{
         0x0628,
-    } });
-    try self.map.put(0xFE91, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE91) return .{ .compat = &[_]u21{
         0x0628,
-    } });
-    try self.map.put(0xFE92, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE92) return .{ .compat = &[_]u21{
         0x0628,
-    } });
-    try self.map.put(0xFE93, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE93) return .{ .compat = &[_]u21{
         0x0629,
-    } });
-    try self.map.put(0xFE94, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE94) return .{ .compat = &[_]u21{
         0x0629,
-    } });
-    try self.map.put(0xFE95, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE95) return .{ .compat = &[_]u21{
         0x062A,
-    } });
-    try self.map.put(0xFE96, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE96) return .{ .compat = &[_]u21{
         0x062A,
-    } });
-    try self.map.put(0xFE97, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE97) return .{ .compat = &[_]u21{
         0x062A,
-    } });
-    try self.map.put(0xFE98, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE98) return .{ .compat = &[_]u21{
         0x062A,
-    } });
-    try self.map.put(0xFE99, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE99) return .{ .compat = &[_]u21{
         0x062B,
-    } });
-    try self.map.put(0xFE9A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE9A) return .{ .compat = &[_]u21{
         0x062B,
-    } });
-    try self.map.put(0xFE9B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE9B) return .{ .compat = &[_]u21{
         0x062B,
-    } });
-    try self.map.put(0xFE9C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE9C) return .{ .compat = &[_]u21{
         0x062B,
-    } });
-    try self.map.put(0xFE9D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE9D) return .{ .compat = &[_]u21{
         0x062C,
-    } });
-    try self.map.put(0xFE9E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE9E) return .{ .compat = &[_]u21{
         0x062C,
-    } });
-    try self.map.put(0xFE9F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFE9F) return .{ .compat = &[_]u21{
         0x062C,
-    } });
-    try self.map.put(0xFEA0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEA0) return .{ .compat = &[_]u21{
         0x062C,
-    } });
-    try self.map.put(0xFEA1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEA1) return .{ .compat = &[_]u21{
         0x062D,
-    } });
-    try self.map.put(0xFEA2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEA2) return .{ .compat = &[_]u21{
         0x062D,
-    } });
-    try self.map.put(0xFEA3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEA3) return .{ .compat = &[_]u21{
         0x062D,
-    } });
-    try self.map.put(0xFEA4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEA4) return .{ .compat = &[_]u21{
         0x062D,
-    } });
-    try self.map.put(0xFEA5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEA5) return .{ .compat = &[_]u21{
         0x062E,
-    } });
-    try self.map.put(0xFEA6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEA6) return .{ .compat = &[_]u21{
         0x062E,
-    } });
-    try self.map.put(0xFEA7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEA7) return .{ .compat = &[_]u21{
         0x062E,
-    } });
-    try self.map.put(0xFEA8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEA8) return .{ .compat = &[_]u21{
         0x062E,
-    } });
-    try self.map.put(0xFEA9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEA9) return .{ .compat = &[_]u21{
         0x062F,
-    } });
-    try self.map.put(0xFEAA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEAA) return .{ .compat = &[_]u21{
         0x062F,
-    } });
-    try self.map.put(0xFEAB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEAB) return .{ .compat = &[_]u21{
         0x0630,
-    } });
-    try self.map.put(0xFEAC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEAC) return .{ .compat = &[_]u21{
         0x0630,
-    } });
-    try self.map.put(0xFEAD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEAD) return .{ .compat = &[_]u21{
         0x0631,
-    } });
-    try self.map.put(0xFEAE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEAE) return .{ .compat = &[_]u21{
         0x0631,
-    } });
-    try self.map.put(0xFEAF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEAF) return .{ .compat = &[_]u21{
         0x0632,
-    } });
-    try self.map.put(0xFEB0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEB0) return .{ .compat = &[_]u21{
         0x0632,
-    } });
-    try self.map.put(0xFEB1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEB1) return .{ .compat = &[_]u21{
         0x0633,
-    } });
-    try self.map.put(0xFEB2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEB2) return .{ .compat = &[_]u21{
         0x0633,
-    } });
-    try self.map.put(0xFEB3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEB3) return .{ .compat = &[_]u21{
         0x0633,
-    } });
-    try self.map.put(0xFEB4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEB4) return .{ .compat = &[_]u21{
         0x0633,
-    } });
-    try self.map.put(0xFEB5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEB5) return .{ .compat = &[_]u21{
         0x0634,
-    } });
-    try self.map.put(0xFEB6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEB6) return .{ .compat = &[_]u21{
         0x0634,
-    } });
-    try self.map.put(0xFEB7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEB7) return .{ .compat = &[_]u21{
         0x0634,
-    } });
-    try self.map.put(0xFEB8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEB8) return .{ .compat = &[_]u21{
         0x0634,
-    } });
-    try self.map.put(0xFEB9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEB9) return .{ .compat = &[_]u21{
         0x0635,
-    } });
-    try self.map.put(0xFEBA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEBA) return .{ .compat = &[_]u21{
         0x0635,
-    } });
-    try self.map.put(0xFEBB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEBB) return .{ .compat = &[_]u21{
         0x0635,
-    } });
-    try self.map.put(0xFEBC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEBC) return .{ .compat = &[_]u21{
         0x0635,
-    } });
-    try self.map.put(0xFEBD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEBD) return .{ .compat = &[_]u21{
         0x0636,
-    } });
-    try self.map.put(0xFEBE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEBE) return .{ .compat = &[_]u21{
         0x0636,
-    } });
-    try self.map.put(0xFEBF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEBF) return .{ .compat = &[_]u21{
         0x0636,
-    } });
-    try self.map.put(0xFEC0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEC0) return .{ .compat = &[_]u21{
         0x0636,
-    } });
-    try self.map.put(0xFEC1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEC1) return .{ .compat = &[_]u21{
         0x0637,
-    } });
-    try self.map.put(0xFEC2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEC2) return .{ .compat = &[_]u21{
         0x0637,
-    } });
-    try self.map.put(0xFEC3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEC3) return .{ .compat = &[_]u21{
         0x0637,
-    } });
-    try self.map.put(0xFEC4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEC4) return .{ .compat = &[_]u21{
         0x0637,
-    } });
-    try self.map.put(0xFEC5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEC5) return .{ .compat = &[_]u21{
         0x0638,
-    } });
-    try self.map.put(0xFEC6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEC6) return .{ .compat = &[_]u21{
         0x0638,
-    } });
-    try self.map.put(0xFEC7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEC7) return .{ .compat = &[_]u21{
         0x0638,
-    } });
-    try self.map.put(0xFEC8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEC8) return .{ .compat = &[_]u21{
         0x0638,
-    } });
-    try self.map.put(0xFEC9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEC9) return .{ .compat = &[_]u21{
         0x0639,
-    } });
-    try self.map.put(0xFECA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFECA) return .{ .compat = &[_]u21{
         0x0639,
-    } });
-    try self.map.put(0xFECB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFECB) return .{ .compat = &[_]u21{
         0x0639,
-    } });
-    try self.map.put(0xFECC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFECC) return .{ .compat = &[_]u21{
         0x0639,
-    } });
-    try self.map.put(0xFECD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFECD) return .{ .compat = &[_]u21{
         0x063A,
-    } });
-    try self.map.put(0xFECE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFECE) return .{ .compat = &[_]u21{
         0x063A,
-    } });
-    try self.map.put(0xFECF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFECF) return .{ .compat = &[_]u21{
         0x063A,
-    } });
-    try self.map.put(0xFED0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFED0) return .{ .compat = &[_]u21{
         0x063A,
-    } });
-    try self.map.put(0xFED1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFED1) return .{ .compat = &[_]u21{
         0x0641,
-    } });
-    try self.map.put(0xFED2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFED2) return .{ .compat = &[_]u21{
         0x0641,
-    } });
-    try self.map.put(0xFED3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFED3) return .{ .compat = &[_]u21{
         0x0641,
-    } });
-    try self.map.put(0xFED4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFED4) return .{ .compat = &[_]u21{
         0x0641,
-    } });
-    try self.map.put(0xFED5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFED5) return .{ .compat = &[_]u21{
         0x0642,
-    } });
-    try self.map.put(0xFED6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFED6) return .{ .compat = &[_]u21{
         0x0642,
-    } });
-    try self.map.put(0xFED7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFED7) return .{ .compat = &[_]u21{
         0x0642,
-    } });
-    try self.map.put(0xFED8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFED8) return .{ .compat = &[_]u21{
         0x0642,
-    } });
-    try self.map.put(0xFED9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFED9) return .{ .compat = &[_]u21{
         0x0643,
-    } });
-    try self.map.put(0xFEDA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEDA) return .{ .compat = &[_]u21{
         0x0643,
-    } });
-    try self.map.put(0xFEDB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEDB) return .{ .compat = &[_]u21{
         0x0643,
-    } });
-    try self.map.put(0xFEDC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEDC) return .{ .compat = &[_]u21{
         0x0643,
-    } });
-    try self.map.put(0xFEDD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEDD) return .{ .compat = &[_]u21{
         0x0644,
-    } });
-    try self.map.put(0xFEDE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEDE) return .{ .compat = &[_]u21{
         0x0644,
-    } });
-    try self.map.put(0xFEDF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEDF) return .{ .compat = &[_]u21{
         0x0644,
-    } });
-    try self.map.put(0xFEE0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEE0) return .{ .compat = &[_]u21{
         0x0644,
-    } });
-    try self.map.put(0xFEE1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEE1) return .{ .compat = &[_]u21{
         0x0645,
-    } });
-    try self.map.put(0xFEE2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEE2) return .{ .compat = &[_]u21{
         0x0645,
-    } });
-    try self.map.put(0xFEE3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEE3) return .{ .compat = &[_]u21{
         0x0645,
-    } });
-    try self.map.put(0xFEE4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEE4) return .{ .compat = &[_]u21{
         0x0645,
-    } });
-    try self.map.put(0xFEE5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEE5) return .{ .compat = &[_]u21{
         0x0646,
-    } });
-    try self.map.put(0xFEE6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEE6) return .{ .compat = &[_]u21{
         0x0646,
-    } });
-    try self.map.put(0xFEE7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEE7) return .{ .compat = &[_]u21{
         0x0646,
-    } });
-    try self.map.put(0xFEE8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEE8) return .{ .compat = &[_]u21{
         0x0646,
-    } });
-    try self.map.put(0xFEE9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEE9) return .{ .compat = &[_]u21{
         0x0647,
-    } });
-    try self.map.put(0xFEEA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEEA) return .{ .compat = &[_]u21{
         0x0647,
-    } });
-    try self.map.put(0xFEEB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEEB) return .{ .compat = &[_]u21{
         0x0647,
-    } });
-    try self.map.put(0xFEEC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEEC) return .{ .compat = &[_]u21{
         0x0647,
-    } });
-    try self.map.put(0xFEED, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEED) return .{ .compat = &[_]u21{
         0x0648,
-    } });
-    try self.map.put(0xFEEE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEEE) return .{ .compat = &[_]u21{
         0x0648,
-    } });
-    try self.map.put(0xFEEF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEEF) return .{ .compat = &[_]u21{
         0x0649,
-    } });
-    try self.map.put(0xFEF0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEF0) return .{ .compat = &[_]u21{
         0x0649,
-    } });
-    try self.map.put(0xFEF1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEF1) return .{ .compat = &[_]u21{
         0x064A,
-    } });
-    try self.map.put(0xFEF2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEF2) return .{ .compat = &[_]u21{
         0x064A,
-    } });
-    try self.map.put(0xFEF3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEF3) return .{ .compat = &[_]u21{
         0x064A,
-    } });
-    try self.map.put(0xFEF4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEF4) return .{ .compat = &[_]u21{
         0x064A,
-    } });
-    try self.map.put(0xFEF5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEF5) return .{ .compat = &[_]u21{
         0x0644,
         0x0622,
-    } });
-    try self.map.put(0xFEF6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEF6) return .{ .compat = &[_]u21{
         0x0644,
         0x0622,
-    } });
-    try self.map.put(0xFEF7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEF7) return .{ .compat = &[_]u21{
         0x0644,
         0x0623,
-    } });
-    try self.map.put(0xFEF8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEF8) return .{ .compat = &[_]u21{
         0x0644,
         0x0623,
-    } });
-    try self.map.put(0xFEF9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEF9) return .{ .compat = &[_]u21{
         0x0644,
         0x0625,
-    } });
-    try self.map.put(0xFEFA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEFA) return .{ .compat = &[_]u21{
         0x0644,
         0x0625,
-    } });
-    try self.map.put(0xFEFB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEFB) return .{ .compat = &[_]u21{
         0x0644,
         0x0627,
-    } });
-    try self.map.put(0xFEFC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFEFC) return .{ .compat = &[_]u21{
         0x0644,
         0x0627,
-    } });
-    try self.map.put(0xFF01, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF01) return .{ .compat = &[_]u21{
         0x0021,
-    } });
-    try self.map.put(0xFF02, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF02) return .{ .compat = &[_]u21{
         0x0022,
-    } });
-    try self.map.put(0xFF03, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF03) return .{ .compat = &[_]u21{
         0x0023,
-    } });
-    try self.map.put(0xFF04, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF04) return .{ .compat = &[_]u21{
         0x0024,
-    } });
-    try self.map.put(0xFF05, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF05) return .{ .compat = &[_]u21{
         0x0025,
-    } });
-    try self.map.put(0xFF06, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF06) return .{ .compat = &[_]u21{
         0x0026,
-    } });
-    try self.map.put(0xFF07, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF07) return .{ .compat = &[_]u21{
         0x0027,
-    } });
-    try self.map.put(0xFF08, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF08) return .{ .compat = &[_]u21{
         0x0028,
-    } });
-    try self.map.put(0xFF09, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF09) return .{ .compat = &[_]u21{
         0x0029,
-    } });
-    try self.map.put(0xFF0A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF0A) return .{ .compat = &[_]u21{
         0x002A,
-    } });
-    try self.map.put(0xFF0B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF0B) return .{ .compat = &[_]u21{
         0x002B,
-    } });
-    try self.map.put(0xFF0C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF0C) return .{ .compat = &[_]u21{
         0x002C,
-    } });
-    try self.map.put(0xFF0D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF0D) return .{ .compat = &[_]u21{
         0x002D,
-    } });
-    try self.map.put(0xFF0E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF0E) return .{ .compat = &[_]u21{
         0x002E,
-    } });
-    try self.map.put(0xFF0F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF0F) return .{ .compat = &[_]u21{
         0x002F,
-    } });
-    try self.map.put(0xFF10, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF10) return .{ .compat = &[_]u21{
         0x0030,
-    } });
-    try self.map.put(0xFF11, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF11) return .{ .compat = &[_]u21{
         0x0031,
-    } });
-    try self.map.put(0xFF12, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF12) return .{ .compat = &[_]u21{
         0x0032,
-    } });
-    try self.map.put(0xFF13, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF13) return .{ .compat = &[_]u21{
         0x0033,
-    } });
-    try self.map.put(0xFF14, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF14) return .{ .compat = &[_]u21{
         0x0034,
-    } });
-    try self.map.put(0xFF15, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF15) return .{ .compat = &[_]u21{
         0x0035,
-    } });
-    try self.map.put(0xFF16, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF16) return .{ .compat = &[_]u21{
         0x0036,
-    } });
-    try self.map.put(0xFF17, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF17) return .{ .compat = &[_]u21{
         0x0037,
-    } });
-    try self.map.put(0xFF18, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF18) return .{ .compat = &[_]u21{
         0x0038,
-    } });
-    try self.map.put(0xFF19, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF19) return .{ .compat = &[_]u21{
         0x0039,
-    } });
-    try self.map.put(0xFF1A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF1A) return .{ .compat = &[_]u21{
         0x003A,
-    } });
-    try self.map.put(0xFF1B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF1B) return .{ .compat = &[_]u21{
         0x003B,
-    } });
-    try self.map.put(0xFF1C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF1C) return .{ .compat = &[_]u21{
         0x003C,
-    } });
-    try self.map.put(0xFF1D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF1D) return .{ .compat = &[_]u21{
         0x003D,
-    } });
-    try self.map.put(0xFF1E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF1E) return .{ .compat = &[_]u21{
         0x003E,
-    } });
-    try self.map.put(0xFF1F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF1F) return .{ .compat = &[_]u21{
         0x003F,
-    } });
-    try self.map.put(0xFF20, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF20) return .{ .compat = &[_]u21{
         0x0040,
-    } });
-    try self.map.put(0xFF21, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF21) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0xFF22, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF22) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0xFF23, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF23) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0xFF24, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF24) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0xFF25, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF25) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0xFF26, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF26) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0xFF27, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF27) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0xFF28, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF28) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0xFF29, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF29) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0xFF2A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF2A) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0xFF2B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF2B) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0xFF2C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF2C) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0xFF2D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF2D) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0xFF2E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF2E) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0xFF2F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF2F) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0xFF30, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF30) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0xFF31, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF31) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0xFF32, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF32) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0xFF33, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF33) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0xFF34, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF34) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0xFF35, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF35) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0xFF36, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF36) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0xFF37, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF37) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0xFF38, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF38) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0xFF39, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF39) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0xFF3A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF3A) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0xFF3B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF3B) return .{ .compat = &[_]u21{
         0x005B,
-    } });
-    try self.map.put(0xFF3C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF3C) return .{ .compat = &[_]u21{
         0x005C,
-    } });
-    try self.map.put(0xFF3D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF3D) return .{ .compat = &[_]u21{
         0x005D,
-    } });
-    try self.map.put(0xFF3E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF3E) return .{ .compat = &[_]u21{
         0x005E,
-    } });
-    try self.map.put(0xFF3F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF3F) return .{ .compat = &[_]u21{
         0x005F,
-    } });
-    try self.map.put(0xFF40, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF40) return .{ .compat = &[_]u21{
         0x0060,
-    } });
-    try self.map.put(0xFF41, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF41) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0xFF42, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF42) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0xFF43, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF43) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0xFF44, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF44) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0xFF45, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF45) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0xFF46, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF46) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0xFF47, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF47) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0xFF48, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF48) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0xFF49, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF49) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0xFF4A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF4A) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0xFF4B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF4B) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0xFF4C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF4C) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0xFF4D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF4D) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0xFF4E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF4E) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0xFF4F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF4F) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0xFF50, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF50) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0xFF51, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF51) return .{ .compat = &[_]u21{
         0x0071,
-    } });
-    try self.map.put(0xFF52, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF52) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0xFF53, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF53) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0xFF54, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF54) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0xFF55, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF55) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0xFF56, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF56) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0xFF57, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF57) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0xFF58, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF58) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0xFF59, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF59) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0xFF5A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF5A) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0xFF5B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF5B) return .{ .compat = &[_]u21{
         0x007B,
-    } });
-    try self.map.put(0xFF5C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF5C) return .{ .compat = &[_]u21{
         0x007C,
-    } });
-    try self.map.put(0xFF5D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF5D) return .{ .compat = &[_]u21{
         0x007D,
-    } });
-    try self.map.put(0xFF5E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF5E) return .{ .compat = &[_]u21{
         0x007E,
-    } });
-    try self.map.put(0xFF5F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF5F) return .{ .compat = &[_]u21{
         0x2985,
-    } });
-    try self.map.put(0xFF60, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF60) return .{ .compat = &[_]u21{
         0x2986,
-    } });
-    try self.map.put(0xFF61, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF61) return .{ .compat = &[_]u21{
         0x3002,
-    } });
-    try self.map.put(0xFF62, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF62) return .{ .compat = &[_]u21{
         0x300C,
-    } });
-    try self.map.put(0xFF63, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF63) return .{ .compat = &[_]u21{
         0x300D,
-    } });
-    try self.map.put(0xFF64, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF64) return .{ .compat = &[_]u21{
         0x3001,
-    } });
-    try self.map.put(0xFF65, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF65) return .{ .compat = &[_]u21{
         0x30FB,
-    } });
-    try self.map.put(0xFF66, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF66) return .{ .compat = &[_]u21{
         0x30F2,
-    } });
-    try self.map.put(0xFF67, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF67) return .{ .compat = &[_]u21{
         0x30A1,
-    } });
-    try self.map.put(0xFF68, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF68) return .{ .compat = &[_]u21{
         0x30A3,
-    } });
-    try self.map.put(0xFF69, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF69) return .{ .compat = &[_]u21{
         0x30A5,
-    } });
-    try self.map.put(0xFF6A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF6A) return .{ .compat = &[_]u21{
         0x30A7,
-    } });
-    try self.map.put(0xFF6B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF6B) return .{ .compat = &[_]u21{
         0x30A9,
-    } });
-    try self.map.put(0xFF6C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF6C) return .{ .compat = &[_]u21{
         0x30E3,
-    } });
-    try self.map.put(0xFF6D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF6D) return .{ .compat = &[_]u21{
         0x30E5,
-    } });
-    try self.map.put(0xFF6E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF6E) return .{ .compat = &[_]u21{
         0x30E7,
-    } });
-    try self.map.put(0xFF6F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF6F) return .{ .compat = &[_]u21{
         0x30C3,
-    } });
-    try self.map.put(0xFF70, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF70) return .{ .compat = &[_]u21{
         0x30FC,
-    } });
-    try self.map.put(0xFF71, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF71) return .{ .compat = &[_]u21{
         0x30A2,
-    } });
-    try self.map.put(0xFF72, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF72) return .{ .compat = &[_]u21{
         0x30A4,
-    } });
-    try self.map.put(0xFF73, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF73) return .{ .compat = &[_]u21{
         0x30A6,
-    } });
-    try self.map.put(0xFF74, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF74) return .{ .compat = &[_]u21{
         0x30A8,
-    } });
-    try self.map.put(0xFF75, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF75) return .{ .compat = &[_]u21{
         0x30AA,
-    } });
-    try self.map.put(0xFF76, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF76) return .{ .compat = &[_]u21{
         0x30AB,
-    } });
-    try self.map.put(0xFF77, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF77) return .{ .compat = &[_]u21{
         0x30AD,
-    } });
-    try self.map.put(0xFF78, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF78) return .{ .compat = &[_]u21{
         0x30AF,
-    } });
-    try self.map.put(0xFF79, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF79) return .{ .compat = &[_]u21{
         0x30B1,
-    } });
-    try self.map.put(0xFF7A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF7A) return .{ .compat = &[_]u21{
         0x30B3,
-    } });
-    try self.map.put(0xFF7B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF7B) return .{ .compat = &[_]u21{
         0x30B5,
-    } });
-    try self.map.put(0xFF7C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF7C) return .{ .compat = &[_]u21{
         0x30B7,
-    } });
-    try self.map.put(0xFF7D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF7D) return .{ .compat = &[_]u21{
         0x30B9,
-    } });
-    try self.map.put(0xFF7E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF7E) return .{ .compat = &[_]u21{
         0x30BB,
-    } });
-    try self.map.put(0xFF7F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF7F) return .{ .compat = &[_]u21{
         0x30BD,
-    } });
-    try self.map.put(0xFF80, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF80) return .{ .compat = &[_]u21{
         0x30BF,
-    } });
-    try self.map.put(0xFF81, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF81) return .{ .compat = &[_]u21{
         0x30C1,
-    } });
-    try self.map.put(0xFF82, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF82) return .{ .compat = &[_]u21{
         0x30C4,
-    } });
-    try self.map.put(0xFF83, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF83) return .{ .compat = &[_]u21{
         0x30C6,
-    } });
-    try self.map.put(0xFF84, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF84) return .{ .compat = &[_]u21{
         0x30C8,
-    } });
-    try self.map.put(0xFF85, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF85) return .{ .compat = &[_]u21{
         0x30CA,
-    } });
-    try self.map.put(0xFF86, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF86) return .{ .compat = &[_]u21{
         0x30CB,
-    } });
-    try self.map.put(0xFF87, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF87) return .{ .compat = &[_]u21{
         0x30CC,
-    } });
-    try self.map.put(0xFF88, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF88) return .{ .compat = &[_]u21{
         0x30CD,
-    } });
-    try self.map.put(0xFF89, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF89) return .{ .compat = &[_]u21{
         0x30CE,
-    } });
-    try self.map.put(0xFF8A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF8A) return .{ .compat = &[_]u21{
         0x30CF,
-    } });
-    try self.map.put(0xFF8B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF8B) return .{ .compat = &[_]u21{
         0x30D2,
-    } });
-    try self.map.put(0xFF8C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF8C) return .{ .compat = &[_]u21{
         0x30D5,
-    } });
-    try self.map.put(0xFF8D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF8D) return .{ .compat = &[_]u21{
         0x30D8,
-    } });
-    try self.map.put(0xFF8E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF8E) return .{ .compat = &[_]u21{
         0x30DB,
-    } });
-    try self.map.put(0xFF8F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF8F) return .{ .compat = &[_]u21{
         0x30DE,
-    } });
-    try self.map.put(0xFF90, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF90) return .{ .compat = &[_]u21{
         0x30DF,
-    } });
-    try self.map.put(0xFF91, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF91) return .{ .compat = &[_]u21{
         0x30E0,
-    } });
-    try self.map.put(0xFF92, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF92) return .{ .compat = &[_]u21{
         0x30E1,
-    } });
-    try self.map.put(0xFF93, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF93) return .{ .compat = &[_]u21{
         0x30E2,
-    } });
-    try self.map.put(0xFF94, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF94) return .{ .compat = &[_]u21{
         0x30E4,
-    } });
-    try self.map.put(0xFF95, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF95) return .{ .compat = &[_]u21{
         0x30E6,
-    } });
-    try self.map.put(0xFF96, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF96) return .{ .compat = &[_]u21{
         0x30E8,
-    } });
-    try self.map.put(0xFF97, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF97) return .{ .compat = &[_]u21{
         0x30E9,
-    } });
-    try self.map.put(0xFF98, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF98) return .{ .compat = &[_]u21{
         0x30EA,
-    } });
-    try self.map.put(0xFF99, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF99) return .{ .compat = &[_]u21{
         0x30EB,
-    } });
-    try self.map.put(0xFF9A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF9A) return .{ .compat = &[_]u21{
         0x30EC,
-    } });
-    try self.map.put(0xFF9B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF9B) return .{ .compat = &[_]u21{
         0x30ED,
-    } });
-    try self.map.put(0xFF9C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF9C) return .{ .compat = &[_]u21{
         0x30EF,
-    } });
-    try self.map.put(0xFF9D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF9D) return .{ .compat = &[_]u21{
         0x30F3,
-    } });
-    try self.map.put(0xFF9E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF9E) return .{ .compat = &[_]u21{
         0x3099,
-    } });
-    try self.map.put(0xFF9F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFF9F) return .{ .compat = &[_]u21{
         0x309A,
-    } });
-    try self.map.put(0xFFA0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFA0) return .{ .compat = &[_]u21{
         0x3164,
-    } });
-    try self.map.put(0xFFA1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFA1) return .{ .compat = &[_]u21{
         0x3131,
-    } });
-    try self.map.put(0xFFA2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFA2) return .{ .compat = &[_]u21{
         0x3132,
-    } });
-    try self.map.put(0xFFA3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFA3) return .{ .compat = &[_]u21{
         0x3133,
-    } });
-    try self.map.put(0xFFA4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFA4) return .{ .compat = &[_]u21{
         0x3134,
-    } });
-    try self.map.put(0xFFA5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFA5) return .{ .compat = &[_]u21{
         0x3135,
-    } });
-    try self.map.put(0xFFA6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFA6) return .{ .compat = &[_]u21{
         0x3136,
-    } });
-    try self.map.put(0xFFA7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFA7) return .{ .compat = &[_]u21{
         0x3137,
-    } });
-    try self.map.put(0xFFA8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFA8) return .{ .compat = &[_]u21{
         0x3138,
-    } });
-    try self.map.put(0xFFA9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFA9) return .{ .compat = &[_]u21{
         0x3139,
-    } });
-    try self.map.put(0xFFAA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFAA) return .{ .compat = &[_]u21{
         0x313A,
-    } });
-    try self.map.put(0xFFAB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFAB) return .{ .compat = &[_]u21{
         0x313B,
-    } });
-    try self.map.put(0xFFAC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFAC) return .{ .compat = &[_]u21{
         0x313C,
-    } });
-    try self.map.put(0xFFAD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFAD) return .{ .compat = &[_]u21{
         0x313D,
-    } });
-    try self.map.put(0xFFAE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFAE) return .{ .compat = &[_]u21{
         0x313E,
-    } });
-    try self.map.put(0xFFAF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFAF) return .{ .compat = &[_]u21{
         0x313F,
-    } });
-    try self.map.put(0xFFB0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFB0) return .{ .compat = &[_]u21{
         0x3140,
-    } });
-    try self.map.put(0xFFB1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFB1) return .{ .compat = &[_]u21{
         0x3141,
-    } });
-    try self.map.put(0xFFB2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFB2) return .{ .compat = &[_]u21{
         0x3142,
-    } });
-    try self.map.put(0xFFB3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFB3) return .{ .compat = &[_]u21{
         0x3143,
-    } });
-    try self.map.put(0xFFB4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFB4) return .{ .compat = &[_]u21{
         0x3144,
-    } });
-    try self.map.put(0xFFB5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFB5) return .{ .compat = &[_]u21{
         0x3145,
-    } });
-    try self.map.put(0xFFB6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFB6) return .{ .compat = &[_]u21{
         0x3146,
-    } });
-    try self.map.put(0xFFB7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFB7) return .{ .compat = &[_]u21{
         0x3147,
-    } });
-    try self.map.put(0xFFB8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFB8) return .{ .compat = &[_]u21{
         0x3148,
-    } });
-    try self.map.put(0xFFB9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFB9) return .{ .compat = &[_]u21{
         0x3149,
-    } });
-    try self.map.put(0xFFBA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFBA) return .{ .compat = &[_]u21{
         0x314A,
-    } });
-    try self.map.put(0xFFBB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFBB) return .{ .compat = &[_]u21{
         0x314B,
-    } });
-    try self.map.put(0xFFBC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFBC) return .{ .compat = &[_]u21{
         0x314C,
-    } });
-    try self.map.put(0xFFBD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFBD) return .{ .compat = &[_]u21{
         0x314D,
-    } });
-    try self.map.put(0xFFBE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFBE) return .{ .compat = &[_]u21{
         0x314E,
-    } });
-    try self.map.put(0xFFC2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFC2) return .{ .compat = &[_]u21{
         0x314F,
-    } });
-    try self.map.put(0xFFC3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFC3) return .{ .compat = &[_]u21{
         0x3150,
-    } });
-    try self.map.put(0xFFC4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFC4) return .{ .compat = &[_]u21{
         0x3151,
-    } });
-    try self.map.put(0xFFC5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFC5) return .{ .compat = &[_]u21{
         0x3152,
-    } });
-    try self.map.put(0xFFC6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFC6) return .{ .compat = &[_]u21{
         0x3153,
-    } });
-    try self.map.put(0xFFC7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFC7) return .{ .compat = &[_]u21{
         0x3154,
-    } });
-    try self.map.put(0xFFCA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFCA) return .{ .compat = &[_]u21{
         0x3155,
-    } });
-    try self.map.put(0xFFCB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFCB) return .{ .compat = &[_]u21{
         0x3156,
-    } });
-    try self.map.put(0xFFCC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFCC) return .{ .compat = &[_]u21{
         0x3157,
-    } });
-    try self.map.put(0xFFCD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFCD) return .{ .compat = &[_]u21{
         0x3158,
-    } });
-    try self.map.put(0xFFCE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFCE) return .{ .compat = &[_]u21{
         0x3159,
-    } });
-    try self.map.put(0xFFCF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFCF) return .{ .compat = &[_]u21{
         0x315A,
-    } });
-    try self.map.put(0xFFD2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFD2) return .{ .compat = &[_]u21{
         0x315B,
-    } });
-    try self.map.put(0xFFD3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFD3) return .{ .compat = &[_]u21{
         0x315C,
-    } });
-    try self.map.put(0xFFD4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFD4) return .{ .compat = &[_]u21{
         0x315D,
-    } });
-    try self.map.put(0xFFD5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFD5) return .{ .compat = &[_]u21{
         0x315E,
-    } });
-    try self.map.put(0xFFD6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFD6) return .{ .compat = &[_]u21{
         0x315F,
-    } });
-    try self.map.put(0xFFD7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFD7) return .{ .compat = &[_]u21{
         0x3160,
-    } });
-    try self.map.put(0xFFDA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFDA) return .{ .compat = &[_]u21{
         0x3161,
-    } });
-    try self.map.put(0xFFDB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFDB) return .{ .compat = &[_]u21{
         0x3162,
-    } });
-    try self.map.put(0xFFDC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFDC) return .{ .compat = &[_]u21{
         0x3163,
-    } });
-    try self.map.put(0xFFE0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFE0) return .{ .compat = &[_]u21{
         0x00A2,
-    } });
-    try self.map.put(0xFFE1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFE1) return .{ .compat = &[_]u21{
         0x00A3,
-    } });
-    try self.map.put(0xFFE2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFE2) return .{ .compat = &[_]u21{
         0x00AC,
-    } });
-    try self.map.put(0xFFE3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFE3) return .{ .compat = &[_]u21{
         0x00AF,
-    } });
-    try self.map.put(0xFFE4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFE4) return .{ .compat = &[_]u21{
         0x00A6,
-    } });
-    try self.map.put(0xFFE5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFE5) return .{ .compat = &[_]u21{
         0x00A5,
-    } });
-    try self.map.put(0xFFE6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFE6) return .{ .compat = &[_]u21{
         0x20A9,
-    } });
-    try self.map.put(0xFFE8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFE8) return .{ .compat = &[_]u21{
         0x2502,
-    } });
-    try self.map.put(0xFFE9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFE9) return .{ .compat = &[_]u21{
         0x2190,
-    } });
-    try self.map.put(0xFFEA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFEA) return .{ .compat = &[_]u21{
         0x2191,
-    } });
-    try self.map.put(0xFFEB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFEB) return .{ .compat = &[_]u21{
         0x2192,
-    } });
-    try self.map.put(0xFFEC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFEC) return .{ .compat = &[_]u21{
         0x2193,
-    } });
-    try self.map.put(0xFFED, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFED) return .{ .compat = &[_]u21{
         0x25A0,
-    } });
-    try self.map.put(0xFFEE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0xFFEE) return .{ .compat = &[_]u21{
         0x25CB,
-    } });
-    try self.map.put(0x1109A, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1109A) return .{ .canon = [2]u21{
         0x11099,
         0x110BA,
-    } });
-    try self.map.put(0x1109C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1109C) return .{ .canon = [2]u21{
         0x1109B,
         0x110BA,
-    } });
-    try self.map.put(0x110AB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x110AB) return .{ .canon = [2]u21{
         0x110A5,
         0x110BA,
-    } });
-    try self.map.put(0x1112E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1112E) return .{ .canon = [2]u21{
         0x11131,
         0x11127,
-    } });
-    try self.map.put(0x1112F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1112F) return .{ .canon = [2]u21{
         0x11132,
         0x11127,
-    } });
-    try self.map.put(0x1134B, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1134B) return .{ .canon = [2]u21{
         0x11347,
         0x1133E,
-    } });
-    try self.map.put(0x1134C, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1134C) return .{ .canon = [2]u21{
         0x11347,
         0x11357,
-    } });
-    try self.map.put(0x114BB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x114BB) return .{ .canon = [2]u21{
         0x114B9,
         0x114BA,
-    } });
-    try self.map.put(0x114BC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x114BC) return .{ .canon = [2]u21{
         0x114B9,
         0x114B0,
-    } });
-    try self.map.put(0x114BE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x114BE) return .{ .canon = [2]u21{
         0x114B9,
         0x114BD,
-    } });
-    try self.map.put(0x115BA, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x115BA) return .{ .canon = [2]u21{
         0x115B8,
         0x115AF,
-    } });
-    try self.map.put(0x115BB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x115BB) return .{ .canon = [2]u21{
         0x115B9,
         0x115AF,
-    } });
-    try self.map.put(0x11938, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x11938) return .{ .canon = [2]u21{
         0x11935,
         0x11930,
-    } });
-    try self.map.put(0x1D15E, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1D15E) return .{ .canon = [2]u21{
         0x1D157,
         0x1D165,
-    } });
-    try self.map.put(0x1D15F, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1D15F) return .{ .canon = [2]u21{
         0x1D158,
         0x1D165,
-    } });
-    try self.map.put(0x1D160, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1D160) return .{ .canon = [2]u21{
         0x1D15F,
         0x1D16E,
-    } });
-    try self.map.put(0x1D161, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1D161) return .{ .canon = [2]u21{
         0x1D15F,
         0x1D16F,
-    } });
-    try self.map.put(0x1D162, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1D162) return .{ .canon = [2]u21{
         0x1D15F,
         0x1D170,
-    } });
-    try self.map.put(0x1D163, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1D163) return .{ .canon = [2]u21{
         0x1D15F,
         0x1D171,
-    } });
-    try self.map.put(0x1D164, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1D164) return .{ .canon = [2]u21{
         0x1D15F,
         0x1D172,
-    } });
-    try self.map.put(0x1D1BB, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1D1BB) return .{ .canon = [2]u21{
         0x1D1B9,
         0x1D165,
-    } });
-    try self.map.put(0x1D1BC, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1D1BC) return .{ .canon = [2]u21{
         0x1D1BA,
         0x1D165,
-    } });
-    try self.map.put(0x1D1BD, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1D1BD) return .{ .canon = [2]u21{
         0x1D1BB,
         0x1D16E,
-    } });
-    try self.map.put(0x1D1BE, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1D1BE) return .{ .canon = [2]u21{
         0x1D1BC,
         0x1D16E,
-    } });
-    try self.map.put(0x1D1BF, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1D1BF) return .{ .canon = [2]u21{
         0x1D1BB,
         0x1D16F,
-    } });
-    try self.map.put(0x1D1C0, .{ .canon = [2]u21{
+    } };
+    if (cp == 0x1D1C0) return .{ .canon = [2]u21{
         0x1D1BC,
         0x1D16F,
-    } });
-    try self.map.put(0x1D400, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D400) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x1D401, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D401) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x1D402, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D402) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x1D403, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D403) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x1D404, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D404) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x1D405, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D405) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0x1D406, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D406) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x1D407, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D407) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x1D408, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D408) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x1D409, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D409) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x1D40A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D40A) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x1D40B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D40B) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x1D40C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D40C) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x1D40D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D40D) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x1D40E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D40E) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x1D40F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D40F) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x1D410, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D410) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0x1D411, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D411) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x1D412, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D412) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0x1D413, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D413) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x1D414, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D414) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x1D415, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D415) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x1D416, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D416) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x1D417, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D417) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x1D418, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D418) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0x1D419, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D419) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0x1D41A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D41A) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x1D41B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D41B) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0x1D41C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D41C) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x1D41D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D41D) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x1D41E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D41E) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x1D41F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D41F) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0x1D420, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D420) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0x1D421, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D421) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x1D422, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D422) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x1D423, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D423) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x1D424, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D424) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x1D425, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D425) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x1D426, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D426) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x1D427, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D427) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x1D428, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D428) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x1D429, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D429) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x1D42A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D42A) return .{ .compat = &[_]u21{
         0x0071,
-    } });
-    try self.map.put(0x1D42B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D42B) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x1D42C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D42C) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x1D42D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D42D) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x1D42E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D42E) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x1D42F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D42F) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x1D430, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D430) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0x1D431, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D431) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x1D432, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D432) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0x1D433, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D433) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0x1D434, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D434) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x1D435, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D435) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x1D436, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D436) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x1D437, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D437) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x1D438, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D438) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x1D439, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D439) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0x1D43A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D43A) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x1D43B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D43B) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x1D43C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D43C) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x1D43D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D43D) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x1D43E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D43E) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x1D43F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D43F) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x1D440, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D440) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x1D441, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D441) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x1D442, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D442) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x1D443, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D443) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x1D444, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D444) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0x1D445, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D445) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x1D446, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D446) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0x1D447, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D447) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x1D448, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D448) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x1D449, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D449) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x1D44A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D44A) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x1D44B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D44B) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x1D44C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D44C) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0x1D44D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D44D) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0x1D44E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D44E) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x1D44F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D44F) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0x1D450, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D450) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x1D451, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D451) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x1D452, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D452) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x1D453, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D453) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0x1D454, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D454) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0x1D456, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D456) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x1D457, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D457) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x1D458, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D458) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x1D459, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D459) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x1D45A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D45A) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x1D45B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D45B) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x1D45C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D45C) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x1D45D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D45D) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x1D45E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D45E) return .{ .compat = &[_]u21{
         0x0071,
-    } });
-    try self.map.put(0x1D45F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D45F) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x1D460, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D460) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x1D461, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D461) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x1D462, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D462) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x1D463, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D463) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x1D464, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D464) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0x1D465, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D465) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x1D466, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D466) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0x1D467, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D467) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0x1D468, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D468) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x1D469, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D469) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x1D46A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D46A) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x1D46B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D46B) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x1D46C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D46C) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x1D46D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D46D) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0x1D46E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D46E) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x1D46F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D46F) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x1D470, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D470) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x1D471, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D471) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x1D472, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D472) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x1D473, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D473) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x1D474, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D474) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x1D475, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D475) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x1D476, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D476) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x1D477, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D477) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x1D478, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D478) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0x1D479, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D479) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x1D47A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D47A) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0x1D47B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D47B) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x1D47C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D47C) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x1D47D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D47D) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x1D47E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D47E) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x1D47F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D47F) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x1D480, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D480) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0x1D481, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D481) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0x1D482, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D482) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x1D483, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D483) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0x1D484, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D484) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x1D485, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D485) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x1D486, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D486) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x1D487, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D487) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0x1D488, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D488) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0x1D489, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D489) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x1D48A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D48A) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x1D48B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D48B) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x1D48C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D48C) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x1D48D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D48D) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x1D48E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D48E) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x1D48F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D48F) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x1D490, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D490) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x1D491, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D491) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x1D492, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D492) return .{ .compat = &[_]u21{
         0x0071,
-    } });
-    try self.map.put(0x1D493, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D493) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x1D494, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D494) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x1D495, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D495) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x1D496, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D496) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x1D497, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D497) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x1D498, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D498) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0x1D499, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D499) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x1D49A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D49A) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0x1D49B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D49B) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0x1D49C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D49C) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x1D49E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D49E) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x1D49F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D49F) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x1D4A2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4A2) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x1D4A5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4A5) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x1D4A6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4A6) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x1D4A9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4A9) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x1D4AA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4AA) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x1D4AB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4AB) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x1D4AC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4AC) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0x1D4AE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4AE) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0x1D4AF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4AF) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x1D4B0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4B0) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x1D4B1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4B1) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x1D4B2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4B2) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x1D4B3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4B3) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x1D4B4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4B4) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0x1D4B5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4B5) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0x1D4B6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4B6) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x1D4B7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4B7) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0x1D4B8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4B8) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x1D4B9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4B9) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x1D4BB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4BB) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0x1D4BD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4BD) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x1D4BE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4BE) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x1D4BF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4BF) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x1D4C0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4C0) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x1D4C1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4C1) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x1D4C2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4C2) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x1D4C3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4C3) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x1D4C5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4C5) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x1D4C6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4C6) return .{ .compat = &[_]u21{
         0x0071,
-    } });
-    try self.map.put(0x1D4C7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4C7) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x1D4C8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4C8) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x1D4C9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4C9) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x1D4CA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4CA) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x1D4CB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4CB) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x1D4CC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4CC) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0x1D4CD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4CD) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x1D4CE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4CE) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0x1D4CF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4CF) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0x1D4D0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4D0) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x1D4D1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4D1) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x1D4D2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4D2) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x1D4D3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4D3) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x1D4D4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4D4) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x1D4D5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4D5) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0x1D4D6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4D6) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x1D4D7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4D7) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x1D4D8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4D8) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x1D4D9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4D9) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x1D4DA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4DA) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x1D4DB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4DB) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x1D4DC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4DC) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x1D4DD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4DD) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x1D4DE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4DE) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x1D4DF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4DF) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x1D4E0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4E0) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0x1D4E1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4E1) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x1D4E2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4E2) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0x1D4E3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4E3) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x1D4E4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4E4) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x1D4E5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4E5) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x1D4E6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4E6) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x1D4E7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4E7) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x1D4E8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4E8) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0x1D4E9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4E9) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0x1D4EA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4EA) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x1D4EB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4EB) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0x1D4EC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4EC) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x1D4ED, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4ED) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x1D4EE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4EE) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x1D4EF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4EF) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0x1D4F0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4F0) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0x1D4F1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4F1) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x1D4F2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4F2) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x1D4F3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4F3) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x1D4F4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4F4) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x1D4F5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4F5) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x1D4F6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4F6) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x1D4F7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4F7) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x1D4F8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4F8) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x1D4F9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4F9) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x1D4FA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4FA) return .{ .compat = &[_]u21{
         0x0071,
-    } });
-    try self.map.put(0x1D4FB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4FB) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x1D4FC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4FC) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x1D4FD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4FD) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x1D4FE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4FE) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x1D4FF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D4FF) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x1D500, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D500) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0x1D501, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D501) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x1D502, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D502) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0x1D503, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D503) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0x1D504, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D504) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x1D505, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D505) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x1D507, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D507) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x1D508, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D508) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x1D509, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D509) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0x1D50A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D50A) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x1D50D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D50D) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x1D50E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D50E) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x1D50F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D50F) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x1D510, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D510) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x1D511, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D511) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x1D512, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D512) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x1D513, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D513) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x1D514, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D514) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0x1D516, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D516) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0x1D517, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D517) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x1D518, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D518) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x1D519, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D519) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x1D51A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D51A) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x1D51B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D51B) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x1D51C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D51C) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0x1D51E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D51E) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x1D51F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D51F) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0x1D520, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D520) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x1D521, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D521) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x1D522, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D522) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x1D523, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D523) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0x1D524, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D524) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0x1D525, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D525) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x1D526, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D526) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x1D527, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D527) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x1D528, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D528) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x1D529, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D529) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x1D52A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D52A) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x1D52B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D52B) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x1D52C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D52C) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x1D52D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D52D) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x1D52E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D52E) return .{ .compat = &[_]u21{
         0x0071,
-    } });
-    try self.map.put(0x1D52F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D52F) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x1D530, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D530) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x1D531, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D531) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x1D532, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D532) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x1D533, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D533) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x1D534, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D534) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0x1D535, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D535) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x1D536, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D536) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0x1D537, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D537) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0x1D538, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D538) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x1D539, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D539) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x1D53B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D53B) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x1D53C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D53C) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x1D53D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D53D) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0x1D53E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D53E) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x1D540, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D540) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x1D541, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D541) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x1D542, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D542) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x1D543, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D543) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x1D544, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D544) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x1D546, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D546) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x1D54A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D54A) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0x1D54B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D54B) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x1D54C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D54C) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x1D54D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D54D) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x1D54E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D54E) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x1D54F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D54F) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x1D550, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D550) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0x1D552, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D552) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x1D553, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D553) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0x1D554, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D554) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x1D555, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D555) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x1D556, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D556) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x1D557, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D557) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0x1D558, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D558) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0x1D559, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D559) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x1D55A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D55A) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x1D55B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D55B) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x1D55C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D55C) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x1D55D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D55D) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x1D55E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D55E) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x1D55F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D55F) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x1D560, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D560) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x1D561, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D561) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x1D562, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D562) return .{ .compat = &[_]u21{
         0x0071,
-    } });
-    try self.map.put(0x1D563, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D563) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x1D564, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D564) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x1D565, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D565) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x1D566, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D566) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x1D567, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D567) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x1D568, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D568) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0x1D569, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D569) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x1D56A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D56A) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0x1D56B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D56B) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0x1D56C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D56C) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x1D56D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D56D) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x1D56E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D56E) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x1D56F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D56F) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x1D570, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D570) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x1D571, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D571) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0x1D572, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D572) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x1D573, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D573) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x1D574, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D574) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x1D575, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D575) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x1D576, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D576) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x1D577, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D577) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x1D578, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D578) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x1D579, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D579) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x1D57A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D57A) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x1D57B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D57B) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x1D57C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D57C) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0x1D57D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D57D) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x1D57E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D57E) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0x1D57F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D57F) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x1D580, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D580) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x1D581, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D581) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x1D582, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D582) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x1D583, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D583) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x1D584, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D584) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0x1D585, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D585) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0x1D586, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D586) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x1D587, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D587) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0x1D588, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D588) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x1D589, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D589) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x1D58A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D58A) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x1D58B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D58B) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0x1D58C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D58C) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0x1D58D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D58D) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x1D58E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D58E) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x1D58F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D58F) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x1D590, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D590) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x1D591, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D591) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x1D592, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D592) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x1D593, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D593) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x1D594, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D594) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x1D595, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D595) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x1D596, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D596) return .{ .compat = &[_]u21{
         0x0071,
-    } });
-    try self.map.put(0x1D597, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D597) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x1D598, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D598) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x1D599, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D599) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x1D59A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D59A) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x1D59B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D59B) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x1D59C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D59C) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0x1D59D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D59D) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x1D59E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D59E) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0x1D59F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D59F) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0x1D5A0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5A0) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x1D5A1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5A1) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x1D5A2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5A2) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x1D5A3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5A3) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x1D5A4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5A4) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x1D5A5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5A5) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0x1D5A6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5A6) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x1D5A7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5A7) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x1D5A8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5A8) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x1D5A9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5A9) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x1D5AA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5AA) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x1D5AB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5AB) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x1D5AC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5AC) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x1D5AD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5AD) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x1D5AE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5AE) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x1D5AF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5AF) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x1D5B0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5B0) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0x1D5B1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5B1) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x1D5B2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5B2) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0x1D5B3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5B3) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x1D5B4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5B4) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x1D5B5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5B5) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x1D5B6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5B6) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x1D5B7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5B7) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x1D5B8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5B8) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0x1D5B9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5B9) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0x1D5BA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5BA) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x1D5BB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5BB) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0x1D5BC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5BC) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x1D5BD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5BD) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x1D5BE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5BE) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x1D5BF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5BF) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0x1D5C0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5C0) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0x1D5C1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5C1) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x1D5C2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5C2) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x1D5C3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5C3) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x1D5C4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5C4) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x1D5C5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5C5) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x1D5C6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5C6) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x1D5C7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5C7) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x1D5C8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5C8) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x1D5C9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5C9) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x1D5CA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5CA) return .{ .compat = &[_]u21{
         0x0071,
-    } });
-    try self.map.put(0x1D5CB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5CB) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x1D5CC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5CC) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x1D5CD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5CD) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x1D5CE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5CE) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x1D5CF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5CF) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x1D5D0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5D0) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0x1D5D1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5D1) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x1D5D2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5D2) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0x1D5D3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5D3) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0x1D5D4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5D4) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x1D5D5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5D5) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x1D5D6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5D6) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x1D5D7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5D7) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x1D5D8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5D8) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x1D5D9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5D9) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0x1D5DA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5DA) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x1D5DB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5DB) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x1D5DC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5DC) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x1D5DD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5DD) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x1D5DE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5DE) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x1D5DF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5DF) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x1D5E0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5E0) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x1D5E1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5E1) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x1D5E2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5E2) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x1D5E3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5E3) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x1D5E4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5E4) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0x1D5E5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5E5) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x1D5E6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5E6) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0x1D5E7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5E7) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x1D5E8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5E8) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x1D5E9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5E9) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x1D5EA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5EA) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x1D5EB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5EB) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x1D5EC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5EC) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0x1D5ED, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5ED) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0x1D5EE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5EE) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x1D5EF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5EF) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0x1D5F0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5F0) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x1D5F1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5F1) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x1D5F2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5F2) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x1D5F3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5F3) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0x1D5F4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5F4) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0x1D5F5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5F5) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x1D5F6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5F6) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x1D5F7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5F7) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x1D5F8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5F8) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x1D5F9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5F9) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x1D5FA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5FA) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x1D5FB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5FB) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x1D5FC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5FC) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x1D5FD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5FD) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x1D5FE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5FE) return .{ .compat = &[_]u21{
         0x0071,
-    } });
-    try self.map.put(0x1D5FF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D5FF) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x1D600, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D600) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x1D601, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D601) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x1D602, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D602) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x1D603, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D603) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x1D604, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D604) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0x1D605, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D605) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x1D606, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D606) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0x1D607, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D607) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0x1D608, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D608) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x1D609, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D609) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x1D60A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D60A) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x1D60B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D60B) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x1D60C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D60C) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x1D60D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D60D) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0x1D60E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D60E) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x1D60F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D60F) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x1D610, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D610) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x1D611, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D611) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x1D612, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D612) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x1D613, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D613) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x1D614, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D614) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x1D615, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D615) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x1D616, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D616) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x1D617, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D617) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x1D618, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D618) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0x1D619, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D619) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x1D61A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D61A) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0x1D61B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D61B) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x1D61C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D61C) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x1D61D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D61D) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x1D61E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D61E) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x1D61F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D61F) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x1D620, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D620) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0x1D621, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D621) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0x1D622, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D622) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x1D623, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D623) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0x1D624, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D624) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x1D625, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D625) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x1D626, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D626) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x1D627, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D627) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0x1D628, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D628) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0x1D629, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D629) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x1D62A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D62A) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x1D62B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D62B) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x1D62C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D62C) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x1D62D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D62D) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x1D62E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D62E) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x1D62F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D62F) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x1D630, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D630) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x1D631, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D631) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x1D632, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D632) return .{ .compat = &[_]u21{
         0x0071,
-    } });
-    try self.map.put(0x1D633, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D633) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x1D634, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D634) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x1D635, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D635) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x1D636, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D636) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x1D637, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D637) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x1D638, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D638) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0x1D639, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D639) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x1D63A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D63A) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0x1D63B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D63B) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0x1D63C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D63C) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x1D63D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D63D) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x1D63E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D63E) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x1D63F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D63F) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x1D640, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D640) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x1D641, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D641) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0x1D642, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D642) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x1D643, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D643) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x1D644, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D644) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x1D645, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D645) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x1D646, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D646) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x1D647, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D647) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x1D648, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D648) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x1D649, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D649) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x1D64A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D64A) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x1D64B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D64B) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x1D64C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D64C) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0x1D64D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D64D) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x1D64E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D64E) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0x1D64F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D64F) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x1D650, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D650) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x1D651, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D651) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x1D652, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D652) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x1D653, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D653) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x1D654, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D654) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0x1D655, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D655) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0x1D656, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D656) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x1D657, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D657) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0x1D658, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D658) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x1D659, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D659) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x1D65A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D65A) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x1D65B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D65B) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0x1D65C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D65C) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0x1D65D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D65D) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x1D65E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D65E) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x1D65F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D65F) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x1D660, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D660) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x1D661, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D661) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x1D662, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D662) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x1D663, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D663) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x1D664, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D664) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x1D665, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D665) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x1D666, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D666) return .{ .compat = &[_]u21{
         0x0071,
-    } });
-    try self.map.put(0x1D667, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D667) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x1D668, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D668) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x1D669, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D669) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x1D66A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D66A) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x1D66B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D66B) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x1D66C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D66C) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0x1D66D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D66D) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x1D66E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D66E) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0x1D66F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D66F) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0x1D670, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D670) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x1D671, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D671) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x1D672, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D672) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x1D673, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D673) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x1D674, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D674) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x1D675, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D675) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0x1D676, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D676) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x1D677, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D677) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x1D678, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D678) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x1D679, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D679) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x1D67A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D67A) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x1D67B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D67B) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x1D67C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D67C) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x1D67D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D67D) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x1D67E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D67E) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x1D67F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D67F) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x1D680, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D680) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0x1D681, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D681) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x1D682, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D682) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0x1D683, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D683) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x1D684, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D684) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x1D685, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D685) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x1D686, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D686) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x1D687, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D687) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x1D688, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D688) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0x1D689, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D689) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0x1D68A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D68A) return .{ .compat = &[_]u21{
         0x0061,
-    } });
-    try self.map.put(0x1D68B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D68B) return .{ .compat = &[_]u21{
         0x0062,
-    } });
-    try self.map.put(0x1D68C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D68C) return .{ .compat = &[_]u21{
         0x0063,
-    } });
-    try self.map.put(0x1D68D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D68D) return .{ .compat = &[_]u21{
         0x0064,
-    } });
-    try self.map.put(0x1D68E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D68E) return .{ .compat = &[_]u21{
         0x0065,
-    } });
-    try self.map.put(0x1D68F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D68F) return .{ .compat = &[_]u21{
         0x0066,
-    } });
-    try self.map.put(0x1D690, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D690) return .{ .compat = &[_]u21{
         0x0067,
-    } });
-    try self.map.put(0x1D691, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D691) return .{ .compat = &[_]u21{
         0x0068,
-    } });
-    try self.map.put(0x1D692, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D692) return .{ .compat = &[_]u21{
         0x0069,
-    } });
-    try self.map.put(0x1D693, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D693) return .{ .compat = &[_]u21{
         0x006A,
-    } });
-    try self.map.put(0x1D694, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D694) return .{ .compat = &[_]u21{
         0x006B,
-    } });
-    try self.map.put(0x1D695, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D695) return .{ .compat = &[_]u21{
         0x006C,
-    } });
-    try self.map.put(0x1D696, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D696) return .{ .compat = &[_]u21{
         0x006D,
-    } });
-    try self.map.put(0x1D697, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D697) return .{ .compat = &[_]u21{
         0x006E,
-    } });
-    try self.map.put(0x1D698, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D698) return .{ .compat = &[_]u21{
         0x006F,
-    } });
-    try self.map.put(0x1D699, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D699) return .{ .compat = &[_]u21{
         0x0070,
-    } });
-    try self.map.put(0x1D69A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D69A) return .{ .compat = &[_]u21{
         0x0071,
-    } });
-    try self.map.put(0x1D69B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D69B) return .{ .compat = &[_]u21{
         0x0072,
-    } });
-    try self.map.put(0x1D69C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D69C) return .{ .compat = &[_]u21{
         0x0073,
-    } });
-    try self.map.put(0x1D69D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D69D) return .{ .compat = &[_]u21{
         0x0074,
-    } });
-    try self.map.put(0x1D69E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D69E) return .{ .compat = &[_]u21{
         0x0075,
-    } });
-    try self.map.put(0x1D69F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D69F) return .{ .compat = &[_]u21{
         0x0076,
-    } });
-    try self.map.put(0x1D6A0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6A0) return .{ .compat = &[_]u21{
         0x0077,
-    } });
-    try self.map.put(0x1D6A1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6A1) return .{ .compat = &[_]u21{
         0x0078,
-    } });
-    try self.map.put(0x1D6A2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6A2) return .{ .compat = &[_]u21{
         0x0079,
-    } });
-    try self.map.put(0x1D6A3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6A3) return .{ .compat = &[_]u21{
         0x007A,
-    } });
-    try self.map.put(0x1D6A4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6A4) return .{ .compat = &[_]u21{
         0x0131,
-    } });
-    try self.map.put(0x1D6A5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6A5) return .{ .compat = &[_]u21{
         0x0237,
-    } });
-    try self.map.put(0x1D6A8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6A8) return .{ .compat = &[_]u21{
         0x0391,
-    } });
-    try self.map.put(0x1D6A9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6A9) return .{ .compat = &[_]u21{
         0x0392,
-    } });
-    try self.map.put(0x1D6AA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6AA) return .{ .compat = &[_]u21{
         0x0393,
-    } });
-    try self.map.put(0x1D6AB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6AB) return .{ .compat = &[_]u21{
         0x0394,
-    } });
-    try self.map.put(0x1D6AC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6AC) return .{ .compat = &[_]u21{
         0x0395,
-    } });
-    try self.map.put(0x1D6AD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6AD) return .{ .compat = &[_]u21{
         0x0396,
-    } });
-    try self.map.put(0x1D6AE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6AE) return .{ .compat = &[_]u21{
         0x0397,
-    } });
-    try self.map.put(0x1D6AF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6AF) return .{ .compat = &[_]u21{
         0x0398,
-    } });
-    try self.map.put(0x1D6B0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6B0) return .{ .compat = &[_]u21{
         0x0399,
-    } });
-    try self.map.put(0x1D6B1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6B1) return .{ .compat = &[_]u21{
         0x039A,
-    } });
-    try self.map.put(0x1D6B2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6B2) return .{ .compat = &[_]u21{
         0x039B,
-    } });
-    try self.map.put(0x1D6B3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6B3) return .{ .compat = &[_]u21{
         0x039C,
-    } });
-    try self.map.put(0x1D6B4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6B4) return .{ .compat = &[_]u21{
         0x039D,
-    } });
-    try self.map.put(0x1D6B5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6B5) return .{ .compat = &[_]u21{
         0x039E,
-    } });
-    try self.map.put(0x1D6B6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6B6) return .{ .compat = &[_]u21{
         0x039F,
-    } });
-    try self.map.put(0x1D6B7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6B7) return .{ .compat = &[_]u21{
         0x03A0,
-    } });
-    try self.map.put(0x1D6B8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6B8) return .{ .compat = &[_]u21{
         0x03A1,
-    } });
-    try self.map.put(0x1D6B9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6B9) return .{ .compat = &[_]u21{
         0x03F4,
-    } });
-    try self.map.put(0x1D6BA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6BA) return .{ .compat = &[_]u21{
         0x03A3,
-    } });
-    try self.map.put(0x1D6BB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6BB) return .{ .compat = &[_]u21{
         0x03A4,
-    } });
-    try self.map.put(0x1D6BC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6BC) return .{ .compat = &[_]u21{
         0x03A5,
-    } });
-    try self.map.put(0x1D6BD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6BD) return .{ .compat = &[_]u21{
         0x03A6,
-    } });
-    try self.map.put(0x1D6BE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6BE) return .{ .compat = &[_]u21{
         0x03A7,
-    } });
-    try self.map.put(0x1D6BF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6BF) return .{ .compat = &[_]u21{
         0x03A8,
-    } });
-    try self.map.put(0x1D6C0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6C0) return .{ .compat = &[_]u21{
         0x03A9,
-    } });
-    try self.map.put(0x1D6C1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6C1) return .{ .compat = &[_]u21{
         0x2207,
-    } });
-    try self.map.put(0x1D6C2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6C2) return .{ .compat = &[_]u21{
         0x03B1,
-    } });
-    try self.map.put(0x1D6C3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6C3) return .{ .compat = &[_]u21{
         0x03B2,
-    } });
-    try self.map.put(0x1D6C4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6C4) return .{ .compat = &[_]u21{
         0x03B3,
-    } });
-    try self.map.put(0x1D6C5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6C5) return .{ .compat = &[_]u21{
         0x03B4,
-    } });
-    try self.map.put(0x1D6C6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6C6) return .{ .compat = &[_]u21{
         0x03B5,
-    } });
-    try self.map.put(0x1D6C7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6C7) return .{ .compat = &[_]u21{
         0x03B6,
-    } });
-    try self.map.put(0x1D6C8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6C8) return .{ .compat = &[_]u21{
         0x03B7,
-    } });
-    try self.map.put(0x1D6C9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6C9) return .{ .compat = &[_]u21{
         0x03B8,
-    } });
-    try self.map.put(0x1D6CA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6CA) return .{ .compat = &[_]u21{
         0x03B9,
-    } });
-    try self.map.put(0x1D6CB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6CB) return .{ .compat = &[_]u21{
         0x03BA,
-    } });
-    try self.map.put(0x1D6CC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6CC) return .{ .compat = &[_]u21{
         0x03BB,
-    } });
-    try self.map.put(0x1D6CD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6CD) return .{ .compat = &[_]u21{
         0x03BC,
-    } });
-    try self.map.put(0x1D6CE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6CE) return .{ .compat = &[_]u21{
         0x03BD,
-    } });
-    try self.map.put(0x1D6CF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6CF) return .{ .compat = &[_]u21{
         0x03BE,
-    } });
-    try self.map.put(0x1D6D0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6D0) return .{ .compat = &[_]u21{
         0x03BF,
-    } });
-    try self.map.put(0x1D6D1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6D1) return .{ .compat = &[_]u21{
         0x03C0,
-    } });
-    try self.map.put(0x1D6D2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6D2) return .{ .compat = &[_]u21{
         0x03C1,
-    } });
-    try self.map.put(0x1D6D3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6D3) return .{ .compat = &[_]u21{
         0x03C2,
-    } });
-    try self.map.put(0x1D6D4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6D4) return .{ .compat = &[_]u21{
         0x03C3,
-    } });
-    try self.map.put(0x1D6D5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6D5) return .{ .compat = &[_]u21{
         0x03C4,
-    } });
-    try self.map.put(0x1D6D6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6D6) return .{ .compat = &[_]u21{
         0x03C5,
-    } });
-    try self.map.put(0x1D6D7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6D7) return .{ .compat = &[_]u21{
         0x03C6,
-    } });
-    try self.map.put(0x1D6D8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6D8) return .{ .compat = &[_]u21{
         0x03C7,
-    } });
-    try self.map.put(0x1D6D9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6D9) return .{ .compat = &[_]u21{
         0x03C8,
-    } });
-    try self.map.put(0x1D6DA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6DA) return .{ .compat = &[_]u21{
         0x03C9,
-    } });
-    try self.map.put(0x1D6DB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6DB) return .{ .compat = &[_]u21{
         0x2202,
-    } });
-    try self.map.put(0x1D6DC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6DC) return .{ .compat = &[_]u21{
         0x03F5,
-    } });
-    try self.map.put(0x1D6DD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6DD) return .{ .compat = &[_]u21{
         0x03D1,
-    } });
-    try self.map.put(0x1D6DE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6DE) return .{ .compat = &[_]u21{
         0x03F0,
-    } });
-    try self.map.put(0x1D6DF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6DF) return .{ .compat = &[_]u21{
         0x03D5,
-    } });
-    try self.map.put(0x1D6E0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6E0) return .{ .compat = &[_]u21{
         0x03F1,
-    } });
-    try self.map.put(0x1D6E1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6E1) return .{ .compat = &[_]u21{
         0x03D6,
-    } });
-    try self.map.put(0x1D6E2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6E2) return .{ .compat = &[_]u21{
         0x0391,
-    } });
-    try self.map.put(0x1D6E3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6E3) return .{ .compat = &[_]u21{
         0x0392,
-    } });
-    try self.map.put(0x1D6E4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6E4) return .{ .compat = &[_]u21{
         0x0393,
-    } });
-    try self.map.put(0x1D6E5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6E5) return .{ .compat = &[_]u21{
         0x0394,
-    } });
-    try self.map.put(0x1D6E6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6E6) return .{ .compat = &[_]u21{
         0x0395,
-    } });
-    try self.map.put(0x1D6E7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6E7) return .{ .compat = &[_]u21{
         0x0396,
-    } });
-    try self.map.put(0x1D6E8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6E8) return .{ .compat = &[_]u21{
         0x0397,
-    } });
-    try self.map.put(0x1D6E9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6E9) return .{ .compat = &[_]u21{
         0x0398,
-    } });
-    try self.map.put(0x1D6EA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6EA) return .{ .compat = &[_]u21{
         0x0399,
-    } });
-    try self.map.put(0x1D6EB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6EB) return .{ .compat = &[_]u21{
         0x039A,
-    } });
-    try self.map.put(0x1D6EC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6EC) return .{ .compat = &[_]u21{
         0x039B,
-    } });
-    try self.map.put(0x1D6ED, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6ED) return .{ .compat = &[_]u21{
         0x039C,
-    } });
-    try self.map.put(0x1D6EE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6EE) return .{ .compat = &[_]u21{
         0x039D,
-    } });
-    try self.map.put(0x1D6EF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6EF) return .{ .compat = &[_]u21{
         0x039E,
-    } });
-    try self.map.put(0x1D6F0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6F0) return .{ .compat = &[_]u21{
         0x039F,
-    } });
-    try self.map.put(0x1D6F1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6F1) return .{ .compat = &[_]u21{
         0x03A0,
-    } });
-    try self.map.put(0x1D6F2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6F2) return .{ .compat = &[_]u21{
         0x03A1,
-    } });
-    try self.map.put(0x1D6F3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6F3) return .{ .compat = &[_]u21{
         0x03F4,
-    } });
-    try self.map.put(0x1D6F4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6F4) return .{ .compat = &[_]u21{
         0x03A3,
-    } });
-    try self.map.put(0x1D6F5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6F5) return .{ .compat = &[_]u21{
         0x03A4,
-    } });
-    try self.map.put(0x1D6F6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6F6) return .{ .compat = &[_]u21{
         0x03A5,
-    } });
-    try self.map.put(0x1D6F7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6F7) return .{ .compat = &[_]u21{
         0x03A6,
-    } });
-    try self.map.put(0x1D6F8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6F8) return .{ .compat = &[_]u21{
         0x03A7,
-    } });
-    try self.map.put(0x1D6F9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6F9) return .{ .compat = &[_]u21{
         0x03A8,
-    } });
-    try self.map.put(0x1D6FA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6FA) return .{ .compat = &[_]u21{
         0x03A9,
-    } });
-    try self.map.put(0x1D6FB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6FB) return .{ .compat = &[_]u21{
         0x2207,
-    } });
-    try self.map.put(0x1D6FC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6FC) return .{ .compat = &[_]u21{
         0x03B1,
-    } });
-    try self.map.put(0x1D6FD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6FD) return .{ .compat = &[_]u21{
         0x03B2,
-    } });
-    try self.map.put(0x1D6FE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6FE) return .{ .compat = &[_]u21{
         0x03B3,
-    } });
-    try self.map.put(0x1D6FF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D6FF) return .{ .compat = &[_]u21{
         0x03B4,
-    } });
-    try self.map.put(0x1D700, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D700) return .{ .compat = &[_]u21{
         0x03B5,
-    } });
-    try self.map.put(0x1D701, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D701) return .{ .compat = &[_]u21{
         0x03B6,
-    } });
-    try self.map.put(0x1D702, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D702) return .{ .compat = &[_]u21{
         0x03B7,
-    } });
-    try self.map.put(0x1D703, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D703) return .{ .compat = &[_]u21{
         0x03B8,
-    } });
-    try self.map.put(0x1D704, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D704) return .{ .compat = &[_]u21{
         0x03B9,
-    } });
-    try self.map.put(0x1D705, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D705) return .{ .compat = &[_]u21{
         0x03BA,
-    } });
-    try self.map.put(0x1D706, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D706) return .{ .compat = &[_]u21{
         0x03BB,
-    } });
-    try self.map.put(0x1D707, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D707) return .{ .compat = &[_]u21{
         0x03BC,
-    } });
-    try self.map.put(0x1D708, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D708) return .{ .compat = &[_]u21{
         0x03BD,
-    } });
-    try self.map.put(0x1D709, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D709) return .{ .compat = &[_]u21{
         0x03BE,
-    } });
-    try self.map.put(0x1D70A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D70A) return .{ .compat = &[_]u21{
         0x03BF,
-    } });
-    try self.map.put(0x1D70B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D70B) return .{ .compat = &[_]u21{
         0x03C0,
-    } });
-    try self.map.put(0x1D70C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D70C) return .{ .compat = &[_]u21{
         0x03C1,
-    } });
-    try self.map.put(0x1D70D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D70D) return .{ .compat = &[_]u21{
         0x03C2,
-    } });
-    try self.map.put(0x1D70E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D70E) return .{ .compat = &[_]u21{
         0x03C3,
-    } });
-    try self.map.put(0x1D70F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D70F) return .{ .compat = &[_]u21{
         0x03C4,
-    } });
-    try self.map.put(0x1D710, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D710) return .{ .compat = &[_]u21{
         0x03C5,
-    } });
-    try self.map.put(0x1D711, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D711) return .{ .compat = &[_]u21{
         0x03C6,
-    } });
-    try self.map.put(0x1D712, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D712) return .{ .compat = &[_]u21{
         0x03C7,
-    } });
-    try self.map.put(0x1D713, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D713) return .{ .compat = &[_]u21{
         0x03C8,
-    } });
-    try self.map.put(0x1D714, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D714) return .{ .compat = &[_]u21{
         0x03C9,
-    } });
-    try self.map.put(0x1D715, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D715) return .{ .compat = &[_]u21{
         0x2202,
-    } });
-    try self.map.put(0x1D716, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D716) return .{ .compat = &[_]u21{
         0x03F5,
-    } });
-    try self.map.put(0x1D717, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D717) return .{ .compat = &[_]u21{
         0x03D1,
-    } });
-    try self.map.put(0x1D718, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D718) return .{ .compat = &[_]u21{
         0x03F0,
-    } });
-    try self.map.put(0x1D719, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D719) return .{ .compat = &[_]u21{
         0x03D5,
-    } });
-    try self.map.put(0x1D71A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D71A) return .{ .compat = &[_]u21{
         0x03F1,
-    } });
-    try self.map.put(0x1D71B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D71B) return .{ .compat = &[_]u21{
         0x03D6,
-    } });
-    try self.map.put(0x1D71C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D71C) return .{ .compat = &[_]u21{
         0x0391,
-    } });
-    try self.map.put(0x1D71D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D71D) return .{ .compat = &[_]u21{
         0x0392,
-    } });
-    try self.map.put(0x1D71E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D71E) return .{ .compat = &[_]u21{
         0x0393,
-    } });
-    try self.map.put(0x1D71F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D71F) return .{ .compat = &[_]u21{
         0x0394,
-    } });
-    try self.map.put(0x1D720, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D720) return .{ .compat = &[_]u21{
         0x0395,
-    } });
-    try self.map.put(0x1D721, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D721) return .{ .compat = &[_]u21{
         0x0396,
-    } });
-    try self.map.put(0x1D722, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D722) return .{ .compat = &[_]u21{
         0x0397,
-    } });
-    try self.map.put(0x1D723, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D723) return .{ .compat = &[_]u21{
         0x0398,
-    } });
-    try self.map.put(0x1D724, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D724) return .{ .compat = &[_]u21{
         0x0399,
-    } });
-    try self.map.put(0x1D725, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D725) return .{ .compat = &[_]u21{
         0x039A,
-    } });
-    try self.map.put(0x1D726, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D726) return .{ .compat = &[_]u21{
         0x039B,
-    } });
-    try self.map.put(0x1D727, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D727) return .{ .compat = &[_]u21{
         0x039C,
-    } });
-    try self.map.put(0x1D728, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D728) return .{ .compat = &[_]u21{
         0x039D,
-    } });
-    try self.map.put(0x1D729, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D729) return .{ .compat = &[_]u21{
         0x039E,
-    } });
-    try self.map.put(0x1D72A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D72A) return .{ .compat = &[_]u21{
         0x039F,
-    } });
-    try self.map.put(0x1D72B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D72B) return .{ .compat = &[_]u21{
         0x03A0,
-    } });
-    try self.map.put(0x1D72C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D72C) return .{ .compat = &[_]u21{
         0x03A1,
-    } });
-    try self.map.put(0x1D72D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D72D) return .{ .compat = &[_]u21{
         0x03F4,
-    } });
-    try self.map.put(0x1D72E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D72E) return .{ .compat = &[_]u21{
         0x03A3,
-    } });
-    try self.map.put(0x1D72F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D72F) return .{ .compat = &[_]u21{
         0x03A4,
-    } });
-    try self.map.put(0x1D730, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D730) return .{ .compat = &[_]u21{
         0x03A5,
-    } });
-    try self.map.put(0x1D731, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D731) return .{ .compat = &[_]u21{
         0x03A6,
-    } });
-    try self.map.put(0x1D732, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D732) return .{ .compat = &[_]u21{
         0x03A7,
-    } });
-    try self.map.put(0x1D733, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D733) return .{ .compat = &[_]u21{
         0x03A8,
-    } });
-    try self.map.put(0x1D734, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D734) return .{ .compat = &[_]u21{
         0x03A9,
-    } });
-    try self.map.put(0x1D735, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D735) return .{ .compat = &[_]u21{
         0x2207,
-    } });
-    try self.map.put(0x1D736, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D736) return .{ .compat = &[_]u21{
         0x03B1,
-    } });
-    try self.map.put(0x1D737, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D737) return .{ .compat = &[_]u21{
         0x03B2,
-    } });
-    try self.map.put(0x1D738, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D738) return .{ .compat = &[_]u21{
         0x03B3,
-    } });
-    try self.map.put(0x1D739, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D739) return .{ .compat = &[_]u21{
         0x03B4,
-    } });
-    try self.map.put(0x1D73A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D73A) return .{ .compat = &[_]u21{
         0x03B5,
-    } });
-    try self.map.put(0x1D73B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D73B) return .{ .compat = &[_]u21{
         0x03B6,
-    } });
-    try self.map.put(0x1D73C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D73C) return .{ .compat = &[_]u21{
         0x03B7,
-    } });
-    try self.map.put(0x1D73D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D73D) return .{ .compat = &[_]u21{
         0x03B8,
-    } });
-    try self.map.put(0x1D73E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D73E) return .{ .compat = &[_]u21{
         0x03B9,
-    } });
-    try self.map.put(0x1D73F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D73F) return .{ .compat = &[_]u21{
         0x03BA,
-    } });
-    try self.map.put(0x1D740, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D740) return .{ .compat = &[_]u21{
         0x03BB,
-    } });
-    try self.map.put(0x1D741, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D741) return .{ .compat = &[_]u21{
         0x03BC,
-    } });
-    try self.map.put(0x1D742, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D742) return .{ .compat = &[_]u21{
         0x03BD,
-    } });
-    try self.map.put(0x1D743, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D743) return .{ .compat = &[_]u21{
         0x03BE,
-    } });
-    try self.map.put(0x1D744, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D744) return .{ .compat = &[_]u21{
         0x03BF,
-    } });
-    try self.map.put(0x1D745, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D745) return .{ .compat = &[_]u21{
         0x03C0,
-    } });
-    try self.map.put(0x1D746, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D746) return .{ .compat = &[_]u21{
         0x03C1,
-    } });
-    try self.map.put(0x1D747, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D747) return .{ .compat = &[_]u21{
         0x03C2,
-    } });
-    try self.map.put(0x1D748, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D748) return .{ .compat = &[_]u21{
         0x03C3,
-    } });
-    try self.map.put(0x1D749, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D749) return .{ .compat = &[_]u21{
         0x03C4,
-    } });
-    try self.map.put(0x1D74A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D74A) return .{ .compat = &[_]u21{
         0x03C5,
-    } });
-    try self.map.put(0x1D74B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D74B) return .{ .compat = &[_]u21{
         0x03C6,
-    } });
-    try self.map.put(0x1D74C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D74C) return .{ .compat = &[_]u21{
         0x03C7,
-    } });
-    try self.map.put(0x1D74D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D74D) return .{ .compat = &[_]u21{
         0x03C8,
-    } });
-    try self.map.put(0x1D74E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D74E) return .{ .compat = &[_]u21{
         0x03C9,
-    } });
-    try self.map.put(0x1D74F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D74F) return .{ .compat = &[_]u21{
         0x2202,
-    } });
-    try self.map.put(0x1D750, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D750) return .{ .compat = &[_]u21{
         0x03F5,
-    } });
-    try self.map.put(0x1D751, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D751) return .{ .compat = &[_]u21{
         0x03D1,
-    } });
-    try self.map.put(0x1D752, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D752) return .{ .compat = &[_]u21{
         0x03F0,
-    } });
-    try self.map.put(0x1D753, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D753) return .{ .compat = &[_]u21{
         0x03D5,
-    } });
-    try self.map.put(0x1D754, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D754) return .{ .compat = &[_]u21{
         0x03F1,
-    } });
-    try self.map.put(0x1D755, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D755) return .{ .compat = &[_]u21{
         0x03D6,
-    } });
-    try self.map.put(0x1D756, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D756) return .{ .compat = &[_]u21{
         0x0391,
-    } });
-    try self.map.put(0x1D757, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D757) return .{ .compat = &[_]u21{
         0x0392,
-    } });
-    try self.map.put(0x1D758, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D758) return .{ .compat = &[_]u21{
         0x0393,
-    } });
-    try self.map.put(0x1D759, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D759) return .{ .compat = &[_]u21{
         0x0394,
-    } });
-    try self.map.put(0x1D75A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D75A) return .{ .compat = &[_]u21{
         0x0395,
-    } });
-    try self.map.put(0x1D75B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D75B) return .{ .compat = &[_]u21{
         0x0396,
-    } });
-    try self.map.put(0x1D75C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D75C) return .{ .compat = &[_]u21{
         0x0397,
-    } });
-    try self.map.put(0x1D75D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D75D) return .{ .compat = &[_]u21{
         0x0398,
-    } });
-    try self.map.put(0x1D75E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D75E) return .{ .compat = &[_]u21{
         0x0399,
-    } });
-    try self.map.put(0x1D75F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D75F) return .{ .compat = &[_]u21{
         0x039A,
-    } });
-    try self.map.put(0x1D760, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D760) return .{ .compat = &[_]u21{
         0x039B,
-    } });
-    try self.map.put(0x1D761, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D761) return .{ .compat = &[_]u21{
         0x039C,
-    } });
-    try self.map.put(0x1D762, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D762) return .{ .compat = &[_]u21{
         0x039D,
-    } });
-    try self.map.put(0x1D763, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D763) return .{ .compat = &[_]u21{
         0x039E,
-    } });
-    try self.map.put(0x1D764, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D764) return .{ .compat = &[_]u21{
         0x039F,
-    } });
-    try self.map.put(0x1D765, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D765) return .{ .compat = &[_]u21{
         0x03A0,
-    } });
-    try self.map.put(0x1D766, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D766) return .{ .compat = &[_]u21{
         0x03A1,
-    } });
-    try self.map.put(0x1D767, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D767) return .{ .compat = &[_]u21{
         0x03F4,
-    } });
-    try self.map.put(0x1D768, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D768) return .{ .compat = &[_]u21{
         0x03A3,
-    } });
-    try self.map.put(0x1D769, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D769) return .{ .compat = &[_]u21{
         0x03A4,
-    } });
-    try self.map.put(0x1D76A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D76A) return .{ .compat = &[_]u21{
         0x03A5,
-    } });
-    try self.map.put(0x1D76B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D76B) return .{ .compat = &[_]u21{
         0x03A6,
-    } });
-    try self.map.put(0x1D76C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D76C) return .{ .compat = &[_]u21{
         0x03A7,
-    } });
-    try self.map.put(0x1D76D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D76D) return .{ .compat = &[_]u21{
         0x03A8,
-    } });
-    try self.map.put(0x1D76E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D76E) return .{ .compat = &[_]u21{
         0x03A9,
-    } });
-    try self.map.put(0x1D76F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D76F) return .{ .compat = &[_]u21{
         0x2207,
-    } });
-    try self.map.put(0x1D770, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D770) return .{ .compat = &[_]u21{
         0x03B1,
-    } });
-    try self.map.put(0x1D771, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D771) return .{ .compat = &[_]u21{
         0x03B2,
-    } });
-    try self.map.put(0x1D772, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D772) return .{ .compat = &[_]u21{
         0x03B3,
-    } });
-    try self.map.put(0x1D773, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D773) return .{ .compat = &[_]u21{
         0x03B4,
-    } });
-    try self.map.put(0x1D774, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D774) return .{ .compat = &[_]u21{
         0x03B5,
-    } });
-    try self.map.put(0x1D775, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D775) return .{ .compat = &[_]u21{
         0x03B6,
-    } });
-    try self.map.put(0x1D776, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D776) return .{ .compat = &[_]u21{
         0x03B7,
-    } });
-    try self.map.put(0x1D777, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D777) return .{ .compat = &[_]u21{
         0x03B8,
-    } });
-    try self.map.put(0x1D778, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D778) return .{ .compat = &[_]u21{
         0x03B9,
-    } });
-    try self.map.put(0x1D779, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D779) return .{ .compat = &[_]u21{
         0x03BA,
-    } });
-    try self.map.put(0x1D77A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D77A) return .{ .compat = &[_]u21{
         0x03BB,
-    } });
-    try self.map.put(0x1D77B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D77B) return .{ .compat = &[_]u21{
         0x03BC,
-    } });
-    try self.map.put(0x1D77C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D77C) return .{ .compat = &[_]u21{
         0x03BD,
-    } });
-    try self.map.put(0x1D77D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D77D) return .{ .compat = &[_]u21{
         0x03BE,
-    } });
-    try self.map.put(0x1D77E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D77E) return .{ .compat = &[_]u21{
         0x03BF,
-    } });
-    try self.map.put(0x1D77F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D77F) return .{ .compat = &[_]u21{
         0x03C0,
-    } });
-    try self.map.put(0x1D780, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D780) return .{ .compat = &[_]u21{
         0x03C1,
-    } });
-    try self.map.put(0x1D781, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D781) return .{ .compat = &[_]u21{
         0x03C2,
-    } });
-    try self.map.put(0x1D782, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D782) return .{ .compat = &[_]u21{
         0x03C3,
-    } });
-    try self.map.put(0x1D783, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D783) return .{ .compat = &[_]u21{
         0x03C4,
-    } });
-    try self.map.put(0x1D784, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D784) return .{ .compat = &[_]u21{
         0x03C5,
-    } });
-    try self.map.put(0x1D785, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D785) return .{ .compat = &[_]u21{
         0x03C6,
-    } });
-    try self.map.put(0x1D786, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D786) return .{ .compat = &[_]u21{
         0x03C7,
-    } });
-    try self.map.put(0x1D787, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D787) return .{ .compat = &[_]u21{
         0x03C8,
-    } });
-    try self.map.put(0x1D788, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D788) return .{ .compat = &[_]u21{
         0x03C9,
-    } });
-    try self.map.put(0x1D789, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D789) return .{ .compat = &[_]u21{
         0x2202,
-    } });
-    try self.map.put(0x1D78A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D78A) return .{ .compat = &[_]u21{
         0x03F5,
-    } });
-    try self.map.put(0x1D78B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D78B) return .{ .compat = &[_]u21{
         0x03D1,
-    } });
-    try self.map.put(0x1D78C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D78C) return .{ .compat = &[_]u21{
         0x03F0,
-    } });
-    try self.map.put(0x1D78D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D78D) return .{ .compat = &[_]u21{
         0x03D5,
-    } });
-    try self.map.put(0x1D78E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D78E) return .{ .compat = &[_]u21{
         0x03F1,
-    } });
-    try self.map.put(0x1D78F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D78F) return .{ .compat = &[_]u21{
         0x03D6,
-    } });
-    try self.map.put(0x1D790, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D790) return .{ .compat = &[_]u21{
         0x0391,
-    } });
-    try self.map.put(0x1D791, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D791) return .{ .compat = &[_]u21{
         0x0392,
-    } });
-    try self.map.put(0x1D792, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D792) return .{ .compat = &[_]u21{
         0x0393,
-    } });
-    try self.map.put(0x1D793, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D793) return .{ .compat = &[_]u21{
         0x0394,
-    } });
-    try self.map.put(0x1D794, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D794) return .{ .compat = &[_]u21{
         0x0395,
-    } });
-    try self.map.put(0x1D795, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D795) return .{ .compat = &[_]u21{
         0x0396,
-    } });
-    try self.map.put(0x1D796, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D796) return .{ .compat = &[_]u21{
         0x0397,
-    } });
-    try self.map.put(0x1D797, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D797) return .{ .compat = &[_]u21{
         0x0398,
-    } });
-    try self.map.put(0x1D798, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D798) return .{ .compat = &[_]u21{
         0x0399,
-    } });
-    try self.map.put(0x1D799, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D799) return .{ .compat = &[_]u21{
         0x039A,
-    } });
-    try self.map.put(0x1D79A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D79A) return .{ .compat = &[_]u21{
         0x039B,
-    } });
-    try self.map.put(0x1D79B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D79B) return .{ .compat = &[_]u21{
         0x039C,
-    } });
-    try self.map.put(0x1D79C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D79C) return .{ .compat = &[_]u21{
         0x039D,
-    } });
-    try self.map.put(0x1D79D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D79D) return .{ .compat = &[_]u21{
         0x039E,
-    } });
-    try self.map.put(0x1D79E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D79E) return .{ .compat = &[_]u21{
         0x039F,
-    } });
-    try self.map.put(0x1D79F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D79F) return .{ .compat = &[_]u21{
         0x03A0,
-    } });
-    try self.map.put(0x1D7A0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7A0) return .{ .compat = &[_]u21{
         0x03A1,
-    } });
-    try self.map.put(0x1D7A1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7A1) return .{ .compat = &[_]u21{
         0x03F4,
-    } });
-    try self.map.put(0x1D7A2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7A2) return .{ .compat = &[_]u21{
         0x03A3,
-    } });
-    try self.map.put(0x1D7A3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7A3) return .{ .compat = &[_]u21{
         0x03A4,
-    } });
-    try self.map.put(0x1D7A4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7A4) return .{ .compat = &[_]u21{
         0x03A5,
-    } });
-    try self.map.put(0x1D7A5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7A5) return .{ .compat = &[_]u21{
         0x03A6,
-    } });
-    try self.map.put(0x1D7A6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7A6) return .{ .compat = &[_]u21{
         0x03A7,
-    } });
-    try self.map.put(0x1D7A7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7A7) return .{ .compat = &[_]u21{
         0x03A8,
-    } });
-    try self.map.put(0x1D7A8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7A8) return .{ .compat = &[_]u21{
         0x03A9,
-    } });
-    try self.map.put(0x1D7A9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7A9) return .{ .compat = &[_]u21{
         0x2207,
-    } });
-    try self.map.put(0x1D7AA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7AA) return .{ .compat = &[_]u21{
         0x03B1,
-    } });
-    try self.map.put(0x1D7AB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7AB) return .{ .compat = &[_]u21{
         0x03B2,
-    } });
-    try self.map.put(0x1D7AC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7AC) return .{ .compat = &[_]u21{
         0x03B3,
-    } });
-    try self.map.put(0x1D7AD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7AD) return .{ .compat = &[_]u21{
         0x03B4,
-    } });
-    try self.map.put(0x1D7AE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7AE) return .{ .compat = &[_]u21{
         0x03B5,
-    } });
-    try self.map.put(0x1D7AF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7AF) return .{ .compat = &[_]u21{
         0x03B6,
-    } });
-    try self.map.put(0x1D7B0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7B0) return .{ .compat = &[_]u21{
         0x03B7,
-    } });
-    try self.map.put(0x1D7B1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7B1) return .{ .compat = &[_]u21{
         0x03B8,
-    } });
-    try self.map.put(0x1D7B2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7B2) return .{ .compat = &[_]u21{
         0x03B9,
-    } });
-    try self.map.put(0x1D7B3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7B3) return .{ .compat = &[_]u21{
         0x03BA,
-    } });
-    try self.map.put(0x1D7B4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7B4) return .{ .compat = &[_]u21{
         0x03BB,
-    } });
-    try self.map.put(0x1D7B5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7B5) return .{ .compat = &[_]u21{
         0x03BC,
-    } });
-    try self.map.put(0x1D7B6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7B6) return .{ .compat = &[_]u21{
         0x03BD,
-    } });
-    try self.map.put(0x1D7B7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7B7) return .{ .compat = &[_]u21{
         0x03BE,
-    } });
-    try self.map.put(0x1D7B8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7B8) return .{ .compat = &[_]u21{
         0x03BF,
-    } });
-    try self.map.put(0x1D7B9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7B9) return .{ .compat = &[_]u21{
         0x03C0,
-    } });
-    try self.map.put(0x1D7BA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7BA) return .{ .compat = &[_]u21{
         0x03C1,
-    } });
-    try self.map.put(0x1D7BB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7BB) return .{ .compat = &[_]u21{
         0x03C2,
-    } });
-    try self.map.put(0x1D7BC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7BC) return .{ .compat = &[_]u21{
         0x03C3,
-    } });
-    try self.map.put(0x1D7BD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7BD) return .{ .compat = &[_]u21{
         0x03C4,
-    } });
-    try self.map.put(0x1D7BE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7BE) return .{ .compat = &[_]u21{
         0x03C5,
-    } });
-    try self.map.put(0x1D7BF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7BF) return .{ .compat = &[_]u21{
         0x03C6,
-    } });
-    try self.map.put(0x1D7C0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7C0) return .{ .compat = &[_]u21{
         0x03C7,
-    } });
-    try self.map.put(0x1D7C1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7C1) return .{ .compat = &[_]u21{
         0x03C8,
-    } });
-    try self.map.put(0x1D7C2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7C2) return .{ .compat = &[_]u21{
         0x03C9,
-    } });
-    try self.map.put(0x1D7C3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7C3) return .{ .compat = &[_]u21{
         0x2202,
-    } });
-    try self.map.put(0x1D7C4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7C4) return .{ .compat = &[_]u21{
         0x03F5,
-    } });
-    try self.map.put(0x1D7C5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7C5) return .{ .compat = &[_]u21{
         0x03D1,
-    } });
-    try self.map.put(0x1D7C6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7C6) return .{ .compat = &[_]u21{
         0x03F0,
-    } });
-    try self.map.put(0x1D7C7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7C7) return .{ .compat = &[_]u21{
         0x03D5,
-    } });
-    try self.map.put(0x1D7C8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7C8) return .{ .compat = &[_]u21{
         0x03F1,
-    } });
-    try self.map.put(0x1D7C9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7C9) return .{ .compat = &[_]u21{
         0x03D6,
-    } });
-    try self.map.put(0x1D7CA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7CA) return .{ .compat = &[_]u21{
         0x03DC,
-    } });
-    try self.map.put(0x1D7CB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7CB) return .{ .compat = &[_]u21{
         0x03DD,
-    } });
-    try self.map.put(0x1D7CE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7CE) return .{ .compat = &[_]u21{
         0x0030,
-    } });
-    try self.map.put(0x1D7CF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7CF) return .{ .compat = &[_]u21{
         0x0031,
-    } });
-    try self.map.put(0x1D7D0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7D0) return .{ .compat = &[_]u21{
         0x0032,
-    } });
-    try self.map.put(0x1D7D1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7D1) return .{ .compat = &[_]u21{
         0x0033,
-    } });
-    try self.map.put(0x1D7D2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7D2) return .{ .compat = &[_]u21{
         0x0034,
-    } });
-    try self.map.put(0x1D7D3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7D3) return .{ .compat = &[_]u21{
         0x0035,
-    } });
-    try self.map.put(0x1D7D4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7D4) return .{ .compat = &[_]u21{
         0x0036,
-    } });
-    try self.map.put(0x1D7D5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7D5) return .{ .compat = &[_]u21{
         0x0037,
-    } });
-    try self.map.put(0x1D7D6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7D6) return .{ .compat = &[_]u21{
         0x0038,
-    } });
-    try self.map.put(0x1D7D7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7D7) return .{ .compat = &[_]u21{
         0x0039,
-    } });
-    try self.map.put(0x1D7D8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7D8) return .{ .compat = &[_]u21{
         0x0030,
-    } });
-    try self.map.put(0x1D7D9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7D9) return .{ .compat = &[_]u21{
         0x0031,
-    } });
-    try self.map.put(0x1D7DA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7DA) return .{ .compat = &[_]u21{
         0x0032,
-    } });
-    try self.map.put(0x1D7DB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7DB) return .{ .compat = &[_]u21{
         0x0033,
-    } });
-    try self.map.put(0x1D7DC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7DC) return .{ .compat = &[_]u21{
         0x0034,
-    } });
-    try self.map.put(0x1D7DD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7DD) return .{ .compat = &[_]u21{
         0x0035,
-    } });
-    try self.map.put(0x1D7DE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7DE) return .{ .compat = &[_]u21{
         0x0036,
-    } });
-    try self.map.put(0x1D7DF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7DF) return .{ .compat = &[_]u21{
         0x0037,
-    } });
-    try self.map.put(0x1D7E0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7E0) return .{ .compat = &[_]u21{
         0x0038,
-    } });
-    try self.map.put(0x1D7E1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7E1) return .{ .compat = &[_]u21{
         0x0039,
-    } });
-    try self.map.put(0x1D7E2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7E2) return .{ .compat = &[_]u21{
         0x0030,
-    } });
-    try self.map.put(0x1D7E3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7E3) return .{ .compat = &[_]u21{
         0x0031,
-    } });
-    try self.map.put(0x1D7E4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7E4) return .{ .compat = &[_]u21{
         0x0032,
-    } });
-    try self.map.put(0x1D7E5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7E5) return .{ .compat = &[_]u21{
         0x0033,
-    } });
-    try self.map.put(0x1D7E6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7E6) return .{ .compat = &[_]u21{
         0x0034,
-    } });
-    try self.map.put(0x1D7E7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7E7) return .{ .compat = &[_]u21{
         0x0035,
-    } });
-    try self.map.put(0x1D7E8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7E8) return .{ .compat = &[_]u21{
         0x0036,
-    } });
-    try self.map.put(0x1D7E9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7E9) return .{ .compat = &[_]u21{
         0x0037,
-    } });
-    try self.map.put(0x1D7EA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7EA) return .{ .compat = &[_]u21{
         0x0038,
-    } });
-    try self.map.put(0x1D7EB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7EB) return .{ .compat = &[_]u21{
         0x0039,
-    } });
-    try self.map.put(0x1D7EC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7EC) return .{ .compat = &[_]u21{
         0x0030,
-    } });
-    try self.map.put(0x1D7ED, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7ED) return .{ .compat = &[_]u21{
         0x0031,
-    } });
-    try self.map.put(0x1D7EE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7EE) return .{ .compat = &[_]u21{
         0x0032,
-    } });
-    try self.map.put(0x1D7EF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7EF) return .{ .compat = &[_]u21{
         0x0033,
-    } });
-    try self.map.put(0x1D7F0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7F0) return .{ .compat = &[_]u21{
         0x0034,
-    } });
-    try self.map.put(0x1D7F1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7F1) return .{ .compat = &[_]u21{
         0x0035,
-    } });
-    try self.map.put(0x1D7F2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7F2) return .{ .compat = &[_]u21{
         0x0036,
-    } });
-    try self.map.put(0x1D7F3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7F3) return .{ .compat = &[_]u21{
         0x0037,
-    } });
-    try self.map.put(0x1D7F4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7F4) return .{ .compat = &[_]u21{
         0x0038,
-    } });
-    try self.map.put(0x1D7F5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7F5) return .{ .compat = &[_]u21{
         0x0039,
-    } });
-    try self.map.put(0x1D7F6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7F6) return .{ .compat = &[_]u21{
         0x0030,
-    } });
-    try self.map.put(0x1D7F7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7F7) return .{ .compat = &[_]u21{
         0x0031,
-    } });
-    try self.map.put(0x1D7F8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7F8) return .{ .compat = &[_]u21{
         0x0032,
-    } });
-    try self.map.put(0x1D7F9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7F9) return .{ .compat = &[_]u21{
         0x0033,
-    } });
-    try self.map.put(0x1D7FA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7FA) return .{ .compat = &[_]u21{
         0x0034,
-    } });
-    try self.map.put(0x1D7FB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7FB) return .{ .compat = &[_]u21{
         0x0035,
-    } });
-    try self.map.put(0x1D7FC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7FC) return .{ .compat = &[_]u21{
         0x0036,
-    } });
-    try self.map.put(0x1D7FD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7FD) return .{ .compat = &[_]u21{
         0x0037,
-    } });
-    try self.map.put(0x1D7FE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7FE) return .{ .compat = &[_]u21{
         0x0038,
-    } });
-    try self.map.put(0x1D7FF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1D7FF) return .{ .compat = &[_]u21{
         0x0039,
-    } });
-    try self.map.put(0x1EE00, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE00) return .{ .compat = &[_]u21{
         0x0627,
-    } });
-    try self.map.put(0x1EE01, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE01) return .{ .compat = &[_]u21{
         0x0628,
-    } });
-    try self.map.put(0x1EE02, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE02) return .{ .compat = &[_]u21{
         0x062C,
-    } });
-    try self.map.put(0x1EE03, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE03) return .{ .compat = &[_]u21{
         0x062F,
-    } });
-    try self.map.put(0x1EE05, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE05) return .{ .compat = &[_]u21{
         0x0648,
-    } });
-    try self.map.put(0x1EE06, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE06) return .{ .compat = &[_]u21{
         0x0632,
-    } });
-    try self.map.put(0x1EE07, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE07) return .{ .compat = &[_]u21{
         0x062D,
-    } });
-    try self.map.put(0x1EE08, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE08) return .{ .compat = &[_]u21{
         0x0637,
-    } });
-    try self.map.put(0x1EE09, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE09) return .{ .compat = &[_]u21{
         0x064A,
-    } });
-    try self.map.put(0x1EE0A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE0A) return .{ .compat = &[_]u21{
         0x0643,
-    } });
-    try self.map.put(0x1EE0B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE0B) return .{ .compat = &[_]u21{
         0x0644,
-    } });
-    try self.map.put(0x1EE0C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE0C) return .{ .compat = &[_]u21{
         0x0645,
-    } });
-    try self.map.put(0x1EE0D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE0D) return .{ .compat = &[_]u21{
         0x0646,
-    } });
-    try self.map.put(0x1EE0E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE0E) return .{ .compat = &[_]u21{
         0x0633,
-    } });
-    try self.map.put(0x1EE0F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE0F) return .{ .compat = &[_]u21{
         0x0639,
-    } });
-    try self.map.put(0x1EE10, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE10) return .{ .compat = &[_]u21{
         0x0641,
-    } });
-    try self.map.put(0x1EE11, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE11) return .{ .compat = &[_]u21{
         0x0635,
-    } });
-    try self.map.put(0x1EE12, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE12) return .{ .compat = &[_]u21{
         0x0642,
-    } });
-    try self.map.put(0x1EE13, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE13) return .{ .compat = &[_]u21{
         0x0631,
-    } });
-    try self.map.put(0x1EE14, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE14) return .{ .compat = &[_]u21{
         0x0634,
-    } });
-    try self.map.put(0x1EE15, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE15) return .{ .compat = &[_]u21{
         0x062A,
-    } });
-    try self.map.put(0x1EE16, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE16) return .{ .compat = &[_]u21{
         0x062B,
-    } });
-    try self.map.put(0x1EE17, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE17) return .{ .compat = &[_]u21{
         0x062E,
-    } });
-    try self.map.put(0x1EE18, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE18) return .{ .compat = &[_]u21{
         0x0630,
-    } });
-    try self.map.put(0x1EE19, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE19) return .{ .compat = &[_]u21{
         0x0636,
-    } });
-    try self.map.put(0x1EE1A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE1A) return .{ .compat = &[_]u21{
         0x0638,
-    } });
-    try self.map.put(0x1EE1B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE1B) return .{ .compat = &[_]u21{
         0x063A,
-    } });
-    try self.map.put(0x1EE1C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE1C) return .{ .compat = &[_]u21{
         0x066E,
-    } });
-    try self.map.put(0x1EE1D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE1D) return .{ .compat = &[_]u21{
         0x06BA,
-    } });
-    try self.map.put(0x1EE1E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE1E) return .{ .compat = &[_]u21{
         0x06A1,
-    } });
-    try self.map.put(0x1EE1F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE1F) return .{ .compat = &[_]u21{
         0x066F,
-    } });
-    try self.map.put(0x1EE21, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE21) return .{ .compat = &[_]u21{
         0x0628,
-    } });
-    try self.map.put(0x1EE22, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE22) return .{ .compat = &[_]u21{
         0x062C,
-    } });
-    try self.map.put(0x1EE24, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE24) return .{ .compat = &[_]u21{
         0x0647,
-    } });
-    try self.map.put(0x1EE27, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE27) return .{ .compat = &[_]u21{
         0x062D,
-    } });
-    try self.map.put(0x1EE29, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE29) return .{ .compat = &[_]u21{
         0x064A,
-    } });
-    try self.map.put(0x1EE2A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE2A) return .{ .compat = &[_]u21{
         0x0643,
-    } });
-    try self.map.put(0x1EE2B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE2B) return .{ .compat = &[_]u21{
         0x0644,
-    } });
-    try self.map.put(0x1EE2C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE2C) return .{ .compat = &[_]u21{
         0x0645,
-    } });
-    try self.map.put(0x1EE2D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE2D) return .{ .compat = &[_]u21{
         0x0646,
-    } });
-    try self.map.put(0x1EE2E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE2E) return .{ .compat = &[_]u21{
         0x0633,
-    } });
-    try self.map.put(0x1EE2F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE2F) return .{ .compat = &[_]u21{
         0x0639,
-    } });
-    try self.map.put(0x1EE30, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE30) return .{ .compat = &[_]u21{
         0x0641,
-    } });
-    try self.map.put(0x1EE31, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE31) return .{ .compat = &[_]u21{
         0x0635,
-    } });
-    try self.map.put(0x1EE32, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE32) return .{ .compat = &[_]u21{
         0x0642,
-    } });
-    try self.map.put(0x1EE34, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE34) return .{ .compat = &[_]u21{
         0x0634,
-    } });
-    try self.map.put(0x1EE35, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE35) return .{ .compat = &[_]u21{
         0x062A,
-    } });
-    try self.map.put(0x1EE36, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE36) return .{ .compat = &[_]u21{
         0x062B,
-    } });
-    try self.map.put(0x1EE37, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE37) return .{ .compat = &[_]u21{
         0x062E,
-    } });
-    try self.map.put(0x1EE39, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE39) return .{ .compat = &[_]u21{
         0x0636,
-    } });
-    try self.map.put(0x1EE3B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE3B) return .{ .compat = &[_]u21{
         0x063A,
-    } });
-    try self.map.put(0x1EE42, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE42) return .{ .compat = &[_]u21{
         0x062C,
-    } });
-    try self.map.put(0x1EE47, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE47) return .{ .compat = &[_]u21{
         0x062D,
-    } });
-    try self.map.put(0x1EE49, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE49) return .{ .compat = &[_]u21{
         0x064A,
-    } });
-    try self.map.put(0x1EE4B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE4B) return .{ .compat = &[_]u21{
         0x0644,
-    } });
-    try self.map.put(0x1EE4D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE4D) return .{ .compat = &[_]u21{
         0x0646,
-    } });
-    try self.map.put(0x1EE4E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE4E) return .{ .compat = &[_]u21{
         0x0633,
-    } });
-    try self.map.put(0x1EE4F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE4F) return .{ .compat = &[_]u21{
         0x0639,
-    } });
-    try self.map.put(0x1EE51, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE51) return .{ .compat = &[_]u21{
         0x0635,
-    } });
-    try self.map.put(0x1EE52, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE52) return .{ .compat = &[_]u21{
         0x0642,
-    } });
-    try self.map.put(0x1EE54, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE54) return .{ .compat = &[_]u21{
         0x0634,
-    } });
-    try self.map.put(0x1EE57, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE57) return .{ .compat = &[_]u21{
         0x062E,
-    } });
-    try self.map.put(0x1EE59, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE59) return .{ .compat = &[_]u21{
         0x0636,
-    } });
-    try self.map.put(0x1EE5B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE5B) return .{ .compat = &[_]u21{
         0x063A,
-    } });
-    try self.map.put(0x1EE5D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE5D) return .{ .compat = &[_]u21{
         0x06BA,
-    } });
-    try self.map.put(0x1EE5F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE5F) return .{ .compat = &[_]u21{
         0x066F,
-    } });
-    try self.map.put(0x1EE61, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE61) return .{ .compat = &[_]u21{
         0x0628,
-    } });
-    try self.map.put(0x1EE62, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE62) return .{ .compat = &[_]u21{
         0x062C,
-    } });
-    try self.map.put(0x1EE64, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE64) return .{ .compat = &[_]u21{
         0x0647,
-    } });
-    try self.map.put(0x1EE67, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE67) return .{ .compat = &[_]u21{
         0x062D,
-    } });
-    try self.map.put(0x1EE68, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE68) return .{ .compat = &[_]u21{
         0x0637,
-    } });
-    try self.map.put(0x1EE69, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE69) return .{ .compat = &[_]u21{
         0x064A,
-    } });
-    try self.map.put(0x1EE6A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE6A) return .{ .compat = &[_]u21{
         0x0643,
-    } });
-    try self.map.put(0x1EE6C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE6C) return .{ .compat = &[_]u21{
         0x0645,
-    } });
-    try self.map.put(0x1EE6D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE6D) return .{ .compat = &[_]u21{
         0x0646,
-    } });
-    try self.map.put(0x1EE6E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE6E) return .{ .compat = &[_]u21{
         0x0633,
-    } });
-    try self.map.put(0x1EE6F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE6F) return .{ .compat = &[_]u21{
         0x0639,
-    } });
-    try self.map.put(0x1EE70, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE70) return .{ .compat = &[_]u21{
         0x0641,
-    } });
-    try self.map.put(0x1EE71, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE71) return .{ .compat = &[_]u21{
         0x0635,
-    } });
-    try self.map.put(0x1EE72, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE72) return .{ .compat = &[_]u21{
         0x0642,
-    } });
-    try self.map.put(0x1EE74, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE74) return .{ .compat = &[_]u21{
         0x0634,
-    } });
-    try self.map.put(0x1EE75, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE75) return .{ .compat = &[_]u21{
         0x062A,
-    } });
-    try self.map.put(0x1EE76, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE76) return .{ .compat = &[_]u21{
         0x062B,
-    } });
-    try self.map.put(0x1EE77, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE77) return .{ .compat = &[_]u21{
         0x062E,
-    } });
-    try self.map.put(0x1EE79, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE79) return .{ .compat = &[_]u21{
         0x0636,
-    } });
-    try self.map.put(0x1EE7A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE7A) return .{ .compat = &[_]u21{
         0x0638,
-    } });
-    try self.map.put(0x1EE7B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE7B) return .{ .compat = &[_]u21{
         0x063A,
-    } });
-    try self.map.put(0x1EE7C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE7C) return .{ .compat = &[_]u21{
         0x066E,
-    } });
-    try self.map.put(0x1EE7E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE7E) return .{ .compat = &[_]u21{
         0x06A1,
-    } });
-    try self.map.put(0x1EE80, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE80) return .{ .compat = &[_]u21{
         0x0627,
-    } });
-    try self.map.put(0x1EE81, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE81) return .{ .compat = &[_]u21{
         0x0628,
-    } });
-    try self.map.put(0x1EE82, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE82) return .{ .compat = &[_]u21{
         0x062C,
-    } });
-    try self.map.put(0x1EE83, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE83) return .{ .compat = &[_]u21{
         0x062F,
-    } });
-    try self.map.put(0x1EE84, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE84) return .{ .compat = &[_]u21{
         0x0647,
-    } });
-    try self.map.put(0x1EE85, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE85) return .{ .compat = &[_]u21{
         0x0648,
-    } });
-    try self.map.put(0x1EE86, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE86) return .{ .compat = &[_]u21{
         0x0632,
-    } });
-    try self.map.put(0x1EE87, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE87) return .{ .compat = &[_]u21{
         0x062D,
-    } });
-    try self.map.put(0x1EE88, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE88) return .{ .compat = &[_]u21{
         0x0637,
-    } });
-    try self.map.put(0x1EE89, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE89) return .{ .compat = &[_]u21{
         0x064A,
-    } });
-    try self.map.put(0x1EE8B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE8B) return .{ .compat = &[_]u21{
         0x0644,
-    } });
-    try self.map.put(0x1EE8C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE8C) return .{ .compat = &[_]u21{
         0x0645,
-    } });
-    try self.map.put(0x1EE8D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE8D) return .{ .compat = &[_]u21{
         0x0646,
-    } });
-    try self.map.put(0x1EE8E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE8E) return .{ .compat = &[_]u21{
         0x0633,
-    } });
-    try self.map.put(0x1EE8F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE8F) return .{ .compat = &[_]u21{
         0x0639,
-    } });
-    try self.map.put(0x1EE90, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE90) return .{ .compat = &[_]u21{
         0x0641,
-    } });
-    try self.map.put(0x1EE91, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE91) return .{ .compat = &[_]u21{
         0x0635,
-    } });
-    try self.map.put(0x1EE92, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE92) return .{ .compat = &[_]u21{
         0x0642,
-    } });
-    try self.map.put(0x1EE93, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE93) return .{ .compat = &[_]u21{
         0x0631,
-    } });
-    try self.map.put(0x1EE94, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE94) return .{ .compat = &[_]u21{
         0x0634,
-    } });
-    try self.map.put(0x1EE95, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE95) return .{ .compat = &[_]u21{
         0x062A,
-    } });
-    try self.map.put(0x1EE96, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE96) return .{ .compat = &[_]u21{
         0x062B,
-    } });
-    try self.map.put(0x1EE97, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE97) return .{ .compat = &[_]u21{
         0x062E,
-    } });
-    try self.map.put(0x1EE98, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE98) return .{ .compat = &[_]u21{
         0x0630,
-    } });
-    try self.map.put(0x1EE99, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE99) return .{ .compat = &[_]u21{
         0x0636,
-    } });
-    try self.map.put(0x1EE9A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE9A) return .{ .compat = &[_]u21{
         0x0638,
-    } });
-    try self.map.put(0x1EE9B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EE9B) return .{ .compat = &[_]u21{
         0x063A,
-    } });
-    try self.map.put(0x1EEA1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEA1) return .{ .compat = &[_]u21{
         0x0628,
-    } });
-    try self.map.put(0x1EEA2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEA2) return .{ .compat = &[_]u21{
         0x062C,
-    } });
-    try self.map.put(0x1EEA3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEA3) return .{ .compat = &[_]u21{
         0x062F,
-    } });
-    try self.map.put(0x1EEA5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEA5) return .{ .compat = &[_]u21{
         0x0648,
-    } });
-    try self.map.put(0x1EEA6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEA6) return .{ .compat = &[_]u21{
         0x0632,
-    } });
-    try self.map.put(0x1EEA7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEA7) return .{ .compat = &[_]u21{
         0x062D,
-    } });
-    try self.map.put(0x1EEA8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEA8) return .{ .compat = &[_]u21{
         0x0637,
-    } });
-    try self.map.put(0x1EEA9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEA9) return .{ .compat = &[_]u21{
         0x064A,
-    } });
-    try self.map.put(0x1EEAB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEAB) return .{ .compat = &[_]u21{
         0x0644,
-    } });
-    try self.map.put(0x1EEAC, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEAC) return .{ .compat = &[_]u21{
         0x0645,
-    } });
-    try self.map.put(0x1EEAD, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEAD) return .{ .compat = &[_]u21{
         0x0646,
-    } });
-    try self.map.put(0x1EEAE, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEAE) return .{ .compat = &[_]u21{
         0x0633,
-    } });
-    try self.map.put(0x1EEAF, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEAF) return .{ .compat = &[_]u21{
         0x0639,
-    } });
-    try self.map.put(0x1EEB0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEB0) return .{ .compat = &[_]u21{
         0x0641,
-    } });
-    try self.map.put(0x1EEB1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEB1) return .{ .compat = &[_]u21{
         0x0635,
-    } });
-    try self.map.put(0x1EEB2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEB2) return .{ .compat = &[_]u21{
         0x0642,
-    } });
-    try self.map.put(0x1EEB3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEB3) return .{ .compat = &[_]u21{
         0x0631,
-    } });
-    try self.map.put(0x1EEB4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEB4) return .{ .compat = &[_]u21{
         0x0634,
-    } });
-    try self.map.put(0x1EEB5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEB5) return .{ .compat = &[_]u21{
         0x062A,
-    } });
-    try self.map.put(0x1EEB6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEB6) return .{ .compat = &[_]u21{
         0x062B,
-    } });
-    try self.map.put(0x1EEB7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEB7) return .{ .compat = &[_]u21{
         0x062E,
-    } });
-    try self.map.put(0x1EEB8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEB8) return .{ .compat = &[_]u21{
         0x0630,
-    } });
-    try self.map.put(0x1EEB9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEB9) return .{ .compat = &[_]u21{
         0x0636,
-    } });
-    try self.map.put(0x1EEBA, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEBA) return .{ .compat = &[_]u21{
         0x0638,
-    } });
-    try self.map.put(0x1EEBB, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1EEBB) return .{ .compat = &[_]u21{
         0x063A,
-    } });
-    try self.map.put(0x1F100, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F100) return .{ .compat = &[_]u21{
         0x0030,
         0x002E,
-    } });
-    try self.map.put(0x1F101, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F101) return .{ .compat = &[_]u21{
         0x0030,
         0x002C,
-    } });
-    try self.map.put(0x1F102, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F102) return .{ .compat = &[_]u21{
         0x0031,
         0x002C,
-    } });
-    try self.map.put(0x1F103, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F103) return .{ .compat = &[_]u21{
         0x0032,
         0x002C,
-    } });
-    try self.map.put(0x1F104, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F104) return .{ .compat = &[_]u21{
         0x0033,
         0x002C,
-    } });
-    try self.map.put(0x1F105, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F105) return .{ .compat = &[_]u21{
         0x0034,
         0x002C,
-    } });
-    try self.map.put(0x1F106, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F106) return .{ .compat = &[_]u21{
         0x0035,
         0x002C,
-    } });
-    try self.map.put(0x1F107, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F107) return .{ .compat = &[_]u21{
         0x0036,
         0x002C,
-    } });
-    try self.map.put(0x1F108, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F108) return .{ .compat = &[_]u21{
         0x0037,
         0x002C,
-    } });
-    try self.map.put(0x1F109, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F109) return .{ .compat = &[_]u21{
         0x0038,
         0x002C,
-    } });
-    try self.map.put(0x1F10A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F10A) return .{ .compat = &[_]u21{
         0x0039,
         0x002C,
-    } });
-    try self.map.put(0x1F110, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F110) return .{ .compat = &[_]u21{
         0x0028,
         0x0041,
         0x0029,
-    } });
-    try self.map.put(0x1F111, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F111) return .{ .compat = &[_]u21{
         0x0028,
         0x0042,
         0x0029,
-    } });
-    try self.map.put(0x1F112, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F112) return .{ .compat = &[_]u21{
         0x0028,
         0x0043,
         0x0029,
-    } });
-    try self.map.put(0x1F113, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F113) return .{ .compat = &[_]u21{
         0x0028,
         0x0044,
         0x0029,
-    } });
-    try self.map.put(0x1F114, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F114) return .{ .compat = &[_]u21{
         0x0028,
         0x0045,
         0x0029,
-    } });
-    try self.map.put(0x1F115, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F115) return .{ .compat = &[_]u21{
         0x0028,
         0x0046,
         0x0029,
-    } });
-    try self.map.put(0x1F116, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F116) return .{ .compat = &[_]u21{
         0x0028,
         0x0047,
         0x0029,
-    } });
-    try self.map.put(0x1F117, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F117) return .{ .compat = &[_]u21{
         0x0028,
         0x0048,
         0x0029,
-    } });
-    try self.map.put(0x1F118, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F118) return .{ .compat = &[_]u21{
         0x0028,
         0x0049,
         0x0029,
-    } });
-    try self.map.put(0x1F119, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F119) return .{ .compat = &[_]u21{
         0x0028,
         0x004A,
         0x0029,
-    } });
-    try self.map.put(0x1F11A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F11A) return .{ .compat = &[_]u21{
         0x0028,
         0x004B,
         0x0029,
-    } });
-    try self.map.put(0x1F11B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F11B) return .{ .compat = &[_]u21{
         0x0028,
         0x004C,
         0x0029,
-    } });
-    try self.map.put(0x1F11C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F11C) return .{ .compat = &[_]u21{
         0x0028,
         0x004D,
         0x0029,
-    } });
-    try self.map.put(0x1F11D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F11D) return .{ .compat = &[_]u21{
         0x0028,
         0x004E,
         0x0029,
-    } });
-    try self.map.put(0x1F11E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F11E) return .{ .compat = &[_]u21{
         0x0028,
         0x004F,
         0x0029,
-    } });
-    try self.map.put(0x1F11F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F11F) return .{ .compat = &[_]u21{
         0x0028,
         0x0050,
         0x0029,
-    } });
-    try self.map.put(0x1F120, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F120) return .{ .compat = &[_]u21{
         0x0028,
         0x0051,
         0x0029,
-    } });
-    try self.map.put(0x1F121, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F121) return .{ .compat = &[_]u21{
         0x0028,
         0x0052,
         0x0029,
-    } });
-    try self.map.put(0x1F122, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F122) return .{ .compat = &[_]u21{
         0x0028,
         0x0053,
         0x0029,
-    } });
-    try self.map.put(0x1F123, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F123) return .{ .compat = &[_]u21{
         0x0028,
         0x0054,
         0x0029,
-    } });
-    try self.map.put(0x1F124, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F124) return .{ .compat = &[_]u21{
         0x0028,
         0x0055,
         0x0029,
-    } });
-    try self.map.put(0x1F125, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F125) return .{ .compat = &[_]u21{
         0x0028,
         0x0056,
         0x0029,
-    } });
-    try self.map.put(0x1F126, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F126) return .{ .compat = &[_]u21{
         0x0028,
         0x0057,
         0x0029,
-    } });
-    try self.map.put(0x1F127, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F127) return .{ .compat = &[_]u21{
         0x0028,
         0x0058,
         0x0029,
-    } });
-    try self.map.put(0x1F128, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F128) return .{ .compat = &[_]u21{
         0x0028,
         0x0059,
         0x0029,
-    } });
-    try self.map.put(0x1F129, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F129) return .{ .compat = &[_]u21{
         0x0028,
         0x005A,
         0x0029,
-    } });
-    try self.map.put(0x1F12A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F12A) return .{ .compat = &[_]u21{
         0x3014,
         0x0053,
         0x3015,
-    } });
-    try self.map.put(0x1F12B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F12B) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x1F12C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F12C) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x1F12D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F12D) return .{ .compat = &[_]u21{
         0x0043,
         0x0044,
-    } });
-    try self.map.put(0x1F12E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F12E) return .{ .compat = &[_]u21{
         0x0057,
         0x005A,
-    } });
-    try self.map.put(0x1F130, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F130) return .{ .compat = &[_]u21{
         0x0041,
-    } });
-    try self.map.put(0x1F131, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F131) return .{ .compat = &[_]u21{
         0x0042,
-    } });
-    try self.map.put(0x1F132, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F132) return .{ .compat = &[_]u21{
         0x0043,
-    } });
-    try self.map.put(0x1F133, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F133) return .{ .compat = &[_]u21{
         0x0044,
-    } });
-    try self.map.put(0x1F134, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F134) return .{ .compat = &[_]u21{
         0x0045,
-    } });
-    try self.map.put(0x1F135, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F135) return .{ .compat = &[_]u21{
         0x0046,
-    } });
-    try self.map.put(0x1F136, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F136) return .{ .compat = &[_]u21{
         0x0047,
-    } });
-    try self.map.put(0x1F137, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F137) return .{ .compat = &[_]u21{
         0x0048,
-    } });
-    try self.map.put(0x1F138, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F138) return .{ .compat = &[_]u21{
         0x0049,
-    } });
-    try self.map.put(0x1F139, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F139) return .{ .compat = &[_]u21{
         0x004A,
-    } });
-    try self.map.put(0x1F13A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F13A) return .{ .compat = &[_]u21{
         0x004B,
-    } });
-    try self.map.put(0x1F13B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F13B) return .{ .compat = &[_]u21{
         0x004C,
-    } });
-    try self.map.put(0x1F13C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F13C) return .{ .compat = &[_]u21{
         0x004D,
-    } });
-    try self.map.put(0x1F13D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F13D) return .{ .compat = &[_]u21{
         0x004E,
-    } });
-    try self.map.put(0x1F13E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F13E) return .{ .compat = &[_]u21{
         0x004F,
-    } });
-    try self.map.put(0x1F13F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F13F) return .{ .compat = &[_]u21{
         0x0050,
-    } });
-    try self.map.put(0x1F140, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F140) return .{ .compat = &[_]u21{
         0x0051,
-    } });
-    try self.map.put(0x1F141, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F141) return .{ .compat = &[_]u21{
         0x0052,
-    } });
-    try self.map.put(0x1F142, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F142) return .{ .compat = &[_]u21{
         0x0053,
-    } });
-    try self.map.put(0x1F143, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F143) return .{ .compat = &[_]u21{
         0x0054,
-    } });
-    try self.map.put(0x1F144, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F144) return .{ .compat = &[_]u21{
         0x0055,
-    } });
-    try self.map.put(0x1F145, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F145) return .{ .compat = &[_]u21{
         0x0056,
-    } });
-    try self.map.put(0x1F146, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F146) return .{ .compat = &[_]u21{
         0x0057,
-    } });
-    try self.map.put(0x1F147, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F147) return .{ .compat = &[_]u21{
         0x0058,
-    } });
-    try self.map.put(0x1F148, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F148) return .{ .compat = &[_]u21{
         0x0059,
-    } });
-    try self.map.put(0x1F149, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F149) return .{ .compat = &[_]u21{
         0x005A,
-    } });
-    try self.map.put(0x1F14A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F14A) return .{ .compat = &[_]u21{
         0x0048,
         0x0056,
-    } });
-    try self.map.put(0x1F14B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F14B) return .{ .compat = &[_]u21{
         0x004D,
         0x0056,
-    } });
-    try self.map.put(0x1F14C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F14C) return .{ .compat = &[_]u21{
         0x0053,
         0x0044,
-    } });
-    try self.map.put(0x1F14D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F14D) return .{ .compat = &[_]u21{
         0x0053,
         0x0053,
-    } });
-    try self.map.put(0x1F14E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F14E) return .{ .compat = &[_]u21{
         0x0050,
         0x0050,
         0x0056,
-    } });
-    try self.map.put(0x1F14F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F14F) return .{ .compat = &[_]u21{
         0x0057,
         0x0043,
-    } });
-    try self.map.put(0x1F16A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F16A) return .{ .compat = &[_]u21{
         0x004D,
         0x0043,
-    } });
-    try self.map.put(0x1F16B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F16B) return .{ .compat = &[_]u21{
         0x004D,
         0x0044,
-    } });
-    try self.map.put(0x1F16C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F16C) return .{ .compat = &[_]u21{
         0x004D,
         0x0052,
-    } });
-    try self.map.put(0x1F190, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F190) return .{ .compat = &[_]u21{
         0x0044,
         0x004A,
-    } });
-    try self.map.put(0x1F200, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F200) return .{ .compat = &[_]u21{
         0x307B,
         0x304B,
-    } });
-    try self.map.put(0x1F201, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F201) return .{ .compat = &[_]u21{
         0x30B3,
         0x30B3,
-    } });
-    try self.map.put(0x1F202, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F202) return .{ .compat = &[_]u21{
         0x30B5,
-    } });
-    try self.map.put(0x1F210, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F210) return .{ .compat = &[_]u21{
         0x624B,
-    } });
-    try self.map.put(0x1F211, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F211) return .{ .compat = &[_]u21{
         0x5B57,
-    } });
-    try self.map.put(0x1F212, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F212) return .{ .compat = &[_]u21{
         0x53CC,
-    } });
-    try self.map.put(0x1F213, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F213) return .{ .compat = &[_]u21{
         0x30C7,
-    } });
-    try self.map.put(0x1F214, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F214) return .{ .compat = &[_]u21{
         0x4E8C,
-    } });
-    try self.map.put(0x1F215, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F215) return .{ .compat = &[_]u21{
         0x591A,
-    } });
-    try self.map.put(0x1F216, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F216) return .{ .compat = &[_]u21{
         0x89E3,
-    } });
-    try self.map.put(0x1F217, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F217) return .{ .compat = &[_]u21{
         0x5929,
-    } });
-    try self.map.put(0x1F218, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F218) return .{ .compat = &[_]u21{
         0x4EA4,
-    } });
-    try self.map.put(0x1F219, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F219) return .{ .compat = &[_]u21{
         0x6620,
-    } });
-    try self.map.put(0x1F21A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F21A) return .{ .compat = &[_]u21{
         0x7121,
-    } });
-    try self.map.put(0x1F21B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F21B) return .{ .compat = &[_]u21{
         0x6599,
-    } });
-    try self.map.put(0x1F21C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F21C) return .{ .compat = &[_]u21{
         0x524D,
-    } });
-    try self.map.put(0x1F21D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F21D) return .{ .compat = &[_]u21{
         0x5F8C,
-    } });
-    try self.map.put(0x1F21E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F21E) return .{ .compat = &[_]u21{
         0x518D,
-    } });
-    try self.map.put(0x1F21F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F21F) return .{ .compat = &[_]u21{
         0x65B0,
-    } });
-    try self.map.put(0x1F220, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F220) return .{ .compat = &[_]u21{
         0x521D,
-    } });
-    try self.map.put(0x1F221, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F221) return .{ .compat = &[_]u21{
         0x7D42,
-    } });
-    try self.map.put(0x1F222, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F222) return .{ .compat = &[_]u21{
         0x751F,
-    } });
-    try self.map.put(0x1F223, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F223) return .{ .compat = &[_]u21{
         0x8CA9,
-    } });
-    try self.map.put(0x1F224, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F224) return .{ .compat = &[_]u21{
         0x58F0,
-    } });
-    try self.map.put(0x1F225, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F225) return .{ .compat = &[_]u21{
         0x5439,
-    } });
-    try self.map.put(0x1F226, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F226) return .{ .compat = &[_]u21{
         0x6F14,
-    } });
-    try self.map.put(0x1F227, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F227) return .{ .compat = &[_]u21{
         0x6295,
-    } });
-    try self.map.put(0x1F228, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F228) return .{ .compat = &[_]u21{
         0x6355,
-    } });
-    try self.map.put(0x1F229, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F229) return .{ .compat = &[_]u21{
         0x4E00,
-    } });
-    try self.map.put(0x1F22A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F22A) return .{ .compat = &[_]u21{
         0x4E09,
-    } });
-    try self.map.put(0x1F22B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F22B) return .{ .compat = &[_]u21{
         0x904A,
-    } });
-    try self.map.put(0x1F22C, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F22C) return .{ .compat = &[_]u21{
         0x5DE6,
-    } });
-    try self.map.put(0x1F22D, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F22D) return .{ .compat = &[_]u21{
         0x4E2D,
-    } });
-    try self.map.put(0x1F22E, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F22E) return .{ .compat = &[_]u21{
         0x53F3,
-    } });
-    try self.map.put(0x1F22F, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F22F) return .{ .compat = &[_]u21{
         0x6307,
-    } });
-    try self.map.put(0x1F230, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F230) return .{ .compat = &[_]u21{
         0x8D70,
-    } });
-    try self.map.put(0x1F231, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F231) return .{ .compat = &[_]u21{
         0x6253,
-    } });
-    try self.map.put(0x1F232, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F232) return .{ .compat = &[_]u21{
         0x7981,
-    } });
-    try self.map.put(0x1F233, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F233) return .{ .compat = &[_]u21{
         0x7A7A,
-    } });
-    try self.map.put(0x1F234, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F234) return .{ .compat = &[_]u21{
         0x5408,
-    } });
-    try self.map.put(0x1F235, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F235) return .{ .compat = &[_]u21{
         0x6E80,
-    } });
-    try self.map.put(0x1F236, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F236) return .{ .compat = &[_]u21{
         0x6709,
-    } });
-    try self.map.put(0x1F237, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F237) return .{ .compat = &[_]u21{
         0x6708,
-    } });
-    try self.map.put(0x1F238, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F238) return .{ .compat = &[_]u21{
         0x7533,
-    } });
-    try self.map.put(0x1F239, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F239) return .{ .compat = &[_]u21{
         0x5272,
-    } });
-    try self.map.put(0x1F23A, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F23A) return .{ .compat = &[_]u21{
         0x55B6,
-    } });
-    try self.map.put(0x1F23B, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F23B) return .{ .compat = &[_]u21{
         0x914D,
-    } });
-    try self.map.put(0x1F240, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F240) return .{ .compat = &[_]u21{
         0x3014,
         0x672C,
         0x3015,
-    } });
-    try self.map.put(0x1F241, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F241) return .{ .compat = &[_]u21{
         0x3014,
         0x4E09,
         0x3015,
-    } });
-    try self.map.put(0x1F242, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F242) return .{ .compat = &[_]u21{
         0x3014,
         0x4E8C,
         0x3015,
-    } });
-    try self.map.put(0x1F243, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F243) return .{ .compat = &[_]u21{
         0x3014,
         0x5B89,
         0x3015,
-    } });
-    try self.map.put(0x1F244, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F244) return .{ .compat = &[_]u21{
         0x3014,
         0x70B9,
         0x3015,
-    } });
-    try self.map.put(0x1F245, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F245) return .{ .compat = &[_]u21{
         0x3014,
         0x6253,
         0x3015,
-    } });
-    try self.map.put(0x1F246, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F246) return .{ .compat = &[_]u21{
         0x3014,
         0x76D7,
         0x3015,
-    } });
-    try self.map.put(0x1F247, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F247) return .{ .compat = &[_]u21{
         0x3014,
         0x52DD,
         0x3015,
-    } });
-    try self.map.put(0x1F248, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F248) return .{ .compat = &[_]u21{
         0x3014,
         0x6557,
         0x3015,
-    } });
-    try self.map.put(0x1F250, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F250) return .{ .compat = &[_]u21{
         0x5F97,
-    } });
-    try self.map.put(0x1F251, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1F251) return .{ .compat = &[_]u21{
         0x53EF,
-    } });
-    try self.map.put(0x1FBF0, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1FBF0) return .{ .compat = &[_]u21{
         0x0030,
-    } });
-    try self.map.put(0x1FBF1, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1FBF1) return .{ .compat = &[_]u21{
         0x0031,
-    } });
-    try self.map.put(0x1FBF2, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1FBF2) return .{ .compat = &[_]u21{
         0x0032,
-    } });
-    try self.map.put(0x1FBF3, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1FBF3) return .{ .compat = &[_]u21{
         0x0033,
-    } });
-    try self.map.put(0x1FBF4, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1FBF4) return .{ .compat = &[_]u21{
         0x0034,
-    } });
-    try self.map.put(0x1FBF5, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1FBF5) return .{ .compat = &[_]u21{
         0x0035,
-    } });
-    try self.map.put(0x1FBF6, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1FBF6) return .{ .compat = &[_]u21{
         0x0036,
-    } });
-    try self.map.put(0x1FBF7, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1FBF7) return .{ .compat = &[_]u21{
         0x0037,
-    } });
-    try self.map.put(0x1FBF8, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1FBF8) return .{ .compat = &[_]u21{
         0x0038,
-    } });
-    try self.map.put(0x1FBF9, .{ .compat = &[_]u21{
+    } };
+    if (cp == 0x1FBF9) return .{ .compat = &[_]u21{
         0x0039,
-    } });
-    try self.map.put(0x2F800, .{ .single = 0x4E3D });
-    try self.map.put(0x2F801, .{ .single = 0x4E38 });
-    try self.map.put(0x2F802, .{ .single = 0x4E41 });
-    try self.map.put(0x2F803, .{ .single = 0x20122 });
-    try self.map.put(0x2F804, .{ .single = 0x4F60 });
-    try self.map.put(0x2F805, .{ .single = 0x4FAE });
-    try self.map.put(0x2F806, .{ .single = 0x4FBB });
-    try self.map.put(0x2F807, .{ .single = 0x5002 });
-    try self.map.put(0x2F808, .{ .single = 0x507A });
-    try self.map.put(0x2F809, .{ .single = 0x5099 });
-    try self.map.put(0x2F80A, .{ .single = 0x50E7 });
-    try self.map.put(0x2F80B, .{ .single = 0x50CF });
-    try self.map.put(0x2F80C, .{ .single = 0x349E });
-    try self.map.put(0x2F80D, .{ .single = 0x2063A });
-    try self.map.put(0x2F80E, .{ .single = 0x514D });
-    try self.map.put(0x2F80F, .{ .single = 0x5154 });
-    try self.map.put(0x2F810, .{ .single = 0x5164 });
-    try self.map.put(0x2F811, .{ .single = 0x5177 });
-    try self.map.put(0x2F812, .{ .single = 0x2051C });
-    try self.map.put(0x2F813, .{ .single = 0x34B9 });
-    try self.map.put(0x2F814, .{ .single = 0x5167 });
-    try self.map.put(0x2F815, .{ .single = 0x518D });
-    try self.map.put(0x2F816, .{ .single = 0x2054B });
-    try self.map.put(0x2F817, .{ .single = 0x5197 });
-    try self.map.put(0x2F818, .{ .single = 0x51A4 });
-    try self.map.put(0x2F819, .{ .single = 0x4ECC });
-    try self.map.put(0x2F81A, .{ .single = 0x51AC });
-    try self.map.put(0x2F81B, .{ .single = 0x51B5 });
-    try self.map.put(0x2F81C, .{ .single = 0x291DF });
-    try self.map.put(0x2F81D, .{ .single = 0x51F5 });
-    try self.map.put(0x2F81E, .{ .single = 0x5203 });
-    try self.map.put(0x2F81F, .{ .single = 0x34DF });
-    try self.map.put(0x2F820, .{ .single = 0x523B });
-    try self.map.put(0x2F821, .{ .single = 0x5246 });
-    try self.map.put(0x2F822, .{ .single = 0x5272 });
-    try self.map.put(0x2F823, .{ .single = 0x5277 });
-    try self.map.put(0x2F824, .{ .single = 0x3515 });
-    try self.map.put(0x2F825, .{ .single = 0x52C7 });
-    try self.map.put(0x2F826, .{ .single = 0x52C9 });
-    try self.map.put(0x2F827, .{ .single = 0x52E4 });
-    try self.map.put(0x2F828, .{ .single = 0x52FA });
-    try self.map.put(0x2F829, .{ .single = 0x5305 });
-    try self.map.put(0x2F82A, .{ .single = 0x5306 });
-    try self.map.put(0x2F82B, .{ .single = 0x5317 });
-    try self.map.put(0x2F82C, .{ .single = 0x5349 });
-    try self.map.put(0x2F82D, .{ .single = 0x5351 });
-    try self.map.put(0x2F82E, .{ .single = 0x535A });
-    try self.map.put(0x2F82F, .{ .single = 0x5373 });
-    try self.map.put(0x2F830, .{ .single = 0x537D });
-    try self.map.put(0x2F831, .{ .single = 0x537F });
-    try self.map.put(0x2F832, .{ .single = 0x537F });
-    try self.map.put(0x2F833, .{ .single = 0x537F });
-    try self.map.put(0x2F834, .{ .single = 0x20A2C });
-    try self.map.put(0x2F835, .{ .single = 0x7070 });
-    try self.map.put(0x2F836, .{ .single = 0x53CA });
-    try self.map.put(0x2F837, .{ .single = 0x53DF });
-    try self.map.put(0x2F838, .{ .single = 0x20B63 });
-    try self.map.put(0x2F839, .{ .single = 0x53EB });
-    try self.map.put(0x2F83A, .{ .single = 0x53F1 });
-    try self.map.put(0x2F83B, .{ .single = 0x5406 });
-    try self.map.put(0x2F83C, .{ .single = 0x549E });
-    try self.map.put(0x2F83D, .{ .single = 0x5438 });
-    try self.map.put(0x2F83E, .{ .single = 0x5448 });
-    try self.map.put(0x2F83F, .{ .single = 0x5468 });
-    try self.map.put(0x2F840, .{ .single = 0x54A2 });
-    try self.map.put(0x2F841, .{ .single = 0x54F6 });
-    try self.map.put(0x2F842, .{ .single = 0x5510 });
-    try self.map.put(0x2F843, .{ .single = 0x5553 });
-    try self.map.put(0x2F844, .{ .single = 0x5563 });
-    try self.map.put(0x2F845, .{ .single = 0x5584 });
-    try self.map.put(0x2F846, .{ .single = 0x5584 });
-    try self.map.put(0x2F847, .{ .single = 0x5599 });
-    try self.map.put(0x2F848, .{ .single = 0x55AB });
-    try self.map.put(0x2F849, .{ .single = 0x55B3 });
-    try self.map.put(0x2F84A, .{ .single = 0x55C2 });
-    try self.map.put(0x2F84B, .{ .single = 0x5716 });
-    try self.map.put(0x2F84C, .{ .single = 0x5606 });
-    try self.map.put(0x2F84D, .{ .single = 0x5717 });
-    try self.map.put(0x2F84E, .{ .single = 0x5651 });
-    try self.map.put(0x2F84F, .{ .single = 0x5674 });
-    try self.map.put(0x2F850, .{ .single = 0x5207 });
-    try self.map.put(0x2F851, .{ .single = 0x58EE });
-    try self.map.put(0x2F852, .{ .single = 0x57CE });
-    try self.map.put(0x2F853, .{ .single = 0x57F4 });
-    try self.map.put(0x2F854, .{ .single = 0x580D });
-    try self.map.put(0x2F855, .{ .single = 0x578B });
-    try self.map.put(0x2F856, .{ .single = 0x5832 });
-    try self.map.put(0x2F857, .{ .single = 0x5831 });
-    try self.map.put(0x2F858, .{ .single = 0x58AC });
-    try self.map.put(0x2F859, .{ .single = 0x214E4 });
-    try self.map.put(0x2F85A, .{ .single = 0x58F2 });
-    try self.map.put(0x2F85B, .{ .single = 0x58F7 });
-    try self.map.put(0x2F85C, .{ .single = 0x5906 });
-    try self.map.put(0x2F85D, .{ .single = 0x591A });
-    try self.map.put(0x2F85E, .{ .single = 0x5922 });
-    try self.map.put(0x2F85F, .{ .single = 0x5962 });
-    try self.map.put(0x2F860, .{ .single = 0x216A8 });
-    try self.map.put(0x2F861, .{ .single = 0x216EA });
-    try self.map.put(0x2F862, .{ .single = 0x59EC });
-    try self.map.put(0x2F863, .{ .single = 0x5A1B });
-    try self.map.put(0x2F864, .{ .single = 0x5A27 });
-    try self.map.put(0x2F865, .{ .single = 0x59D8 });
-    try self.map.put(0x2F866, .{ .single = 0x5A66 });
-    try self.map.put(0x2F867, .{ .single = 0x36EE });
-    try self.map.put(0x2F868, .{ .single = 0x36FC });
-    try self.map.put(0x2F869, .{ .single = 0x5B08 });
-    try self.map.put(0x2F86A, .{ .single = 0x5B3E });
-    try self.map.put(0x2F86B, .{ .single = 0x5B3E });
-    try self.map.put(0x2F86C, .{ .single = 0x219C8 });
-    try self.map.put(0x2F86D, .{ .single = 0x5BC3 });
-    try self.map.put(0x2F86E, .{ .single = 0x5BD8 });
-    try self.map.put(0x2F86F, .{ .single = 0x5BE7 });
-    try self.map.put(0x2F870, .{ .single = 0x5BF3 });
-    try self.map.put(0x2F871, .{ .single = 0x21B18 });
-    try self.map.put(0x2F872, .{ .single = 0x5BFF });
-    try self.map.put(0x2F873, .{ .single = 0x5C06 });
-    try self.map.put(0x2F874, .{ .single = 0x5F53 });
-    try self.map.put(0x2F875, .{ .single = 0x5C22 });
-    try self.map.put(0x2F876, .{ .single = 0x3781 });
-    try self.map.put(0x2F877, .{ .single = 0x5C60 });
-    try self.map.put(0x2F878, .{ .single = 0x5C6E });
-    try self.map.put(0x2F879, .{ .single = 0x5CC0 });
-    try self.map.put(0x2F87A, .{ .single = 0x5C8D });
-    try self.map.put(0x2F87B, .{ .single = 0x21DE4 });
-    try self.map.put(0x2F87C, .{ .single = 0x5D43 });
-    try self.map.put(0x2F87D, .{ .single = 0x21DE6 });
-    try self.map.put(0x2F87E, .{ .single = 0x5D6E });
-    try self.map.put(0x2F87F, .{ .single = 0x5D6B });
-    try self.map.put(0x2F880, .{ .single = 0x5D7C });
-    try self.map.put(0x2F881, .{ .single = 0x5DE1 });
-    try self.map.put(0x2F882, .{ .single = 0x5DE2 });
-    try self.map.put(0x2F883, .{ .single = 0x382F });
-    try self.map.put(0x2F884, .{ .single = 0x5DFD });
-    try self.map.put(0x2F885, .{ .single = 0x5E28 });
-    try self.map.put(0x2F886, .{ .single = 0x5E3D });
-    try self.map.put(0x2F887, .{ .single = 0x5E69 });
-    try self.map.put(0x2F888, .{ .single = 0x3862 });
-    try self.map.put(0x2F889, .{ .single = 0x22183 });
-    try self.map.put(0x2F88A, .{ .single = 0x387C });
-    try self.map.put(0x2F88B, .{ .single = 0x5EB0 });
-    try self.map.put(0x2F88C, .{ .single = 0x5EB3 });
-    try self.map.put(0x2F88D, .{ .single = 0x5EB6 });
-    try self.map.put(0x2F88E, .{ .single = 0x5ECA });
-    try self.map.put(0x2F88F, .{ .single = 0x2A392 });
-    try self.map.put(0x2F890, .{ .single = 0x5EFE });
-    try self.map.put(0x2F891, .{ .single = 0x22331 });
-    try self.map.put(0x2F892, .{ .single = 0x22331 });
-    try self.map.put(0x2F893, .{ .single = 0x8201 });
-    try self.map.put(0x2F894, .{ .single = 0x5F22 });
-    try self.map.put(0x2F895, .{ .single = 0x5F22 });
-    try self.map.put(0x2F896, .{ .single = 0x38C7 });
-    try self.map.put(0x2F897, .{ .single = 0x232B8 });
-    try self.map.put(0x2F898, .{ .single = 0x261DA });
-    try self.map.put(0x2F899, .{ .single = 0x5F62 });
-    try self.map.put(0x2F89A, .{ .single = 0x5F6B });
-    try self.map.put(0x2F89B, .{ .single = 0x38E3 });
-    try self.map.put(0x2F89C, .{ .single = 0x5F9A });
-    try self.map.put(0x2F89D, .{ .single = 0x5FCD });
-    try self.map.put(0x2F89E, .{ .single = 0x5FD7 });
-    try self.map.put(0x2F89F, .{ .single = 0x5FF9 });
-    try self.map.put(0x2F8A0, .{ .single = 0x6081 });
-    try self.map.put(0x2F8A1, .{ .single = 0x393A });
-    try self.map.put(0x2F8A2, .{ .single = 0x391C });
-    try self.map.put(0x2F8A3, .{ .single = 0x6094 });
-    try self.map.put(0x2F8A4, .{ .single = 0x226D4 });
-    try self.map.put(0x2F8A5, .{ .single = 0x60C7 });
-    try self.map.put(0x2F8A6, .{ .single = 0x6148 });
-    try self.map.put(0x2F8A7, .{ .single = 0x614C });
-    try self.map.put(0x2F8A8, .{ .single = 0x614E });
-    try self.map.put(0x2F8A9, .{ .single = 0x614C });
-    try self.map.put(0x2F8AA, .{ .single = 0x617A });
-    try self.map.put(0x2F8AB, .{ .single = 0x618E });
-    try self.map.put(0x2F8AC, .{ .single = 0x61B2 });
-    try self.map.put(0x2F8AD, .{ .single = 0x61A4 });
-    try self.map.put(0x2F8AE, .{ .single = 0x61AF });
-    try self.map.put(0x2F8AF, .{ .single = 0x61DE });
-    try self.map.put(0x2F8B0, .{ .single = 0x61F2 });
-    try self.map.put(0x2F8B1, .{ .single = 0x61F6 });
-    try self.map.put(0x2F8B2, .{ .single = 0x6210 });
-    try self.map.put(0x2F8B3, .{ .single = 0x621B });
-    try self.map.put(0x2F8B4, .{ .single = 0x625D });
-    try self.map.put(0x2F8B5, .{ .single = 0x62B1 });
-    try self.map.put(0x2F8B6, .{ .single = 0x62D4 });
-    try self.map.put(0x2F8B7, .{ .single = 0x6350 });
-    try self.map.put(0x2F8B8, .{ .single = 0x22B0C });
-    try self.map.put(0x2F8B9, .{ .single = 0x633D });
-    try self.map.put(0x2F8BA, .{ .single = 0x62FC });
-    try self.map.put(0x2F8BB, .{ .single = 0x6368 });
-    try self.map.put(0x2F8BC, .{ .single = 0x6383 });
-    try self.map.put(0x2F8BD, .{ .single = 0x63E4 });
-    try self.map.put(0x2F8BE, .{ .single = 0x22BF1 });
-    try self.map.put(0x2F8BF, .{ .single = 0x6422 });
-    try self.map.put(0x2F8C0, .{ .single = 0x63C5 });
-    try self.map.put(0x2F8C1, .{ .single = 0x63A9 });
-    try self.map.put(0x2F8C2, .{ .single = 0x3A2E });
-    try self.map.put(0x2F8C3, .{ .single = 0x6469 });
-    try self.map.put(0x2F8C4, .{ .single = 0x647E });
-    try self.map.put(0x2F8C5, .{ .single = 0x649D });
-    try self.map.put(0x2F8C6, .{ .single = 0x6477 });
-    try self.map.put(0x2F8C7, .{ .single = 0x3A6C });
-    try self.map.put(0x2F8C8, .{ .single = 0x654F });
-    try self.map.put(0x2F8C9, .{ .single = 0x656C });
-    try self.map.put(0x2F8CA, .{ .single = 0x2300A });
-    try self.map.put(0x2F8CB, .{ .single = 0x65E3 });
-    try self.map.put(0x2F8CC, .{ .single = 0x66F8 });
-    try self.map.put(0x2F8CD, .{ .single = 0x6649 });
-    try self.map.put(0x2F8CE, .{ .single = 0x3B19 });
-    try self.map.put(0x2F8CF, .{ .single = 0x6691 });
-    try self.map.put(0x2F8D0, .{ .single = 0x3B08 });
-    try self.map.put(0x2F8D1, .{ .single = 0x3AE4 });
-    try self.map.put(0x2F8D2, .{ .single = 0x5192 });
-    try self.map.put(0x2F8D3, .{ .single = 0x5195 });
-    try self.map.put(0x2F8D4, .{ .single = 0x6700 });
-    try self.map.put(0x2F8D5, .{ .single = 0x669C });
-    try self.map.put(0x2F8D6, .{ .single = 0x80AD });
-    try self.map.put(0x2F8D7, .{ .single = 0x43D9 });
-    try self.map.put(0x2F8D8, .{ .single = 0x6717 });
-    try self.map.put(0x2F8D9, .{ .single = 0x671B });
-    try self.map.put(0x2F8DA, .{ .single = 0x6721 });
-    try self.map.put(0x2F8DB, .{ .single = 0x675E });
-    try self.map.put(0x2F8DC, .{ .single = 0x6753 });
-    try self.map.put(0x2F8DD, .{ .single = 0x233C3 });
-    try self.map.put(0x2F8DE, .{ .single = 0x3B49 });
-    try self.map.put(0x2F8DF, .{ .single = 0x67FA });
-    try self.map.put(0x2F8E0, .{ .single = 0x6785 });
-    try self.map.put(0x2F8E1, .{ .single = 0x6852 });
-    try self.map.put(0x2F8E2, .{ .single = 0x6885 });
-    try self.map.put(0x2F8E3, .{ .single = 0x2346D });
-    try self.map.put(0x2F8E4, .{ .single = 0x688E });
-    try self.map.put(0x2F8E5, .{ .single = 0x681F });
-    try self.map.put(0x2F8E6, .{ .single = 0x6914 });
-    try self.map.put(0x2F8E7, .{ .single = 0x3B9D });
-    try self.map.put(0x2F8E8, .{ .single = 0x6942 });
-    try self.map.put(0x2F8E9, .{ .single = 0x69A3 });
-    try self.map.put(0x2F8EA, .{ .single = 0x69EA });
-    try self.map.put(0x2F8EB, .{ .single = 0x6AA8 });
-    try self.map.put(0x2F8EC, .{ .single = 0x236A3 });
-    try self.map.put(0x2F8ED, .{ .single = 0x6ADB });
-    try self.map.put(0x2F8EE, .{ .single = 0x3C18 });
-    try self.map.put(0x2F8EF, .{ .single = 0x6B21 });
-    try self.map.put(0x2F8F0, .{ .single = 0x238A7 });
-    try self.map.put(0x2F8F1, .{ .single = 0x6B54 });
-    try self.map.put(0x2F8F2, .{ .single = 0x3C4E });
-    try self.map.put(0x2F8F3, .{ .single = 0x6B72 });
-    try self.map.put(0x2F8F4, .{ .single = 0x6B9F });
-    try self.map.put(0x2F8F5, .{ .single = 0x6BBA });
-    try self.map.put(0x2F8F6, .{ .single = 0x6BBB });
-    try self.map.put(0x2F8F7, .{ .single = 0x23A8D });
-    try self.map.put(0x2F8F8, .{ .single = 0x21D0B });
-    try self.map.put(0x2F8F9, .{ .single = 0x23AFA });
-    try self.map.put(0x2F8FA, .{ .single = 0x6C4E });
-    try self.map.put(0x2F8FB, .{ .single = 0x23CBC });
-    try self.map.put(0x2F8FC, .{ .single = 0x6CBF });
-    try self.map.put(0x2F8FD, .{ .single = 0x6CCD });
-    try self.map.put(0x2F8FE, .{ .single = 0x6C67 });
-    try self.map.put(0x2F8FF, .{ .single = 0x6D16 });
-    try self.map.put(0x2F900, .{ .single = 0x6D3E });
-    try self.map.put(0x2F901, .{ .single = 0x6D77 });
-    try self.map.put(0x2F902, .{ .single = 0x6D41 });
-    try self.map.put(0x2F903, .{ .single = 0x6D69 });
-    try self.map.put(0x2F904, .{ .single = 0x6D78 });
-    try self.map.put(0x2F905, .{ .single = 0x6D85 });
-    try self.map.put(0x2F906, .{ .single = 0x23D1E });
-    try self.map.put(0x2F907, .{ .single = 0x6D34 });
-    try self.map.put(0x2F908, .{ .single = 0x6E2F });
-    try self.map.put(0x2F909, .{ .single = 0x6E6E });
-    try self.map.put(0x2F90A, .{ .single = 0x3D33 });
-    try self.map.put(0x2F90B, .{ .single = 0x6ECB });
-    try self.map.put(0x2F90C, .{ .single = 0x6EC7 });
-    try self.map.put(0x2F90D, .{ .single = 0x23ED1 });
-    try self.map.put(0x2F90E, .{ .single = 0x6DF9 });
-    try self.map.put(0x2F90F, .{ .single = 0x6F6E });
-    try self.map.put(0x2F910, .{ .single = 0x23F5E });
-    try self.map.put(0x2F911, .{ .single = 0x23F8E });
-    try self.map.put(0x2F912, .{ .single = 0x6FC6 });
-    try self.map.put(0x2F913, .{ .single = 0x7039 });
-    try self.map.put(0x2F914, .{ .single = 0x701E });
-    try self.map.put(0x2F915, .{ .single = 0x701B });
-    try self.map.put(0x2F916, .{ .single = 0x3D96 });
-    try self.map.put(0x2F917, .{ .single = 0x704A });
-    try self.map.put(0x2F918, .{ .single = 0x707D });
-    try self.map.put(0x2F919, .{ .single = 0x7077 });
-    try self.map.put(0x2F91A, .{ .single = 0x70AD });
-    try self.map.put(0x2F91B, .{ .single = 0x20525 });
-    try self.map.put(0x2F91C, .{ .single = 0x7145 });
-    try self.map.put(0x2F91D, .{ .single = 0x24263 });
-    try self.map.put(0x2F91E, .{ .single = 0x719C });
-    try self.map.put(0x2F91F, .{ .single = 0x243AB });
-    try self.map.put(0x2F920, .{ .single = 0x7228 });
-    try self.map.put(0x2F921, .{ .single = 0x7235 });
-    try self.map.put(0x2F922, .{ .single = 0x7250 });
-    try self.map.put(0x2F923, .{ .single = 0x24608 });
-    try self.map.put(0x2F924, .{ .single = 0x7280 });
-    try self.map.put(0x2F925, .{ .single = 0x7295 });
-    try self.map.put(0x2F926, .{ .single = 0x24735 });
-    try self.map.put(0x2F927, .{ .single = 0x24814 });
-    try self.map.put(0x2F928, .{ .single = 0x737A });
-    try self.map.put(0x2F929, .{ .single = 0x738B });
-    try self.map.put(0x2F92A, .{ .single = 0x3EAC });
-    try self.map.put(0x2F92B, .{ .single = 0x73A5 });
-    try self.map.put(0x2F92C, .{ .single = 0x3EB8 });
-    try self.map.put(0x2F92D, .{ .single = 0x3EB8 });
-    try self.map.put(0x2F92E, .{ .single = 0x7447 });
-    try self.map.put(0x2F92F, .{ .single = 0x745C });
-    try self.map.put(0x2F930, .{ .single = 0x7471 });
-    try self.map.put(0x2F931, .{ .single = 0x7485 });
-    try self.map.put(0x2F932, .{ .single = 0x74CA });
-    try self.map.put(0x2F933, .{ .single = 0x3F1B });
-    try self.map.put(0x2F934, .{ .single = 0x7524 });
-    try self.map.put(0x2F935, .{ .single = 0x24C36 });
-    try self.map.put(0x2F936, .{ .single = 0x753E });
-    try self.map.put(0x2F937, .{ .single = 0x24C92 });
-    try self.map.put(0x2F938, .{ .single = 0x7570 });
-    try self.map.put(0x2F939, .{ .single = 0x2219F });
-    try self.map.put(0x2F93A, .{ .single = 0x7610 });
-    try self.map.put(0x2F93B, .{ .single = 0x24FA1 });
-    try self.map.put(0x2F93C, .{ .single = 0x24FB8 });
-    try self.map.put(0x2F93D, .{ .single = 0x25044 });
-    try self.map.put(0x2F93E, .{ .single = 0x3FFC });
-    try self.map.put(0x2F93F, .{ .single = 0x4008 });
-    try self.map.put(0x2F940, .{ .single = 0x76F4 });
-    try self.map.put(0x2F941, .{ .single = 0x250F3 });
-    try self.map.put(0x2F942, .{ .single = 0x250F2 });
-    try self.map.put(0x2F943, .{ .single = 0x25119 });
-    try self.map.put(0x2F944, .{ .single = 0x25133 });
-    try self.map.put(0x2F945, .{ .single = 0x771E });
-    try self.map.put(0x2F946, .{ .single = 0x771F });
-    try self.map.put(0x2F947, .{ .single = 0x771F });
-    try self.map.put(0x2F948, .{ .single = 0x774A });
-    try self.map.put(0x2F949, .{ .single = 0x4039 });
-    try self.map.put(0x2F94A, .{ .single = 0x778B });
-    try self.map.put(0x2F94B, .{ .single = 0x4046 });
-    try self.map.put(0x2F94C, .{ .single = 0x4096 });
-    try self.map.put(0x2F94D, .{ .single = 0x2541D });
-    try self.map.put(0x2F94E, .{ .single = 0x784E });
-    try self.map.put(0x2F94F, .{ .single = 0x788C });
-    try self.map.put(0x2F950, .{ .single = 0x78CC });
-    try self.map.put(0x2F951, .{ .single = 0x40E3 });
-    try self.map.put(0x2F952, .{ .single = 0x25626 });
-    try self.map.put(0x2F953, .{ .single = 0x7956 });
-    try self.map.put(0x2F954, .{ .single = 0x2569A });
-    try self.map.put(0x2F955, .{ .single = 0x256C5 });
-    try self.map.put(0x2F956, .{ .single = 0x798F });
-    try self.map.put(0x2F957, .{ .single = 0x79EB });
-    try self.map.put(0x2F958, .{ .single = 0x412F });
-    try self.map.put(0x2F959, .{ .single = 0x7A40 });
-    try self.map.put(0x2F95A, .{ .single = 0x7A4A });
-    try self.map.put(0x2F95B, .{ .single = 0x7A4F });
-    try self.map.put(0x2F95C, .{ .single = 0x2597C });
-    try self.map.put(0x2F95D, .{ .single = 0x25AA7 });
-    try self.map.put(0x2F95E, .{ .single = 0x25AA7 });
-    try self.map.put(0x2F95F, .{ .single = 0x7AEE });
-    try self.map.put(0x2F960, .{ .single = 0x4202 });
-    try self.map.put(0x2F961, .{ .single = 0x25BAB });
-    try self.map.put(0x2F962, .{ .single = 0x7BC6 });
-    try self.map.put(0x2F963, .{ .single = 0x7BC9 });
-    try self.map.put(0x2F964, .{ .single = 0x4227 });
-    try self.map.put(0x2F965, .{ .single = 0x25C80 });
-    try self.map.put(0x2F966, .{ .single = 0x7CD2 });
-    try self.map.put(0x2F967, .{ .single = 0x42A0 });
-    try self.map.put(0x2F968, .{ .single = 0x7CE8 });
-    try self.map.put(0x2F969, .{ .single = 0x7CE3 });
-    try self.map.put(0x2F96A, .{ .single = 0x7D00 });
-    try self.map.put(0x2F96B, .{ .single = 0x25F86 });
-    try self.map.put(0x2F96C, .{ .single = 0x7D63 });
-    try self.map.put(0x2F96D, .{ .single = 0x4301 });
-    try self.map.put(0x2F96E, .{ .single = 0x7DC7 });
-    try self.map.put(0x2F96F, .{ .single = 0x7E02 });
-    try self.map.put(0x2F970, .{ .single = 0x7E45 });
-    try self.map.put(0x2F971, .{ .single = 0x4334 });
-    try self.map.put(0x2F972, .{ .single = 0x26228 });
-    try self.map.put(0x2F973, .{ .single = 0x26247 });
-    try self.map.put(0x2F974, .{ .single = 0x4359 });
-    try self.map.put(0x2F975, .{ .single = 0x262D9 });
-    try self.map.put(0x2F976, .{ .single = 0x7F7A });
-    try self.map.put(0x2F977, .{ .single = 0x2633E });
-    try self.map.put(0x2F978, .{ .single = 0x7F95 });
-    try self.map.put(0x2F979, .{ .single = 0x7FFA });
-    try self.map.put(0x2F97A, .{ .single = 0x8005 });
-    try self.map.put(0x2F97B, .{ .single = 0x264DA });
-    try self.map.put(0x2F97C, .{ .single = 0x26523 });
-    try self.map.put(0x2F97D, .{ .single = 0x8060 });
-    try self.map.put(0x2F97E, .{ .single = 0x265A8 });
-    try self.map.put(0x2F97F, .{ .single = 0x8070 });
-    try self.map.put(0x2F980, .{ .single = 0x2335F });
-    try self.map.put(0x2F981, .{ .single = 0x43D5 });
-    try self.map.put(0x2F982, .{ .single = 0x80B2 });
-    try self.map.put(0x2F983, .{ .single = 0x8103 });
-    try self.map.put(0x2F984, .{ .single = 0x440B });
-    try self.map.put(0x2F985, .{ .single = 0x813E });
-    try self.map.put(0x2F986, .{ .single = 0x5AB5 });
-    try self.map.put(0x2F987, .{ .single = 0x267A7 });
-    try self.map.put(0x2F988, .{ .single = 0x267B5 });
-    try self.map.put(0x2F989, .{ .single = 0x23393 });
-    try self.map.put(0x2F98A, .{ .single = 0x2339C });
-    try self.map.put(0x2F98B, .{ .single = 0x8201 });
-    try self.map.put(0x2F98C, .{ .single = 0x8204 });
-    try self.map.put(0x2F98D, .{ .single = 0x8F9E });
-    try self.map.put(0x2F98E, .{ .single = 0x446B });
-    try self.map.put(0x2F98F, .{ .single = 0x8291 });
-    try self.map.put(0x2F990, .{ .single = 0x828B });
-    try self.map.put(0x2F991, .{ .single = 0x829D });
-    try self.map.put(0x2F992, .{ .single = 0x52B3 });
-    try self.map.put(0x2F993, .{ .single = 0x82B1 });
-    try self.map.put(0x2F994, .{ .single = 0x82B3 });
-    try self.map.put(0x2F995, .{ .single = 0x82BD });
-    try self.map.put(0x2F996, .{ .single = 0x82E6 });
-    try self.map.put(0x2F997, .{ .single = 0x26B3C });
-    try self.map.put(0x2F998, .{ .single = 0x82E5 });
-    try self.map.put(0x2F999, .{ .single = 0x831D });
-    try self.map.put(0x2F99A, .{ .single = 0x8363 });
-    try self.map.put(0x2F99B, .{ .single = 0x83AD });
-    try self.map.put(0x2F99C, .{ .single = 0x8323 });
-    try self.map.put(0x2F99D, .{ .single = 0x83BD });
-    try self.map.put(0x2F99E, .{ .single = 0x83E7 });
-    try self.map.put(0x2F99F, .{ .single = 0x8457 });
-    try self.map.put(0x2F9A0, .{ .single = 0x8353 });
-    try self.map.put(0x2F9A1, .{ .single = 0x83CA });
-    try self.map.put(0x2F9A2, .{ .single = 0x83CC });
-    try self.map.put(0x2F9A3, .{ .single = 0x83DC });
-    try self.map.put(0x2F9A4, .{ .single = 0x26C36 });
-    try self.map.put(0x2F9A5, .{ .single = 0x26D6B });
-    try self.map.put(0x2F9A6, .{ .single = 0x26CD5 });
-    try self.map.put(0x2F9A7, .{ .single = 0x452B });
-    try self.map.put(0x2F9A8, .{ .single = 0x84F1 });
-    try self.map.put(0x2F9A9, .{ .single = 0x84F3 });
-    try self.map.put(0x2F9AA, .{ .single = 0x8516 });
-    try self.map.put(0x2F9AB, .{ .single = 0x273CA });
-    try self.map.put(0x2F9AC, .{ .single = 0x8564 });
-    try self.map.put(0x2F9AD, .{ .single = 0x26F2C });
-    try self.map.put(0x2F9AE, .{ .single = 0x455D });
-    try self.map.put(0x2F9AF, .{ .single = 0x4561 });
-    try self.map.put(0x2F9B0, .{ .single = 0x26FB1 });
-    try self.map.put(0x2F9B1, .{ .single = 0x270D2 });
-    try self.map.put(0x2F9B2, .{ .single = 0x456B });
-    try self.map.put(0x2F9B3, .{ .single = 0x8650 });
-    try self.map.put(0x2F9B4, .{ .single = 0x865C });
-    try self.map.put(0x2F9B5, .{ .single = 0x8667 });
-    try self.map.put(0x2F9B6, .{ .single = 0x8669 });
-    try self.map.put(0x2F9B7, .{ .single = 0x86A9 });
-    try self.map.put(0x2F9B8, .{ .single = 0x8688 });
-    try self.map.put(0x2F9B9, .{ .single = 0x870E });
-    try self.map.put(0x2F9BA, .{ .single = 0x86E2 });
-    try self.map.put(0x2F9BB, .{ .single = 0x8779 });
-    try self.map.put(0x2F9BC, .{ .single = 0x8728 });
-    try self.map.put(0x2F9BD, .{ .single = 0x876B });
-    try self.map.put(0x2F9BE, .{ .single = 0x8786 });
-    try self.map.put(0x2F9BF, .{ .single = 0x45D7 });
-    try self.map.put(0x2F9C0, .{ .single = 0x87E1 });
-    try self.map.put(0x2F9C1, .{ .single = 0x8801 });
-    try self.map.put(0x2F9C2, .{ .single = 0x45F9 });
-    try self.map.put(0x2F9C3, .{ .single = 0x8860 });
-    try self.map.put(0x2F9C4, .{ .single = 0x8863 });
-    try self.map.put(0x2F9C5, .{ .single = 0x27667 });
-    try self.map.put(0x2F9C6, .{ .single = 0x88D7 });
-    try self.map.put(0x2F9C7, .{ .single = 0x88DE });
-    try self.map.put(0x2F9C8, .{ .single = 0x4635 });
-    try self.map.put(0x2F9C9, .{ .single = 0x88FA });
-    try self.map.put(0x2F9CA, .{ .single = 0x34BB });
-    try self.map.put(0x2F9CB, .{ .single = 0x278AE });
-    try self.map.put(0x2F9CC, .{ .single = 0x27966 });
-    try self.map.put(0x2F9CD, .{ .single = 0x46BE });
-    try self.map.put(0x2F9CE, .{ .single = 0x46C7 });
-    try self.map.put(0x2F9CF, .{ .single = 0x8AA0 });
-    try self.map.put(0x2F9D0, .{ .single = 0x8AED });
-    try self.map.put(0x2F9D1, .{ .single = 0x8B8A });
-    try self.map.put(0x2F9D2, .{ .single = 0x8C55 });
-    try self.map.put(0x2F9D3, .{ .single = 0x27CA8 });
-    try self.map.put(0x2F9D4, .{ .single = 0x8CAB });
-    try self.map.put(0x2F9D5, .{ .single = 0x8CC1 });
-    try self.map.put(0x2F9D6, .{ .single = 0x8D1B });
-    try self.map.put(0x2F9D7, .{ .single = 0x8D77 });
-    try self.map.put(0x2F9D8, .{ .single = 0x27F2F });
-    try self.map.put(0x2F9D9, .{ .single = 0x20804 });
-    try self.map.put(0x2F9DA, .{ .single = 0x8DCB });
-    try self.map.put(0x2F9DB, .{ .single = 0x8DBC });
-    try self.map.put(0x2F9DC, .{ .single = 0x8DF0 });
-    try self.map.put(0x2F9DD, .{ .single = 0x208DE });
-    try self.map.put(0x2F9DE, .{ .single = 0x8ED4 });
-    try self.map.put(0x2F9DF, .{ .single = 0x8F38 });
-    try self.map.put(0x2F9E0, .{ .single = 0x285D2 });
-    try self.map.put(0x2F9E1, .{ .single = 0x285ED });
-    try self.map.put(0x2F9E2, .{ .single = 0x9094 });
-    try self.map.put(0x2F9E3, .{ .single = 0x90F1 });
-    try self.map.put(0x2F9E4, .{ .single = 0x9111 });
-    try self.map.put(0x2F9E5, .{ .single = 0x2872E });
-    try self.map.put(0x2F9E6, .{ .single = 0x911B });
-    try self.map.put(0x2F9E7, .{ .single = 0x9238 });
-    try self.map.put(0x2F9E8, .{ .single = 0x92D7 });
-    try self.map.put(0x2F9E9, .{ .single = 0x92D8 });
-    try self.map.put(0x2F9EA, .{ .single = 0x927C });
-    try self.map.put(0x2F9EB, .{ .single = 0x93F9 });
-    try self.map.put(0x2F9EC, .{ .single = 0x9415 });
-    try self.map.put(0x2F9ED, .{ .single = 0x28BFA });
-    try self.map.put(0x2F9EE, .{ .single = 0x958B });
-    try self.map.put(0x2F9EF, .{ .single = 0x4995 });
-    try self.map.put(0x2F9F0, .{ .single = 0x95B7 });
-    try self.map.put(0x2F9F1, .{ .single = 0x28D77 });
-    try self.map.put(0x2F9F2, .{ .single = 0x49E6 });
-    try self.map.put(0x2F9F3, .{ .single = 0x96C3 });
-    try self.map.put(0x2F9F4, .{ .single = 0x5DB2 });
-    try self.map.put(0x2F9F5, .{ .single = 0x9723 });
-    try self.map.put(0x2F9F6, .{ .single = 0x29145 });
-    try self.map.put(0x2F9F7, .{ .single = 0x2921A });
-    try self.map.put(0x2F9F8, .{ .single = 0x4A6E });
-    try self.map.put(0x2F9F9, .{ .single = 0x4A76 });
-    try self.map.put(0x2F9FA, .{ .single = 0x97E0 });
-    try self.map.put(0x2F9FB, .{ .single = 0x2940A });
-    try self.map.put(0x2F9FC, .{ .single = 0x4AB2 });
-    try self.map.put(0x2F9FD, .{ .single = 0x29496 });
-    try self.map.put(0x2F9FE, .{ .single = 0x980B });
-    try self.map.put(0x2F9FF, .{ .single = 0x980B });
-    try self.map.put(0x2FA00, .{ .single = 0x9829 });
-    try self.map.put(0x2FA01, .{ .single = 0x295B6 });
-    try self.map.put(0x2FA02, .{ .single = 0x98E2 });
-    try self.map.put(0x2FA03, .{ .single = 0x4B33 });
-    try self.map.put(0x2FA04, .{ .single = 0x9929 });
-    try self.map.put(0x2FA05, .{ .single = 0x99A7 });
-    try self.map.put(0x2FA06, .{ .single = 0x99C2 });
-    try self.map.put(0x2FA07, .{ .single = 0x99FE });
-    try self.map.put(0x2FA08, .{ .single = 0x4BCE });
-    try self.map.put(0x2FA09, .{ .single = 0x29B30 });
-    try self.map.put(0x2FA0A, .{ .single = 0x9B12 });
-    try self.map.put(0x2FA0B, .{ .single = 0x9C40 });
-    try self.map.put(0x2FA0C, .{ .single = 0x9CFD });
-    try self.map.put(0x2FA0D, .{ .single = 0x4CCE });
-    try self.map.put(0x2FA0E, .{ .single = 0x4CED });
-    try self.map.put(0x2FA0F, .{ .single = 0x9D67 });
-    try self.map.put(0x2FA10, .{ .single = 0x2A0CE });
-    try self.map.put(0x2FA11, .{ .single = 0x4CF8 });
-    try self.map.put(0x2FA12, .{ .single = 0x2A105 });
-    try self.map.put(0x2FA13, .{ .single = 0x2A20E });
-    try self.map.put(0x2FA14, .{ .single = 0x2A291 });
-    try self.map.put(0x2FA15, .{ .single = 0x9EBB });
-    try self.map.put(0x2FA16, .{ .single = 0x4D56 });
-    try self.map.put(0x2FA17, .{ .single = 0x9EF9 });
-    try self.map.put(0x2FA18, .{ .single = 0x9EFE });
-    try self.map.put(0x2FA19, .{ .single = 0x9F05 });
-    try self.map.put(0x2FA1A, .{ .single = 0x9F0F });
-    try self.map.put(0x2FA1B, .{ .single = 0x9F16 });
-    try self.map.put(0x2FA1C, .{ .single = 0x9F3B });
-    try self.map.put(0x2FA1D, .{ .single = 0x2A600 });
+    } };
+    if (cp == 0x2F800) return .{ .single = 0x4E3D };
+    if (cp == 0x2F801) return .{ .single = 0x4E38 };
+    if (cp == 0x2F802) return .{ .single = 0x4E41 };
+    if (cp == 0x2F803) return .{ .single = 0x20122 };
+    if (cp == 0x2F804) return .{ .single = 0x4F60 };
+    if (cp == 0x2F805) return .{ .single = 0x4FAE };
+    if (cp == 0x2F806) return .{ .single = 0x4FBB };
+    if (cp == 0x2F807) return .{ .single = 0x5002 };
+    if (cp == 0x2F808) return .{ .single = 0x507A };
+    if (cp == 0x2F809) return .{ .single = 0x5099 };
+    if (cp == 0x2F80A) return .{ .single = 0x50E7 };
+    if (cp == 0x2F80B) return .{ .single = 0x50CF };
+    if (cp == 0x2F80C) return .{ .single = 0x349E };
+    if (cp == 0x2F80D) return .{ .single = 0x2063A };
+    if (cp == 0x2F80E) return .{ .single = 0x514D };
+    if (cp == 0x2F80F) return .{ .single = 0x5154 };
+    if (cp == 0x2F810) return .{ .single = 0x5164 };
+    if (cp == 0x2F811) return .{ .single = 0x5177 };
+    if (cp == 0x2F812) return .{ .single = 0x2051C };
+    if (cp == 0x2F813) return .{ .single = 0x34B9 };
+    if (cp == 0x2F814) return .{ .single = 0x5167 };
+    if (cp == 0x2F815) return .{ .single = 0x518D };
+    if (cp == 0x2F816) return .{ .single = 0x2054B };
+    if (cp == 0x2F817) return .{ .single = 0x5197 };
+    if (cp == 0x2F818) return .{ .single = 0x51A4 };
+    if (cp == 0x2F819) return .{ .single = 0x4ECC };
+    if (cp == 0x2F81A) return .{ .single = 0x51AC };
+    if (cp == 0x2F81B) return .{ .single = 0x51B5 };
+    if (cp == 0x2F81C) return .{ .single = 0x291DF };
+    if (cp == 0x2F81D) return .{ .single = 0x51F5 };
+    if (cp == 0x2F81E) return .{ .single = 0x5203 };
+    if (cp == 0x2F81F) return .{ .single = 0x34DF };
+    if (cp == 0x2F820) return .{ .single = 0x523B };
+    if (cp == 0x2F821) return .{ .single = 0x5246 };
+    if (cp == 0x2F822) return .{ .single = 0x5272 };
+    if (cp == 0x2F823) return .{ .single = 0x5277 };
+    if (cp == 0x2F824) return .{ .single = 0x3515 };
+    if (cp == 0x2F825) return .{ .single = 0x52C7 };
+    if (cp == 0x2F826) return .{ .single = 0x52C9 };
+    if (cp == 0x2F827) return .{ .single = 0x52E4 };
+    if (cp == 0x2F828) return .{ .single = 0x52FA };
+    if (cp == 0x2F829) return .{ .single = 0x5305 };
+    if (cp == 0x2F82A) return .{ .single = 0x5306 };
+    if (cp == 0x2F82B) return .{ .single = 0x5317 };
+    if (cp == 0x2F82C) return .{ .single = 0x5349 };
+    if (cp == 0x2F82D) return .{ .single = 0x5351 };
+    if (cp == 0x2F82E) return .{ .single = 0x535A };
+    if (cp == 0x2F82F) return .{ .single = 0x5373 };
+    if (cp == 0x2F830) return .{ .single = 0x537D };
+    if (cp == 0x2F831) return .{ .single = 0x537F };
+    if (cp == 0x2F832) return .{ .single = 0x537F };
+    if (cp == 0x2F833) return .{ .single = 0x537F };
+    if (cp == 0x2F834) return .{ .single = 0x20A2C };
+    if (cp == 0x2F835) return .{ .single = 0x7070 };
+    if (cp == 0x2F836) return .{ .single = 0x53CA };
+    if (cp == 0x2F837) return .{ .single = 0x53DF };
+    if (cp == 0x2F838) return .{ .single = 0x20B63 };
+    if (cp == 0x2F839) return .{ .single = 0x53EB };
+    if (cp == 0x2F83A) return .{ .single = 0x53F1 };
+    if (cp == 0x2F83B) return .{ .single = 0x5406 };
+    if (cp == 0x2F83C) return .{ .single = 0x549E };
+    if (cp == 0x2F83D) return .{ .single = 0x5438 };
+    if (cp == 0x2F83E) return .{ .single = 0x5448 };
+    if (cp == 0x2F83F) return .{ .single = 0x5468 };
+    if (cp == 0x2F840) return .{ .single = 0x54A2 };
+    if (cp == 0x2F841) return .{ .single = 0x54F6 };
+    if (cp == 0x2F842) return .{ .single = 0x5510 };
+    if (cp == 0x2F843) return .{ .single = 0x5553 };
+    if (cp == 0x2F844) return .{ .single = 0x5563 };
+    if (cp == 0x2F845) return .{ .single = 0x5584 };
+    if (cp == 0x2F846) return .{ .single = 0x5584 };
+    if (cp == 0x2F847) return .{ .single = 0x5599 };
+    if (cp == 0x2F848) return .{ .single = 0x55AB };
+    if (cp == 0x2F849) return .{ .single = 0x55B3 };
+    if (cp == 0x2F84A) return .{ .single = 0x55C2 };
+    if (cp == 0x2F84B) return .{ .single = 0x5716 };
+    if (cp == 0x2F84C) return .{ .single = 0x5606 };
+    if (cp == 0x2F84D) return .{ .single = 0x5717 };
+    if (cp == 0x2F84E) return .{ .single = 0x5651 };
+    if (cp == 0x2F84F) return .{ .single = 0x5674 };
+    if (cp == 0x2F850) return .{ .single = 0x5207 };
+    if (cp == 0x2F851) return .{ .single = 0x58EE };
+    if (cp == 0x2F852) return .{ .single = 0x57CE };
+    if (cp == 0x2F853) return .{ .single = 0x57F4 };
+    if (cp == 0x2F854) return .{ .single = 0x580D };
+    if (cp == 0x2F855) return .{ .single = 0x578B };
+    if (cp == 0x2F856) return .{ .single = 0x5832 };
+    if (cp == 0x2F857) return .{ .single = 0x5831 };
+    if (cp == 0x2F858) return .{ .single = 0x58AC };
+    if (cp == 0x2F859) return .{ .single = 0x214E4 };
+    if (cp == 0x2F85A) return .{ .single = 0x58F2 };
+    if (cp == 0x2F85B) return .{ .single = 0x58F7 };
+    if (cp == 0x2F85C) return .{ .single = 0x5906 };
+    if (cp == 0x2F85D) return .{ .single = 0x591A };
+    if (cp == 0x2F85E) return .{ .single = 0x5922 };
+    if (cp == 0x2F85F) return .{ .single = 0x5962 };
+    if (cp == 0x2F860) return .{ .single = 0x216A8 };
+    if (cp == 0x2F861) return .{ .single = 0x216EA };
+    if (cp == 0x2F862) return .{ .single = 0x59EC };
+    if (cp == 0x2F863) return .{ .single = 0x5A1B };
+    if (cp == 0x2F864) return .{ .single = 0x5A27 };
+    if (cp == 0x2F865) return .{ .single = 0x59D8 };
+    if (cp == 0x2F866) return .{ .single = 0x5A66 };
+    if (cp == 0x2F867) return .{ .single = 0x36EE };
+    if (cp == 0x2F868) return .{ .single = 0x36FC };
+    if (cp == 0x2F869) return .{ .single = 0x5B08 };
+    if (cp == 0x2F86A) return .{ .single = 0x5B3E };
+    if (cp == 0x2F86B) return .{ .single = 0x5B3E };
+    if (cp == 0x2F86C) return .{ .single = 0x219C8 };
+    if (cp == 0x2F86D) return .{ .single = 0x5BC3 };
+    if (cp == 0x2F86E) return .{ .single = 0x5BD8 };
+    if (cp == 0x2F86F) return .{ .single = 0x5BE7 };
+    if (cp == 0x2F870) return .{ .single = 0x5BF3 };
+    if (cp == 0x2F871) return .{ .single = 0x21B18 };
+    if (cp == 0x2F872) return .{ .single = 0x5BFF };
+    if (cp == 0x2F873) return .{ .single = 0x5C06 };
+    if (cp == 0x2F874) return .{ .single = 0x5F53 };
+    if (cp == 0x2F875) return .{ .single = 0x5C22 };
+    if (cp == 0x2F876) return .{ .single = 0x3781 };
+    if (cp == 0x2F877) return .{ .single = 0x5C60 };
+    if (cp == 0x2F878) return .{ .single = 0x5C6E };
+    if (cp == 0x2F879) return .{ .single = 0x5CC0 };
+    if (cp == 0x2F87A) return .{ .single = 0x5C8D };
+    if (cp == 0x2F87B) return .{ .single = 0x21DE4 };
+    if (cp == 0x2F87C) return .{ .single = 0x5D43 };
+    if (cp == 0x2F87D) return .{ .single = 0x21DE6 };
+    if (cp == 0x2F87E) return .{ .single = 0x5D6E };
+    if (cp == 0x2F87F) return .{ .single = 0x5D6B };
+    if (cp == 0x2F880) return .{ .single = 0x5D7C };
+    if (cp == 0x2F881) return .{ .single = 0x5DE1 };
+    if (cp == 0x2F882) return .{ .single = 0x5DE2 };
+    if (cp == 0x2F883) return .{ .single = 0x382F };
+    if (cp == 0x2F884) return .{ .single = 0x5DFD };
+    if (cp == 0x2F885) return .{ .single = 0x5E28 };
+    if (cp == 0x2F886) return .{ .single = 0x5E3D };
+    if (cp == 0x2F887) return .{ .single = 0x5E69 };
+    if (cp == 0x2F888) return .{ .single = 0x3862 };
+    if (cp == 0x2F889) return .{ .single = 0x22183 };
+    if (cp == 0x2F88A) return .{ .single = 0x387C };
+    if (cp == 0x2F88B) return .{ .single = 0x5EB0 };
+    if (cp == 0x2F88C) return .{ .single = 0x5EB3 };
+    if (cp == 0x2F88D) return .{ .single = 0x5EB6 };
+    if (cp == 0x2F88E) return .{ .single = 0x5ECA };
+    if (cp == 0x2F88F) return .{ .single = 0x2A392 };
+    if (cp == 0x2F890) return .{ .single = 0x5EFE };
+    if (cp == 0x2F891) return .{ .single = 0x22331 };
+    if (cp == 0x2F892) return .{ .single = 0x22331 };
+    if (cp == 0x2F893) return .{ .single = 0x8201 };
+    if (cp == 0x2F894) return .{ .single = 0x5F22 };
+    if (cp == 0x2F895) return .{ .single = 0x5F22 };
+    if (cp == 0x2F896) return .{ .single = 0x38C7 };
+    if (cp == 0x2F897) return .{ .single = 0x232B8 };
+    if (cp == 0x2F898) return .{ .single = 0x261DA };
+    if (cp == 0x2F899) return .{ .single = 0x5F62 };
+    if (cp == 0x2F89A) return .{ .single = 0x5F6B };
+    if (cp == 0x2F89B) return .{ .single = 0x38E3 };
+    if (cp == 0x2F89C) return .{ .single = 0x5F9A };
+    if (cp == 0x2F89D) return .{ .single = 0x5FCD };
+    if (cp == 0x2F89E) return .{ .single = 0x5FD7 };
+    if (cp == 0x2F89F) return .{ .single = 0x5FF9 };
+    if (cp == 0x2F8A0) return .{ .single = 0x6081 };
+    if (cp == 0x2F8A1) return .{ .single = 0x393A };
+    if (cp == 0x2F8A2) return .{ .single = 0x391C };
+    if (cp == 0x2F8A3) return .{ .single = 0x6094 };
+    if (cp == 0x2F8A4) return .{ .single = 0x226D4 };
+    if (cp == 0x2F8A5) return .{ .single = 0x60C7 };
+    if (cp == 0x2F8A6) return .{ .single = 0x6148 };
+    if (cp == 0x2F8A7) return .{ .single = 0x614C };
+    if (cp == 0x2F8A8) return .{ .single = 0x614E };
+    if (cp == 0x2F8A9) return .{ .single = 0x614C };
+    if (cp == 0x2F8AA) return .{ .single = 0x617A };
+    if (cp == 0x2F8AB) return .{ .single = 0x618E };
+    if (cp == 0x2F8AC) return .{ .single = 0x61B2 };
+    if (cp == 0x2F8AD) return .{ .single = 0x61A4 };
+    if (cp == 0x2F8AE) return .{ .single = 0x61AF };
+    if (cp == 0x2F8AF) return .{ .single = 0x61DE };
+    if (cp == 0x2F8B0) return .{ .single = 0x61F2 };
+    if (cp == 0x2F8B1) return .{ .single = 0x61F6 };
+    if (cp == 0x2F8B2) return .{ .single = 0x6210 };
+    if (cp == 0x2F8B3) return .{ .single = 0x621B };
+    if (cp == 0x2F8B4) return .{ .single = 0x625D };
+    if (cp == 0x2F8B5) return .{ .single = 0x62B1 };
+    if (cp == 0x2F8B6) return .{ .single = 0x62D4 };
+    if (cp == 0x2F8B7) return .{ .single = 0x6350 };
+    if (cp == 0x2F8B8) return .{ .single = 0x22B0C };
+    if (cp == 0x2F8B9) return .{ .single = 0x633D };
+    if (cp == 0x2F8BA) return .{ .single = 0x62FC };
+    if (cp == 0x2F8BB) return .{ .single = 0x6368 };
+    if (cp == 0x2F8BC) return .{ .single = 0x6383 };
+    if (cp == 0x2F8BD) return .{ .single = 0x63E4 };
+    if (cp == 0x2F8BE) return .{ .single = 0x22BF1 };
+    if (cp == 0x2F8BF) return .{ .single = 0x6422 };
+    if (cp == 0x2F8C0) return .{ .single = 0x63C5 };
+    if (cp == 0x2F8C1) return .{ .single = 0x63A9 };
+    if (cp == 0x2F8C2) return .{ .single = 0x3A2E };
+    if (cp == 0x2F8C3) return .{ .single = 0x6469 };
+    if (cp == 0x2F8C4) return .{ .single = 0x647E };
+    if (cp == 0x2F8C5) return .{ .single = 0x649D };
+    if (cp == 0x2F8C6) return .{ .single = 0x6477 };
+    if (cp == 0x2F8C7) return .{ .single = 0x3A6C };
+    if (cp == 0x2F8C8) return .{ .single = 0x654F };
+    if (cp == 0x2F8C9) return .{ .single = 0x656C };
+    if (cp == 0x2F8CA) return .{ .single = 0x2300A };
+    if (cp == 0x2F8CB) return .{ .single = 0x65E3 };
+    if (cp == 0x2F8CC) return .{ .single = 0x66F8 };
+    if (cp == 0x2F8CD) return .{ .single = 0x6649 };
+    if (cp == 0x2F8CE) return .{ .single = 0x3B19 };
+    if (cp == 0x2F8CF) return .{ .single = 0x6691 };
+    if (cp == 0x2F8D0) return .{ .single = 0x3B08 };
+    if (cp == 0x2F8D1) return .{ .single = 0x3AE4 };
+    if (cp == 0x2F8D2) return .{ .single = 0x5192 };
+    if (cp == 0x2F8D3) return .{ .single = 0x5195 };
+    if (cp == 0x2F8D4) return .{ .single = 0x6700 };
+    if (cp == 0x2F8D5) return .{ .single = 0x669C };
+    if (cp == 0x2F8D6) return .{ .single = 0x80AD };
+    if (cp == 0x2F8D7) return .{ .single = 0x43D9 };
+    if (cp == 0x2F8D8) return .{ .single = 0x6717 };
+    if (cp == 0x2F8D9) return .{ .single = 0x671B };
+    if (cp == 0x2F8DA) return .{ .single = 0x6721 };
+    if (cp == 0x2F8DB) return .{ .single = 0x675E };
+    if (cp == 0x2F8DC) return .{ .single = 0x6753 };
+    if (cp == 0x2F8DD) return .{ .single = 0x233C3 };
+    if (cp == 0x2F8DE) return .{ .single = 0x3B49 };
+    if (cp == 0x2F8DF) return .{ .single = 0x67FA };
+    if (cp == 0x2F8E0) return .{ .single = 0x6785 };
+    if (cp == 0x2F8E1) return .{ .single = 0x6852 };
+    if (cp == 0x2F8E2) return .{ .single = 0x6885 };
+    if (cp == 0x2F8E3) return .{ .single = 0x2346D };
+    if (cp == 0x2F8E4) return .{ .single = 0x688E };
+    if (cp == 0x2F8E5) return .{ .single = 0x681F };
+    if (cp == 0x2F8E6) return .{ .single = 0x6914 };
+    if (cp == 0x2F8E7) return .{ .single = 0x3B9D };
+    if (cp == 0x2F8E8) return .{ .single = 0x6942 };
+    if (cp == 0x2F8E9) return .{ .single = 0x69A3 };
+    if (cp == 0x2F8EA) return .{ .single = 0x69EA };
+    if (cp == 0x2F8EB) return .{ .single = 0x6AA8 };
+    if (cp == 0x2F8EC) return .{ .single = 0x236A3 };
+    if (cp == 0x2F8ED) return .{ .single = 0x6ADB };
+    if (cp == 0x2F8EE) return .{ .single = 0x3C18 };
+    if (cp == 0x2F8EF) return .{ .single = 0x6B21 };
+    if (cp == 0x2F8F0) return .{ .single = 0x238A7 };
+    if (cp == 0x2F8F1) return .{ .single = 0x6B54 };
+    if (cp == 0x2F8F2) return .{ .single = 0x3C4E };
+    if (cp == 0x2F8F3) return .{ .single = 0x6B72 };
+    if (cp == 0x2F8F4) return .{ .single = 0x6B9F };
+    if (cp == 0x2F8F5) return .{ .single = 0x6BBA };
+    if (cp == 0x2F8F6) return .{ .single = 0x6BBB };
+    if (cp == 0x2F8F7) return .{ .single = 0x23A8D };
+    if (cp == 0x2F8F8) return .{ .single = 0x21D0B };
+    if (cp == 0x2F8F9) return .{ .single = 0x23AFA };
+    if (cp == 0x2F8FA) return .{ .single = 0x6C4E };
+    if (cp == 0x2F8FB) return .{ .single = 0x23CBC };
+    if (cp == 0x2F8FC) return .{ .single = 0x6CBF };
+    if (cp == 0x2F8FD) return .{ .single = 0x6CCD };
+    if (cp == 0x2F8FE) return .{ .single = 0x6C67 };
+    if (cp == 0x2F8FF) return .{ .single = 0x6D16 };
+    if (cp == 0x2F900) return .{ .single = 0x6D3E };
+    if (cp == 0x2F901) return .{ .single = 0x6D77 };
+    if (cp == 0x2F902) return .{ .single = 0x6D41 };
+    if (cp == 0x2F903) return .{ .single = 0x6D69 };
+    if (cp == 0x2F904) return .{ .single = 0x6D78 };
+    if (cp == 0x2F905) return .{ .single = 0x6D85 };
+    if (cp == 0x2F906) return .{ .single = 0x23D1E };
+    if (cp == 0x2F907) return .{ .single = 0x6D34 };
+    if (cp == 0x2F908) return .{ .single = 0x6E2F };
+    if (cp == 0x2F909) return .{ .single = 0x6E6E };
+    if (cp == 0x2F90A) return .{ .single = 0x3D33 };
+    if (cp == 0x2F90B) return .{ .single = 0x6ECB };
+    if (cp == 0x2F90C) return .{ .single = 0x6EC7 };
+    if (cp == 0x2F90D) return .{ .single = 0x23ED1 };
+    if (cp == 0x2F90E) return .{ .single = 0x6DF9 };
+    if (cp == 0x2F90F) return .{ .single = 0x6F6E };
+    if (cp == 0x2F910) return .{ .single = 0x23F5E };
+    if (cp == 0x2F911) return .{ .single = 0x23F8E };
+    if (cp == 0x2F912) return .{ .single = 0x6FC6 };
+    if (cp == 0x2F913) return .{ .single = 0x7039 };
+    if (cp == 0x2F914) return .{ .single = 0x701E };
+    if (cp == 0x2F915) return .{ .single = 0x701B };
+    if (cp == 0x2F916) return .{ .single = 0x3D96 };
+    if (cp == 0x2F917) return .{ .single = 0x704A };
+    if (cp == 0x2F918) return .{ .single = 0x707D };
+    if (cp == 0x2F919) return .{ .single = 0x7077 };
+    if (cp == 0x2F91A) return .{ .single = 0x70AD };
+    if (cp == 0x2F91B) return .{ .single = 0x20525 };
+    if (cp == 0x2F91C) return .{ .single = 0x7145 };
+    if (cp == 0x2F91D) return .{ .single = 0x24263 };
+    if (cp == 0x2F91E) return .{ .single = 0x719C };
+    if (cp == 0x2F91F) return .{ .single = 0x243AB };
+    if (cp == 0x2F920) return .{ .single = 0x7228 };
+    if (cp == 0x2F921) return .{ .single = 0x7235 };
+    if (cp == 0x2F922) return .{ .single = 0x7250 };
+    if (cp == 0x2F923) return .{ .single = 0x24608 };
+    if (cp == 0x2F924) return .{ .single = 0x7280 };
+    if (cp == 0x2F925) return .{ .single = 0x7295 };
+    if (cp == 0x2F926) return .{ .single = 0x24735 };
+    if (cp == 0x2F927) return .{ .single = 0x24814 };
+    if (cp == 0x2F928) return .{ .single = 0x737A };
+    if (cp == 0x2F929) return .{ .single = 0x738B };
+    if (cp == 0x2F92A) return .{ .single = 0x3EAC };
+    if (cp == 0x2F92B) return .{ .single = 0x73A5 };
+    if (cp == 0x2F92C) return .{ .single = 0x3EB8 };
+    if (cp == 0x2F92D) return .{ .single = 0x3EB8 };
+    if (cp == 0x2F92E) return .{ .single = 0x7447 };
+    if (cp == 0x2F92F) return .{ .single = 0x745C };
+    if (cp == 0x2F930) return .{ .single = 0x7471 };
+    if (cp == 0x2F931) return .{ .single = 0x7485 };
+    if (cp == 0x2F932) return .{ .single = 0x74CA };
+    if (cp == 0x2F933) return .{ .single = 0x3F1B };
+    if (cp == 0x2F934) return .{ .single = 0x7524 };
+    if (cp == 0x2F935) return .{ .single = 0x24C36 };
+    if (cp == 0x2F936) return .{ .single = 0x753E };
+    if (cp == 0x2F937) return .{ .single = 0x24C92 };
+    if (cp == 0x2F938) return .{ .single = 0x7570 };
+    if (cp == 0x2F939) return .{ .single = 0x2219F };
+    if (cp == 0x2F93A) return .{ .single = 0x7610 };
+    if (cp == 0x2F93B) return .{ .single = 0x24FA1 };
+    if (cp == 0x2F93C) return .{ .single = 0x24FB8 };
+    if (cp == 0x2F93D) return .{ .single = 0x25044 };
+    if (cp == 0x2F93E) return .{ .single = 0x3FFC };
+    if (cp == 0x2F93F) return .{ .single = 0x4008 };
+    if (cp == 0x2F940) return .{ .single = 0x76F4 };
+    if (cp == 0x2F941) return .{ .single = 0x250F3 };
+    if (cp == 0x2F942) return .{ .single = 0x250F2 };
+    if (cp == 0x2F943) return .{ .single = 0x25119 };
+    if (cp == 0x2F944) return .{ .single = 0x25133 };
+    if (cp == 0x2F945) return .{ .single = 0x771E };
+    if (cp == 0x2F946) return .{ .single = 0x771F };
+    if (cp == 0x2F947) return .{ .single = 0x771F };
+    if (cp == 0x2F948) return .{ .single = 0x774A };
+    if (cp == 0x2F949) return .{ .single = 0x4039 };
+    if (cp == 0x2F94A) return .{ .single = 0x778B };
+    if (cp == 0x2F94B) return .{ .single = 0x4046 };
+    if (cp == 0x2F94C) return .{ .single = 0x4096 };
+    if (cp == 0x2F94D) return .{ .single = 0x2541D };
+    if (cp == 0x2F94E) return .{ .single = 0x784E };
+    if (cp == 0x2F94F) return .{ .single = 0x788C };
+    if (cp == 0x2F950) return .{ .single = 0x78CC };
+    if (cp == 0x2F951) return .{ .single = 0x40E3 };
+    if (cp == 0x2F952) return .{ .single = 0x25626 };
+    if (cp == 0x2F953) return .{ .single = 0x7956 };
+    if (cp == 0x2F954) return .{ .single = 0x2569A };
+    if (cp == 0x2F955) return .{ .single = 0x256C5 };
+    if (cp == 0x2F956) return .{ .single = 0x798F };
+    if (cp == 0x2F957) return .{ .single = 0x79EB };
+    if (cp == 0x2F958) return .{ .single = 0x412F };
+    if (cp == 0x2F959) return .{ .single = 0x7A40 };
+    if (cp == 0x2F95A) return .{ .single = 0x7A4A };
+    if (cp == 0x2F95B) return .{ .single = 0x7A4F };
+    if (cp == 0x2F95C) return .{ .single = 0x2597C };
+    if (cp == 0x2F95D) return .{ .single = 0x25AA7 };
+    if (cp == 0x2F95E) return .{ .single = 0x25AA7 };
+    if (cp == 0x2F95F) return .{ .single = 0x7AEE };
+    if (cp == 0x2F960) return .{ .single = 0x4202 };
+    if (cp == 0x2F961) return .{ .single = 0x25BAB };
+    if (cp == 0x2F962) return .{ .single = 0x7BC6 };
+    if (cp == 0x2F963) return .{ .single = 0x7BC9 };
+    if (cp == 0x2F964) return .{ .single = 0x4227 };
+    if (cp == 0x2F965) return .{ .single = 0x25C80 };
+    if (cp == 0x2F966) return .{ .single = 0x7CD2 };
+    if (cp == 0x2F967) return .{ .single = 0x42A0 };
+    if (cp == 0x2F968) return .{ .single = 0x7CE8 };
+    if (cp == 0x2F969) return .{ .single = 0x7CE3 };
+    if (cp == 0x2F96A) return .{ .single = 0x7D00 };
+    if (cp == 0x2F96B) return .{ .single = 0x25F86 };
+    if (cp == 0x2F96C) return .{ .single = 0x7D63 };
+    if (cp == 0x2F96D) return .{ .single = 0x4301 };
+    if (cp == 0x2F96E) return .{ .single = 0x7DC7 };
+    if (cp == 0x2F96F) return .{ .single = 0x7E02 };
+    if (cp == 0x2F970) return .{ .single = 0x7E45 };
+    if (cp == 0x2F971) return .{ .single = 0x4334 };
+    if (cp == 0x2F972) return .{ .single = 0x26228 };
+    if (cp == 0x2F973) return .{ .single = 0x26247 };
+    if (cp == 0x2F974) return .{ .single = 0x4359 };
+    if (cp == 0x2F975) return .{ .single = 0x262D9 };
+    if (cp == 0x2F976) return .{ .single = 0x7F7A };
+    if (cp == 0x2F977) return .{ .single = 0x2633E };
+    if (cp == 0x2F978) return .{ .single = 0x7F95 };
+    if (cp == 0x2F979) return .{ .single = 0x7FFA };
+    if (cp == 0x2F97A) return .{ .single = 0x8005 };
+    if (cp == 0x2F97B) return .{ .single = 0x264DA };
+    if (cp == 0x2F97C) return .{ .single = 0x26523 };
+    if (cp == 0x2F97D) return .{ .single = 0x8060 };
+    if (cp == 0x2F97E) return .{ .single = 0x265A8 };
+    if (cp == 0x2F97F) return .{ .single = 0x8070 };
+    if (cp == 0x2F980) return .{ .single = 0x2335F };
+    if (cp == 0x2F981) return .{ .single = 0x43D5 };
+    if (cp == 0x2F982) return .{ .single = 0x80B2 };
+    if (cp == 0x2F983) return .{ .single = 0x8103 };
+    if (cp == 0x2F984) return .{ .single = 0x440B };
+    if (cp == 0x2F985) return .{ .single = 0x813E };
+    if (cp == 0x2F986) return .{ .single = 0x5AB5 };
+    if (cp == 0x2F987) return .{ .single = 0x267A7 };
+    if (cp == 0x2F988) return .{ .single = 0x267B5 };
+    if (cp == 0x2F989) return .{ .single = 0x23393 };
+    if (cp == 0x2F98A) return .{ .single = 0x2339C };
+    if (cp == 0x2F98B) return .{ .single = 0x8201 };
+    if (cp == 0x2F98C) return .{ .single = 0x8204 };
+    if (cp == 0x2F98D) return .{ .single = 0x8F9E };
+    if (cp == 0x2F98E) return .{ .single = 0x446B };
+    if (cp == 0x2F98F) return .{ .single = 0x8291 };
+    if (cp == 0x2F990) return .{ .single = 0x828B };
+    if (cp == 0x2F991) return .{ .single = 0x829D };
+    if (cp == 0x2F992) return .{ .single = 0x52B3 };
+    if (cp == 0x2F993) return .{ .single = 0x82B1 };
+    if (cp == 0x2F994) return .{ .single = 0x82B3 };
+    if (cp == 0x2F995) return .{ .single = 0x82BD };
+    if (cp == 0x2F996) return .{ .single = 0x82E6 };
+    if (cp == 0x2F997) return .{ .single = 0x26B3C };
+    if (cp == 0x2F998) return .{ .single = 0x82E5 };
+    if (cp == 0x2F999) return .{ .single = 0x831D };
+    if (cp == 0x2F99A) return .{ .single = 0x8363 };
+    if (cp == 0x2F99B) return .{ .single = 0x83AD };
+    if (cp == 0x2F99C) return .{ .single = 0x8323 };
+    if (cp == 0x2F99D) return .{ .single = 0x83BD };
+    if (cp == 0x2F99E) return .{ .single = 0x83E7 };
+    if (cp == 0x2F99F) return .{ .single = 0x8457 };
+    if (cp == 0x2F9A0) return .{ .single = 0x8353 };
+    if (cp == 0x2F9A1) return .{ .single = 0x83CA };
+    if (cp == 0x2F9A2) return .{ .single = 0x83CC };
+    if (cp == 0x2F9A3) return .{ .single = 0x83DC };
+    if (cp == 0x2F9A4) return .{ .single = 0x26C36 };
+    if (cp == 0x2F9A5) return .{ .single = 0x26D6B };
+    if (cp == 0x2F9A6) return .{ .single = 0x26CD5 };
+    if (cp == 0x2F9A7) return .{ .single = 0x452B };
+    if (cp == 0x2F9A8) return .{ .single = 0x84F1 };
+    if (cp == 0x2F9A9) return .{ .single = 0x84F3 };
+    if (cp == 0x2F9AA) return .{ .single = 0x8516 };
+    if (cp == 0x2F9AB) return .{ .single = 0x273CA };
+    if (cp == 0x2F9AC) return .{ .single = 0x8564 };
+    if (cp == 0x2F9AD) return .{ .single = 0x26F2C };
+    if (cp == 0x2F9AE) return .{ .single = 0x455D };
+    if (cp == 0x2F9AF) return .{ .single = 0x4561 };
+    if (cp == 0x2F9B0) return .{ .single = 0x26FB1 };
+    if (cp == 0x2F9B1) return .{ .single = 0x270D2 };
+    if (cp == 0x2F9B2) return .{ .single = 0x456B };
+    if (cp == 0x2F9B3) return .{ .single = 0x8650 };
+    if (cp == 0x2F9B4) return .{ .single = 0x865C };
+    if (cp == 0x2F9B5) return .{ .single = 0x8667 };
+    if (cp == 0x2F9B6) return .{ .single = 0x8669 };
+    if (cp == 0x2F9B7) return .{ .single = 0x86A9 };
+    if (cp == 0x2F9B8) return .{ .single = 0x8688 };
+    if (cp == 0x2F9B9) return .{ .single = 0x870E };
+    if (cp == 0x2F9BA) return .{ .single = 0x86E2 };
+    if (cp == 0x2F9BB) return .{ .single = 0x8779 };
+    if (cp == 0x2F9BC) return .{ .single = 0x8728 };
+    if (cp == 0x2F9BD) return .{ .single = 0x876B };
+    if (cp == 0x2F9BE) return .{ .single = 0x8786 };
+    if (cp == 0x2F9BF) return .{ .single = 0x45D7 };
+    if (cp == 0x2F9C0) return .{ .single = 0x87E1 };
+    if (cp == 0x2F9C1) return .{ .single = 0x8801 };
+    if (cp == 0x2F9C2) return .{ .single = 0x45F9 };
+    if (cp == 0x2F9C3) return .{ .single = 0x8860 };
+    if (cp == 0x2F9C4) return .{ .single = 0x8863 };
+    if (cp == 0x2F9C5) return .{ .single = 0x27667 };
+    if (cp == 0x2F9C6) return .{ .single = 0x88D7 };
+    if (cp == 0x2F9C7) return .{ .single = 0x88DE };
+    if (cp == 0x2F9C8) return .{ .single = 0x4635 };
+    if (cp == 0x2F9C9) return .{ .single = 0x88FA };
+    if (cp == 0x2F9CA) return .{ .single = 0x34BB };
+    if (cp == 0x2F9CB) return .{ .single = 0x278AE };
+    if (cp == 0x2F9CC) return .{ .single = 0x27966 };
+    if (cp == 0x2F9CD) return .{ .single = 0x46BE };
+    if (cp == 0x2F9CE) return .{ .single = 0x46C7 };
+    if (cp == 0x2F9CF) return .{ .single = 0x8AA0 };
+    if (cp == 0x2F9D0) return .{ .single = 0x8AED };
+    if (cp == 0x2F9D1) return .{ .single = 0x8B8A };
+    if (cp == 0x2F9D2) return .{ .single = 0x8C55 };
+    if (cp == 0x2F9D3) return .{ .single = 0x27CA8 };
+    if (cp == 0x2F9D4) return .{ .single = 0x8CAB };
+    if (cp == 0x2F9D5) return .{ .single = 0x8CC1 };
+    if (cp == 0x2F9D6) return .{ .single = 0x8D1B };
+    if (cp == 0x2F9D7) return .{ .single = 0x8D77 };
+    if (cp == 0x2F9D8) return .{ .single = 0x27F2F };
+    if (cp == 0x2F9D9) return .{ .single = 0x20804 };
+    if (cp == 0x2F9DA) return .{ .single = 0x8DCB };
+    if (cp == 0x2F9DB) return .{ .single = 0x8DBC };
+    if (cp == 0x2F9DC) return .{ .single = 0x8DF0 };
+    if (cp == 0x2F9DD) return .{ .single = 0x208DE };
+    if (cp == 0x2F9DE) return .{ .single = 0x8ED4 };
+    if (cp == 0x2F9DF) return .{ .single = 0x8F38 };
+    if (cp == 0x2F9E0) return .{ .single = 0x285D2 };
+    if (cp == 0x2F9E1) return .{ .single = 0x285ED };
+    if (cp == 0x2F9E2) return .{ .single = 0x9094 };
+    if (cp == 0x2F9E3) return .{ .single = 0x90F1 };
+    if (cp == 0x2F9E4) return .{ .single = 0x9111 };
+    if (cp == 0x2F9E5) return .{ .single = 0x2872E };
+    if (cp == 0x2F9E6) return .{ .single = 0x911B };
+    if (cp == 0x2F9E7) return .{ .single = 0x9238 };
+    if (cp == 0x2F9E8) return .{ .single = 0x92D7 };
+    if (cp == 0x2F9E9) return .{ .single = 0x92D8 };
+    if (cp == 0x2F9EA) return .{ .single = 0x927C };
+    if (cp == 0x2F9EB) return .{ .single = 0x93F9 };
+    if (cp == 0x2F9EC) return .{ .single = 0x9415 };
+    if (cp == 0x2F9ED) return .{ .single = 0x28BFA };
+    if (cp == 0x2F9EE) return .{ .single = 0x958B };
+    if (cp == 0x2F9EF) return .{ .single = 0x4995 };
+    if (cp == 0x2F9F0) return .{ .single = 0x95B7 };
+    if (cp == 0x2F9F1) return .{ .single = 0x28D77 };
+    if (cp == 0x2F9F2) return .{ .single = 0x49E6 };
+    if (cp == 0x2F9F3) return .{ .single = 0x96C3 };
+    if (cp == 0x2F9F4) return .{ .single = 0x5DB2 };
+    if (cp == 0x2F9F5) return .{ .single = 0x9723 };
+    if (cp == 0x2F9F6) return .{ .single = 0x29145 };
+    if (cp == 0x2F9F7) return .{ .single = 0x2921A };
+    if (cp == 0x2F9F8) return .{ .single = 0x4A6E };
+    if (cp == 0x2F9F9) return .{ .single = 0x4A76 };
+    if (cp == 0x2F9FA) return .{ .single = 0x97E0 };
+    if (cp == 0x2F9FB) return .{ .single = 0x2940A };
+    if (cp == 0x2F9FC) return .{ .single = 0x4AB2 };
+    if (cp == 0x2F9FD) return .{ .single = 0x29496 };
+    if (cp == 0x2F9FE) return .{ .single = 0x980B };
+    if (cp == 0x2F9FF) return .{ .single = 0x980B };
+    if (cp == 0x2FA00) return .{ .single = 0x9829 };
+    if (cp == 0x2FA01) return .{ .single = 0x295B6 };
+    if (cp == 0x2FA02) return .{ .single = 0x98E2 };
+    if (cp == 0x2FA03) return .{ .single = 0x4B33 };
+    if (cp == 0x2FA04) return .{ .single = 0x9929 };
+    if (cp == 0x2FA05) return .{ .single = 0x99A7 };
+    if (cp == 0x2FA06) return .{ .single = 0x99C2 };
+    if (cp == 0x2FA07) return .{ .single = 0x99FE };
+    if (cp == 0x2FA08) return .{ .single = 0x4BCE };
+    if (cp == 0x2FA09) return .{ .single = 0x29B30 };
+    if (cp == 0x2FA0A) return .{ .single = 0x9B12 };
+    if (cp == 0x2FA0B) return .{ .single = 0x9C40 };
+    if (cp == 0x2FA0C) return .{ .single = 0x9CFD };
+    if (cp == 0x2FA0D) return .{ .single = 0x4CCE };
+    if (cp == 0x2FA0E) return .{ .single = 0x4CED };
+    if (cp == 0x2FA0F) return .{ .single = 0x9D67 };
+    if (cp == 0x2FA10) return .{ .single = 0x2A0CE };
+    if (cp == 0x2FA11) return .{ .single = 0x4CF8 };
+    if (cp == 0x2FA12) return .{ .single = 0x2A105 };
+    if (cp == 0x2FA13) return .{ .single = 0x2A20E };
+    if (cp == 0x2FA14) return .{ .single = 0x2A291 };
+    if (cp == 0x2FA15) return .{ .single = 0x9EBB };
+    if (cp == 0x2FA16) return .{ .single = 0x4D56 };
+    if (cp == 0x2FA17) return .{ .single = 0x9EF9 };
+    if (cp == 0x2FA18) return .{ .single = 0x9EFE };
+    if (cp == 0x2FA19) return .{ .single = 0x9F05 };
+    if (cp == 0x2FA1A) return .{ .single = 0x9F0F };
+    if (cp == 0x2FA1B) return .{ .single = 0x9F16 };
+    if (cp == 0x2FA1C) return .{ .single = 0x9F3B };
+    if (cp == 0x2FA1D) return .{ .single = 0x2A600 };
+    return .{ .same = cp };
 }
 
 pub fn deinit(self: *Self) void {
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
-            self.map.deinit();
-            self.ccc_map.deinit();
-            self.hangul_map.deinit();
             self.allocator.destroy(s.instance);
             singleton = null;
         }
     }
-}
-
-/// mapping retrieves the decomposition mapping for a code point as per the UCD.
-pub fn mapping(self: Self, cp: u21) Decomposed {
-    return if (self.map.get(cp)) |dc| dc else .{ .same = cp };
 }
 
 /// codePointTo takes a code point and returns a sequence of code points that represent its conversion 

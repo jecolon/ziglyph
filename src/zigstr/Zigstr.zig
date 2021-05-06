@@ -299,17 +299,13 @@ fn eqlNormIgnore(self: *Self, other: []const u8) !bool {
         self.decomp_map = try DecomposeMap.init(self.allocator);
     }
     // The long winding road of normalized caseless matching...
-    // NFKD(CaseFold(NFKD(CaseFold(NFD(str)))))
+    // NFD(CaseFold(NFD(str)))
     var norm_a = try self.decomp_map.?.normalizeTo(&arena.allocator, .D, self.bytes);
     var cf_a = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_a);
-    norm_a = try self.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_a);
-    cf_a = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_a);
-    norm_a = try self.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_a);
+    norm_a = try self.decomp_map.?.normalizeTo(&arena.allocator, .D, cf_a);
     var norm_b = try self.decomp_map.?.normalizeTo(&arena.allocator, .D, other);
     var cf_b = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_b);
-    norm_b = try self.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_b);
-    cf_b = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_b);
-    norm_b = try self.decomp_map.?.normalizeTo(&arena.allocator, .KD, cf_b);
+    norm_b = try self.decomp_map.?.normalizeTo(&arena.allocator, .D, cf_b);
 
     return mem.eql(u8, norm_a, norm_b);
 }
@@ -749,7 +745,7 @@ test "Zigstr eql" {
     expect(try str.eqlBy("foΥ\u{0301}", .normalize));
 
     try str.reset("Foϓ");
-    expect(try str.eqlBy("foΥ\u{0301}", .norm_ignore));
+    expect(try str.eqlBy("fo\u{03D2}\u{0301}", .norm_ignore));
 
     try str.reset("FOÉ");
     expect(try str.eqlBy("foe\u{0301}", .norm_ignore)); // foÉ == foé

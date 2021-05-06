@@ -15,15 +15,15 @@ const Nonspacing = @import("../../components.zig").Nonspacing;
 const Self = @This();
 
 allocator: *mem.Allocator,
-ambiguous: *Ambiguous,
-enclosing: *Enclosing,
-extpic: *ExtPic,
-format: *Format,
-fullwidth: *Fullwidth,
+ambiguous: Ambiguous,
+enclosing: Enclosing,
+extpic: ExtPic,
+format: Format,
+fullwidth: Fullwidth,
 giter: GraphemeIterator,
-nonspacing: *Nonspacing,
-regional: *Regional,
-wide: *Wide,
+nonspacing: Nonspacing,
+regional: Regional,
+wide: Wide,
 
 const Singleton = struct {
     instance: *Self,
@@ -42,15 +42,15 @@ pub fn init(allocator: *mem.Allocator) !*Self {
 
     instance.* = Self{
         .allocator = allocator,
-        .ambiguous = try Ambiguous.init(allocator),
-        .enclosing = try Enclosing.init(allocator),
-        .extpic = try ExtPic.init(allocator),
-        .format = try Format.init(allocator),
-        .fullwidth = try Fullwidth.init(allocator),
+        .ambiguous = Ambiguous{},
+        .enclosing = Enclosing{},
+        .extpic = ExtPic{},
+        .format = Format{},
+        .fullwidth = Fullwidth{},
         .giter = try GraphemeIterator.init(allocator, ""),
-        .nonspacing = try Nonspacing.init(allocator),
-        .regional = try Regional.init(allocator),
-        .wide = try Wide.init(allocator),
+        .nonspacing = Nonspacing{},
+        .regional = Regional{},
+        .wide = Wide{},
     };
 
     singleton = Singleton{
@@ -65,15 +65,7 @@ pub fn deinit(self: *Self) void {
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
-            self.ambiguous.deinit();
-            self.enclosing.deinit();
-            self.extpic.deinit();
-            self.format.deinit();
-            self.fullwidth.deinit();
             self.giter.deinit();
-            self.nonspacing.deinit();
-            self.regional.deinit();
-            self.wide.deinit();
 
             self.allocator.destroy(s.instance);
             singleton = null;

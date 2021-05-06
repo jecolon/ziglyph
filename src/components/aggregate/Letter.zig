@@ -2,7 +2,6 @@ const std = @import("std");
 const mem = std.mem;
 
 pub const CaseFoldMap = @import("../../components.zig").CaseFoldMap;
-pub const CaseFold = CaseFoldMap.CaseFold;
 pub const Cased = @import("../../components.zig").Cased;
 pub const Lower = @import("../../components.zig").Lower;
 pub const LowerMap = @import("../../components.zig").LowerMap;
@@ -16,16 +15,16 @@ pub const UpperMap = @import("../../components.zig").UpperMap;
 const Self = @This();
 
 allocator: *mem.Allocator,
-fold_map: *CaseFoldMap,
-cased: *Cased,
-lower: *Lower,
-lower_map: *LowerMap,
-modifier_letter: *ModifierLetter,
-other_letter: *OtherLetter,
-title: *Title,
-title_map: *TitleMap,
-upper: *Upper,
-upper_map: *UpperMap,
+fold_map: CaseFoldMap,
+cased: Cased,
+lower: Lower,
+lower_map: LowerMap,
+modifier_letter: ModifierLetter,
+other_letter: OtherLetter,
+title: Title,
+title_map: TitleMap,
+upper: Upper,
+upper_map: UpperMap,
 
 const Singleton = struct {
     instance: *Self,
@@ -44,16 +43,16 @@ pub fn init(allocator: *mem.Allocator) !*Self {
 
     instance.* = Self{
         .allocator = allocator,
-        .fold_map = try CaseFoldMap.init(allocator),
-        .cased = try Cased.init(allocator),
-        .lower = try Lower.init(allocator),
-        .lower_map = try LowerMap.init(allocator),
-        .modifier_letter = try ModifierLetter.init(allocator),
-        .other_letter = try OtherLetter.init(allocator),
-        .title = try Title.init(allocator),
-        .title_map = try TitleMap.init(allocator),
-        .upper = try Upper.init(allocator),
-        .upper_map = try UpperMap.init(allocator),
+        .fold_map = CaseFoldMap{},
+        .cased = Cased{},
+        .lower = Lower{},
+        .lower_map = LowerMap{},
+        .modifier_letter = ModifierLetter{},
+        .other_letter = OtherLetter{},
+        .title = Title{},
+        .title_map = TitleMap{},
+        .upper = Upper{},
+        .upper_map = UpperMap{},
     };
 
     singleton = Singleton{
@@ -68,17 +67,6 @@ pub fn deinit(self: *Self) void {
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
-            self.fold_map.deinit();
-            self.cased.deinit();
-            self.lower.deinit();
-            self.lower_map.deinit();
-            self.modifier_letter.deinit();
-            self.other_letter.deinit();
-            self.title.deinit();
-            self.title_map.deinit();
-            self.upper.deinit();
-            self.upper_map.deinit();
-
             self.allocator.destroy(s.instance);
             singleton = null;
         }
@@ -174,8 +162,9 @@ pub fn toAsciiUpper(self: Self, cp: u21) u21 {
 }
 
 /// toCaseFold will convert a code point into its case folded equivalent. Note that this can result
-/// in a mapping to more than one code point, known as the full case fold.
-pub fn toCaseFold(self: Self, cp: u21) CaseFold {
+/// in a mapping to more than one code point, known as the full case fold. The returned array has 3
+/// elements and the code points span until the first element equal to 0 or the end, whichever is first.
+pub fn toCaseFold(self: Self, cp: u21) [3]u21 {
     return self.fold_map.toCaseFold(cp);
 }
 
@@ -224,34 +213,19 @@ test "Component toCaseFold" {
     defer letter.deinit();
 
     var result = letter.toCaseFold('A');
-    switch (result) {
-        .simple => |cp| expectEqual(cp, 'a'),
-        .full => @panic("Got .full, wanted .simple for A"),
-    }
+    expectEqualSlices(u21, &[_]u21{ 'a', 0, 0 }, &result);
 
     result = letter.toCaseFold('a');
-    switch (result) {
-        .simple => |cp| expectEqual(cp, 'a'),
-        .full => @panic("Got .full, wanted .simple for a"),
-    }
+    expectEqualSlices(u21, &[_]u21{ 'a', 0, 0 }, &result);
 
     result = letter.toCaseFold('1');
-    switch (result) {
-        .simple => |cp| expectEqual(cp, '1'),
-        .full => @panic("Got .full, wanted .simple for 1"),
-    }
+    expectEqualSlices(u21, &[_]u21{ '1', 0, 0 }, &result);
 
     result = letter.toCaseFold('\u{00DF}');
-    switch (result) {
-        .simple => @panic("Got .simple, wanted .full for 0x00DF"),
-        .full => |s| expectEqualSlices(u21, s, &[_]u21{ 0x0073, 0x0073 }),
-    }
+    expectEqualSlices(u21, &[_]u21{ 0x0073, 0x0073, 0 }, &result);
 
     result = letter.toCaseFold('\u{0390}');
-    switch (result) {
-        .simple => @panic("Got .simple, wanted .full for 0x0390"),
-        .full => |s| expectEqualSlices(u21, s, &[_]u21{ 0x03B9, 0x0308, 0x0301 }),
-    }
+    expectEqualSlices(u21, &[_]u21{ 0x03B9, 0x0308, 0x0301 }, &result);
 }
 
 test "Component toLower" {

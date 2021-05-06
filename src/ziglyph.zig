@@ -70,38 +70,35 @@ pub const Zigstr = @import("components.zig").Zigstr;
 
 /// Ziglyph consolidates frequently-used Unicode utility functions in one place.
 pub const Ziglyph = struct {
-    alphabetic: *Alphabetic,
-    control: *Control,
+    alphabetic: Alphabetic,
+    control: Control,
     letter: *Letter,
     mark: *Mark,
     number: *Number,
     punct: *Punct,
-    space: *WhiteSpace,
+    space: WhiteSpace,
     symbol: *Symbol,
 
     const Self = @This();
 
     pub fn init(allocator: *mem.Allocator) !Self {
         return Self{
-            .alphabetic = try Alphabetic.init(allocator),
-            .control = try Control.init(allocator),
+            .alphabetic = Alphabetic{},
+            .control = Control{},
             .letter = try Letter.init(allocator),
             .mark = try Mark.init(allocator),
             .number = try Number.init(allocator),
             .punct = try Punct.init(allocator),
-            .space = try WhiteSpace.init(allocator),
+            .space = WhiteSpace{},
             .symbol = try Symbol.init(allocator),
         };
     }
 
     pub fn deinit(self: *Self) void {
-        self.alphabetic.deinit();
-        self.control.deinit();
         self.letter.deinit();
         self.mark.deinit();
         self.number.deinit();
         self.punct.deinit();
-        self.space.deinit();
         self.symbol.deinit();
     }
 

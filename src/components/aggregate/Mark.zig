@@ -8,9 +8,9 @@ pub const Spacing = @import("../../components.zig").Spacing;
 const Self = @This();
 
 allocator: *mem.Allocator,
-enclosing: *Enclosing,
-nonspacing: *Nonspacing,
-spacing: *Spacing,
+enclosing: Enclosing,
+nonspacing: Nonspacing,
+spacing: Spacing,
 
 const Singleton = struct {
     instance: *Self,
@@ -29,9 +29,9 @@ pub fn init(allocator: *mem.Allocator) !*Self {
 
     instance.* = Self{
         .allocator = allocator,
-        .enclosing = try Enclosing.init(allocator),
-        .nonspacing = try Nonspacing.init(allocator),
-        .spacing = try Spacing.init(allocator),
+        .enclosing = Enclosing{},
+        .nonspacing = Nonspacing{},
+        .spacing = Spacing{},
     };
 
     singleton = Singleton{
@@ -46,10 +46,6 @@ pub fn deinit(self: *Self) void {
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
-            self.enclosing.deinit();
-            self.nonspacing.deinit();
-            self.spacing.deinit();
-
             self.allocator.destroy(s.instance);
             singleton = null;
         }

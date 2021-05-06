@@ -415,7 +415,6 @@ const UcdGenerator = struct {
         var input_stream = buf_reader.reader();
         // Setup output.
         const header_tpl = @embedFile("parts/fold_map_header_tpl.txt");
-        const trailer_tpl = @embedFile("parts/fold_map_trailer_tpl.txt");
         var cwd = std.fs.cwd();
         cwd.makeDir("components/autogen/CaseFolding") catch |err| switch (err) {
             error.PathAlreadyExists => {},
@@ -448,11 +447,19 @@ const UcdGenerator = struct {
                         // Mapping.
                         var field = mem.trim(u8, raw, " ");
                         var cp_iter = mem.split(field, " ");
-                        _ = try writer.print("    try instance.map.put(0x{s}, &[_]u21{{\n", .{code_point});
+                        _ = try writer.print("    if (cp == 0x{s}) return [3]u21{{ ", .{code_point});
+                        var i: usize = 0;
                         while (cp_iter.next()) |cp| {
-                            _ = try writer.print("        0x{s},\n", .{cp});
+                            i += 1;
+                            if (i != 1) _ = try writer.write(", ");
+                            _ = try writer.print("0x{s}", .{cp});
                         }
-                        _ = try writer.write("    });\n");
+                        if (i < 3) {
+                            while (i < 3) : (i += 1) {
+                                _ = try writer.write(", 0");
+                            }
+                        }
+                        _ = try writer.write(" };\n");
                         select = false;
                     }
                 } else {
@@ -462,7 +469,7 @@ const UcdGenerator = struct {
         }
 
         // Finish writing.
-        _ = try writer.write(trailer_tpl);
+        _ = try writer.write("    return [3]u21{ cp, 0, 0 };\n}");
         try buf_writer.flush();
     }
 
@@ -483,7 +490,6 @@ const UcdGenerator = struct {
         const decomp_header_tpl = @embedFile("parts/decomp_map_header_tpl.txt");
         const decomp_trailer_tpl = @embedFile("parts/decomp_map_trailer_tpl.txt");
         const map_header_tpl = @embedFile("parts/map_header_tpl.txt");
-        const map_trailer_tpl = @embedFile("parts/map_trailer_tpl.txt");
         // Setup output.
         var d_file = try cwd.createFile("components/autogen/UnicodeData/DecomposeMap.zig", .{});
         defer d_file.close();
@@ -504,9 +510,9 @@ const UcdGenerator = struct {
 
         // Headers.
         _ = try d_writer.write(decomp_header_tpl);
-        _ = try l_writer.print(map_header_tpl, .{"LowerMap"});
-        _ = try t_writer.print(map_header_tpl, .{"TitleMap"});
-        _ = try u_writer.print(map_header_tpl, .{"UpperMap"});
+        _ = try l_writer.print(map_header_tpl, .{ "Lower", "LowerMap" });
+        _ = try t_writer.print(map_header_tpl, .{ "Title", "TitleMap" });
+        _ = try u_writer.print(map_header_tpl, .{ "Upper", "UpperMap" });
 
         // Iterate over lines.
         // pf == Final_Punctuation
@@ -541,33 +547,33 @@ const UcdGenerator = struct {
                     }
                     if (!is_compat and cp_list.items.len == 1) {
                         // Singleton
-                        _ = try d_writer.print("    try self.map.put(0x{s}, .{{ .single = 0x{s} }});\n", .{ code_point, cp_list.items[0] });
+                        _ = try d_writer.print("    if (cp == 0x{s}) return .{{ .single = 0x{s} }};\n", .{ code_point, cp_list.items[0] });
                     } else if (!is_compat) {
                         // Canonical
                         std.debug.assert(cp_list.items.len != 0);
-                        _ = try d_writer.print("    try self.map.put(0x{s}, .{{ .canon = [2]u21{{\n", .{code_point});
+                        _ = try d_writer.print("    if (cp == 0x{s}) return .{{ .canon = [2]u21{{\n", .{code_point});
                         for (cp_list.items) |cp| {
                             _ = try d_writer.print("        0x{s},\n", .{cp});
                         }
-                        _ = try d_writer.write("    } });\n");
+                        _ = try d_writer.write("    } };\n");
                     } else {
                         // Compatibility
                         std.debug.assert(cp_list.items.len != 0);
-                        _ = try d_writer.print("    try self.map.put(0x{s}, .{{ .compat = &[_]u21{{\n", .{code_point});
+                        _ = try d_writer.print("    if (cp == 0x{s}) return .{{ .compat = &[_]u21{{\n", .{code_point});
                         for (cp_list.items) |cp| {
                             _ = try d_writer.print("        0x{s},\n", .{cp});
                         }
-                        _ = try d_writer.write("    } });\n");
+                        _ = try d_writer.write("    } };\n");
                     }
                 } else if (field_index == 12 and raw.len != 0) {
                     // Uppercase mapping.
-                    _ = try u_writer.print("    try instance.map.put(0x{s}, 0x{s});\n", .{ code_point, raw });
+                    _ = try u_writer.print("    if (cp == 0x{s}) return 0x{s};\n", .{ code_point, raw });
                 } else if (field_index == 13 and raw.len != 0) {
                     // Lowercase mapping.
-                    _ = try l_writer.print("    try instance.map.put(0x{s}, 0x{s});\n", .{ code_point, raw });
+                    _ = try l_writer.print("    if (cp == 0x{s}) return 0x{s};\n", .{ code_point, raw });
                 } else if (field_index == 14 and raw.len != 0) {
                     // Titlecase mapping.
-                    _ = try t_writer.print("    try instance.map.put(0x{s}, 0x{s});\n", .{ code_point, raw });
+                    _ = try t_writer.print("    if (cp == 0x{s}) return 0x{s};\n", .{ code_point, raw });
                 } else {
                     continue;
                 }
@@ -575,10 +581,11 @@ const UcdGenerator = struct {
         }
 
         // Finish writing.
+        _ = try d_writer.write("    return .{ .same = cp };\n}");
         _ = try d_writer.write(decomp_trailer_tpl);
-        _ = try l_writer.print(map_trailer_tpl, .{ "Lower", "LowerMap" });
-        _ = try t_writer.print(map_trailer_tpl, .{ "Title", "TitleMap" });
-        _ = try u_writer.print(map_trailer_tpl, .{ "Upper", "UpperMap" });
+        _ = try l_writer.write("    return cp;\n}");
+        _ = try t_writer.write("    return cp;\n}");
+        _ = try u_writer.write("    return cp;\n}");
         try d_buf.flush();
         try l_buf.flush();
         try t_buf.flush();
@@ -741,7 +748,6 @@ const UcdGenerator = struct {
         var input_stream = buf_reader.reader();
         // Setup output.
         const header_tpl = @embedFile("parts/ccc_header_tpl.txt");
-        const trailer_tpl = @embedFile("parts/ccc_trailer_tpl.txt");
         var cwd = std.fs.cwd();
         cwd.makeDir("components/autogen/DerivedCombiningClass") catch |err| switch (err) {
             error.PathAlreadyExists => {},
@@ -788,12 +794,9 @@ const UcdGenerator = struct {
                         continue;
                     }
                     if (code_point) |cp| {
-                        _ = try writer.print("    try instance.map.put(0x{s}, {s});\n", .{ code_point, field });
+                        _ = try writer.print("    if (cp == 0x{s}) return {s};\n", .{ code_point, field });
                     } else {
-                        _ = try writer.print("    index = 0x{s};\n", .{r_lo.?});
-                        _ = try writer.print("    while (index <= 0x{s}) : (index += 1) {{\n", .{r_hi.?});
-                        _ = try writer.print("        try instance.map.put(index, {s});\n", .{field});
-                        _ = try writer.write("    }\n");
+                        _ = try writer.print("    if (cp >= 0x{s} and cp <= 0x{s}) return {s};\n", .{ r_lo.?, r_hi.?, field });
                     }
                     r_lo = null;
                     r_hi = null;
@@ -809,7 +812,7 @@ const UcdGenerator = struct {
         }
 
         // Finish writing.
-        _ = try writer.write(trailer_tpl);
+        _ = try writer.write("    return 0;\n}");
         try buf_writer.flush();
     }
 
@@ -822,7 +825,6 @@ const UcdGenerator = struct {
         var input_stream = buf_reader.reader();
         // Setup output.
         const header_tpl = @embedFile("parts/hangul_header_tpl.txt");
-        const trailer_tpl = @embedFile("parts/hangul_trailer_tpl.txt");
         var cwd = std.fs.cwd();
         cwd.makeDir("components/autogen/HangulSyllableType") catch |err| switch (err) {
             error.PathAlreadyExists => {},
@@ -862,12 +864,9 @@ const UcdGenerator = struct {
                         field = mem.trimRight(u8, field[0..octo], " ");
                     }
                     if (code_point) |cp| {
-                        _ = try writer.print("    try instance.map.put(0x{s}, .{s});\n", .{ code_point, field });
+                        _ = try writer.print("    if (cp == 0x{s}) return .{s};\n", .{ code_point, field });
                     } else {
-                        _ = try writer.print("    index = 0x{s};\n", .{r_lo.?});
-                        _ = try writer.print("    while (index <= 0x{s}) : (index += 1) {{\n", .{r_hi.?});
-                        _ = try writer.print("        try instance.map.put(index, .{s});\n", .{field});
-                        _ = try writer.write("    }\n");
+                        _ = try writer.print("    if (cp >= 0x{s} and cp <= 0x{s}) return .{s};\n", .{ r_lo.?, r_hi.?, field });
                     }
                     r_lo = null;
                     r_hi = null;
@@ -883,22 +882,81 @@ const UcdGenerator = struct {
         }
 
         // Finish writing.
-        _ = try writer.write(trailer_tpl);
+        _ = try writer.write("    return null;\n}");
+        try buf_writer.flush();
+    }
+
+    // data/ucd/DerivedNormalizationProps.txt
+    fn processNFDQC(self: *Self) !void {
+        // Setup input.
+        var file = try std.fs.cwd().openFile("data/ucd/DerivedNormalizationProps.txt", .{});
+        defer file.close();
+        var buf_reader = io.bufferedReader(file.reader());
+        var input_stream = buf_reader.reader();
+        // Setup output.
+        const header_tpl = @embedFile("parts/nfd_qc_header_tpl.txt");
+        var cwd = std.fs.cwd();
+        cwd.makeDir("components/autogen/DerivedNormalizationProps") catch |err| switch (err) {
+            error.PathAlreadyExists => {},
+            else => return err,
+        };
+        var out_file = try cwd.createFile("components/autogen/DerivedNormalizationProps/NFDCheck.zig", .{});
+        defer out_file.close();
+        var buf_writer = io.bufferedWriter(out_file.writer());
+        const writer = buf_writer.writer();
+        _ = try writer.write(header_tpl);
+
+        // Iterate over lines.
+        var buf: [640]u8 = undefined;
+        while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+            // Skip comments or empty lines.
+            if (line.len == 0 or line[0] == '#') continue;
+            // Iterate over fields.
+            var fields = mem.split(line, ";");
+            var field_index: usize = 0;
+            var r_lo: ?[]const u8 = null;
+            var r_hi: ?[]const u8 = null;
+            var code_point: ?[]const u8 = null;
+            while (fields.next()) |raw| : (field_index += 1) {
+                var field = mem.trim(u8, raw, " ");
+                if (field_index == 0) {
+                    if (mem.indexOf(u8, field, "..")) |dots| {
+                        // Ranges.
+                        r_lo = field[0..dots];
+                        r_hi = field[dots + 2 ..];
+                    } else {
+                        code_point = field;
+                    }
+                } else if (field_index == 1) {
+                    if (!mem.eql(u8, field, "NFD_QC")) continue; // Only NFD
+                    // Check type.
+                    // Possible comment at end.
+                    if (mem.indexOf(u8, field, "#")) |octo| {
+                        field = mem.trimRight(u8, field[0..octo], " ");
+                    }
+                    if (code_point) |cp| {
+                        _ = try writer.print("    if (cp == 0x{s}) return false;\n", .{code_point});
+                    } else {
+                        _ = try writer.print("    if (cp >= 0x{s} and cp <= 0x{s}) return false;\n", .{ r_lo.?, r_hi.? });
+                    }
+                    r_lo = null;
+                    r_hi = null;
+                    code_point = null;
+                    continue;
+                } else {
+                    r_lo = null;
+                    r_hi = null;
+                    code_point = null;
+                    continue;
+                }
+            }
+        }
+
+        // Finish writing.
+        _ = try writer.write("    return true;\n}");
         try buf_writer.flush();
     }
 };
-
-fn clean_name(allocator: *mem.Allocator, str: []const u8) ![]u8 {
-    var name1 = try allocator.alloc(u8, mem.replacementSize(u8, str, "_", ""));
-    defer allocator.free(name1);
-    _ = mem.replace(u8, str, "_", "", name1);
-    var name2 = try allocator.alloc(u8, mem.replacementSize(u8, name1, "-", ""));
-    defer allocator.free(name2);
-    _ = mem.replace(u8, name1, "-", "", name2);
-    var name = try allocator.alloc(u8, mem.replacementSize(u8, name1, " ", ""));
-    _ = mem.replace(u8, name2, " ", "", name);
-    return name;
-}
 
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -920,5 +978,6 @@ pub fn main() !void {
     //try ugen.processSpecialCasing();
     try ugen.processCccMap();
     try ugen.processHangul();
+    try ugen.processNFDQC();
     try ugen.processAsianWidth();
 }

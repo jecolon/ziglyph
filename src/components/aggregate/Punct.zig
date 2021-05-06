@@ -13,13 +13,13 @@ pub const OtherPunct = @import("../../components.zig").OtherPunct;
 const Self = @This();
 
 allocator: *mem.Allocator,
-close: *Close,
-connector: *Connector,
-dash: *Dash,
-final: *Final,
-initial: *Initial,
-open: *Open,
-other_punct: *OtherPunct,
+close: Close,
+connector: Connector,
+dash: Dash,
+final: Final,
+initial: Initial,
+open: Open,
+other_punct: OtherPunct,
 
 const Singleton = struct {
     instance: *Self,
@@ -38,13 +38,13 @@ pub fn init(allocator: *mem.Allocator) !*Self {
 
     instance.* = Self{
         .allocator = allocator,
-        .close = try Close.init(allocator),
-        .connector = try Connector.init(allocator),
-        .dash = try Dash.init(allocator),
-        .final = try Final.init(allocator),
-        .initial = try Initial.init(allocator),
-        .open = try Open.init(allocator),
-        .other_punct = try OtherPunct.init(allocator),
+        .close = Close{},
+        .connector = Connector{},
+        .dash = Dash{},
+        .final = Final{},
+        .initial = Initial{},
+        .open = Open{},
+        .other_punct = OtherPunct{},
     };
 
     singleton = Singleton{
@@ -59,14 +59,6 @@ pub fn deinit(self: *Self) void {
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
-            self.close.deinit();
-            self.connector.deinit();
-            self.dash.deinit();
-            self.final.deinit();
-            self.initial.deinit();
-            self.open.deinit();
-            self.other_punct.deinit();
-
             self.allocator.destroy(s.instance);
             singleton = null;
         }

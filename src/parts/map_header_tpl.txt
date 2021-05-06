@@ -3,30 +3,7 @@
 //    0. Struct name
 //! Unicode letter case mapping.
 
-const std = @import("std");
-const mem = std.mem;
-const {0s} = @This();
+const {1s} = @This();
 
-allocator: *mem.Allocator,
-map: std.AutoHashMap(u21, u21),
-
-const Singleton = struct {{
-    instance: *{0s},
-    ref_count: usize,
-}};
-
-var singleton: ?Singleton = null;
-
-pub fn init(allocator: *mem.Allocator) !*{0s} {{
-    if (singleton) |*s| {{
-        s.ref_count += 1;
-        return s.instance;
-    }}
-
-    var instance = try allocator.create({0s});
-
-    instance.* = {0s}{{
-        .allocator = allocator,
-        .map = std.AutoHashMap(u21, u21).init(allocator),
-    }};
-
+/// to{0s} maps the code point to the desired case or returns the same code point if no mapping exists.
+pub fn to{0s}(self: {1s}, cp: u21) u21 {{

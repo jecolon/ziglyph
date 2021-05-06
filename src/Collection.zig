@@ -35,7 +35,6 @@ pub fn deinit(self: *Collection) void {
 
 pub fn writeFile(self: *Collection, dir: []const u8) !void {
     const header_tpl = @embedFile("parts/collection_header_tpl.txt");
-    const trailer_tpl = @embedFile("parts/collection_trailer_tpl.txt");
 
     // Prepare output files.
     const name = try self.clean_name();
@@ -59,24 +58,20 @@ pub fn writeFile(self: *Collection, dir: []const u8) !void {
     const writer = buf_writer.writer();
 
     // Write data.
-    _ = try writer.print(header_tpl, .{ self.kind, name, self.lo, self.hi });
-    _ = try writer.write("    var index: u21 = 0;\n");
+    _ = try writer.print(header_tpl, .{ name, self.lo, self.hi });
 
     for (self.records) |record| {
         switch (record) {
             .single => |cp| {
-                _ = try writer.print("    try instance.cp_set.put({d}, {{}});\n", .{cp});
+                _ = try writer.print("    if (cp == {d}) return true;\n", .{cp});
             },
             .range => |range| {
-                _ = try writer.print("    index = {d};\n", .{range.lo});
-                _ = try writer.print("    while (index <= {d}) : (index += 1) {{\n", .{range.hi});
-                _ = try writer.write("        try instance.cp_set.put(index, {});\n");
-                _ = try writer.write("    }\n");
+                _ = try writer.print("    if (cp >= {d} and cp <= {d}) return true;\n", .{ range.lo, range.hi });
             },
         }
     }
 
-    _ = try writer.print(trailer_tpl, .{ name, self.kind });
+    _ = try writer.write("    return false;\n}");
     try buf_writer.flush();
 }
 

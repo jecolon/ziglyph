@@ -10,10 +10,10 @@ pub const OtherSymbol = @import("../../components.zig").OtherSymbol;
 const Self = @This();
 
 allocator: *mem.Allocator,
-currency: *Currency,
-math: *Math,
-modifier_symbol: *ModifierSymbol,
-other_symbol: *OtherSymbol,
+currency: Currency,
+math: Math,
+modifier_symbol: ModifierSymbol,
+other_symbol: OtherSymbol,
 
 const Singleton = struct {
     instance: *Self,
@@ -32,10 +32,10 @@ pub fn init(allocator: *mem.Allocator) !*Self {
 
     instance.* = Self{
         .allocator = allocator,
-        .currency = try Currency.init(allocator),
-        .math = try Math.init(allocator),
-        .modifier_symbol = try ModifierSymbol.init(allocator),
-        .other_symbol = try OtherSymbol.init(allocator),
+        .currency = Currency{},
+        .math = Math{},
+        .modifier_symbol = ModifierSymbol{},
+        .other_symbol = OtherSymbol{},
     };
 
     singleton = Singleton{
@@ -50,11 +50,6 @@ pub fn deinit(self: *Self) void {
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
-            self.currency.deinit();
-            self.math.deinit();
-            self.modifier_symbol.deinit();
-            self.other_symbol.deinit();
-
             self.allocator.destroy(s.instance);
             singleton = null;
         }

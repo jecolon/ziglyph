@@ -10,11 +10,11 @@ pub const OtherNumber = @import("../../components.zig").OtherNumber;
 const Self = @This();
 
 allocator: *mem.Allocator,
-decimal: *Decimal,
-digit: *Digit,
-hex: *Hex,
-letter_number: *LetterNumber,
-other_number: *OtherNumber,
+decimal: Decimal,
+digit: Digit,
+hex: Hex,
+letter_number: LetterNumber,
+other_number: OtherNumber,
 
 const Singleton = struct {
     instance: *Self,
@@ -33,11 +33,11 @@ pub fn init(allocator: *mem.Allocator) !*Self {
 
     instance.* = Self{
         .allocator = allocator,
-        .decimal = try Decimal.init(allocator),
-        .digit = try Digit.init(allocator),
-        .hex = try Hex.init(allocator),
-        .letter_number = try LetterNumber.init(allocator),
-        .other_number = try OtherNumber.init(allocator),
+        .decimal = Decimal{},
+        .digit = Digit{},
+        .hex = Hex{},
+        .letter_number = LetterNumber{},
+        .other_number = OtherNumber{},
     };
 
     singleton = Singleton{
@@ -52,12 +52,6 @@ pub fn deinit(self: *Self) void {
     if (singleton) |*s| {
         s.ref_count -= 1;
         if (s.ref_count == 0) {
-            self.decimal.deinit();
-            self.digit.deinit();
-            self.hex.deinit();
-            self.letter_number.deinit();
-            self.other_number.deinit();
-
             self.allocator.destroy(s.instance);
             singleton = null;
         }

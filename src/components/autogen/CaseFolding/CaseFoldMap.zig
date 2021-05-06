@@ -7,4674 +7,20 @@ const unicode = std.unicode;
 
 const CaseFoldMap = @This();
 
-allocator: *std.mem.Allocator,
-map: std.AutoHashMap(u21, []const u21),
-
-const Singleton = struct {
-    instance: *CaseFoldMap,
-    ref_count: usize,
-};
-
-var singleton: ?Singleton = null;
-
-pub fn init(allocator: *mem.Allocator) !*CaseFoldMap {
-    if (singleton) |*s| {
-        s.ref_count += 1;
-        return s.instance;
-    }
-
-    var instance = try allocator.create(CaseFoldMap);
-
-    instance.* = CaseFoldMap{
-        .allocator = allocator,
-        .map = std.AutoHashMap(u21, []const u21).init(allocator),
-    };
-
-    try instance.map.put(0x0041, &[_]u21{
-        0x0061,
-    });
-    try instance.map.put(0x0042, &[_]u21{
-        0x0062,
-    });
-    try instance.map.put(0x0043, &[_]u21{
-        0x0063,
-    });
-    try instance.map.put(0x0044, &[_]u21{
-        0x0064,
-    });
-    try instance.map.put(0x0045, &[_]u21{
-        0x0065,
-    });
-    try instance.map.put(0x0046, &[_]u21{
-        0x0066,
-    });
-    try instance.map.put(0x0047, &[_]u21{
-        0x0067,
-    });
-    try instance.map.put(0x0048, &[_]u21{
-        0x0068,
-    });
-    try instance.map.put(0x0049, &[_]u21{
-        0x0069,
-    });
-    try instance.map.put(0x004A, &[_]u21{
-        0x006A,
-    });
-    try instance.map.put(0x004B, &[_]u21{
-        0x006B,
-    });
-    try instance.map.put(0x004C, &[_]u21{
-        0x006C,
-    });
-    try instance.map.put(0x004D, &[_]u21{
-        0x006D,
-    });
-    try instance.map.put(0x004E, &[_]u21{
-        0x006E,
-    });
-    try instance.map.put(0x004F, &[_]u21{
-        0x006F,
-    });
-    try instance.map.put(0x0050, &[_]u21{
-        0x0070,
-    });
-    try instance.map.put(0x0051, &[_]u21{
-        0x0071,
-    });
-    try instance.map.put(0x0052, &[_]u21{
-        0x0072,
-    });
-    try instance.map.put(0x0053, &[_]u21{
-        0x0073,
-    });
-    try instance.map.put(0x0054, &[_]u21{
-        0x0074,
-    });
-    try instance.map.put(0x0055, &[_]u21{
-        0x0075,
-    });
-    try instance.map.put(0x0056, &[_]u21{
-        0x0076,
-    });
-    try instance.map.put(0x0057, &[_]u21{
-        0x0077,
-    });
-    try instance.map.put(0x0058, &[_]u21{
-        0x0078,
-    });
-    try instance.map.put(0x0059, &[_]u21{
-        0x0079,
-    });
-    try instance.map.put(0x005A, &[_]u21{
-        0x007A,
-    });
-    try instance.map.put(0x00B5, &[_]u21{
-        0x03BC,
-    });
-    try instance.map.put(0x00C0, &[_]u21{
-        0x00E0,
-    });
-    try instance.map.put(0x00C1, &[_]u21{
-        0x00E1,
-    });
-    try instance.map.put(0x00C2, &[_]u21{
-        0x00E2,
-    });
-    try instance.map.put(0x00C3, &[_]u21{
-        0x00E3,
-    });
-    try instance.map.put(0x00C4, &[_]u21{
-        0x00E4,
-    });
-    try instance.map.put(0x00C5, &[_]u21{
-        0x00E5,
-    });
-    try instance.map.put(0x00C6, &[_]u21{
-        0x00E6,
-    });
-    try instance.map.put(0x00C7, &[_]u21{
-        0x00E7,
-    });
-    try instance.map.put(0x00C8, &[_]u21{
-        0x00E8,
-    });
-    try instance.map.put(0x00C9, &[_]u21{
-        0x00E9,
-    });
-    try instance.map.put(0x00CA, &[_]u21{
-        0x00EA,
-    });
-    try instance.map.put(0x00CB, &[_]u21{
-        0x00EB,
-    });
-    try instance.map.put(0x00CC, &[_]u21{
-        0x00EC,
-    });
-    try instance.map.put(0x00CD, &[_]u21{
-        0x00ED,
-    });
-    try instance.map.put(0x00CE, &[_]u21{
-        0x00EE,
-    });
-    try instance.map.put(0x00CF, &[_]u21{
-        0x00EF,
-    });
-    try instance.map.put(0x00D0, &[_]u21{
-        0x00F0,
-    });
-    try instance.map.put(0x00D1, &[_]u21{
-        0x00F1,
-    });
-    try instance.map.put(0x00D2, &[_]u21{
-        0x00F2,
-    });
-    try instance.map.put(0x00D3, &[_]u21{
-        0x00F3,
-    });
-    try instance.map.put(0x00D4, &[_]u21{
-        0x00F4,
-    });
-    try instance.map.put(0x00D5, &[_]u21{
-        0x00F5,
-    });
-    try instance.map.put(0x00D6, &[_]u21{
-        0x00F6,
-    });
-    try instance.map.put(0x00D8, &[_]u21{
-        0x00F8,
-    });
-    try instance.map.put(0x00D9, &[_]u21{
-        0x00F9,
-    });
-    try instance.map.put(0x00DA, &[_]u21{
-        0x00FA,
-    });
-    try instance.map.put(0x00DB, &[_]u21{
-        0x00FB,
-    });
-    try instance.map.put(0x00DC, &[_]u21{
-        0x00FC,
-    });
-    try instance.map.put(0x00DD, &[_]u21{
-        0x00FD,
-    });
-    try instance.map.put(0x00DE, &[_]u21{
-        0x00FE,
-    });
-    try instance.map.put(0x00DF, &[_]u21{
-        0x0073,
-        0x0073,
-    });
-    try instance.map.put(0x0100, &[_]u21{
-        0x0101,
-    });
-    try instance.map.put(0x0102, &[_]u21{
-        0x0103,
-    });
-    try instance.map.put(0x0104, &[_]u21{
-        0x0105,
-    });
-    try instance.map.put(0x0106, &[_]u21{
-        0x0107,
-    });
-    try instance.map.put(0x0108, &[_]u21{
-        0x0109,
-    });
-    try instance.map.put(0x010A, &[_]u21{
-        0x010B,
-    });
-    try instance.map.put(0x010C, &[_]u21{
-        0x010D,
-    });
-    try instance.map.put(0x010E, &[_]u21{
-        0x010F,
-    });
-    try instance.map.put(0x0110, &[_]u21{
-        0x0111,
-    });
-    try instance.map.put(0x0112, &[_]u21{
-        0x0113,
-    });
-    try instance.map.put(0x0114, &[_]u21{
-        0x0115,
-    });
-    try instance.map.put(0x0116, &[_]u21{
-        0x0117,
-    });
-    try instance.map.put(0x0118, &[_]u21{
-        0x0119,
-    });
-    try instance.map.put(0x011A, &[_]u21{
-        0x011B,
-    });
-    try instance.map.put(0x011C, &[_]u21{
-        0x011D,
-    });
-    try instance.map.put(0x011E, &[_]u21{
-        0x011F,
-    });
-    try instance.map.put(0x0120, &[_]u21{
-        0x0121,
-    });
-    try instance.map.put(0x0122, &[_]u21{
-        0x0123,
-    });
-    try instance.map.put(0x0124, &[_]u21{
-        0x0125,
-    });
-    try instance.map.put(0x0126, &[_]u21{
-        0x0127,
-    });
-    try instance.map.put(0x0128, &[_]u21{
-        0x0129,
-    });
-    try instance.map.put(0x012A, &[_]u21{
-        0x012B,
-    });
-    try instance.map.put(0x012C, &[_]u21{
-        0x012D,
-    });
-    try instance.map.put(0x012E, &[_]u21{
-        0x012F,
-    });
-    try instance.map.put(0x0130, &[_]u21{
-        0x0069,
-        0x0307,
-    });
-    try instance.map.put(0x0132, &[_]u21{
-        0x0133,
-    });
-    try instance.map.put(0x0134, &[_]u21{
-        0x0135,
-    });
-    try instance.map.put(0x0136, &[_]u21{
-        0x0137,
-    });
-    try instance.map.put(0x0139, &[_]u21{
-        0x013A,
-    });
-    try instance.map.put(0x013B, &[_]u21{
-        0x013C,
-    });
-    try instance.map.put(0x013D, &[_]u21{
-        0x013E,
-    });
-    try instance.map.put(0x013F, &[_]u21{
-        0x0140,
-    });
-    try instance.map.put(0x0141, &[_]u21{
-        0x0142,
-    });
-    try instance.map.put(0x0143, &[_]u21{
-        0x0144,
-    });
-    try instance.map.put(0x0145, &[_]u21{
-        0x0146,
-    });
-    try instance.map.put(0x0147, &[_]u21{
-        0x0148,
-    });
-    try instance.map.put(0x0149, &[_]u21{
-        0x02BC,
-        0x006E,
-    });
-    try instance.map.put(0x014A, &[_]u21{
-        0x014B,
-    });
-    try instance.map.put(0x014C, &[_]u21{
-        0x014D,
-    });
-    try instance.map.put(0x014E, &[_]u21{
-        0x014F,
-    });
-    try instance.map.put(0x0150, &[_]u21{
-        0x0151,
-    });
-    try instance.map.put(0x0152, &[_]u21{
-        0x0153,
-    });
-    try instance.map.put(0x0154, &[_]u21{
-        0x0155,
-    });
-    try instance.map.put(0x0156, &[_]u21{
-        0x0157,
-    });
-    try instance.map.put(0x0158, &[_]u21{
-        0x0159,
-    });
-    try instance.map.put(0x015A, &[_]u21{
-        0x015B,
-    });
-    try instance.map.put(0x015C, &[_]u21{
-        0x015D,
-    });
-    try instance.map.put(0x015E, &[_]u21{
-        0x015F,
-    });
-    try instance.map.put(0x0160, &[_]u21{
-        0x0161,
-    });
-    try instance.map.put(0x0162, &[_]u21{
-        0x0163,
-    });
-    try instance.map.put(0x0164, &[_]u21{
-        0x0165,
-    });
-    try instance.map.put(0x0166, &[_]u21{
-        0x0167,
-    });
-    try instance.map.put(0x0168, &[_]u21{
-        0x0169,
-    });
-    try instance.map.put(0x016A, &[_]u21{
-        0x016B,
-    });
-    try instance.map.put(0x016C, &[_]u21{
-        0x016D,
-    });
-    try instance.map.put(0x016E, &[_]u21{
-        0x016F,
-    });
-    try instance.map.put(0x0170, &[_]u21{
-        0x0171,
-    });
-    try instance.map.put(0x0172, &[_]u21{
-        0x0173,
-    });
-    try instance.map.put(0x0174, &[_]u21{
-        0x0175,
-    });
-    try instance.map.put(0x0176, &[_]u21{
-        0x0177,
-    });
-    try instance.map.put(0x0178, &[_]u21{
-        0x00FF,
-    });
-    try instance.map.put(0x0179, &[_]u21{
-        0x017A,
-    });
-    try instance.map.put(0x017B, &[_]u21{
-        0x017C,
-    });
-    try instance.map.put(0x017D, &[_]u21{
-        0x017E,
-    });
-    try instance.map.put(0x017F, &[_]u21{
-        0x0073,
-    });
-    try instance.map.put(0x0181, &[_]u21{
-        0x0253,
-    });
-    try instance.map.put(0x0182, &[_]u21{
-        0x0183,
-    });
-    try instance.map.put(0x0184, &[_]u21{
-        0x0185,
-    });
-    try instance.map.put(0x0186, &[_]u21{
-        0x0254,
-    });
-    try instance.map.put(0x0187, &[_]u21{
-        0x0188,
-    });
-    try instance.map.put(0x0189, &[_]u21{
-        0x0256,
-    });
-    try instance.map.put(0x018A, &[_]u21{
-        0x0257,
-    });
-    try instance.map.put(0x018B, &[_]u21{
-        0x018C,
-    });
-    try instance.map.put(0x018E, &[_]u21{
-        0x01DD,
-    });
-    try instance.map.put(0x018F, &[_]u21{
-        0x0259,
-    });
-    try instance.map.put(0x0190, &[_]u21{
-        0x025B,
-    });
-    try instance.map.put(0x0191, &[_]u21{
-        0x0192,
-    });
-    try instance.map.put(0x0193, &[_]u21{
-        0x0260,
-    });
-    try instance.map.put(0x0194, &[_]u21{
-        0x0263,
-    });
-    try instance.map.put(0x0196, &[_]u21{
-        0x0269,
-    });
-    try instance.map.put(0x0197, &[_]u21{
-        0x0268,
-    });
-    try instance.map.put(0x0198, &[_]u21{
-        0x0199,
-    });
-    try instance.map.put(0x019C, &[_]u21{
-        0x026F,
-    });
-    try instance.map.put(0x019D, &[_]u21{
-        0x0272,
-    });
-    try instance.map.put(0x019F, &[_]u21{
-        0x0275,
-    });
-    try instance.map.put(0x01A0, &[_]u21{
-        0x01A1,
-    });
-    try instance.map.put(0x01A2, &[_]u21{
-        0x01A3,
-    });
-    try instance.map.put(0x01A4, &[_]u21{
-        0x01A5,
-    });
-    try instance.map.put(0x01A6, &[_]u21{
-        0x0280,
-    });
-    try instance.map.put(0x01A7, &[_]u21{
-        0x01A8,
-    });
-    try instance.map.put(0x01A9, &[_]u21{
-        0x0283,
-    });
-    try instance.map.put(0x01AC, &[_]u21{
-        0x01AD,
-    });
-    try instance.map.put(0x01AE, &[_]u21{
-        0x0288,
-    });
-    try instance.map.put(0x01AF, &[_]u21{
-        0x01B0,
-    });
-    try instance.map.put(0x01B1, &[_]u21{
-        0x028A,
-    });
-    try instance.map.put(0x01B2, &[_]u21{
-        0x028B,
-    });
-    try instance.map.put(0x01B3, &[_]u21{
-        0x01B4,
-    });
-    try instance.map.put(0x01B5, &[_]u21{
-        0x01B6,
-    });
-    try instance.map.put(0x01B7, &[_]u21{
-        0x0292,
-    });
-    try instance.map.put(0x01B8, &[_]u21{
-        0x01B9,
-    });
-    try instance.map.put(0x01BC, &[_]u21{
-        0x01BD,
-    });
-    try instance.map.put(0x01C4, &[_]u21{
-        0x01C6,
-    });
-    try instance.map.put(0x01C5, &[_]u21{
-        0x01C6,
-    });
-    try instance.map.put(0x01C7, &[_]u21{
-        0x01C9,
-    });
-    try instance.map.put(0x01C8, &[_]u21{
-        0x01C9,
-    });
-    try instance.map.put(0x01CA, &[_]u21{
-        0x01CC,
-    });
-    try instance.map.put(0x01CB, &[_]u21{
-        0x01CC,
-    });
-    try instance.map.put(0x01CD, &[_]u21{
-        0x01CE,
-    });
-    try instance.map.put(0x01CF, &[_]u21{
-        0x01D0,
-    });
-    try instance.map.put(0x01D1, &[_]u21{
-        0x01D2,
-    });
-    try instance.map.put(0x01D3, &[_]u21{
-        0x01D4,
-    });
-    try instance.map.put(0x01D5, &[_]u21{
-        0x01D6,
-    });
-    try instance.map.put(0x01D7, &[_]u21{
-        0x01D8,
-    });
-    try instance.map.put(0x01D9, &[_]u21{
-        0x01DA,
-    });
-    try instance.map.put(0x01DB, &[_]u21{
-        0x01DC,
-    });
-    try instance.map.put(0x01DE, &[_]u21{
-        0x01DF,
-    });
-    try instance.map.put(0x01E0, &[_]u21{
-        0x01E1,
-    });
-    try instance.map.put(0x01E2, &[_]u21{
-        0x01E3,
-    });
-    try instance.map.put(0x01E4, &[_]u21{
-        0x01E5,
-    });
-    try instance.map.put(0x01E6, &[_]u21{
-        0x01E7,
-    });
-    try instance.map.put(0x01E8, &[_]u21{
-        0x01E9,
-    });
-    try instance.map.put(0x01EA, &[_]u21{
-        0x01EB,
-    });
-    try instance.map.put(0x01EC, &[_]u21{
-        0x01ED,
-    });
-    try instance.map.put(0x01EE, &[_]u21{
-        0x01EF,
-    });
-    try instance.map.put(0x01F0, &[_]u21{
-        0x006A,
-        0x030C,
-    });
-    try instance.map.put(0x01F1, &[_]u21{
-        0x01F3,
-    });
-    try instance.map.put(0x01F2, &[_]u21{
-        0x01F3,
-    });
-    try instance.map.put(0x01F4, &[_]u21{
-        0x01F5,
-    });
-    try instance.map.put(0x01F6, &[_]u21{
-        0x0195,
-    });
-    try instance.map.put(0x01F7, &[_]u21{
-        0x01BF,
-    });
-    try instance.map.put(0x01F8, &[_]u21{
-        0x01F9,
-    });
-    try instance.map.put(0x01FA, &[_]u21{
-        0x01FB,
-    });
-    try instance.map.put(0x01FC, &[_]u21{
-        0x01FD,
-    });
-    try instance.map.put(0x01FE, &[_]u21{
-        0x01FF,
-    });
-    try instance.map.put(0x0200, &[_]u21{
-        0x0201,
-    });
-    try instance.map.put(0x0202, &[_]u21{
-        0x0203,
-    });
-    try instance.map.put(0x0204, &[_]u21{
-        0x0205,
-    });
-    try instance.map.put(0x0206, &[_]u21{
-        0x0207,
-    });
-    try instance.map.put(0x0208, &[_]u21{
-        0x0209,
-    });
-    try instance.map.put(0x020A, &[_]u21{
-        0x020B,
-    });
-    try instance.map.put(0x020C, &[_]u21{
-        0x020D,
-    });
-    try instance.map.put(0x020E, &[_]u21{
-        0x020F,
-    });
-    try instance.map.put(0x0210, &[_]u21{
-        0x0211,
-    });
-    try instance.map.put(0x0212, &[_]u21{
-        0x0213,
-    });
-    try instance.map.put(0x0214, &[_]u21{
-        0x0215,
-    });
-    try instance.map.put(0x0216, &[_]u21{
-        0x0217,
-    });
-    try instance.map.put(0x0218, &[_]u21{
-        0x0219,
-    });
-    try instance.map.put(0x021A, &[_]u21{
-        0x021B,
-    });
-    try instance.map.put(0x021C, &[_]u21{
-        0x021D,
-    });
-    try instance.map.put(0x021E, &[_]u21{
-        0x021F,
-    });
-    try instance.map.put(0x0220, &[_]u21{
-        0x019E,
-    });
-    try instance.map.put(0x0222, &[_]u21{
-        0x0223,
-    });
-    try instance.map.put(0x0224, &[_]u21{
-        0x0225,
-    });
-    try instance.map.put(0x0226, &[_]u21{
-        0x0227,
-    });
-    try instance.map.put(0x0228, &[_]u21{
-        0x0229,
-    });
-    try instance.map.put(0x022A, &[_]u21{
-        0x022B,
-    });
-    try instance.map.put(0x022C, &[_]u21{
-        0x022D,
-    });
-    try instance.map.put(0x022E, &[_]u21{
-        0x022F,
-    });
-    try instance.map.put(0x0230, &[_]u21{
-        0x0231,
-    });
-    try instance.map.put(0x0232, &[_]u21{
-        0x0233,
-    });
-    try instance.map.put(0x023A, &[_]u21{
-        0x2C65,
-    });
-    try instance.map.put(0x023B, &[_]u21{
-        0x023C,
-    });
-    try instance.map.put(0x023D, &[_]u21{
-        0x019A,
-    });
-    try instance.map.put(0x023E, &[_]u21{
-        0x2C66,
-    });
-    try instance.map.put(0x0241, &[_]u21{
-        0x0242,
-    });
-    try instance.map.put(0x0243, &[_]u21{
-        0x0180,
-    });
-    try instance.map.put(0x0244, &[_]u21{
-        0x0289,
-    });
-    try instance.map.put(0x0245, &[_]u21{
-        0x028C,
-    });
-    try instance.map.put(0x0246, &[_]u21{
-        0x0247,
-    });
-    try instance.map.put(0x0248, &[_]u21{
-        0x0249,
-    });
-    try instance.map.put(0x024A, &[_]u21{
-        0x024B,
-    });
-    try instance.map.put(0x024C, &[_]u21{
-        0x024D,
-    });
-    try instance.map.put(0x024E, &[_]u21{
-        0x024F,
-    });
-    try instance.map.put(0x0345, &[_]u21{
-        0x03B9,
-    });
-    try instance.map.put(0x0370, &[_]u21{
-        0x0371,
-    });
-    try instance.map.put(0x0372, &[_]u21{
-        0x0373,
-    });
-    try instance.map.put(0x0376, &[_]u21{
-        0x0377,
-    });
-    try instance.map.put(0x037F, &[_]u21{
-        0x03F3,
-    });
-    try instance.map.put(0x0386, &[_]u21{
-        0x03AC,
-    });
-    try instance.map.put(0x0388, &[_]u21{
-        0x03AD,
-    });
-    try instance.map.put(0x0389, &[_]u21{
-        0x03AE,
-    });
-    try instance.map.put(0x038A, &[_]u21{
-        0x03AF,
-    });
-    try instance.map.put(0x038C, &[_]u21{
-        0x03CC,
-    });
-    try instance.map.put(0x038E, &[_]u21{
-        0x03CD,
-    });
-    try instance.map.put(0x038F, &[_]u21{
-        0x03CE,
-    });
-    try instance.map.put(0x0390, &[_]u21{
-        0x03B9,
-        0x0308,
-        0x0301,
-    });
-    try instance.map.put(0x0391, &[_]u21{
-        0x03B1,
-    });
-    try instance.map.put(0x0392, &[_]u21{
-        0x03B2,
-    });
-    try instance.map.put(0x0393, &[_]u21{
-        0x03B3,
-    });
-    try instance.map.put(0x0394, &[_]u21{
-        0x03B4,
-    });
-    try instance.map.put(0x0395, &[_]u21{
-        0x03B5,
-    });
-    try instance.map.put(0x0396, &[_]u21{
-        0x03B6,
-    });
-    try instance.map.put(0x0397, &[_]u21{
-        0x03B7,
-    });
-    try instance.map.put(0x0398, &[_]u21{
-        0x03B8,
-    });
-    try instance.map.put(0x0399, &[_]u21{
-        0x03B9,
-    });
-    try instance.map.put(0x039A, &[_]u21{
-        0x03BA,
-    });
-    try instance.map.put(0x039B, &[_]u21{
-        0x03BB,
-    });
-    try instance.map.put(0x039C, &[_]u21{
-        0x03BC,
-    });
-    try instance.map.put(0x039D, &[_]u21{
-        0x03BD,
-    });
-    try instance.map.put(0x039E, &[_]u21{
-        0x03BE,
-    });
-    try instance.map.put(0x039F, &[_]u21{
-        0x03BF,
-    });
-    try instance.map.put(0x03A0, &[_]u21{
-        0x03C0,
-    });
-    try instance.map.put(0x03A1, &[_]u21{
-        0x03C1,
-    });
-    try instance.map.put(0x03A3, &[_]u21{
-        0x03C3,
-    });
-    try instance.map.put(0x03A4, &[_]u21{
-        0x03C4,
-    });
-    try instance.map.put(0x03A5, &[_]u21{
-        0x03C5,
-    });
-    try instance.map.put(0x03A6, &[_]u21{
-        0x03C6,
-    });
-    try instance.map.put(0x03A7, &[_]u21{
-        0x03C7,
-    });
-    try instance.map.put(0x03A8, &[_]u21{
-        0x03C8,
-    });
-    try instance.map.put(0x03A9, &[_]u21{
-        0x03C9,
-    });
-    try instance.map.put(0x03AA, &[_]u21{
-        0x03CA,
-    });
-    try instance.map.put(0x03AB, &[_]u21{
-        0x03CB,
-    });
-    try instance.map.put(0x03B0, &[_]u21{
-        0x03C5,
-        0x0308,
-        0x0301,
-    });
-    try instance.map.put(0x03C2, &[_]u21{
-        0x03C3,
-    });
-    try instance.map.put(0x03CF, &[_]u21{
-        0x03D7,
-    });
-    try instance.map.put(0x03D0, &[_]u21{
-        0x03B2,
-    });
-    try instance.map.put(0x03D1, &[_]u21{
-        0x03B8,
-    });
-    try instance.map.put(0x03D5, &[_]u21{
-        0x03C6,
-    });
-    try instance.map.put(0x03D6, &[_]u21{
-        0x03C0,
-    });
-    try instance.map.put(0x03D8, &[_]u21{
-        0x03D9,
-    });
-    try instance.map.put(0x03DA, &[_]u21{
-        0x03DB,
-    });
-    try instance.map.put(0x03DC, &[_]u21{
-        0x03DD,
-    });
-    try instance.map.put(0x03DE, &[_]u21{
-        0x03DF,
-    });
-    try instance.map.put(0x03E0, &[_]u21{
-        0x03E1,
-    });
-    try instance.map.put(0x03E2, &[_]u21{
-        0x03E3,
-    });
-    try instance.map.put(0x03E4, &[_]u21{
-        0x03E5,
-    });
-    try instance.map.put(0x03E6, &[_]u21{
-        0x03E7,
-    });
-    try instance.map.put(0x03E8, &[_]u21{
-        0x03E9,
-    });
-    try instance.map.put(0x03EA, &[_]u21{
-        0x03EB,
-    });
-    try instance.map.put(0x03EC, &[_]u21{
-        0x03ED,
-    });
-    try instance.map.put(0x03EE, &[_]u21{
-        0x03EF,
-    });
-    try instance.map.put(0x03F0, &[_]u21{
-        0x03BA,
-    });
-    try instance.map.put(0x03F1, &[_]u21{
-        0x03C1,
-    });
-    try instance.map.put(0x03F4, &[_]u21{
-        0x03B8,
-    });
-    try instance.map.put(0x03F5, &[_]u21{
-        0x03B5,
-    });
-    try instance.map.put(0x03F7, &[_]u21{
-        0x03F8,
-    });
-    try instance.map.put(0x03F9, &[_]u21{
-        0x03F2,
-    });
-    try instance.map.put(0x03FA, &[_]u21{
-        0x03FB,
-    });
-    try instance.map.put(0x03FD, &[_]u21{
-        0x037B,
-    });
-    try instance.map.put(0x03FE, &[_]u21{
-        0x037C,
-    });
-    try instance.map.put(0x03FF, &[_]u21{
-        0x037D,
-    });
-    try instance.map.put(0x0400, &[_]u21{
-        0x0450,
-    });
-    try instance.map.put(0x0401, &[_]u21{
-        0x0451,
-    });
-    try instance.map.put(0x0402, &[_]u21{
-        0x0452,
-    });
-    try instance.map.put(0x0403, &[_]u21{
-        0x0453,
-    });
-    try instance.map.put(0x0404, &[_]u21{
-        0x0454,
-    });
-    try instance.map.put(0x0405, &[_]u21{
-        0x0455,
-    });
-    try instance.map.put(0x0406, &[_]u21{
-        0x0456,
-    });
-    try instance.map.put(0x0407, &[_]u21{
-        0x0457,
-    });
-    try instance.map.put(0x0408, &[_]u21{
-        0x0458,
-    });
-    try instance.map.put(0x0409, &[_]u21{
-        0x0459,
-    });
-    try instance.map.put(0x040A, &[_]u21{
-        0x045A,
-    });
-    try instance.map.put(0x040B, &[_]u21{
-        0x045B,
-    });
-    try instance.map.put(0x040C, &[_]u21{
-        0x045C,
-    });
-    try instance.map.put(0x040D, &[_]u21{
-        0x045D,
-    });
-    try instance.map.put(0x040E, &[_]u21{
-        0x045E,
-    });
-    try instance.map.put(0x040F, &[_]u21{
-        0x045F,
-    });
-    try instance.map.put(0x0410, &[_]u21{
-        0x0430,
-    });
-    try instance.map.put(0x0411, &[_]u21{
-        0x0431,
-    });
-    try instance.map.put(0x0412, &[_]u21{
-        0x0432,
-    });
-    try instance.map.put(0x0413, &[_]u21{
-        0x0433,
-    });
-    try instance.map.put(0x0414, &[_]u21{
-        0x0434,
-    });
-    try instance.map.put(0x0415, &[_]u21{
-        0x0435,
-    });
-    try instance.map.put(0x0416, &[_]u21{
-        0x0436,
-    });
-    try instance.map.put(0x0417, &[_]u21{
-        0x0437,
-    });
-    try instance.map.put(0x0418, &[_]u21{
-        0x0438,
-    });
-    try instance.map.put(0x0419, &[_]u21{
-        0x0439,
-    });
-    try instance.map.put(0x041A, &[_]u21{
-        0x043A,
-    });
-    try instance.map.put(0x041B, &[_]u21{
-        0x043B,
-    });
-    try instance.map.put(0x041C, &[_]u21{
-        0x043C,
-    });
-    try instance.map.put(0x041D, &[_]u21{
-        0x043D,
-    });
-    try instance.map.put(0x041E, &[_]u21{
-        0x043E,
-    });
-    try instance.map.put(0x041F, &[_]u21{
-        0x043F,
-    });
-    try instance.map.put(0x0420, &[_]u21{
-        0x0440,
-    });
-    try instance.map.put(0x0421, &[_]u21{
-        0x0441,
-    });
-    try instance.map.put(0x0422, &[_]u21{
-        0x0442,
-    });
-    try instance.map.put(0x0423, &[_]u21{
-        0x0443,
-    });
-    try instance.map.put(0x0424, &[_]u21{
-        0x0444,
-    });
-    try instance.map.put(0x0425, &[_]u21{
-        0x0445,
-    });
-    try instance.map.put(0x0426, &[_]u21{
-        0x0446,
-    });
-    try instance.map.put(0x0427, &[_]u21{
-        0x0447,
-    });
-    try instance.map.put(0x0428, &[_]u21{
-        0x0448,
-    });
-    try instance.map.put(0x0429, &[_]u21{
-        0x0449,
-    });
-    try instance.map.put(0x042A, &[_]u21{
-        0x044A,
-    });
-    try instance.map.put(0x042B, &[_]u21{
-        0x044B,
-    });
-    try instance.map.put(0x042C, &[_]u21{
-        0x044C,
-    });
-    try instance.map.put(0x042D, &[_]u21{
-        0x044D,
-    });
-    try instance.map.put(0x042E, &[_]u21{
-        0x044E,
-    });
-    try instance.map.put(0x042F, &[_]u21{
-        0x044F,
-    });
-    try instance.map.put(0x0460, &[_]u21{
-        0x0461,
-    });
-    try instance.map.put(0x0462, &[_]u21{
-        0x0463,
-    });
-    try instance.map.put(0x0464, &[_]u21{
-        0x0465,
-    });
-    try instance.map.put(0x0466, &[_]u21{
-        0x0467,
-    });
-    try instance.map.put(0x0468, &[_]u21{
-        0x0469,
-    });
-    try instance.map.put(0x046A, &[_]u21{
-        0x046B,
-    });
-    try instance.map.put(0x046C, &[_]u21{
-        0x046D,
-    });
-    try instance.map.put(0x046E, &[_]u21{
-        0x046F,
-    });
-    try instance.map.put(0x0470, &[_]u21{
-        0x0471,
-    });
-    try instance.map.put(0x0472, &[_]u21{
-        0x0473,
-    });
-    try instance.map.put(0x0474, &[_]u21{
-        0x0475,
-    });
-    try instance.map.put(0x0476, &[_]u21{
-        0x0477,
-    });
-    try instance.map.put(0x0478, &[_]u21{
-        0x0479,
-    });
-    try instance.map.put(0x047A, &[_]u21{
-        0x047B,
-    });
-    try instance.map.put(0x047C, &[_]u21{
-        0x047D,
-    });
-    try instance.map.put(0x047E, &[_]u21{
-        0x047F,
-    });
-    try instance.map.put(0x0480, &[_]u21{
-        0x0481,
-    });
-    try instance.map.put(0x048A, &[_]u21{
-        0x048B,
-    });
-    try instance.map.put(0x048C, &[_]u21{
-        0x048D,
-    });
-    try instance.map.put(0x048E, &[_]u21{
-        0x048F,
-    });
-    try instance.map.put(0x0490, &[_]u21{
-        0x0491,
-    });
-    try instance.map.put(0x0492, &[_]u21{
-        0x0493,
-    });
-    try instance.map.put(0x0494, &[_]u21{
-        0x0495,
-    });
-    try instance.map.put(0x0496, &[_]u21{
-        0x0497,
-    });
-    try instance.map.put(0x0498, &[_]u21{
-        0x0499,
-    });
-    try instance.map.put(0x049A, &[_]u21{
-        0x049B,
-    });
-    try instance.map.put(0x049C, &[_]u21{
-        0x049D,
-    });
-    try instance.map.put(0x049E, &[_]u21{
-        0x049F,
-    });
-    try instance.map.put(0x04A0, &[_]u21{
-        0x04A1,
-    });
-    try instance.map.put(0x04A2, &[_]u21{
-        0x04A3,
-    });
-    try instance.map.put(0x04A4, &[_]u21{
-        0x04A5,
-    });
-    try instance.map.put(0x04A6, &[_]u21{
-        0x04A7,
-    });
-    try instance.map.put(0x04A8, &[_]u21{
-        0x04A9,
-    });
-    try instance.map.put(0x04AA, &[_]u21{
-        0x04AB,
-    });
-    try instance.map.put(0x04AC, &[_]u21{
-        0x04AD,
-    });
-    try instance.map.put(0x04AE, &[_]u21{
-        0x04AF,
-    });
-    try instance.map.put(0x04B0, &[_]u21{
-        0x04B1,
-    });
-    try instance.map.put(0x04B2, &[_]u21{
-        0x04B3,
-    });
-    try instance.map.put(0x04B4, &[_]u21{
-        0x04B5,
-    });
-    try instance.map.put(0x04B6, &[_]u21{
-        0x04B7,
-    });
-    try instance.map.put(0x04B8, &[_]u21{
-        0x04B9,
-    });
-    try instance.map.put(0x04BA, &[_]u21{
-        0x04BB,
-    });
-    try instance.map.put(0x04BC, &[_]u21{
-        0x04BD,
-    });
-    try instance.map.put(0x04BE, &[_]u21{
-        0x04BF,
-    });
-    try instance.map.put(0x04C0, &[_]u21{
-        0x04CF,
-    });
-    try instance.map.put(0x04C1, &[_]u21{
-        0x04C2,
-    });
-    try instance.map.put(0x04C3, &[_]u21{
-        0x04C4,
-    });
-    try instance.map.put(0x04C5, &[_]u21{
-        0x04C6,
-    });
-    try instance.map.put(0x04C7, &[_]u21{
-        0x04C8,
-    });
-    try instance.map.put(0x04C9, &[_]u21{
-        0x04CA,
-    });
-    try instance.map.put(0x04CB, &[_]u21{
-        0x04CC,
-    });
-    try instance.map.put(0x04CD, &[_]u21{
-        0x04CE,
-    });
-    try instance.map.put(0x04D0, &[_]u21{
-        0x04D1,
-    });
-    try instance.map.put(0x04D2, &[_]u21{
-        0x04D3,
-    });
-    try instance.map.put(0x04D4, &[_]u21{
-        0x04D5,
-    });
-    try instance.map.put(0x04D6, &[_]u21{
-        0x04D7,
-    });
-    try instance.map.put(0x04D8, &[_]u21{
-        0x04D9,
-    });
-    try instance.map.put(0x04DA, &[_]u21{
-        0x04DB,
-    });
-    try instance.map.put(0x04DC, &[_]u21{
-        0x04DD,
-    });
-    try instance.map.put(0x04DE, &[_]u21{
-        0x04DF,
-    });
-    try instance.map.put(0x04E0, &[_]u21{
-        0x04E1,
-    });
-    try instance.map.put(0x04E2, &[_]u21{
-        0x04E3,
-    });
-    try instance.map.put(0x04E4, &[_]u21{
-        0x04E5,
-    });
-    try instance.map.put(0x04E6, &[_]u21{
-        0x04E7,
-    });
-    try instance.map.put(0x04E8, &[_]u21{
-        0x04E9,
-    });
-    try instance.map.put(0x04EA, &[_]u21{
-        0x04EB,
-    });
-    try instance.map.put(0x04EC, &[_]u21{
-        0x04ED,
-    });
-    try instance.map.put(0x04EE, &[_]u21{
-        0x04EF,
-    });
-    try instance.map.put(0x04F0, &[_]u21{
-        0x04F1,
-    });
-    try instance.map.put(0x04F2, &[_]u21{
-        0x04F3,
-    });
-    try instance.map.put(0x04F4, &[_]u21{
-        0x04F5,
-    });
-    try instance.map.put(0x04F6, &[_]u21{
-        0x04F7,
-    });
-    try instance.map.put(0x04F8, &[_]u21{
-        0x04F9,
-    });
-    try instance.map.put(0x04FA, &[_]u21{
-        0x04FB,
-    });
-    try instance.map.put(0x04FC, &[_]u21{
-        0x04FD,
-    });
-    try instance.map.put(0x04FE, &[_]u21{
-        0x04FF,
-    });
-    try instance.map.put(0x0500, &[_]u21{
-        0x0501,
-    });
-    try instance.map.put(0x0502, &[_]u21{
-        0x0503,
-    });
-    try instance.map.put(0x0504, &[_]u21{
-        0x0505,
-    });
-    try instance.map.put(0x0506, &[_]u21{
-        0x0507,
-    });
-    try instance.map.put(0x0508, &[_]u21{
-        0x0509,
-    });
-    try instance.map.put(0x050A, &[_]u21{
-        0x050B,
-    });
-    try instance.map.put(0x050C, &[_]u21{
-        0x050D,
-    });
-    try instance.map.put(0x050E, &[_]u21{
-        0x050F,
-    });
-    try instance.map.put(0x0510, &[_]u21{
-        0x0511,
-    });
-    try instance.map.put(0x0512, &[_]u21{
-        0x0513,
-    });
-    try instance.map.put(0x0514, &[_]u21{
-        0x0515,
-    });
-    try instance.map.put(0x0516, &[_]u21{
-        0x0517,
-    });
-    try instance.map.put(0x0518, &[_]u21{
-        0x0519,
-    });
-    try instance.map.put(0x051A, &[_]u21{
-        0x051B,
-    });
-    try instance.map.put(0x051C, &[_]u21{
-        0x051D,
-    });
-    try instance.map.put(0x051E, &[_]u21{
-        0x051F,
-    });
-    try instance.map.put(0x0520, &[_]u21{
-        0x0521,
-    });
-    try instance.map.put(0x0522, &[_]u21{
-        0x0523,
-    });
-    try instance.map.put(0x0524, &[_]u21{
-        0x0525,
-    });
-    try instance.map.put(0x0526, &[_]u21{
-        0x0527,
-    });
-    try instance.map.put(0x0528, &[_]u21{
-        0x0529,
-    });
-    try instance.map.put(0x052A, &[_]u21{
-        0x052B,
-    });
-    try instance.map.put(0x052C, &[_]u21{
-        0x052D,
-    });
-    try instance.map.put(0x052E, &[_]u21{
-        0x052F,
-    });
-    try instance.map.put(0x0531, &[_]u21{
-        0x0561,
-    });
-    try instance.map.put(0x0532, &[_]u21{
-        0x0562,
-    });
-    try instance.map.put(0x0533, &[_]u21{
-        0x0563,
-    });
-    try instance.map.put(0x0534, &[_]u21{
-        0x0564,
-    });
-    try instance.map.put(0x0535, &[_]u21{
-        0x0565,
-    });
-    try instance.map.put(0x0536, &[_]u21{
-        0x0566,
-    });
-    try instance.map.put(0x0537, &[_]u21{
-        0x0567,
-    });
-    try instance.map.put(0x0538, &[_]u21{
-        0x0568,
-    });
-    try instance.map.put(0x0539, &[_]u21{
-        0x0569,
-    });
-    try instance.map.put(0x053A, &[_]u21{
-        0x056A,
-    });
-    try instance.map.put(0x053B, &[_]u21{
-        0x056B,
-    });
-    try instance.map.put(0x053C, &[_]u21{
-        0x056C,
-    });
-    try instance.map.put(0x053D, &[_]u21{
-        0x056D,
-    });
-    try instance.map.put(0x053E, &[_]u21{
-        0x056E,
-    });
-    try instance.map.put(0x053F, &[_]u21{
-        0x056F,
-    });
-    try instance.map.put(0x0540, &[_]u21{
-        0x0570,
-    });
-    try instance.map.put(0x0541, &[_]u21{
-        0x0571,
-    });
-    try instance.map.put(0x0542, &[_]u21{
-        0x0572,
-    });
-    try instance.map.put(0x0543, &[_]u21{
-        0x0573,
-    });
-    try instance.map.put(0x0544, &[_]u21{
-        0x0574,
-    });
-    try instance.map.put(0x0545, &[_]u21{
-        0x0575,
-    });
-    try instance.map.put(0x0546, &[_]u21{
-        0x0576,
-    });
-    try instance.map.put(0x0547, &[_]u21{
-        0x0577,
-    });
-    try instance.map.put(0x0548, &[_]u21{
-        0x0578,
-    });
-    try instance.map.put(0x0549, &[_]u21{
-        0x0579,
-    });
-    try instance.map.put(0x054A, &[_]u21{
-        0x057A,
-    });
-    try instance.map.put(0x054B, &[_]u21{
-        0x057B,
-    });
-    try instance.map.put(0x054C, &[_]u21{
-        0x057C,
-    });
-    try instance.map.put(0x054D, &[_]u21{
-        0x057D,
-    });
-    try instance.map.put(0x054E, &[_]u21{
-        0x057E,
-    });
-    try instance.map.put(0x054F, &[_]u21{
-        0x057F,
-    });
-    try instance.map.put(0x0550, &[_]u21{
-        0x0580,
-    });
-    try instance.map.put(0x0551, &[_]u21{
-        0x0581,
-    });
-    try instance.map.put(0x0552, &[_]u21{
-        0x0582,
-    });
-    try instance.map.put(0x0553, &[_]u21{
-        0x0583,
-    });
-    try instance.map.put(0x0554, &[_]u21{
-        0x0584,
-    });
-    try instance.map.put(0x0555, &[_]u21{
-        0x0585,
-    });
-    try instance.map.put(0x0556, &[_]u21{
-        0x0586,
-    });
-    try instance.map.put(0x0587, &[_]u21{
-        0x0565,
-        0x0582,
-    });
-    try instance.map.put(0x10A0, &[_]u21{
-        0x2D00,
-    });
-    try instance.map.put(0x10A1, &[_]u21{
-        0x2D01,
-    });
-    try instance.map.put(0x10A2, &[_]u21{
-        0x2D02,
-    });
-    try instance.map.put(0x10A3, &[_]u21{
-        0x2D03,
-    });
-    try instance.map.put(0x10A4, &[_]u21{
-        0x2D04,
-    });
-    try instance.map.put(0x10A5, &[_]u21{
-        0x2D05,
-    });
-    try instance.map.put(0x10A6, &[_]u21{
-        0x2D06,
-    });
-    try instance.map.put(0x10A7, &[_]u21{
-        0x2D07,
-    });
-    try instance.map.put(0x10A8, &[_]u21{
-        0x2D08,
-    });
-    try instance.map.put(0x10A9, &[_]u21{
-        0x2D09,
-    });
-    try instance.map.put(0x10AA, &[_]u21{
-        0x2D0A,
-    });
-    try instance.map.put(0x10AB, &[_]u21{
-        0x2D0B,
-    });
-    try instance.map.put(0x10AC, &[_]u21{
-        0x2D0C,
-    });
-    try instance.map.put(0x10AD, &[_]u21{
-        0x2D0D,
-    });
-    try instance.map.put(0x10AE, &[_]u21{
-        0x2D0E,
-    });
-    try instance.map.put(0x10AF, &[_]u21{
-        0x2D0F,
-    });
-    try instance.map.put(0x10B0, &[_]u21{
-        0x2D10,
-    });
-    try instance.map.put(0x10B1, &[_]u21{
-        0x2D11,
-    });
-    try instance.map.put(0x10B2, &[_]u21{
-        0x2D12,
-    });
-    try instance.map.put(0x10B3, &[_]u21{
-        0x2D13,
-    });
-    try instance.map.put(0x10B4, &[_]u21{
-        0x2D14,
-    });
-    try instance.map.put(0x10B5, &[_]u21{
-        0x2D15,
-    });
-    try instance.map.put(0x10B6, &[_]u21{
-        0x2D16,
-    });
-    try instance.map.put(0x10B7, &[_]u21{
-        0x2D17,
-    });
-    try instance.map.put(0x10B8, &[_]u21{
-        0x2D18,
-    });
-    try instance.map.put(0x10B9, &[_]u21{
-        0x2D19,
-    });
-    try instance.map.put(0x10BA, &[_]u21{
-        0x2D1A,
-    });
-    try instance.map.put(0x10BB, &[_]u21{
-        0x2D1B,
-    });
-    try instance.map.put(0x10BC, &[_]u21{
-        0x2D1C,
-    });
-    try instance.map.put(0x10BD, &[_]u21{
-        0x2D1D,
-    });
-    try instance.map.put(0x10BE, &[_]u21{
-        0x2D1E,
-    });
-    try instance.map.put(0x10BF, &[_]u21{
-        0x2D1F,
-    });
-    try instance.map.put(0x10C0, &[_]u21{
-        0x2D20,
-    });
-    try instance.map.put(0x10C1, &[_]u21{
-        0x2D21,
-    });
-    try instance.map.put(0x10C2, &[_]u21{
-        0x2D22,
-    });
-    try instance.map.put(0x10C3, &[_]u21{
-        0x2D23,
-    });
-    try instance.map.put(0x10C4, &[_]u21{
-        0x2D24,
-    });
-    try instance.map.put(0x10C5, &[_]u21{
-        0x2D25,
-    });
-    try instance.map.put(0x10C7, &[_]u21{
-        0x2D27,
-    });
-    try instance.map.put(0x10CD, &[_]u21{
-        0x2D2D,
-    });
-    try instance.map.put(0x13F8, &[_]u21{
-        0x13F0,
-    });
-    try instance.map.put(0x13F9, &[_]u21{
-        0x13F1,
-    });
-    try instance.map.put(0x13FA, &[_]u21{
-        0x13F2,
-    });
-    try instance.map.put(0x13FB, &[_]u21{
-        0x13F3,
-    });
-    try instance.map.put(0x13FC, &[_]u21{
-        0x13F4,
-    });
-    try instance.map.put(0x13FD, &[_]u21{
-        0x13F5,
-    });
-    try instance.map.put(0x1C80, &[_]u21{
-        0x0432,
-    });
-    try instance.map.put(0x1C81, &[_]u21{
-        0x0434,
-    });
-    try instance.map.put(0x1C82, &[_]u21{
-        0x043E,
-    });
-    try instance.map.put(0x1C83, &[_]u21{
-        0x0441,
-    });
-    try instance.map.put(0x1C84, &[_]u21{
-        0x0442,
-    });
-    try instance.map.put(0x1C85, &[_]u21{
-        0x0442,
-    });
-    try instance.map.put(0x1C86, &[_]u21{
-        0x044A,
-    });
-    try instance.map.put(0x1C87, &[_]u21{
-        0x0463,
-    });
-    try instance.map.put(0x1C88, &[_]u21{
-        0xA64B,
-    });
-    try instance.map.put(0x1C90, &[_]u21{
-        0x10D0,
-    });
-    try instance.map.put(0x1C91, &[_]u21{
-        0x10D1,
-    });
-    try instance.map.put(0x1C92, &[_]u21{
-        0x10D2,
-    });
-    try instance.map.put(0x1C93, &[_]u21{
-        0x10D3,
-    });
-    try instance.map.put(0x1C94, &[_]u21{
-        0x10D4,
-    });
-    try instance.map.put(0x1C95, &[_]u21{
-        0x10D5,
-    });
-    try instance.map.put(0x1C96, &[_]u21{
-        0x10D6,
-    });
-    try instance.map.put(0x1C97, &[_]u21{
-        0x10D7,
-    });
-    try instance.map.put(0x1C98, &[_]u21{
-        0x10D8,
-    });
-    try instance.map.put(0x1C99, &[_]u21{
-        0x10D9,
-    });
-    try instance.map.put(0x1C9A, &[_]u21{
-        0x10DA,
-    });
-    try instance.map.put(0x1C9B, &[_]u21{
-        0x10DB,
-    });
-    try instance.map.put(0x1C9C, &[_]u21{
-        0x10DC,
-    });
-    try instance.map.put(0x1C9D, &[_]u21{
-        0x10DD,
-    });
-    try instance.map.put(0x1C9E, &[_]u21{
-        0x10DE,
-    });
-    try instance.map.put(0x1C9F, &[_]u21{
-        0x10DF,
-    });
-    try instance.map.put(0x1CA0, &[_]u21{
-        0x10E0,
-    });
-    try instance.map.put(0x1CA1, &[_]u21{
-        0x10E1,
-    });
-    try instance.map.put(0x1CA2, &[_]u21{
-        0x10E2,
-    });
-    try instance.map.put(0x1CA3, &[_]u21{
-        0x10E3,
-    });
-    try instance.map.put(0x1CA4, &[_]u21{
-        0x10E4,
-    });
-    try instance.map.put(0x1CA5, &[_]u21{
-        0x10E5,
-    });
-    try instance.map.put(0x1CA6, &[_]u21{
-        0x10E6,
-    });
-    try instance.map.put(0x1CA7, &[_]u21{
-        0x10E7,
-    });
-    try instance.map.put(0x1CA8, &[_]u21{
-        0x10E8,
-    });
-    try instance.map.put(0x1CA9, &[_]u21{
-        0x10E9,
-    });
-    try instance.map.put(0x1CAA, &[_]u21{
-        0x10EA,
-    });
-    try instance.map.put(0x1CAB, &[_]u21{
-        0x10EB,
-    });
-    try instance.map.put(0x1CAC, &[_]u21{
-        0x10EC,
-    });
-    try instance.map.put(0x1CAD, &[_]u21{
-        0x10ED,
-    });
-    try instance.map.put(0x1CAE, &[_]u21{
-        0x10EE,
-    });
-    try instance.map.put(0x1CAF, &[_]u21{
-        0x10EF,
-    });
-    try instance.map.put(0x1CB0, &[_]u21{
-        0x10F0,
-    });
-    try instance.map.put(0x1CB1, &[_]u21{
-        0x10F1,
-    });
-    try instance.map.put(0x1CB2, &[_]u21{
-        0x10F2,
-    });
-    try instance.map.put(0x1CB3, &[_]u21{
-        0x10F3,
-    });
-    try instance.map.put(0x1CB4, &[_]u21{
-        0x10F4,
-    });
-    try instance.map.put(0x1CB5, &[_]u21{
-        0x10F5,
-    });
-    try instance.map.put(0x1CB6, &[_]u21{
-        0x10F6,
-    });
-    try instance.map.put(0x1CB7, &[_]u21{
-        0x10F7,
-    });
-    try instance.map.put(0x1CB8, &[_]u21{
-        0x10F8,
-    });
-    try instance.map.put(0x1CB9, &[_]u21{
-        0x10F9,
-    });
-    try instance.map.put(0x1CBA, &[_]u21{
-        0x10FA,
-    });
-    try instance.map.put(0x1CBD, &[_]u21{
-        0x10FD,
-    });
-    try instance.map.put(0x1CBE, &[_]u21{
-        0x10FE,
-    });
-    try instance.map.put(0x1CBF, &[_]u21{
-        0x10FF,
-    });
-    try instance.map.put(0x1E00, &[_]u21{
-        0x1E01,
-    });
-    try instance.map.put(0x1E02, &[_]u21{
-        0x1E03,
-    });
-    try instance.map.put(0x1E04, &[_]u21{
-        0x1E05,
-    });
-    try instance.map.put(0x1E06, &[_]u21{
-        0x1E07,
-    });
-    try instance.map.put(0x1E08, &[_]u21{
-        0x1E09,
-    });
-    try instance.map.put(0x1E0A, &[_]u21{
-        0x1E0B,
-    });
-    try instance.map.put(0x1E0C, &[_]u21{
-        0x1E0D,
-    });
-    try instance.map.put(0x1E0E, &[_]u21{
-        0x1E0F,
-    });
-    try instance.map.put(0x1E10, &[_]u21{
-        0x1E11,
-    });
-    try instance.map.put(0x1E12, &[_]u21{
-        0x1E13,
-    });
-    try instance.map.put(0x1E14, &[_]u21{
-        0x1E15,
-    });
-    try instance.map.put(0x1E16, &[_]u21{
-        0x1E17,
-    });
-    try instance.map.put(0x1E18, &[_]u21{
-        0x1E19,
-    });
-    try instance.map.put(0x1E1A, &[_]u21{
-        0x1E1B,
-    });
-    try instance.map.put(0x1E1C, &[_]u21{
-        0x1E1D,
-    });
-    try instance.map.put(0x1E1E, &[_]u21{
-        0x1E1F,
-    });
-    try instance.map.put(0x1E20, &[_]u21{
-        0x1E21,
-    });
-    try instance.map.put(0x1E22, &[_]u21{
-        0x1E23,
-    });
-    try instance.map.put(0x1E24, &[_]u21{
-        0x1E25,
-    });
-    try instance.map.put(0x1E26, &[_]u21{
-        0x1E27,
-    });
-    try instance.map.put(0x1E28, &[_]u21{
-        0x1E29,
-    });
-    try instance.map.put(0x1E2A, &[_]u21{
-        0x1E2B,
-    });
-    try instance.map.put(0x1E2C, &[_]u21{
-        0x1E2D,
-    });
-    try instance.map.put(0x1E2E, &[_]u21{
-        0x1E2F,
-    });
-    try instance.map.put(0x1E30, &[_]u21{
-        0x1E31,
-    });
-    try instance.map.put(0x1E32, &[_]u21{
-        0x1E33,
-    });
-    try instance.map.put(0x1E34, &[_]u21{
-        0x1E35,
-    });
-    try instance.map.put(0x1E36, &[_]u21{
-        0x1E37,
-    });
-    try instance.map.put(0x1E38, &[_]u21{
-        0x1E39,
-    });
-    try instance.map.put(0x1E3A, &[_]u21{
-        0x1E3B,
-    });
-    try instance.map.put(0x1E3C, &[_]u21{
-        0x1E3D,
-    });
-    try instance.map.put(0x1E3E, &[_]u21{
-        0x1E3F,
-    });
-    try instance.map.put(0x1E40, &[_]u21{
-        0x1E41,
-    });
-    try instance.map.put(0x1E42, &[_]u21{
-        0x1E43,
-    });
-    try instance.map.put(0x1E44, &[_]u21{
-        0x1E45,
-    });
-    try instance.map.put(0x1E46, &[_]u21{
-        0x1E47,
-    });
-    try instance.map.put(0x1E48, &[_]u21{
-        0x1E49,
-    });
-    try instance.map.put(0x1E4A, &[_]u21{
-        0x1E4B,
-    });
-    try instance.map.put(0x1E4C, &[_]u21{
-        0x1E4D,
-    });
-    try instance.map.put(0x1E4E, &[_]u21{
-        0x1E4F,
-    });
-    try instance.map.put(0x1E50, &[_]u21{
-        0x1E51,
-    });
-    try instance.map.put(0x1E52, &[_]u21{
-        0x1E53,
-    });
-    try instance.map.put(0x1E54, &[_]u21{
-        0x1E55,
-    });
-    try instance.map.put(0x1E56, &[_]u21{
-        0x1E57,
-    });
-    try instance.map.put(0x1E58, &[_]u21{
-        0x1E59,
-    });
-    try instance.map.put(0x1E5A, &[_]u21{
-        0x1E5B,
-    });
-    try instance.map.put(0x1E5C, &[_]u21{
-        0x1E5D,
-    });
-    try instance.map.put(0x1E5E, &[_]u21{
-        0x1E5F,
-    });
-    try instance.map.put(0x1E60, &[_]u21{
-        0x1E61,
-    });
-    try instance.map.put(0x1E62, &[_]u21{
-        0x1E63,
-    });
-    try instance.map.put(0x1E64, &[_]u21{
-        0x1E65,
-    });
-    try instance.map.put(0x1E66, &[_]u21{
-        0x1E67,
-    });
-    try instance.map.put(0x1E68, &[_]u21{
-        0x1E69,
-    });
-    try instance.map.put(0x1E6A, &[_]u21{
-        0x1E6B,
-    });
-    try instance.map.put(0x1E6C, &[_]u21{
-        0x1E6D,
-    });
-    try instance.map.put(0x1E6E, &[_]u21{
-        0x1E6F,
-    });
-    try instance.map.put(0x1E70, &[_]u21{
-        0x1E71,
-    });
-    try instance.map.put(0x1E72, &[_]u21{
-        0x1E73,
-    });
-    try instance.map.put(0x1E74, &[_]u21{
-        0x1E75,
-    });
-    try instance.map.put(0x1E76, &[_]u21{
-        0x1E77,
-    });
-    try instance.map.put(0x1E78, &[_]u21{
-        0x1E79,
-    });
-    try instance.map.put(0x1E7A, &[_]u21{
-        0x1E7B,
-    });
-    try instance.map.put(0x1E7C, &[_]u21{
-        0x1E7D,
-    });
-    try instance.map.put(0x1E7E, &[_]u21{
-        0x1E7F,
-    });
-    try instance.map.put(0x1E80, &[_]u21{
-        0x1E81,
-    });
-    try instance.map.put(0x1E82, &[_]u21{
-        0x1E83,
-    });
-    try instance.map.put(0x1E84, &[_]u21{
-        0x1E85,
-    });
-    try instance.map.put(0x1E86, &[_]u21{
-        0x1E87,
-    });
-    try instance.map.put(0x1E88, &[_]u21{
-        0x1E89,
-    });
-    try instance.map.put(0x1E8A, &[_]u21{
-        0x1E8B,
-    });
-    try instance.map.put(0x1E8C, &[_]u21{
-        0x1E8D,
-    });
-    try instance.map.put(0x1E8E, &[_]u21{
-        0x1E8F,
-    });
-    try instance.map.put(0x1E90, &[_]u21{
-        0x1E91,
-    });
-    try instance.map.put(0x1E92, &[_]u21{
-        0x1E93,
-    });
-    try instance.map.put(0x1E94, &[_]u21{
-        0x1E95,
-    });
-    try instance.map.put(0x1E96, &[_]u21{
-        0x0068,
-        0x0331,
-    });
-    try instance.map.put(0x1E97, &[_]u21{
-        0x0074,
-        0x0308,
-    });
-    try instance.map.put(0x1E98, &[_]u21{
-        0x0077,
-        0x030A,
-    });
-    try instance.map.put(0x1E99, &[_]u21{
-        0x0079,
-        0x030A,
-    });
-    try instance.map.put(0x1E9A, &[_]u21{
-        0x0061,
-        0x02BE,
-    });
-    try instance.map.put(0x1E9B, &[_]u21{
-        0x1E61,
-    });
-    try instance.map.put(0x1E9E, &[_]u21{
-        0x0073,
-        0x0073,
-    });
-    try instance.map.put(0x1EA0, &[_]u21{
-        0x1EA1,
-    });
-    try instance.map.put(0x1EA2, &[_]u21{
-        0x1EA3,
-    });
-    try instance.map.put(0x1EA4, &[_]u21{
-        0x1EA5,
-    });
-    try instance.map.put(0x1EA6, &[_]u21{
-        0x1EA7,
-    });
-    try instance.map.put(0x1EA8, &[_]u21{
-        0x1EA9,
-    });
-    try instance.map.put(0x1EAA, &[_]u21{
-        0x1EAB,
-    });
-    try instance.map.put(0x1EAC, &[_]u21{
-        0x1EAD,
-    });
-    try instance.map.put(0x1EAE, &[_]u21{
-        0x1EAF,
-    });
-    try instance.map.put(0x1EB0, &[_]u21{
-        0x1EB1,
-    });
-    try instance.map.put(0x1EB2, &[_]u21{
-        0x1EB3,
-    });
-    try instance.map.put(0x1EB4, &[_]u21{
-        0x1EB5,
-    });
-    try instance.map.put(0x1EB6, &[_]u21{
-        0x1EB7,
-    });
-    try instance.map.put(0x1EB8, &[_]u21{
-        0x1EB9,
-    });
-    try instance.map.put(0x1EBA, &[_]u21{
-        0x1EBB,
-    });
-    try instance.map.put(0x1EBC, &[_]u21{
-        0x1EBD,
-    });
-    try instance.map.put(0x1EBE, &[_]u21{
-        0x1EBF,
-    });
-    try instance.map.put(0x1EC0, &[_]u21{
-        0x1EC1,
-    });
-    try instance.map.put(0x1EC2, &[_]u21{
-        0x1EC3,
-    });
-    try instance.map.put(0x1EC4, &[_]u21{
-        0x1EC5,
-    });
-    try instance.map.put(0x1EC6, &[_]u21{
-        0x1EC7,
-    });
-    try instance.map.put(0x1EC8, &[_]u21{
-        0x1EC9,
-    });
-    try instance.map.put(0x1ECA, &[_]u21{
-        0x1ECB,
-    });
-    try instance.map.put(0x1ECC, &[_]u21{
-        0x1ECD,
-    });
-    try instance.map.put(0x1ECE, &[_]u21{
-        0x1ECF,
-    });
-    try instance.map.put(0x1ED0, &[_]u21{
-        0x1ED1,
-    });
-    try instance.map.put(0x1ED2, &[_]u21{
-        0x1ED3,
-    });
-    try instance.map.put(0x1ED4, &[_]u21{
-        0x1ED5,
-    });
-    try instance.map.put(0x1ED6, &[_]u21{
-        0x1ED7,
-    });
-    try instance.map.put(0x1ED8, &[_]u21{
-        0x1ED9,
-    });
-    try instance.map.put(0x1EDA, &[_]u21{
-        0x1EDB,
-    });
-    try instance.map.put(0x1EDC, &[_]u21{
-        0x1EDD,
-    });
-    try instance.map.put(0x1EDE, &[_]u21{
-        0x1EDF,
-    });
-    try instance.map.put(0x1EE0, &[_]u21{
-        0x1EE1,
-    });
-    try instance.map.put(0x1EE2, &[_]u21{
-        0x1EE3,
-    });
-    try instance.map.put(0x1EE4, &[_]u21{
-        0x1EE5,
-    });
-    try instance.map.put(0x1EE6, &[_]u21{
-        0x1EE7,
-    });
-    try instance.map.put(0x1EE8, &[_]u21{
-        0x1EE9,
-    });
-    try instance.map.put(0x1EEA, &[_]u21{
-        0x1EEB,
-    });
-    try instance.map.put(0x1EEC, &[_]u21{
-        0x1EED,
-    });
-    try instance.map.put(0x1EEE, &[_]u21{
-        0x1EEF,
-    });
-    try instance.map.put(0x1EF0, &[_]u21{
-        0x1EF1,
-    });
-    try instance.map.put(0x1EF2, &[_]u21{
-        0x1EF3,
-    });
-    try instance.map.put(0x1EF4, &[_]u21{
-        0x1EF5,
-    });
-    try instance.map.put(0x1EF6, &[_]u21{
-        0x1EF7,
-    });
-    try instance.map.put(0x1EF8, &[_]u21{
-        0x1EF9,
-    });
-    try instance.map.put(0x1EFA, &[_]u21{
-        0x1EFB,
-    });
-    try instance.map.put(0x1EFC, &[_]u21{
-        0x1EFD,
-    });
-    try instance.map.put(0x1EFE, &[_]u21{
-        0x1EFF,
-    });
-    try instance.map.put(0x1F08, &[_]u21{
-        0x1F00,
-    });
-    try instance.map.put(0x1F09, &[_]u21{
-        0x1F01,
-    });
-    try instance.map.put(0x1F0A, &[_]u21{
-        0x1F02,
-    });
-    try instance.map.put(0x1F0B, &[_]u21{
-        0x1F03,
-    });
-    try instance.map.put(0x1F0C, &[_]u21{
-        0x1F04,
-    });
-    try instance.map.put(0x1F0D, &[_]u21{
-        0x1F05,
-    });
-    try instance.map.put(0x1F0E, &[_]u21{
-        0x1F06,
-    });
-    try instance.map.put(0x1F0F, &[_]u21{
-        0x1F07,
-    });
-    try instance.map.put(0x1F18, &[_]u21{
-        0x1F10,
-    });
-    try instance.map.put(0x1F19, &[_]u21{
-        0x1F11,
-    });
-    try instance.map.put(0x1F1A, &[_]u21{
-        0x1F12,
-    });
-    try instance.map.put(0x1F1B, &[_]u21{
-        0x1F13,
-    });
-    try instance.map.put(0x1F1C, &[_]u21{
-        0x1F14,
-    });
-    try instance.map.put(0x1F1D, &[_]u21{
-        0x1F15,
-    });
-    try instance.map.put(0x1F28, &[_]u21{
-        0x1F20,
-    });
-    try instance.map.put(0x1F29, &[_]u21{
-        0x1F21,
-    });
-    try instance.map.put(0x1F2A, &[_]u21{
-        0x1F22,
-    });
-    try instance.map.put(0x1F2B, &[_]u21{
-        0x1F23,
-    });
-    try instance.map.put(0x1F2C, &[_]u21{
-        0x1F24,
-    });
-    try instance.map.put(0x1F2D, &[_]u21{
-        0x1F25,
-    });
-    try instance.map.put(0x1F2E, &[_]u21{
-        0x1F26,
-    });
-    try instance.map.put(0x1F2F, &[_]u21{
-        0x1F27,
-    });
-    try instance.map.put(0x1F38, &[_]u21{
-        0x1F30,
-    });
-    try instance.map.put(0x1F39, &[_]u21{
-        0x1F31,
-    });
-    try instance.map.put(0x1F3A, &[_]u21{
-        0x1F32,
-    });
-    try instance.map.put(0x1F3B, &[_]u21{
-        0x1F33,
-    });
-    try instance.map.put(0x1F3C, &[_]u21{
-        0x1F34,
-    });
-    try instance.map.put(0x1F3D, &[_]u21{
-        0x1F35,
-    });
-    try instance.map.put(0x1F3E, &[_]u21{
-        0x1F36,
-    });
-    try instance.map.put(0x1F3F, &[_]u21{
-        0x1F37,
-    });
-    try instance.map.put(0x1F48, &[_]u21{
-        0x1F40,
-    });
-    try instance.map.put(0x1F49, &[_]u21{
-        0x1F41,
-    });
-    try instance.map.put(0x1F4A, &[_]u21{
-        0x1F42,
-    });
-    try instance.map.put(0x1F4B, &[_]u21{
-        0x1F43,
-    });
-    try instance.map.put(0x1F4C, &[_]u21{
-        0x1F44,
-    });
-    try instance.map.put(0x1F4D, &[_]u21{
-        0x1F45,
-    });
-    try instance.map.put(0x1F50, &[_]u21{
-        0x03C5,
-        0x0313,
-    });
-    try instance.map.put(0x1F52, &[_]u21{
-        0x03C5,
-        0x0313,
-        0x0300,
-    });
-    try instance.map.put(0x1F54, &[_]u21{
-        0x03C5,
-        0x0313,
-        0x0301,
-    });
-    try instance.map.put(0x1F56, &[_]u21{
-        0x03C5,
-        0x0313,
-        0x0342,
-    });
-    try instance.map.put(0x1F59, &[_]u21{
-        0x1F51,
-    });
-    try instance.map.put(0x1F5B, &[_]u21{
-        0x1F53,
-    });
-    try instance.map.put(0x1F5D, &[_]u21{
-        0x1F55,
-    });
-    try instance.map.put(0x1F5F, &[_]u21{
-        0x1F57,
-    });
-    try instance.map.put(0x1F68, &[_]u21{
-        0x1F60,
-    });
-    try instance.map.put(0x1F69, &[_]u21{
-        0x1F61,
-    });
-    try instance.map.put(0x1F6A, &[_]u21{
-        0x1F62,
-    });
-    try instance.map.put(0x1F6B, &[_]u21{
-        0x1F63,
-    });
-    try instance.map.put(0x1F6C, &[_]u21{
-        0x1F64,
-    });
-    try instance.map.put(0x1F6D, &[_]u21{
-        0x1F65,
-    });
-    try instance.map.put(0x1F6E, &[_]u21{
-        0x1F66,
-    });
-    try instance.map.put(0x1F6F, &[_]u21{
-        0x1F67,
-    });
-    try instance.map.put(0x1F80, &[_]u21{
-        0x1F00,
-        0x03B9,
-    });
-    try instance.map.put(0x1F81, &[_]u21{
-        0x1F01,
-        0x03B9,
-    });
-    try instance.map.put(0x1F82, &[_]u21{
-        0x1F02,
-        0x03B9,
-    });
-    try instance.map.put(0x1F83, &[_]u21{
-        0x1F03,
-        0x03B9,
-    });
-    try instance.map.put(0x1F84, &[_]u21{
-        0x1F04,
-        0x03B9,
-    });
-    try instance.map.put(0x1F85, &[_]u21{
-        0x1F05,
-        0x03B9,
-    });
-    try instance.map.put(0x1F86, &[_]u21{
-        0x1F06,
-        0x03B9,
-    });
-    try instance.map.put(0x1F87, &[_]u21{
-        0x1F07,
-        0x03B9,
-    });
-    try instance.map.put(0x1F88, &[_]u21{
-        0x1F00,
-        0x03B9,
-    });
-    try instance.map.put(0x1F89, &[_]u21{
-        0x1F01,
-        0x03B9,
-    });
-    try instance.map.put(0x1F8A, &[_]u21{
-        0x1F02,
-        0x03B9,
-    });
-    try instance.map.put(0x1F8B, &[_]u21{
-        0x1F03,
-        0x03B9,
-    });
-    try instance.map.put(0x1F8C, &[_]u21{
-        0x1F04,
-        0x03B9,
-    });
-    try instance.map.put(0x1F8D, &[_]u21{
-        0x1F05,
-        0x03B9,
-    });
-    try instance.map.put(0x1F8E, &[_]u21{
-        0x1F06,
-        0x03B9,
-    });
-    try instance.map.put(0x1F8F, &[_]u21{
-        0x1F07,
-        0x03B9,
-    });
-    try instance.map.put(0x1F90, &[_]u21{
-        0x1F20,
-        0x03B9,
-    });
-    try instance.map.put(0x1F91, &[_]u21{
-        0x1F21,
-        0x03B9,
-    });
-    try instance.map.put(0x1F92, &[_]u21{
-        0x1F22,
-        0x03B9,
-    });
-    try instance.map.put(0x1F93, &[_]u21{
-        0x1F23,
-        0x03B9,
-    });
-    try instance.map.put(0x1F94, &[_]u21{
-        0x1F24,
-        0x03B9,
-    });
-    try instance.map.put(0x1F95, &[_]u21{
-        0x1F25,
-        0x03B9,
-    });
-    try instance.map.put(0x1F96, &[_]u21{
-        0x1F26,
-        0x03B9,
-    });
-    try instance.map.put(0x1F97, &[_]u21{
-        0x1F27,
-        0x03B9,
-    });
-    try instance.map.put(0x1F98, &[_]u21{
-        0x1F20,
-        0x03B9,
-    });
-    try instance.map.put(0x1F99, &[_]u21{
-        0x1F21,
-        0x03B9,
-    });
-    try instance.map.put(0x1F9A, &[_]u21{
-        0x1F22,
-        0x03B9,
-    });
-    try instance.map.put(0x1F9B, &[_]u21{
-        0x1F23,
-        0x03B9,
-    });
-    try instance.map.put(0x1F9C, &[_]u21{
-        0x1F24,
-        0x03B9,
-    });
-    try instance.map.put(0x1F9D, &[_]u21{
-        0x1F25,
-        0x03B9,
-    });
-    try instance.map.put(0x1F9E, &[_]u21{
-        0x1F26,
-        0x03B9,
-    });
-    try instance.map.put(0x1F9F, &[_]u21{
-        0x1F27,
-        0x03B9,
-    });
-    try instance.map.put(0x1FA0, &[_]u21{
-        0x1F60,
-        0x03B9,
-    });
-    try instance.map.put(0x1FA1, &[_]u21{
-        0x1F61,
-        0x03B9,
-    });
-    try instance.map.put(0x1FA2, &[_]u21{
-        0x1F62,
-        0x03B9,
-    });
-    try instance.map.put(0x1FA3, &[_]u21{
-        0x1F63,
-        0x03B9,
-    });
-    try instance.map.put(0x1FA4, &[_]u21{
-        0x1F64,
-        0x03B9,
-    });
-    try instance.map.put(0x1FA5, &[_]u21{
-        0x1F65,
-        0x03B9,
-    });
-    try instance.map.put(0x1FA6, &[_]u21{
-        0x1F66,
-        0x03B9,
-    });
-    try instance.map.put(0x1FA7, &[_]u21{
-        0x1F67,
-        0x03B9,
-    });
-    try instance.map.put(0x1FA8, &[_]u21{
-        0x1F60,
-        0x03B9,
-    });
-    try instance.map.put(0x1FA9, &[_]u21{
-        0x1F61,
-        0x03B9,
-    });
-    try instance.map.put(0x1FAA, &[_]u21{
-        0x1F62,
-        0x03B9,
-    });
-    try instance.map.put(0x1FAB, &[_]u21{
-        0x1F63,
-        0x03B9,
-    });
-    try instance.map.put(0x1FAC, &[_]u21{
-        0x1F64,
-        0x03B9,
-    });
-    try instance.map.put(0x1FAD, &[_]u21{
-        0x1F65,
-        0x03B9,
-    });
-    try instance.map.put(0x1FAE, &[_]u21{
-        0x1F66,
-        0x03B9,
-    });
-    try instance.map.put(0x1FAF, &[_]u21{
-        0x1F67,
-        0x03B9,
-    });
-    try instance.map.put(0x1FB2, &[_]u21{
-        0x1F70,
-        0x03B9,
-    });
-    try instance.map.put(0x1FB3, &[_]u21{
-        0x03B1,
-        0x03B9,
-    });
-    try instance.map.put(0x1FB4, &[_]u21{
-        0x03AC,
-        0x03B9,
-    });
-    try instance.map.put(0x1FB6, &[_]u21{
-        0x03B1,
-        0x0342,
-    });
-    try instance.map.put(0x1FB7, &[_]u21{
-        0x03B1,
-        0x0342,
-        0x03B9,
-    });
-    try instance.map.put(0x1FB8, &[_]u21{
-        0x1FB0,
-    });
-    try instance.map.put(0x1FB9, &[_]u21{
-        0x1FB1,
-    });
-    try instance.map.put(0x1FBA, &[_]u21{
-        0x1F70,
-    });
-    try instance.map.put(0x1FBB, &[_]u21{
-        0x1F71,
-    });
-    try instance.map.put(0x1FBC, &[_]u21{
-        0x03B1,
-        0x03B9,
-    });
-    try instance.map.put(0x1FBE, &[_]u21{
-        0x03B9,
-    });
-    try instance.map.put(0x1FC2, &[_]u21{
-        0x1F74,
-        0x03B9,
-    });
-    try instance.map.put(0x1FC3, &[_]u21{
-        0x03B7,
-        0x03B9,
-    });
-    try instance.map.put(0x1FC4, &[_]u21{
-        0x03AE,
-        0x03B9,
-    });
-    try instance.map.put(0x1FC6, &[_]u21{
-        0x03B7,
-        0x0342,
-    });
-    try instance.map.put(0x1FC7, &[_]u21{
-        0x03B7,
-        0x0342,
-        0x03B9,
-    });
-    try instance.map.put(0x1FC8, &[_]u21{
-        0x1F72,
-    });
-    try instance.map.put(0x1FC9, &[_]u21{
-        0x1F73,
-    });
-    try instance.map.put(0x1FCA, &[_]u21{
-        0x1F74,
-    });
-    try instance.map.put(0x1FCB, &[_]u21{
-        0x1F75,
-    });
-    try instance.map.put(0x1FCC, &[_]u21{
-        0x03B7,
-        0x03B9,
-    });
-    try instance.map.put(0x1FD2, &[_]u21{
-        0x03B9,
-        0x0308,
-        0x0300,
-    });
-    try instance.map.put(0x1FD3, &[_]u21{
-        0x03B9,
-        0x0308,
-        0x0301,
-    });
-    try instance.map.put(0x1FD6, &[_]u21{
-        0x03B9,
-        0x0342,
-    });
-    try instance.map.put(0x1FD7, &[_]u21{
-        0x03B9,
-        0x0308,
-        0x0342,
-    });
-    try instance.map.put(0x1FD8, &[_]u21{
-        0x1FD0,
-    });
-    try instance.map.put(0x1FD9, &[_]u21{
-        0x1FD1,
-    });
-    try instance.map.put(0x1FDA, &[_]u21{
-        0x1F76,
-    });
-    try instance.map.put(0x1FDB, &[_]u21{
-        0x1F77,
-    });
-    try instance.map.put(0x1FE2, &[_]u21{
-        0x03C5,
-        0x0308,
-        0x0300,
-    });
-    try instance.map.put(0x1FE3, &[_]u21{
-        0x03C5,
-        0x0308,
-        0x0301,
-    });
-    try instance.map.put(0x1FE4, &[_]u21{
-        0x03C1,
-        0x0313,
-    });
-    try instance.map.put(0x1FE6, &[_]u21{
-        0x03C5,
-        0x0342,
-    });
-    try instance.map.put(0x1FE7, &[_]u21{
-        0x03C5,
-        0x0308,
-        0x0342,
-    });
-    try instance.map.put(0x1FE8, &[_]u21{
-        0x1FE0,
-    });
-    try instance.map.put(0x1FE9, &[_]u21{
-        0x1FE1,
-    });
-    try instance.map.put(0x1FEA, &[_]u21{
-        0x1F7A,
-    });
-    try instance.map.put(0x1FEB, &[_]u21{
-        0x1F7B,
-    });
-    try instance.map.put(0x1FEC, &[_]u21{
-        0x1FE5,
-    });
-    try instance.map.put(0x1FF2, &[_]u21{
-        0x1F7C,
-        0x03B9,
-    });
-    try instance.map.put(0x1FF3, &[_]u21{
-        0x03C9,
-        0x03B9,
-    });
-    try instance.map.put(0x1FF4, &[_]u21{
-        0x03CE,
-        0x03B9,
-    });
-    try instance.map.put(0x1FF6, &[_]u21{
-        0x03C9,
-        0x0342,
-    });
-    try instance.map.put(0x1FF7, &[_]u21{
-        0x03C9,
-        0x0342,
-        0x03B9,
-    });
-    try instance.map.put(0x1FF8, &[_]u21{
-        0x1F78,
-    });
-    try instance.map.put(0x1FF9, &[_]u21{
-        0x1F79,
-    });
-    try instance.map.put(0x1FFA, &[_]u21{
-        0x1F7C,
-    });
-    try instance.map.put(0x1FFB, &[_]u21{
-        0x1F7D,
-    });
-    try instance.map.put(0x1FFC, &[_]u21{
-        0x03C9,
-        0x03B9,
-    });
-    try instance.map.put(0x2126, &[_]u21{
-        0x03C9,
-    });
-    try instance.map.put(0x212A, &[_]u21{
-        0x006B,
-    });
-    try instance.map.put(0x212B, &[_]u21{
-        0x00E5,
-    });
-    try instance.map.put(0x2132, &[_]u21{
-        0x214E,
-    });
-    try instance.map.put(0x2160, &[_]u21{
-        0x2170,
-    });
-    try instance.map.put(0x2161, &[_]u21{
-        0x2171,
-    });
-    try instance.map.put(0x2162, &[_]u21{
-        0x2172,
-    });
-    try instance.map.put(0x2163, &[_]u21{
-        0x2173,
-    });
-    try instance.map.put(0x2164, &[_]u21{
-        0x2174,
-    });
-    try instance.map.put(0x2165, &[_]u21{
-        0x2175,
-    });
-    try instance.map.put(0x2166, &[_]u21{
-        0x2176,
-    });
-    try instance.map.put(0x2167, &[_]u21{
-        0x2177,
-    });
-    try instance.map.put(0x2168, &[_]u21{
-        0x2178,
-    });
-    try instance.map.put(0x2169, &[_]u21{
-        0x2179,
-    });
-    try instance.map.put(0x216A, &[_]u21{
-        0x217A,
-    });
-    try instance.map.put(0x216B, &[_]u21{
-        0x217B,
-    });
-    try instance.map.put(0x216C, &[_]u21{
-        0x217C,
-    });
-    try instance.map.put(0x216D, &[_]u21{
-        0x217D,
-    });
-    try instance.map.put(0x216E, &[_]u21{
-        0x217E,
-    });
-    try instance.map.put(0x216F, &[_]u21{
-        0x217F,
-    });
-    try instance.map.put(0x2183, &[_]u21{
-        0x2184,
-    });
-    try instance.map.put(0x24B6, &[_]u21{
-        0x24D0,
-    });
-    try instance.map.put(0x24B7, &[_]u21{
-        0x24D1,
-    });
-    try instance.map.put(0x24B8, &[_]u21{
-        0x24D2,
-    });
-    try instance.map.put(0x24B9, &[_]u21{
-        0x24D3,
-    });
-    try instance.map.put(0x24BA, &[_]u21{
-        0x24D4,
-    });
-    try instance.map.put(0x24BB, &[_]u21{
-        0x24D5,
-    });
-    try instance.map.put(0x24BC, &[_]u21{
-        0x24D6,
-    });
-    try instance.map.put(0x24BD, &[_]u21{
-        0x24D7,
-    });
-    try instance.map.put(0x24BE, &[_]u21{
-        0x24D8,
-    });
-    try instance.map.put(0x24BF, &[_]u21{
-        0x24D9,
-    });
-    try instance.map.put(0x24C0, &[_]u21{
-        0x24DA,
-    });
-    try instance.map.put(0x24C1, &[_]u21{
-        0x24DB,
-    });
-    try instance.map.put(0x24C2, &[_]u21{
-        0x24DC,
-    });
-    try instance.map.put(0x24C3, &[_]u21{
-        0x24DD,
-    });
-    try instance.map.put(0x24C4, &[_]u21{
-        0x24DE,
-    });
-    try instance.map.put(0x24C5, &[_]u21{
-        0x24DF,
-    });
-    try instance.map.put(0x24C6, &[_]u21{
-        0x24E0,
-    });
-    try instance.map.put(0x24C7, &[_]u21{
-        0x24E1,
-    });
-    try instance.map.put(0x24C8, &[_]u21{
-        0x24E2,
-    });
-    try instance.map.put(0x24C9, &[_]u21{
-        0x24E3,
-    });
-    try instance.map.put(0x24CA, &[_]u21{
-        0x24E4,
-    });
-    try instance.map.put(0x24CB, &[_]u21{
-        0x24E5,
-    });
-    try instance.map.put(0x24CC, &[_]u21{
-        0x24E6,
-    });
-    try instance.map.put(0x24CD, &[_]u21{
-        0x24E7,
-    });
-    try instance.map.put(0x24CE, &[_]u21{
-        0x24E8,
-    });
-    try instance.map.put(0x24CF, &[_]u21{
-        0x24E9,
-    });
-    try instance.map.put(0x2C00, &[_]u21{
-        0x2C30,
-    });
-    try instance.map.put(0x2C01, &[_]u21{
-        0x2C31,
-    });
-    try instance.map.put(0x2C02, &[_]u21{
-        0x2C32,
-    });
-    try instance.map.put(0x2C03, &[_]u21{
-        0x2C33,
-    });
-    try instance.map.put(0x2C04, &[_]u21{
-        0x2C34,
-    });
-    try instance.map.put(0x2C05, &[_]u21{
-        0x2C35,
-    });
-    try instance.map.put(0x2C06, &[_]u21{
-        0x2C36,
-    });
-    try instance.map.put(0x2C07, &[_]u21{
-        0x2C37,
-    });
-    try instance.map.put(0x2C08, &[_]u21{
-        0x2C38,
-    });
-    try instance.map.put(0x2C09, &[_]u21{
-        0x2C39,
-    });
-    try instance.map.put(0x2C0A, &[_]u21{
-        0x2C3A,
-    });
-    try instance.map.put(0x2C0B, &[_]u21{
-        0x2C3B,
-    });
-    try instance.map.put(0x2C0C, &[_]u21{
-        0x2C3C,
-    });
-    try instance.map.put(0x2C0D, &[_]u21{
-        0x2C3D,
-    });
-    try instance.map.put(0x2C0E, &[_]u21{
-        0x2C3E,
-    });
-    try instance.map.put(0x2C0F, &[_]u21{
-        0x2C3F,
-    });
-    try instance.map.put(0x2C10, &[_]u21{
-        0x2C40,
-    });
-    try instance.map.put(0x2C11, &[_]u21{
-        0x2C41,
-    });
-    try instance.map.put(0x2C12, &[_]u21{
-        0x2C42,
-    });
-    try instance.map.put(0x2C13, &[_]u21{
-        0x2C43,
-    });
-    try instance.map.put(0x2C14, &[_]u21{
-        0x2C44,
-    });
-    try instance.map.put(0x2C15, &[_]u21{
-        0x2C45,
-    });
-    try instance.map.put(0x2C16, &[_]u21{
-        0x2C46,
-    });
-    try instance.map.put(0x2C17, &[_]u21{
-        0x2C47,
-    });
-    try instance.map.put(0x2C18, &[_]u21{
-        0x2C48,
-    });
-    try instance.map.put(0x2C19, &[_]u21{
-        0x2C49,
-    });
-    try instance.map.put(0x2C1A, &[_]u21{
-        0x2C4A,
-    });
-    try instance.map.put(0x2C1B, &[_]u21{
-        0x2C4B,
-    });
-    try instance.map.put(0x2C1C, &[_]u21{
-        0x2C4C,
-    });
-    try instance.map.put(0x2C1D, &[_]u21{
-        0x2C4D,
-    });
-    try instance.map.put(0x2C1E, &[_]u21{
-        0x2C4E,
-    });
-    try instance.map.put(0x2C1F, &[_]u21{
-        0x2C4F,
-    });
-    try instance.map.put(0x2C20, &[_]u21{
-        0x2C50,
-    });
-    try instance.map.put(0x2C21, &[_]u21{
-        0x2C51,
-    });
-    try instance.map.put(0x2C22, &[_]u21{
-        0x2C52,
-    });
-    try instance.map.put(0x2C23, &[_]u21{
-        0x2C53,
-    });
-    try instance.map.put(0x2C24, &[_]u21{
-        0x2C54,
-    });
-    try instance.map.put(0x2C25, &[_]u21{
-        0x2C55,
-    });
-    try instance.map.put(0x2C26, &[_]u21{
-        0x2C56,
-    });
-    try instance.map.put(0x2C27, &[_]u21{
-        0x2C57,
-    });
-    try instance.map.put(0x2C28, &[_]u21{
-        0x2C58,
-    });
-    try instance.map.put(0x2C29, &[_]u21{
-        0x2C59,
-    });
-    try instance.map.put(0x2C2A, &[_]u21{
-        0x2C5A,
-    });
-    try instance.map.put(0x2C2B, &[_]u21{
-        0x2C5B,
-    });
-    try instance.map.put(0x2C2C, &[_]u21{
-        0x2C5C,
-    });
-    try instance.map.put(0x2C2D, &[_]u21{
-        0x2C5D,
-    });
-    try instance.map.put(0x2C2E, &[_]u21{
-        0x2C5E,
-    });
-    try instance.map.put(0x2C60, &[_]u21{
-        0x2C61,
-    });
-    try instance.map.put(0x2C62, &[_]u21{
-        0x026B,
-    });
-    try instance.map.put(0x2C63, &[_]u21{
-        0x1D7D,
-    });
-    try instance.map.put(0x2C64, &[_]u21{
-        0x027D,
-    });
-    try instance.map.put(0x2C67, &[_]u21{
-        0x2C68,
-    });
-    try instance.map.put(0x2C69, &[_]u21{
-        0x2C6A,
-    });
-    try instance.map.put(0x2C6B, &[_]u21{
-        0x2C6C,
-    });
-    try instance.map.put(0x2C6D, &[_]u21{
-        0x0251,
-    });
-    try instance.map.put(0x2C6E, &[_]u21{
-        0x0271,
-    });
-    try instance.map.put(0x2C6F, &[_]u21{
-        0x0250,
-    });
-    try instance.map.put(0x2C70, &[_]u21{
-        0x0252,
-    });
-    try instance.map.put(0x2C72, &[_]u21{
-        0x2C73,
-    });
-    try instance.map.put(0x2C75, &[_]u21{
-        0x2C76,
-    });
-    try instance.map.put(0x2C7E, &[_]u21{
-        0x023F,
-    });
-    try instance.map.put(0x2C7F, &[_]u21{
-        0x0240,
-    });
-    try instance.map.put(0x2C80, &[_]u21{
-        0x2C81,
-    });
-    try instance.map.put(0x2C82, &[_]u21{
-        0x2C83,
-    });
-    try instance.map.put(0x2C84, &[_]u21{
-        0x2C85,
-    });
-    try instance.map.put(0x2C86, &[_]u21{
-        0x2C87,
-    });
-    try instance.map.put(0x2C88, &[_]u21{
-        0x2C89,
-    });
-    try instance.map.put(0x2C8A, &[_]u21{
-        0x2C8B,
-    });
-    try instance.map.put(0x2C8C, &[_]u21{
-        0x2C8D,
-    });
-    try instance.map.put(0x2C8E, &[_]u21{
-        0x2C8F,
-    });
-    try instance.map.put(0x2C90, &[_]u21{
-        0x2C91,
-    });
-    try instance.map.put(0x2C92, &[_]u21{
-        0x2C93,
-    });
-    try instance.map.put(0x2C94, &[_]u21{
-        0x2C95,
-    });
-    try instance.map.put(0x2C96, &[_]u21{
-        0x2C97,
-    });
-    try instance.map.put(0x2C98, &[_]u21{
-        0x2C99,
-    });
-    try instance.map.put(0x2C9A, &[_]u21{
-        0x2C9B,
-    });
-    try instance.map.put(0x2C9C, &[_]u21{
-        0x2C9D,
-    });
-    try instance.map.put(0x2C9E, &[_]u21{
-        0x2C9F,
-    });
-    try instance.map.put(0x2CA0, &[_]u21{
-        0x2CA1,
-    });
-    try instance.map.put(0x2CA2, &[_]u21{
-        0x2CA3,
-    });
-    try instance.map.put(0x2CA4, &[_]u21{
-        0x2CA5,
-    });
-    try instance.map.put(0x2CA6, &[_]u21{
-        0x2CA7,
-    });
-    try instance.map.put(0x2CA8, &[_]u21{
-        0x2CA9,
-    });
-    try instance.map.put(0x2CAA, &[_]u21{
-        0x2CAB,
-    });
-    try instance.map.put(0x2CAC, &[_]u21{
-        0x2CAD,
-    });
-    try instance.map.put(0x2CAE, &[_]u21{
-        0x2CAF,
-    });
-    try instance.map.put(0x2CB0, &[_]u21{
-        0x2CB1,
-    });
-    try instance.map.put(0x2CB2, &[_]u21{
-        0x2CB3,
-    });
-    try instance.map.put(0x2CB4, &[_]u21{
-        0x2CB5,
-    });
-    try instance.map.put(0x2CB6, &[_]u21{
-        0x2CB7,
-    });
-    try instance.map.put(0x2CB8, &[_]u21{
-        0x2CB9,
-    });
-    try instance.map.put(0x2CBA, &[_]u21{
-        0x2CBB,
-    });
-    try instance.map.put(0x2CBC, &[_]u21{
-        0x2CBD,
-    });
-    try instance.map.put(0x2CBE, &[_]u21{
-        0x2CBF,
-    });
-    try instance.map.put(0x2CC0, &[_]u21{
-        0x2CC1,
-    });
-    try instance.map.put(0x2CC2, &[_]u21{
-        0x2CC3,
-    });
-    try instance.map.put(0x2CC4, &[_]u21{
-        0x2CC5,
-    });
-    try instance.map.put(0x2CC6, &[_]u21{
-        0x2CC7,
-    });
-    try instance.map.put(0x2CC8, &[_]u21{
-        0x2CC9,
-    });
-    try instance.map.put(0x2CCA, &[_]u21{
-        0x2CCB,
-    });
-    try instance.map.put(0x2CCC, &[_]u21{
-        0x2CCD,
-    });
-    try instance.map.put(0x2CCE, &[_]u21{
-        0x2CCF,
-    });
-    try instance.map.put(0x2CD0, &[_]u21{
-        0x2CD1,
-    });
-    try instance.map.put(0x2CD2, &[_]u21{
-        0x2CD3,
-    });
-    try instance.map.put(0x2CD4, &[_]u21{
-        0x2CD5,
-    });
-    try instance.map.put(0x2CD6, &[_]u21{
-        0x2CD7,
-    });
-    try instance.map.put(0x2CD8, &[_]u21{
-        0x2CD9,
-    });
-    try instance.map.put(0x2CDA, &[_]u21{
-        0x2CDB,
-    });
-    try instance.map.put(0x2CDC, &[_]u21{
-        0x2CDD,
-    });
-    try instance.map.put(0x2CDE, &[_]u21{
-        0x2CDF,
-    });
-    try instance.map.put(0x2CE0, &[_]u21{
-        0x2CE1,
-    });
-    try instance.map.put(0x2CE2, &[_]u21{
-        0x2CE3,
-    });
-    try instance.map.put(0x2CEB, &[_]u21{
-        0x2CEC,
-    });
-    try instance.map.put(0x2CED, &[_]u21{
-        0x2CEE,
-    });
-    try instance.map.put(0x2CF2, &[_]u21{
-        0x2CF3,
-    });
-    try instance.map.put(0xA640, &[_]u21{
-        0xA641,
-    });
-    try instance.map.put(0xA642, &[_]u21{
-        0xA643,
-    });
-    try instance.map.put(0xA644, &[_]u21{
-        0xA645,
-    });
-    try instance.map.put(0xA646, &[_]u21{
-        0xA647,
-    });
-    try instance.map.put(0xA648, &[_]u21{
-        0xA649,
-    });
-    try instance.map.put(0xA64A, &[_]u21{
-        0xA64B,
-    });
-    try instance.map.put(0xA64C, &[_]u21{
-        0xA64D,
-    });
-    try instance.map.put(0xA64E, &[_]u21{
-        0xA64F,
-    });
-    try instance.map.put(0xA650, &[_]u21{
-        0xA651,
-    });
-    try instance.map.put(0xA652, &[_]u21{
-        0xA653,
-    });
-    try instance.map.put(0xA654, &[_]u21{
-        0xA655,
-    });
-    try instance.map.put(0xA656, &[_]u21{
-        0xA657,
-    });
-    try instance.map.put(0xA658, &[_]u21{
-        0xA659,
-    });
-    try instance.map.put(0xA65A, &[_]u21{
-        0xA65B,
-    });
-    try instance.map.put(0xA65C, &[_]u21{
-        0xA65D,
-    });
-    try instance.map.put(0xA65E, &[_]u21{
-        0xA65F,
-    });
-    try instance.map.put(0xA660, &[_]u21{
-        0xA661,
-    });
-    try instance.map.put(0xA662, &[_]u21{
-        0xA663,
-    });
-    try instance.map.put(0xA664, &[_]u21{
-        0xA665,
-    });
-    try instance.map.put(0xA666, &[_]u21{
-        0xA667,
-    });
-    try instance.map.put(0xA668, &[_]u21{
-        0xA669,
-    });
-    try instance.map.put(0xA66A, &[_]u21{
-        0xA66B,
-    });
-    try instance.map.put(0xA66C, &[_]u21{
-        0xA66D,
-    });
-    try instance.map.put(0xA680, &[_]u21{
-        0xA681,
-    });
-    try instance.map.put(0xA682, &[_]u21{
-        0xA683,
-    });
-    try instance.map.put(0xA684, &[_]u21{
-        0xA685,
-    });
-    try instance.map.put(0xA686, &[_]u21{
-        0xA687,
-    });
-    try instance.map.put(0xA688, &[_]u21{
-        0xA689,
-    });
-    try instance.map.put(0xA68A, &[_]u21{
-        0xA68B,
-    });
-    try instance.map.put(0xA68C, &[_]u21{
-        0xA68D,
-    });
-    try instance.map.put(0xA68E, &[_]u21{
-        0xA68F,
-    });
-    try instance.map.put(0xA690, &[_]u21{
-        0xA691,
-    });
-    try instance.map.put(0xA692, &[_]u21{
-        0xA693,
-    });
-    try instance.map.put(0xA694, &[_]u21{
-        0xA695,
-    });
-    try instance.map.put(0xA696, &[_]u21{
-        0xA697,
-    });
-    try instance.map.put(0xA698, &[_]u21{
-        0xA699,
-    });
-    try instance.map.put(0xA69A, &[_]u21{
-        0xA69B,
-    });
-    try instance.map.put(0xA722, &[_]u21{
-        0xA723,
-    });
-    try instance.map.put(0xA724, &[_]u21{
-        0xA725,
-    });
-    try instance.map.put(0xA726, &[_]u21{
-        0xA727,
-    });
-    try instance.map.put(0xA728, &[_]u21{
-        0xA729,
-    });
-    try instance.map.put(0xA72A, &[_]u21{
-        0xA72B,
-    });
-    try instance.map.put(0xA72C, &[_]u21{
-        0xA72D,
-    });
-    try instance.map.put(0xA72E, &[_]u21{
-        0xA72F,
-    });
-    try instance.map.put(0xA732, &[_]u21{
-        0xA733,
-    });
-    try instance.map.put(0xA734, &[_]u21{
-        0xA735,
-    });
-    try instance.map.put(0xA736, &[_]u21{
-        0xA737,
-    });
-    try instance.map.put(0xA738, &[_]u21{
-        0xA739,
-    });
-    try instance.map.put(0xA73A, &[_]u21{
-        0xA73B,
-    });
-    try instance.map.put(0xA73C, &[_]u21{
-        0xA73D,
-    });
-    try instance.map.put(0xA73E, &[_]u21{
-        0xA73F,
-    });
-    try instance.map.put(0xA740, &[_]u21{
-        0xA741,
-    });
-    try instance.map.put(0xA742, &[_]u21{
-        0xA743,
-    });
-    try instance.map.put(0xA744, &[_]u21{
-        0xA745,
-    });
-    try instance.map.put(0xA746, &[_]u21{
-        0xA747,
-    });
-    try instance.map.put(0xA748, &[_]u21{
-        0xA749,
-    });
-    try instance.map.put(0xA74A, &[_]u21{
-        0xA74B,
-    });
-    try instance.map.put(0xA74C, &[_]u21{
-        0xA74D,
-    });
-    try instance.map.put(0xA74E, &[_]u21{
-        0xA74F,
-    });
-    try instance.map.put(0xA750, &[_]u21{
-        0xA751,
-    });
-    try instance.map.put(0xA752, &[_]u21{
-        0xA753,
-    });
-    try instance.map.put(0xA754, &[_]u21{
-        0xA755,
-    });
-    try instance.map.put(0xA756, &[_]u21{
-        0xA757,
-    });
-    try instance.map.put(0xA758, &[_]u21{
-        0xA759,
-    });
-    try instance.map.put(0xA75A, &[_]u21{
-        0xA75B,
-    });
-    try instance.map.put(0xA75C, &[_]u21{
-        0xA75D,
-    });
-    try instance.map.put(0xA75E, &[_]u21{
-        0xA75F,
-    });
-    try instance.map.put(0xA760, &[_]u21{
-        0xA761,
-    });
-    try instance.map.put(0xA762, &[_]u21{
-        0xA763,
-    });
-    try instance.map.put(0xA764, &[_]u21{
-        0xA765,
-    });
-    try instance.map.put(0xA766, &[_]u21{
-        0xA767,
-    });
-    try instance.map.put(0xA768, &[_]u21{
-        0xA769,
-    });
-    try instance.map.put(0xA76A, &[_]u21{
-        0xA76B,
-    });
-    try instance.map.put(0xA76C, &[_]u21{
-        0xA76D,
-    });
-    try instance.map.put(0xA76E, &[_]u21{
-        0xA76F,
-    });
-    try instance.map.put(0xA779, &[_]u21{
-        0xA77A,
-    });
-    try instance.map.put(0xA77B, &[_]u21{
-        0xA77C,
-    });
-    try instance.map.put(0xA77D, &[_]u21{
-        0x1D79,
-    });
-    try instance.map.put(0xA77E, &[_]u21{
-        0xA77F,
-    });
-    try instance.map.put(0xA780, &[_]u21{
-        0xA781,
-    });
-    try instance.map.put(0xA782, &[_]u21{
-        0xA783,
-    });
-    try instance.map.put(0xA784, &[_]u21{
-        0xA785,
-    });
-    try instance.map.put(0xA786, &[_]u21{
-        0xA787,
-    });
-    try instance.map.put(0xA78B, &[_]u21{
-        0xA78C,
-    });
-    try instance.map.put(0xA78D, &[_]u21{
-        0x0265,
-    });
-    try instance.map.put(0xA790, &[_]u21{
-        0xA791,
-    });
-    try instance.map.put(0xA792, &[_]u21{
-        0xA793,
-    });
-    try instance.map.put(0xA796, &[_]u21{
-        0xA797,
-    });
-    try instance.map.put(0xA798, &[_]u21{
-        0xA799,
-    });
-    try instance.map.put(0xA79A, &[_]u21{
-        0xA79B,
-    });
-    try instance.map.put(0xA79C, &[_]u21{
-        0xA79D,
-    });
-    try instance.map.put(0xA79E, &[_]u21{
-        0xA79F,
-    });
-    try instance.map.put(0xA7A0, &[_]u21{
-        0xA7A1,
-    });
-    try instance.map.put(0xA7A2, &[_]u21{
-        0xA7A3,
-    });
-    try instance.map.put(0xA7A4, &[_]u21{
-        0xA7A5,
-    });
-    try instance.map.put(0xA7A6, &[_]u21{
-        0xA7A7,
-    });
-    try instance.map.put(0xA7A8, &[_]u21{
-        0xA7A9,
-    });
-    try instance.map.put(0xA7AA, &[_]u21{
-        0x0266,
-    });
-    try instance.map.put(0xA7AB, &[_]u21{
-        0x025C,
-    });
-    try instance.map.put(0xA7AC, &[_]u21{
-        0x0261,
-    });
-    try instance.map.put(0xA7AD, &[_]u21{
-        0x026C,
-    });
-    try instance.map.put(0xA7AE, &[_]u21{
-        0x026A,
-    });
-    try instance.map.put(0xA7B0, &[_]u21{
-        0x029E,
-    });
-    try instance.map.put(0xA7B1, &[_]u21{
-        0x0287,
-    });
-    try instance.map.put(0xA7B2, &[_]u21{
-        0x029D,
-    });
-    try instance.map.put(0xA7B3, &[_]u21{
-        0xAB53,
-    });
-    try instance.map.put(0xA7B4, &[_]u21{
-        0xA7B5,
-    });
-    try instance.map.put(0xA7B6, &[_]u21{
-        0xA7B7,
-    });
-    try instance.map.put(0xA7B8, &[_]u21{
-        0xA7B9,
-    });
-    try instance.map.put(0xA7BA, &[_]u21{
-        0xA7BB,
-    });
-    try instance.map.put(0xA7BC, &[_]u21{
-        0xA7BD,
-    });
-    try instance.map.put(0xA7BE, &[_]u21{
-        0xA7BF,
-    });
-    try instance.map.put(0xA7C2, &[_]u21{
-        0xA7C3,
-    });
-    try instance.map.put(0xA7C4, &[_]u21{
-        0xA794,
-    });
-    try instance.map.put(0xA7C5, &[_]u21{
-        0x0282,
-    });
-    try instance.map.put(0xA7C6, &[_]u21{
-        0x1D8E,
-    });
-    try instance.map.put(0xA7C7, &[_]u21{
-        0xA7C8,
-    });
-    try instance.map.put(0xA7C9, &[_]u21{
-        0xA7CA,
-    });
-    try instance.map.put(0xA7F5, &[_]u21{
-        0xA7F6,
-    });
-    try instance.map.put(0xAB70, &[_]u21{
-        0x13A0,
-    });
-    try instance.map.put(0xAB71, &[_]u21{
-        0x13A1,
-    });
-    try instance.map.put(0xAB72, &[_]u21{
-        0x13A2,
-    });
-    try instance.map.put(0xAB73, &[_]u21{
-        0x13A3,
-    });
-    try instance.map.put(0xAB74, &[_]u21{
-        0x13A4,
-    });
-    try instance.map.put(0xAB75, &[_]u21{
-        0x13A5,
-    });
-    try instance.map.put(0xAB76, &[_]u21{
-        0x13A6,
-    });
-    try instance.map.put(0xAB77, &[_]u21{
-        0x13A7,
-    });
-    try instance.map.put(0xAB78, &[_]u21{
-        0x13A8,
-    });
-    try instance.map.put(0xAB79, &[_]u21{
-        0x13A9,
-    });
-    try instance.map.put(0xAB7A, &[_]u21{
-        0x13AA,
-    });
-    try instance.map.put(0xAB7B, &[_]u21{
-        0x13AB,
-    });
-    try instance.map.put(0xAB7C, &[_]u21{
-        0x13AC,
-    });
-    try instance.map.put(0xAB7D, &[_]u21{
-        0x13AD,
-    });
-    try instance.map.put(0xAB7E, &[_]u21{
-        0x13AE,
-    });
-    try instance.map.put(0xAB7F, &[_]u21{
-        0x13AF,
-    });
-    try instance.map.put(0xAB80, &[_]u21{
-        0x13B0,
-    });
-    try instance.map.put(0xAB81, &[_]u21{
-        0x13B1,
-    });
-    try instance.map.put(0xAB82, &[_]u21{
-        0x13B2,
-    });
-    try instance.map.put(0xAB83, &[_]u21{
-        0x13B3,
-    });
-    try instance.map.put(0xAB84, &[_]u21{
-        0x13B4,
-    });
-    try instance.map.put(0xAB85, &[_]u21{
-        0x13B5,
-    });
-    try instance.map.put(0xAB86, &[_]u21{
-        0x13B6,
-    });
-    try instance.map.put(0xAB87, &[_]u21{
-        0x13B7,
-    });
-    try instance.map.put(0xAB88, &[_]u21{
-        0x13B8,
-    });
-    try instance.map.put(0xAB89, &[_]u21{
-        0x13B9,
-    });
-    try instance.map.put(0xAB8A, &[_]u21{
-        0x13BA,
-    });
-    try instance.map.put(0xAB8B, &[_]u21{
-        0x13BB,
-    });
-    try instance.map.put(0xAB8C, &[_]u21{
-        0x13BC,
-    });
-    try instance.map.put(0xAB8D, &[_]u21{
-        0x13BD,
-    });
-    try instance.map.put(0xAB8E, &[_]u21{
-        0x13BE,
-    });
-    try instance.map.put(0xAB8F, &[_]u21{
-        0x13BF,
-    });
-    try instance.map.put(0xAB90, &[_]u21{
-        0x13C0,
-    });
-    try instance.map.put(0xAB91, &[_]u21{
-        0x13C1,
-    });
-    try instance.map.put(0xAB92, &[_]u21{
-        0x13C2,
-    });
-    try instance.map.put(0xAB93, &[_]u21{
-        0x13C3,
-    });
-    try instance.map.put(0xAB94, &[_]u21{
-        0x13C4,
-    });
-    try instance.map.put(0xAB95, &[_]u21{
-        0x13C5,
-    });
-    try instance.map.put(0xAB96, &[_]u21{
-        0x13C6,
-    });
-    try instance.map.put(0xAB97, &[_]u21{
-        0x13C7,
-    });
-    try instance.map.put(0xAB98, &[_]u21{
-        0x13C8,
-    });
-    try instance.map.put(0xAB99, &[_]u21{
-        0x13C9,
-    });
-    try instance.map.put(0xAB9A, &[_]u21{
-        0x13CA,
-    });
-    try instance.map.put(0xAB9B, &[_]u21{
-        0x13CB,
-    });
-    try instance.map.put(0xAB9C, &[_]u21{
-        0x13CC,
-    });
-    try instance.map.put(0xAB9D, &[_]u21{
-        0x13CD,
-    });
-    try instance.map.put(0xAB9E, &[_]u21{
-        0x13CE,
-    });
-    try instance.map.put(0xAB9F, &[_]u21{
-        0x13CF,
-    });
-    try instance.map.put(0xABA0, &[_]u21{
-        0x13D0,
-    });
-    try instance.map.put(0xABA1, &[_]u21{
-        0x13D1,
-    });
-    try instance.map.put(0xABA2, &[_]u21{
-        0x13D2,
-    });
-    try instance.map.put(0xABA3, &[_]u21{
-        0x13D3,
-    });
-    try instance.map.put(0xABA4, &[_]u21{
-        0x13D4,
-    });
-    try instance.map.put(0xABA5, &[_]u21{
-        0x13D5,
-    });
-    try instance.map.put(0xABA6, &[_]u21{
-        0x13D6,
-    });
-    try instance.map.put(0xABA7, &[_]u21{
-        0x13D7,
-    });
-    try instance.map.put(0xABA8, &[_]u21{
-        0x13D8,
-    });
-    try instance.map.put(0xABA9, &[_]u21{
-        0x13D9,
-    });
-    try instance.map.put(0xABAA, &[_]u21{
-        0x13DA,
-    });
-    try instance.map.put(0xABAB, &[_]u21{
-        0x13DB,
-    });
-    try instance.map.put(0xABAC, &[_]u21{
-        0x13DC,
-    });
-    try instance.map.put(0xABAD, &[_]u21{
-        0x13DD,
-    });
-    try instance.map.put(0xABAE, &[_]u21{
-        0x13DE,
-    });
-    try instance.map.put(0xABAF, &[_]u21{
-        0x13DF,
-    });
-    try instance.map.put(0xABB0, &[_]u21{
-        0x13E0,
-    });
-    try instance.map.put(0xABB1, &[_]u21{
-        0x13E1,
-    });
-    try instance.map.put(0xABB2, &[_]u21{
-        0x13E2,
-    });
-    try instance.map.put(0xABB3, &[_]u21{
-        0x13E3,
-    });
-    try instance.map.put(0xABB4, &[_]u21{
-        0x13E4,
-    });
-    try instance.map.put(0xABB5, &[_]u21{
-        0x13E5,
-    });
-    try instance.map.put(0xABB6, &[_]u21{
-        0x13E6,
-    });
-    try instance.map.put(0xABB7, &[_]u21{
-        0x13E7,
-    });
-    try instance.map.put(0xABB8, &[_]u21{
-        0x13E8,
-    });
-    try instance.map.put(0xABB9, &[_]u21{
-        0x13E9,
-    });
-    try instance.map.put(0xABBA, &[_]u21{
-        0x13EA,
-    });
-    try instance.map.put(0xABBB, &[_]u21{
-        0x13EB,
-    });
-    try instance.map.put(0xABBC, &[_]u21{
-        0x13EC,
-    });
-    try instance.map.put(0xABBD, &[_]u21{
-        0x13ED,
-    });
-    try instance.map.put(0xABBE, &[_]u21{
-        0x13EE,
-    });
-    try instance.map.put(0xABBF, &[_]u21{
-        0x13EF,
-    });
-    try instance.map.put(0xFB00, &[_]u21{
-        0x0066,
-        0x0066,
-    });
-    try instance.map.put(0xFB01, &[_]u21{
-        0x0066,
-        0x0069,
-    });
-    try instance.map.put(0xFB02, &[_]u21{
-        0x0066,
-        0x006C,
-    });
-    try instance.map.put(0xFB03, &[_]u21{
-        0x0066,
-        0x0066,
-        0x0069,
-    });
-    try instance.map.put(0xFB04, &[_]u21{
-        0x0066,
-        0x0066,
-        0x006C,
-    });
-    try instance.map.put(0xFB05, &[_]u21{
-        0x0073,
-        0x0074,
-    });
-    try instance.map.put(0xFB06, &[_]u21{
-        0x0073,
-        0x0074,
-    });
-    try instance.map.put(0xFB13, &[_]u21{
-        0x0574,
-        0x0576,
-    });
-    try instance.map.put(0xFB14, &[_]u21{
-        0x0574,
-        0x0565,
-    });
-    try instance.map.put(0xFB15, &[_]u21{
-        0x0574,
-        0x056B,
-    });
-    try instance.map.put(0xFB16, &[_]u21{
-        0x057E,
-        0x0576,
-    });
-    try instance.map.put(0xFB17, &[_]u21{
-        0x0574,
-        0x056D,
-    });
-    try instance.map.put(0xFF21, &[_]u21{
-        0xFF41,
-    });
-    try instance.map.put(0xFF22, &[_]u21{
-        0xFF42,
-    });
-    try instance.map.put(0xFF23, &[_]u21{
-        0xFF43,
-    });
-    try instance.map.put(0xFF24, &[_]u21{
-        0xFF44,
-    });
-    try instance.map.put(0xFF25, &[_]u21{
-        0xFF45,
-    });
-    try instance.map.put(0xFF26, &[_]u21{
-        0xFF46,
-    });
-    try instance.map.put(0xFF27, &[_]u21{
-        0xFF47,
-    });
-    try instance.map.put(0xFF28, &[_]u21{
-        0xFF48,
-    });
-    try instance.map.put(0xFF29, &[_]u21{
-        0xFF49,
-    });
-    try instance.map.put(0xFF2A, &[_]u21{
-        0xFF4A,
-    });
-    try instance.map.put(0xFF2B, &[_]u21{
-        0xFF4B,
-    });
-    try instance.map.put(0xFF2C, &[_]u21{
-        0xFF4C,
-    });
-    try instance.map.put(0xFF2D, &[_]u21{
-        0xFF4D,
-    });
-    try instance.map.put(0xFF2E, &[_]u21{
-        0xFF4E,
-    });
-    try instance.map.put(0xFF2F, &[_]u21{
-        0xFF4F,
-    });
-    try instance.map.put(0xFF30, &[_]u21{
-        0xFF50,
-    });
-    try instance.map.put(0xFF31, &[_]u21{
-        0xFF51,
-    });
-    try instance.map.put(0xFF32, &[_]u21{
-        0xFF52,
-    });
-    try instance.map.put(0xFF33, &[_]u21{
-        0xFF53,
-    });
-    try instance.map.put(0xFF34, &[_]u21{
-        0xFF54,
-    });
-    try instance.map.put(0xFF35, &[_]u21{
-        0xFF55,
-    });
-    try instance.map.put(0xFF36, &[_]u21{
-        0xFF56,
-    });
-    try instance.map.put(0xFF37, &[_]u21{
-        0xFF57,
-    });
-    try instance.map.put(0xFF38, &[_]u21{
-        0xFF58,
-    });
-    try instance.map.put(0xFF39, &[_]u21{
-        0xFF59,
-    });
-    try instance.map.put(0xFF3A, &[_]u21{
-        0xFF5A,
-    });
-    try instance.map.put(0x10400, &[_]u21{
-        0x10428,
-    });
-    try instance.map.put(0x10401, &[_]u21{
-        0x10429,
-    });
-    try instance.map.put(0x10402, &[_]u21{
-        0x1042A,
-    });
-    try instance.map.put(0x10403, &[_]u21{
-        0x1042B,
-    });
-    try instance.map.put(0x10404, &[_]u21{
-        0x1042C,
-    });
-    try instance.map.put(0x10405, &[_]u21{
-        0x1042D,
-    });
-    try instance.map.put(0x10406, &[_]u21{
-        0x1042E,
-    });
-    try instance.map.put(0x10407, &[_]u21{
-        0x1042F,
-    });
-    try instance.map.put(0x10408, &[_]u21{
-        0x10430,
-    });
-    try instance.map.put(0x10409, &[_]u21{
-        0x10431,
-    });
-    try instance.map.put(0x1040A, &[_]u21{
-        0x10432,
-    });
-    try instance.map.put(0x1040B, &[_]u21{
-        0x10433,
-    });
-    try instance.map.put(0x1040C, &[_]u21{
-        0x10434,
-    });
-    try instance.map.put(0x1040D, &[_]u21{
-        0x10435,
-    });
-    try instance.map.put(0x1040E, &[_]u21{
-        0x10436,
-    });
-    try instance.map.put(0x1040F, &[_]u21{
-        0x10437,
-    });
-    try instance.map.put(0x10410, &[_]u21{
-        0x10438,
-    });
-    try instance.map.put(0x10411, &[_]u21{
-        0x10439,
-    });
-    try instance.map.put(0x10412, &[_]u21{
-        0x1043A,
-    });
-    try instance.map.put(0x10413, &[_]u21{
-        0x1043B,
-    });
-    try instance.map.put(0x10414, &[_]u21{
-        0x1043C,
-    });
-    try instance.map.put(0x10415, &[_]u21{
-        0x1043D,
-    });
-    try instance.map.put(0x10416, &[_]u21{
-        0x1043E,
-    });
-    try instance.map.put(0x10417, &[_]u21{
-        0x1043F,
-    });
-    try instance.map.put(0x10418, &[_]u21{
-        0x10440,
-    });
-    try instance.map.put(0x10419, &[_]u21{
-        0x10441,
-    });
-    try instance.map.put(0x1041A, &[_]u21{
-        0x10442,
-    });
-    try instance.map.put(0x1041B, &[_]u21{
-        0x10443,
-    });
-    try instance.map.put(0x1041C, &[_]u21{
-        0x10444,
-    });
-    try instance.map.put(0x1041D, &[_]u21{
-        0x10445,
-    });
-    try instance.map.put(0x1041E, &[_]u21{
-        0x10446,
-    });
-    try instance.map.put(0x1041F, &[_]u21{
-        0x10447,
-    });
-    try instance.map.put(0x10420, &[_]u21{
-        0x10448,
-    });
-    try instance.map.put(0x10421, &[_]u21{
-        0x10449,
-    });
-    try instance.map.put(0x10422, &[_]u21{
-        0x1044A,
-    });
-    try instance.map.put(0x10423, &[_]u21{
-        0x1044B,
-    });
-    try instance.map.put(0x10424, &[_]u21{
-        0x1044C,
-    });
-    try instance.map.put(0x10425, &[_]u21{
-        0x1044D,
-    });
-    try instance.map.put(0x10426, &[_]u21{
-        0x1044E,
-    });
-    try instance.map.put(0x10427, &[_]u21{
-        0x1044F,
-    });
-    try instance.map.put(0x104B0, &[_]u21{
-        0x104D8,
-    });
-    try instance.map.put(0x104B1, &[_]u21{
-        0x104D9,
-    });
-    try instance.map.put(0x104B2, &[_]u21{
-        0x104DA,
-    });
-    try instance.map.put(0x104B3, &[_]u21{
-        0x104DB,
-    });
-    try instance.map.put(0x104B4, &[_]u21{
-        0x104DC,
-    });
-    try instance.map.put(0x104B5, &[_]u21{
-        0x104DD,
-    });
-    try instance.map.put(0x104B6, &[_]u21{
-        0x104DE,
-    });
-    try instance.map.put(0x104B7, &[_]u21{
-        0x104DF,
-    });
-    try instance.map.put(0x104B8, &[_]u21{
-        0x104E0,
-    });
-    try instance.map.put(0x104B9, &[_]u21{
-        0x104E1,
-    });
-    try instance.map.put(0x104BA, &[_]u21{
-        0x104E2,
-    });
-    try instance.map.put(0x104BB, &[_]u21{
-        0x104E3,
-    });
-    try instance.map.put(0x104BC, &[_]u21{
-        0x104E4,
-    });
-    try instance.map.put(0x104BD, &[_]u21{
-        0x104E5,
-    });
-    try instance.map.put(0x104BE, &[_]u21{
-        0x104E6,
-    });
-    try instance.map.put(0x104BF, &[_]u21{
-        0x104E7,
-    });
-    try instance.map.put(0x104C0, &[_]u21{
-        0x104E8,
-    });
-    try instance.map.put(0x104C1, &[_]u21{
-        0x104E9,
-    });
-    try instance.map.put(0x104C2, &[_]u21{
-        0x104EA,
-    });
-    try instance.map.put(0x104C3, &[_]u21{
-        0x104EB,
-    });
-    try instance.map.put(0x104C4, &[_]u21{
-        0x104EC,
-    });
-    try instance.map.put(0x104C5, &[_]u21{
-        0x104ED,
-    });
-    try instance.map.put(0x104C6, &[_]u21{
-        0x104EE,
-    });
-    try instance.map.put(0x104C7, &[_]u21{
-        0x104EF,
-    });
-    try instance.map.put(0x104C8, &[_]u21{
-        0x104F0,
-    });
-    try instance.map.put(0x104C9, &[_]u21{
-        0x104F1,
-    });
-    try instance.map.put(0x104CA, &[_]u21{
-        0x104F2,
-    });
-    try instance.map.put(0x104CB, &[_]u21{
-        0x104F3,
-    });
-    try instance.map.put(0x104CC, &[_]u21{
-        0x104F4,
-    });
-    try instance.map.put(0x104CD, &[_]u21{
-        0x104F5,
-    });
-    try instance.map.put(0x104CE, &[_]u21{
-        0x104F6,
-    });
-    try instance.map.put(0x104CF, &[_]u21{
-        0x104F7,
-    });
-    try instance.map.put(0x104D0, &[_]u21{
-        0x104F8,
-    });
-    try instance.map.put(0x104D1, &[_]u21{
-        0x104F9,
-    });
-    try instance.map.put(0x104D2, &[_]u21{
-        0x104FA,
-    });
-    try instance.map.put(0x104D3, &[_]u21{
-        0x104FB,
-    });
-    try instance.map.put(0x10C80, &[_]u21{
-        0x10CC0,
-    });
-    try instance.map.put(0x10C81, &[_]u21{
-        0x10CC1,
-    });
-    try instance.map.put(0x10C82, &[_]u21{
-        0x10CC2,
-    });
-    try instance.map.put(0x10C83, &[_]u21{
-        0x10CC3,
-    });
-    try instance.map.put(0x10C84, &[_]u21{
-        0x10CC4,
-    });
-    try instance.map.put(0x10C85, &[_]u21{
-        0x10CC5,
-    });
-    try instance.map.put(0x10C86, &[_]u21{
-        0x10CC6,
-    });
-    try instance.map.put(0x10C87, &[_]u21{
-        0x10CC7,
-    });
-    try instance.map.put(0x10C88, &[_]u21{
-        0x10CC8,
-    });
-    try instance.map.put(0x10C89, &[_]u21{
-        0x10CC9,
-    });
-    try instance.map.put(0x10C8A, &[_]u21{
-        0x10CCA,
-    });
-    try instance.map.put(0x10C8B, &[_]u21{
-        0x10CCB,
-    });
-    try instance.map.put(0x10C8C, &[_]u21{
-        0x10CCC,
-    });
-    try instance.map.put(0x10C8D, &[_]u21{
-        0x10CCD,
-    });
-    try instance.map.put(0x10C8E, &[_]u21{
-        0x10CCE,
-    });
-    try instance.map.put(0x10C8F, &[_]u21{
-        0x10CCF,
-    });
-    try instance.map.put(0x10C90, &[_]u21{
-        0x10CD0,
-    });
-    try instance.map.put(0x10C91, &[_]u21{
-        0x10CD1,
-    });
-    try instance.map.put(0x10C92, &[_]u21{
-        0x10CD2,
-    });
-    try instance.map.put(0x10C93, &[_]u21{
-        0x10CD3,
-    });
-    try instance.map.put(0x10C94, &[_]u21{
-        0x10CD4,
-    });
-    try instance.map.put(0x10C95, &[_]u21{
-        0x10CD5,
-    });
-    try instance.map.put(0x10C96, &[_]u21{
-        0x10CD6,
-    });
-    try instance.map.put(0x10C97, &[_]u21{
-        0x10CD7,
-    });
-    try instance.map.put(0x10C98, &[_]u21{
-        0x10CD8,
-    });
-    try instance.map.put(0x10C99, &[_]u21{
-        0x10CD9,
-    });
-    try instance.map.put(0x10C9A, &[_]u21{
-        0x10CDA,
-    });
-    try instance.map.put(0x10C9B, &[_]u21{
-        0x10CDB,
-    });
-    try instance.map.put(0x10C9C, &[_]u21{
-        0x10CDC,
-    });
-    try instance.map.put(0x10C9D, &[_]u21{
-        0x10CDD,
-    });
-    try instance.map.put(0x10C9E, &[_]u21{
-        0x10CDE,
-    });
-    try instance.map.put(0x10C9F, &[_]u21{
-        0x10CDF,
-    });
-    try instance.map.put(0x10CA0, &[_]u21{
-        0x10CE0,
-    });
-    try instance.map.put(0x10CA1, &[_]u21{
-        0x10CE1,
-    });
-    try instance.map.put(0x10CA2, &[_]u21{
-        0x10CE2,
-    });
-    try instance.map.put(0x10CA3, &[_]u21{
-        0x10CE3,
-    });
-    try instance.map.put(0x10CA4, &[_]u21{
-        0x10CE4,
-    });
-    try instance.map.put(0x10CA5, &[_]u21{
-        0x10CE5,
-    });
-    try instance.map.put(0x10CA6, &[_]u21{
-        0x10CE6,
-    });
-    try instance.map.put(0x10CA7, &[_]u21{
-        0x10CE7,
-    });
-    try instance.map.put(0x10CA8, &[_]u21{
-        0x10CE8,
-    });
-    try instance.map.put(0x10CA9, &[_]u21{
-        0x10CE9,
-    });
-    try instance.map.put(0x10CAA, &[_]u21{
-        0x10CEA,
-    });
-    try instance.map.put(0x10CAB, &[_]u21{
-        0x10CEB,
-    });
-    try instance.map.put(0x10CAC, &[_]u21{
-        0x10CEC,
-    });
-    try instance.map.put(0x10CAD, &[_]u21{
-        0x10CED,
-    });
-    try instance.map.put(0x10CAE, &[_]u21{
-        0x10CEE,
-    });
-    try instance.map.put(0x10CAF, &[_]u21{
-        0x10CEF,
-    });
-    try instance.map.put(0x10CB0, &[_]u21{
-        0x10CF0,
-    });
-    try instance.map.put(0x10CB1, &[_]u21{
-        0x10CF1,
-    });
-    try instance.map.put(0x10CB2, &[_]u21{
-        0x10CF2,
-    });
-    try instance.map.put(0x118A0, &[_]u21{
-        0x118C0,
-    });
-    try instance.map.put(0x118A1, &[_]u21{
-        0x118C1,
-    });
-    try instance.map.put(0x118A2, &[_]u21{
-        0x118C2,
-    });
-    try instance.map.put(0x118A3, &[_]u21{
-        0x118C3,
-    });
-    try instance.map.put(0x118A4, &[_]u21{
-        0x118C4,
-    });
-    try instance.map.put(0x118A5, &[_]u21{
-        0x118C5,
-    });
-    try instance.map.put(0x118A6, &[_]u21{
-        0x118C6,
-    });
-    try instance.map.put(0x118A7, &[_]u21{
-        0x118C7,
-    });
-    try instance.map.put(0x118A8, &[_]u21{
-        0x118C8,
-    });
-    try instance.map.put(0x118A9, &[_]u21{
-        0x118C9,
-    });
-    try instance.map.put(0x118AA, &[_]u21{
-        0x118CA,
-    });
-    try instance.map.put(0x118AB, &[_]u21{
-        0x118CB,
-    });
-    try instance.map.put(0x118AC, &[_]u21{
-        0x118CC,
-    });
-    try instance.map.put(0x118AD, &[_]u21{
-        0x118CD,
-    });
-    try instance.map.put(0x118AE, &[_]u21{
-        0x118CE,
-    });
-    try instance.map.put(0x118AF, &[_]u21{
-        0x118CF,
-    });
-    try instance.map.put(0x118B0, &[_]u21{
-        0x118D0,
-    });
-    try instance.map.put(0x118B1, &[_]u21{
-        0x118D1,
-    });
-    try instance.map.put(0x118B2, &[_]u21{
-        0x118D2,
-    });
-    try instance.map.put(0x118B3, &[_]u21{
-        0x118D3,
-    });
-    try instance.map.put(0x118B4, &[_]u21{
-        0x118D4,
-    });
-    try instance.map.put(0x118B5, &[_]u21{
-        0x118D5,
-    });
-    try instance.map.put(0x118B6, &[_]u21{
-        0x118D6,
-    });
-    try instance.map.put(0x118B7, &[_]u21{
-        0x118D7,
-    });
-    try instance.map.put(0x118B8, &[_]u21{
-        0x118D8,
-    });
-    try instance.map.put(0x118B9, &[_]u21{
-        0x118D9,
-    });
-    try instance.map.put(0x118BA, &[_]u21{
-        0x118DA,
-    });
-    try instance.map.put(0x118BB, &[_]u21{
-        0x118DB,
-    });
-    try instance.map.put(0x118BC, &[_]u21{
-        0x118DC,
-    });
-    try instance.map.put(0x118BD, &[_]u21{
-        0x118DD,
-    });
-    try instance.map.put(0x118BE, &[_]u21{
-        0x118DE,
-    });
-    try instance.map.put(0x118BF, &[_]u21{
-        0x118DF,
-    });
-    try instance.map.put(0x16E40, &[_]u21{
-        0x16E60,
-    });
-    try instance.map.put(0x16E41, &[_]u21{
-        0x16E61,
-    });
-    try instance.map.put(0x16E42, &[_]u21{
-        0x16E62,
-    });
-    try instance.map.put(0x16E43, &[_]u21{
-        0x16E63,
-    });
-    try instance.map.put(0x16E44, &[_]u21{
-        0x16E64,
-    });
-    try instance.map.put(0x16E45, &[_]u21{
-        0x16E65,
-    });
-    try instance.map.put(0x16E46, &[_]u21{
-        0x16E66,
-    });
-    try instance.map.put(0x16E47, &[_]u21{
-        0x16E67,
-    });
-    try instance.map.put(0x16E48, &[_]u21{
-        0x16E68,
-    });
-    try instance.map.put(0x16E49, &[_]u21{
-        0x16E69,
-    });
-    try instance.map.put(0x16E4A, &[_]u21{
-        0x16E6A,
-    });
-    try instance.map.put(0x16E4B, &[_]u21{
-        0x16E6B,
-    });
-    try instance.map.put(0x16E4C, &[_]u21{
-        0x16E6C,
-    });
-    try instance.map.put(0x16E4D, &[_]u21{
-        0x16E6D,
-    });
-    try instance.map.put(0x16E4E, &[_]u21{
-        0x16E6E,
-    });
-    try instance.map.put(0x16E4F, &[_]u21{
-        0x16E6F,
-    });
-    try instance.map.put(0x16E50, &[_]u21{
-        0x16E70,
-    });
-    try instance.map.put(0x16E51, &[_]u21{
-        0x16E71,
-    });
-    try instance.map.put(0x16E52, &[_]u21{
-        0x16E72,
-    });
-    try instance.map.put(0x16E53, &[_]u21{
-        0x16E73,
-    });
-    try instance.map.put(0x16E54, &[_]u21{
-        0x16E74,
-    });
-    try instance.map.put(0x16E55, &[_]u21{
-        0x16E75,
-    });
-    try instance.map.put(0x16E56, &[_]u21{
-        0x16E76,
-    });
-    try instance.map.put(0x16E57, &[_]u21{
-        0x16E77,
-    });
-    try instance.map.put(0x16E58, &[_]u21{
-        0x16E78,
-    });
-    try instance.map.put(0x16E59, &[_]u21{
-        0x16E79,
-    });
-    try instance.map.put(0x16E5A, &[_]u21{
-        0x16E7A,
-    });
-    try instance.map.put(0x16E5B, &[_]u21{
-        0x16E7B,
-    });
-    try instance.map.put(0x16E5C, &[_]u21{
-        0x16E7C,
-    });
-    try instance.map.put(0x16E5D, &[_]u21{
-        0x16E7D,
-    });
-    try instance.map.put(0x16E5E, &[_]u21{
-        0x16E7E,
-    });
-    try instance.map.put(0x16E5F, &[_]u21{
-        0x16E7F,
-    });
-    try instance.map.put(0x1E900, &[_]u21{
-        0x1E922,
-    });
-    try instance.map.put(0x1E901, &[_]u21{
-        0x1E923,
-    });
-    try instance.map.put(0x1E902, &[_]u21{
-        0x1E924,
-    });
-    try instance.map.put(0x1E903, &[_]u21{
-        0x1E925,
-    });
-    try instance.map.put(0x1E904, &[_]u21{
-        0x1E926,
-    });
-    try instance.map.put(0x1E905, &[_]u21{
-        0x1E927,
-    });
-    try instance.map.put(0x1E906, &[_]u21{
-        0x1E928,
-    });
-    try instance.map.put(0x1E907, &[_]u21{
-        0x1E929,
-    });
-    try instance.map.put(0x1E908, &[_]u21{
-        0x1E92A,
-    });
-    try instance.map.put(0x1E909, &[_]u21{
-        0x1E92B,
-    });
-    try instance.map.put(0x1E90A, &[_]u21{
-        0x1E92C,
-    });
-    try instance.map.put(0x1E90B, &[_]u21{
-        0x1E92D,
-    });
-    try instance.map.put(0x1E90C, &[_]u21{
-        0x1E92E,
-    });
-    try instance.map.put(0x1E90D, &[_]u21{
-        0x1E92F,
-    });
-    try instance.map.put(0x1E90E, &[_]u21{
-        0x1E930,
-    });
-    try instance.map.put(0x1E90F, &[_]u21{
-        0x1E931,
-    });
-    try instance.map.put(0x1E910, &[_]u21{
-        0x1E932,
-    });
-    try instance.map.put(0x1E911, &[_]u21{
-        0x1E933,
-    });
-    try instance.map.put(0x1E912, &[_]u21{
-        0x1E934,
-    });
-    try instance.map.put(0x1E913, &[_]u21{
-        0x1E935,
-    });
-    try instance.map.put(0x1E914, &[_]u21{
-        0x1E936,
-    });
-    try instance.map.put(0x1E915, &[_]u21{
-        0x1E937,
-    });
-    try instance.map.put(0x1E916, &[_]u21{
-        0x1E938,
-    });
-    try instance.map.put(0x1E917, &[_]u21{
-        0x1E939,
-    });
-    try instance.map.put(0x1E918, &[_]u21{
-        0x1E93A,
-    });
-    try instance.map.put(0x1E919, &[_]u21{
-        0x1E93B,
-    });
-    try instance.map.put(0x1E91A, &[_]u21{
-        0x1E93C,
-    });
-    try instance.map.put(0x1E91B, &[_]u21{
-        0x1E93D,
-    });
-    try instance.map.put(0x1E91C, &[_]u21{
-        0x1E93E,
-    });
-    try instance.map.put(0x1E91D, &[_]u21{
-        0x1E93F,
-    });
-    try instance.map.put(0x1E91E, &[_]u21{
-        0x1E940,
-    });
-    try instance.map.put(0x1E91F, &[_]u21{
-        0x1E941,
-    });
-    try instance.map.put(0x1E920, &[_]u21{
-        0x1E942,
-    });
-    try instance.map.put(0x1E921, &[_]u21{
-        0x1E943,
-    });
-
-    singleton = Singleton{
-        .instance = instance,
-        .ref_count = 1,
-    };
-
-    return instance;
-}
-
-pub fn deinit(self: *CaseFoldMap) void {
-    if (singleton) |*s| {
-        s.ref_count -= 1;
-        if (s.ref_count == 0) {
-            self.map.deinit();
-            self.allocator.destroy(s.instance);
-            singleton = null;
-        }
-    }
-}
-
-/// CaseFold can be a simple, one code point value or a sequence of code points in the full case fold scenario.
-pub const CaseFold = union(enum) {
-    simple: u21,
-    full: []const u21,
-};
-
-/// toCaseFold will convert a code point into its case folded equivalent. Note that this can result
-/// in a mapping to more than one code point, known as the full case fold.
-pub fn toCaseFold(self: CaseFoldMap, cp: u21) CaseFold {
-    if (self.map.get(cp)) |seq| {
-        if (seq.len == 1) {
-            return .{ .simple = seq[0] };
-        } else {
-            return .{ .full = seq };
-        }
-    } else {
-        return .{ .simple = cp };
-    }
-}
-
 /// caseFoldStr will caseFold the code points in str, producing a slice of u8 with the new bytes.
 /// Caller must free returned bytes.
 pub fn caseFoldStr(self: *CaseFoldMap, allocator: *mem.Allocator, str: []const u8) ![]u8 {
     var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
-    var code_points = std.ArrayList(u21).init(self.allocator);
+    var code_points = std.ArrayList(u21).init(allocator);
     defer code_points.deinit();
 
     // Gather decomposed code points.
     var iter = (try unicode.Utf8View.init(str)).iterator();
     while (iter.nextCodepoint()) |cp| {
-        const cf = self.toCaseFold(cp);
-        switch (cf) {
-            .simple => |scp| try code_points.append(scp),
-            .full => |seq| try code_points.appendSlice(seq),
+        for (self.toCaseFold(cp)) |fcp| {
+            if (fcp == 0) break;
+            try code_points.append(fcp);
         }
     }
 
@@ -4686,4 +32,1500 @@ pub fn caseFoldStr(self: *CaseFoldMap, allocator: *mem.Allocator, str: []const u
     }
 
     return result.toOwnedSlice();
+}
+
+/// toCaseFold will convert a code point into its case folded equivalent. Note that this can result
+/// in a mapping to more than one code point, known as the full case fold.
+pub fn toCaseFold(self: CaseFoldMap, cp: u21) [3]u21 {
+    if (cp == 0x0041) return [3]u21{ 0x0061, 0, 0 };
+    if (cp == 0x0042) return [3]u21{ 0x0062, 0, 0 };
+    if (cp == 0x0043) return [3]u21{ 0x0063, 0, 0 };
+    if (cp == 0x0044) return [3]u21{ 0x0064, 0, 0 };
+    if (cp == 0x0045) return [3]u21{ 0x0065, 0, 0 };
+    if (cp == 0x0046) return [3]u21{ 0x0066, 0, 0 };
+    if (cp == 0x0047) return [3]u21{ 0x0067, 0, 0 };
+    if (cp == 0x0048) return [3]u21{ 0x0068, 0, 0 };
+    if (cp == 0x0049) return [3]u21{ 0x0069, 0, 0 };
+    if (cp == 0x004A) return [3]u21{ 0x006A, 0, 0 };
+    if (cp == 0x004B) return [3]u21{ 0x006B, 0, 0 };
+    if (cp == 0x004C) return [3]u21{ 0x006C, 0, 0 };
+    if (cp == 0x004D) return [3]u21{ 0x006D, 0, 0 };
+    if (cp == 0x004E) return [3]u21{ 0x006E, 0, 0 };
+    if (cp == 0x004F) return [3]u21{ 0x006F, 0, 0 };
+    if (cp == 0x0050) return [3]u21{ 0x0070, 0, 0 };
+    if (cp == 0x0051) return [3]u21{ 0x0071, 0, 0 };
+    if (cp == 0x0052) return [3]u21{ 0x0072, 0, 0 };
+    if (cp == 0x0053) return [3]u21{ 0x0073, 0, 0 };
+    if (cp == 0x0054) return [3]u21{ 0x0074, 0, 0 };
+    if (cp == 0x0055) return [3]u21{ 0x0075, 0, 0 };
+    if (cp == 0x0056) return [3]u21{ 0x0076, 0, 0 };
+    if (cp == 0x0057) return [3]u21{ 0x0077, 0, 0 };
+    if (cp == 0x0058) return [3]u21{ 0x0078, 0, 0 };
+    if (cp == 0x0059) return [3]u21{ 0x0079, 0, 0 };
+    if (cp == 0x005A) return [3]u21{ 0x007A, 0, 0 };
+    if (cp == 0x00B5) return [3]u21{ 0x03BC, 0, 0 };
+    if (cp == 0x00C0) return [3]u21{ 0x00E0, 0, 0 };
+    if (cp == 0x00C1) return [3]u21{ 0x00E1, 0, 0 };
+    if (cp == 0x00C2) return [3]u21{ 0x00E2, 0, 0 };
+    if (cp == 0x00C3) return [3]u21{ 0x00E3, 0, 0 };
+    if (cp == 0x00C4) return [3]u21{ 0x00E4, 0, 0 };
+    if (cp == 0x00C5) return [3]u21{ 0x00E5, 0, 0 };
+    if (cp == 0x00C6) return [3]u21{ 0x00E6, 0, 0 };
+    if (cp == 0x00C7) return [3]u21{ 0x00E7, 0, 0 };
+    if (cp == 0x00C8) return [3]u21{ 0x00E8, 0, 0 };
+    if (cp == 0x00C9) return [3]u21{ 0x00E9, 0, 0 };
+    if (cp == 0x00CA) return [3]u21{ 0x00EA, 0, 0 };
+    if (cp == 0x00CB) return [3]u21{ 0x00EB, 0, 0 };
+    if (cp == 0x00CC) return [3]u21{ 0x00EC, 0, 0 };
+    if (cp == 0x00CD) return [3]u21{ 0x00ED, 0, 0 };
+    if (cp == 0x00CE) return [3]u21{ 0x00EE, 0, 0 };
+    if (cp == 0x00CF) return [3]u21{ 0x00EF, 0, 0 };
+    if (cp == 0x00D0) return [3]u21{ 0x00F0, 0, 0 };
+    if (cp == 0x00D1) return [3]u21{ 0x00F1, 0, 0 };
+    if (cp == 0x00D2) return [3]u21{ 0x00F2, 0, 0 };
+    if (cp == 0x00D3) return [3]u21{ 0x00F3, 0, 0 };
+    if (cp == 0x00D4) return [3]u21{ 0x00F4, 0, 0 };
+    if (cp == 0x00D5) return [3]u21{ 0x00F5, 0, 0 };
+    if (cp == 0x00D6) return [3]u21{ 0x00F6, 0, 0 };
+    if (cp == 0x00D8) return [3]u21{ 0x00F8, 0, 0 };
+    if (cp == 0x00D9) return [3]u21{ 0x00F9, 0, 0 };
+    if (cp == 0x00DA) return [3]u21{ 0x00FA, 0, 0 };
+    if (cp == 0x00DB) return [3]u21{ 0x00FB, 0, 0 };
+    if (cp == 0x00DC) return [3]u21{ 0x00FC, 0, 0 };
+    if (cp == 0x00DD) return [3]u21{ 0x00FD, 0, 0 };
+    if (cp == 0x00DE) return [3]u21{ 0x00FE, 0, 0 };
+    if (cp == 0x00DF) return [3]u21{ 0x0073, 0x0073, 0 };
+    if (cp == 0x0100) return [3]u21{ 0x0101, 0, 0 };
+    if (cp == 0x0102) return [3]u21{ 0x0103, 0, 0 };
+    if (cp == 0x0104) return [3]u21{ 0x0105, 0, 0 };
+    if (cp == 0x0106) return [3]u21{ 0x0107, 0, 0 };
+    if (cp == 0x0108) return [3]u21{ 0x0109, 0, 0 };
+    if (cp == 0x010A) return [3]u21{ 0x010B, 0, 0 };
+    if (cp == 0x010C) return [3]u21{ 0x010D, 0, 0 };
+    if (cp == 0x010E) return [3]u21{ 0x010F, 0, 0 };
+    if (cp == 0x0110) return [3]u21{ 0x0111, 0, 0 };
+    if (cp == 0x0112) return [3]u21{ 0x0113, 0, 0 };
+    if (cp == 0x0114) return [3]u21{ 0x0115, 0, 0 };
+    if (cp == 0x0116) return [3]u21{ 0x0117, 0, 0 };
+    if (cp == 0x0118) return [3]u21{ 0x0119, 0, 0 };
+    if (cp == 0x011A) return [3]u21{ 0x011B, 0, 0 };
+    if (cp == 0x011C) return [3]u21{ 0x011D, 0, 0 };
+    if (cp == 0x011E) return [3]u21{ 0x011F, 0, 0 };
+    if (cp == 0x0120) return [3]u21{ 0x0121, 0, 0 };
+    if (cp == 0x0122) return [3]u21{ 0x0123, 0, 0 };
+    if (cp == 0x0124) return [3]u21{ 0x0125, 0, 0 };
+    if (cp == 0x0126) return [3]u21{ 0x0127, 0, 0 };
+    if (cp == 0x0128) return [3]u21{ 0x0129, 0, 0 };
+    if (cp == 0x012A) return [3]u21{ 0x012B, 0, 0 };
+    if (cp == 0x012C) return [3]u21{ 0x012D, 0, 0 };
+    if (cp == 0x012E) return [3]u21{ 0x012F, 0, 0 };
+    if (cp == 0x0130) return [3]u21{ 0x0069, 0x0307, 0 };
+    if (cp == 0x0132) return [3]u21{ 0x0133, 0, 0 };
+    if (cp == 0x0134) return [3]u21{ 0x0135, 0, 0 };
+    if (cp == 0x0136) return [3]u21{ 0x0137, 0, 0 };
+    if (cp == 0x0139) return [3]u21{ 0x013A, 0, 0 };
+    if (cp == 0x013B) return [3]u21{ 0x013C, 0, 0 };
+    if (cp == 0x013D) return [3]u21{ 0x013E, 0, 0 };
+    if (cp == 0x013F) return [3]u21{ 0x0140, 0, 0 };
+    if (cp == 0x0141) return [3]u21{ 0x0142, 0, 0 };
+    if (cp == 0x0143) return [3]u21{ 0x0144, 0, 0 };
+    if (cp == 0x0145) return [3]u21{ 0x0146, 0, 0 };
+    if (cp == 0x0147) return [3]u21{ 0x0148, 0, 0 };
+    if (cp == 0x0149) return [3]u21{ 0x02BC, 0x006E, 0 };
+    if (cp == 0x014A) return [3]u21{ 0x014B, 0, 0 };
+    if (cp == 0x014C) return [3]u21{ 0x014D, 0, 0 };
+    if (cp == 0x014E) return [3]u21{ 0x014F, 0, 0 };
+    if (cp == 0x0150) return [3]u21{ 0x0151, 0, 0 };
+    if (cp == 0x0152) return [3]u21{ 0x0153, 0, 0 };
+    if (cp == 0x0154) return [3]u21{ 0x0155, 0, 0 };
+    if (cp == 0x0156) return [3]u21{ 0x0157, 0, 0 };
+    if (cp == 0x0158) return [3]u21{ 0x0159, 0, 0 };
+    if (cp == 0x015A) return [3]u21{ 0x015B, 0, 0 };
+    if (cp == 0x015C) return [3]u21{ 0x015D, 0, 0 };
+    if (cp == 0x015E) return [3]u21{ 0x015F, 0, 0 };
+    if (cp == 0x0160) return [3]u21{ 0x0161, 0, 0 };
+    if (cp == 0x0162) return [3]u21{ 0x0163, 0, 0 };
+    if (cp == 0x0164) return [3]u21{ 0x0165, 0, 0 };
+    if (cp == 0x0166) return [3]u21{ 0x0167, 0, 0 };
+    if (cp == 0x0168) return [3]u21{ 0x0169, 0, 0 };
+    if (cp == 0x016A) return [3]u21{ 0x016B, 0, 0 };
+    if (cp == 0x016C) return [3]u21{ 0x016D, 0, 0 };
+    if (cp == 0x016E) return [3]u21{ 0x016F, 0, 0 };
+    if (cp == 0x0170) return [3]u21{ 0x0171, 0, 0 };
+    if (cp == 0x0172) return [3]u21{ 0x0173, 0, 0 };
+    if (cp == 0x0174) return [3]u21{ 0x0175, 0, 0 };
+    if (cp == 0x0176) return [3]u21{ 0x0177, 0, 0 };
+    if (cp == 0x0178) return [3]u21{ 0x00FF, 0, 0 };
+    if (cp == 0x0179) return [3]u21{ 0x017A, 0, 0 };
+    if (cp == 0x017B) return [3]u21{ 0x017C, 0, 0 };
+    if (cp == 0x017D) return [3]u21{ 0x017E, 0, 0 };
+    if (cp == 0x017F) return [3]u21{ 0x0073, 0, 0 };
+    if (cp == 0x0181) return [3]u21{ 0x0253, 0, 0 };
+    if (cp == 0x0182) return [3]u21{ 0x0183, 0, 0 };
+    if (cp == 0x0184) return [3]u21{ 0x0185, 0, 0 };
+    if (cp == 0x0186) return [3]u21{ 0x0254, 0, 0 };
+    if (cp == 0x0187) return [3]u21{ 0x0188, 0, 0 };
+    if (cp == 0x0189) return [3]u21{ 0x0256, 0, 0 };
+    if (cp == 0x018A) return [3]u21{ 0x0257, 0, 0 };
+    if (cp == 0x018B) return [3]u21{ 0x018C, 0, 0 };
+    if (cp == 0x018E) return [3]u21{ 0x01DD, 0, 0 };
+    if (cp == 0x018F) return [3]u21{ 0x0259, 0, 0 };
+    if (cp == 0x0190) return [3]u21{ 0x025B, 0, 0 };
+    if (cp == 0x0191) return [3]u21{ 0x0192, 0, 0 };
+    if (cp == 0x0193) return [3]u21{ 0x0260, 0, 0 };
+    if (cp == 0x0194) return [3]u21{ 0x0263, 0, 0 };
+    if (cp == 0x0196) return [3]u21{ 0x0269, 0, 0 };
+    if (cp == 0x0197) return [3]u21{ 0x0268, 0, 0 };
+    if (cp == 0x0198) return [3]u21{ 0x0199, 0, 0 };
+    if (cp == 0x019C) return [3]u21{ 0x026F, 0, 0 };
+    if (cp == 0x019D) return [3]u21{ 0x0272, 0, 0 };
+    if (cp == 0x019F) return [3]u21{ 0x0275, 0, 0 };
+    if (cp == 0x01A0) return [3]u21{ 0x01A1, 0, 0 };
+    if (cp == 0x01A2) return [3]u21{ 0x01A3, 0, 0 };
+    if (cp == 0x01A4) return [3]u21{ 0x01A5, 0, 0 };
+    if (cp == 0x01A6) return [3]u21{ 0x0280, 0, 0 };
+    if (cp == 0x01A7) return [3]u21{ 0x01A8, 0, 0 };
+    if (cp == 0x01A9) return [3]u21{ 0x0283, 0, 0 };
+    if (cp == 0x01AC) return [3]u21{ 0x01AD, 0, 0 };
+    if (cp == 0x01AE) return [3]u21{ 0x0288, 0, 0 };
+    if (cp == 0x01AF) return [3]u21{ 0x01B0, 0, 0 };
+    if (cp == 0x01B1) return [3]u21{ 0x028A, 0, 0 };
+    if (cp == 0x01B2) return [3]u21{ 0x028B, 0, 0 };
+    if (cp == 0x01B3) return [3]u21{ 0x01B4, 0, 0 };
+    if (cp == 0x01B5) return [3]u21{ 0x01B6, 0, 0 };
+    if (cp == 0x01B7) return [3]u21{ 0x0292, 0, 0 };
+    if (cp == 0x01B8) return [3]u21{ 0x01B9, 0, 0 };
+    if (cp == 0x01BC) return [3]u21{ 0x01BD, 0, 0 };
+    if (cp == 0x01C4) return [3]u21{ 0x01C6, 0, 0 };
+    if (cp == 0x01C5) return [3]u21{ 0x01C6, 0, 0 };
+    if (cp == 0x01C7) return [3]u21{ 0x01C9, 0, 0 };
+    if (cp == 0x01C8) return [3]u21{ 0x01C9, 0, 0 };
+    if (cp == 0x01CA) return [3]u21{ 0x01CC, 0, 0 };
+    if (cp == 0x01CB) return [3]u21{ 0x01CC, 0, 0 };
+    if (cp == 0x01CD) return [3]u21{ 0x01CE, 0, 0 };
+    if (cp == 0x01CF) return [3]u21{ 0x01D0, 0, 0 };
+    if (cp == 0x01D1) return [3]u21{ 0x01D2, 0, 0 };
+    if (cp == 0x01D3) return [3]u21{ 0x01D4, 0, 0 };
+    if (cp == 0x01D5) return [3]u21{ 0x01D6, 0, 0 };
+    if (cp == 0x01D7) return [3]u21{ 0x01D8, 0, 0 };
+    if (cp == 0x01D9) return [3]u21{ 0x01DA, 0, 0 };
+    if (cp == 0x01DB) return [3]u21{ 0x01DC, 0, 0 };
+    if (cp == 0x01DE) return [3]u21{ 0x01DF, 0, 0 };
+    if (cp == 0x01E0) return [3]u21{ 0x01E1, 0, 0 };
+    if (cp == 0x01E2) return [3]u21{ 0x01E3, 0, 0 };
+    if (cp == 0x01E4) return [3]u21{ 0x01E5, 0, 0 };
+    if (cp == 0x01E6) return [3]u21{ 0x01E7, 0, 0 };
+    if (cp == 0x01E8) return [3]u21{ 0x01E9, 0, 0 };
+    if (cp == 0x01EA) return [3]u21{ 0x01EB, 0, 0 };
+    if (cp == 0x01EC) return [3]u21{ 0x01ED, 0, 0 };
+    if (cp == 0x01EE) return [3]u21{ 0x01EF, 0, 0 };
+    if (cp == 0x01F0) return [3]u21{ 0x006A, 0x030C, 0 };
+    if (cp == 0x01F1) return [3]u21{ 0x01F3, 0, 0 };
+    if (cp == 0x01F2) return [3]u21{ 0x01F3, 0, 0 };
+    if (cp == 0x01F4) return [3]u21{ 0x01F5, 0, 0 };
+    if (cp == 0x01F6) return [3]u21{ 0x0195, 0, 0 };
+    if (cp == 0x01F7) return [3]u21{ 0x01BF, 0, 0 };
+    if (cp == 0x01F8) return [3]u21{ 0x01F9, 0, 0 };
+    if (cp == 0x01FA) return [3]u21{ 0x01FB, 0, 0 };
+    if (cp == 0x01FC) return [3]u21{ 0x01FD, 0, 0 };
+    if (cp == 0x01FE) return [3]u21{ 0x01FF, 0, 0 };
+    if (cp == 0x0200) return [3]u21{ 0x0201, 0, 0 };
+    if (cp == 0x0202) return [3]u21{ 0x0203, 0, 0 };
+    if (cp == 0x0204) return [3]u21{ 0x0205, 0, 0 };
+    if (cp == 0x0206) return [3]u21{ 0x0207, 0, 0 };
+    if (cp == 0x0208) return [3]u21{ 0x0209, 0, 0 };
+    if (cp == 0x020A) return [3]u21{ 0x020B, 0, 0 };
+    if (cp == 0x020C) return [3]u21{ 0x020D, 0, 0 };
+    if (cp == 0x020E) return [3]u21{ 0x020F, 0, 0 };
+    if (cp == 0x0210) return [3]u21{ 0x0211, 0, 0 };
+    if (cp == 0x0212) return [3]u21{ 0x0213, 0, 0 };
+    if (cp == 0x0214) return [3]u21{ 0x0215, 0, 0 };
+    if (cp == 0x0216) return [3]u21{ 0x0217, 0, 0 };
+    if (cp == 0x0218) return [3]u21{ 0x0219, 0, 0 };
+    if (cp == 0x021A) return [3]u21{ 0x021B, 0, 0 };
+    if (cp == 0x021C) return [3]u21{ 0x021D, 0, 0 };
+    if (cp == 0x021E) return [3]u21{ 0x021F, 0, 0 };
+    if (cp == 0x0220) return [3]u21{ 0x019E, 0, 0 };
+    if (cp == 0x0222) return [3]u21{ 0x0223, 0, 0 };
+    if (cp == 0x0224) return [3]u21{ 0x0225, 0, 0 };
+    if (cp == 0x0226) return [3]u21{ 0x0227, 0, 0 };
+    if (cp == 0x0228) return [3]u21{ 0x0229, 0, 0 };
+    if (cp == 0x022A) return [3]u21{ 0x022B, 0, 0 };
+    if (cp == 0x022C) return [3]u21{ 0x022D, 0, 0 };
+    if (cp == 0x022E) return [3]u21{ 0x022F, 0, 0 };
+    if (cp == 0x0230) return [3]u21{ 0x0231, 0, 0 };
+    if (cp == 0x0232) return [3]u21{ 0x0233, 0, 0 };
+    if (cp == 0x023A) return [3]u21{ 0x2C65, 0, 0 };
+    if (cp == 0x023B) return [3]u21{ 0x023C, 0, 0 };
+    if (cp == 0x023D) return [3]u21{ 0x019A, 0, 0 };
+    if (cp == 0x023E) return [3]u21{ 0x2C66, 0, 0 };
+    if (cp == 0x0241) return [3]u21{ 0x0242, 0, 0 };
+    if (cp == 0x0243) return [3]u21{ 0x0180, 0, 0 };
+    if (cp == 0x0244) return [3]u21{ 0x0289, 0, 0 };
+    if (cp == 0x0245) return [3]u21{ 0x028C, 0, 0 };
+    if (cp == 0x0246) return [3]u21{ 0x0247, 0, 0 };
+    if (cp == 0x0248) return [3]u21{ 0x0249, 0, 0 };
+    if (cp == 0x024A) return [3]u21{ 0x024B, 0, 0 };
+    if (cp == 0x024C) return [3]u21{ 0x024D, 0, 0 };
+    if (cp == 0x024E) return [3]u21{ 0x024F, 0, 0 };
+    if (cp == 0x0345) return [3]u21{ 0x03B9, 0, 0 };
+    if (cp == 0x0370) return [3]u21{ 0x0371, 0, 0 };
+    if (cp == 0x0372) return [3]u21{ 0x0373, 0, 0 };
+    if (cp == 0x0376) return [3]u21{ 0x0377, 0, 0 };
+    if (cp == 0x037F) return [3]u21{ 0x03F3, 0, 0 };
+    if (cp == 0x0386) return [3]u21{ 0x03AC, 0, 0 };
+    if (cp == 0x0388) return [3]u21{ 0x03AD, 0, 0 };
+    if (cp == 0x0389) return [3]u21{ 0x03AE, 0, 0 };
+    if (cp == 0x038A) return [3]u21{ 0x03AF, 0, 0 };
+    if (cp == 0x038C) return [3]u21{ 0x03CC, 0, 0 };
+    if (cp == 0x038E) return [3]u21{ 0x03CD, 0, 0 };
+    if (cp == 0x038F) return [3]u21{ 0x03CE, 0, 0 };
+    if (cp == 0x0390) return [3]u21{ 0x03B9, 0x0308, 0x0301 };
+    if (cp == 0x0391) return [3]u21{ 0x03B1, 0, 0 };
+    if (cp == 0x0392) return [3]u21{ 0x03B2, 0, 0 };
+    if (cp == 0x0393) return [3]u21{ 0x03B3, 0, 0 };
+    if (cp == 0x0394) return [3]u21{ 0x03B4, 0, 0 };
+    if (cp == 0x0395) return [3]u21{ 0x03B5, 0, 0 };
+    if (cp == 0x0396) return [3]u21{ 0x03B6, 0, 0 };
+    if (cp == 0x0397) return [3]u21{ 0x03B7, 0, 0 };
+    if (cp == 0x0398) return [3]u21{ 0x03B8, 0, 0 };
+    if (cp == 0x0399) return [3]u21{ 0x03B9, 0, 0 };
+    if (cp == 0x039A) return [3]u21{ 0x03BA, 0, 0 };
+    if (cp == 0x039B) return [3]u21{ 0x03BB, 0, 0 };
+    if (cp == 0x039C) return [3]u21{ 0x03BC, 0, 0 };
+    if (cp == 0x039D) return [3]u21{ 0x03BD, 0, 0 };
+    if (cp == 0x039E) return [3]u21{ 0x03BE, 0, 0 };
+    if (cp == 0x039F) return [3]u21{ 0x03BF, 0, 0 };
+    if (cp == 0x03A0) return [3]u21{ 0x03C0, 0, 0 };
+    if (cp == 0x03A1) return [3]u21{ 0x03C1, 0, 0 };
+    if (cp == 0x03A3) return [3]u21{ 0x03C3, 0, 0 };
+    if (cp == 0x03A4) return [3]u21{ 0x03C4, 0, 0 };
+    if (cp == 0x03A5) return [3]u21{ 0x03C5, 0, 0 };
+    if (cp == 0x03A6) return [3]u21{ 0x03C6, 0, 0 };
+    if (cp == 0x03A7) return [3]u21{ 0x03C7, 0, 0 };
+    if (cp == 0x03A8) return [3]u21{ 0x03C8, 0, 0 };
+    if (cp == 0x03A9) return [3]u21{ 0x03C9, 0, 0 };
+    if (cp == 0x03AA) return [3]u21{ 0x03CA, 0, 0 };
+    if (cp == 0x03AB) return [3]u21{ 0x03CB, 0, 0 };
+    if (cp == 0x03B0) return [3]u21{ 0x03C5, 0x0308, 0x0301 };
+    if (cp == 0x03C2) return [3]u21{ 0x03C3, 0, 0 };
+    if (cp == 0x03CF) return [3]u21{ 0x03D7, 0, 0 };
+    if (cp == 0x03D0) return [3]u21{ 0x03B2, 0, 0 };
+    if (cp == 0x03D1) return [3]u21{ 0x03B8, 0, 0 };
+    if (cp == 0x03D5) return [3]u21{ 0x03C6, 0, 0 };
+    if (cp == 0x03D6) return [3]u21{ 0x03C0, 0, 0 };
+    if (cp == 0x03D8) return [3]u21{ 0x03D9, 0, 0 };
+    if (cp == 0x03DA) return [3]u21{ 0x03DB, 0, 0 };
+    if (cp == 0x03DC) return [3]u21{ 0x03DD, 0, 0 };
+    if (cp == 0x03DE) return [3]u21{ 0x03DF, 0, 0 };
+    if (cp == 0x03E0) return [3]u21{ 0x03E1, 0, 0 };
+    if (cp == 0x03E2) return [3]u21{ 0x03E3, 0, 0 };
+    if (cp == 0x03E4) return [3]u21{ 0x03E5, 0, 0 };
+    if (cp == 0x03E6) return [3]u21{ 0x03E7, 0, 0 };
+    if (cp == 0x03E8) return [3]u21{ 0x03E9, 0, 0 };
+    if (cp == 0x03EA) return [3]u21{ 0x03EB, 0, 0 };
+    if (cp == 0x03EC) return [3]u21{ 0x03ED, 0, 0 };
+    if (cp == 0x03EE) return [3]u21{ 0x03EF, 0, 0 };
+    if (cp == 0x03F0) return [3]u21{ 0x03BA, 0, 0 };
+    if (cp == 0x03F1) return [3]u21{ 0x03C1, 0, 0 };
+    if (cp == 0x03F4) return [3]u21{ 0x03B8, 0, 0 };
+    if (cp == 0x03F5) return [3]u21{ 0x03B5, 0, 0 };
+    if (cp == 0x03F7) return [3]u21{ 0x03F8, 0, 0 };
+    if (cp == 0x03F9) return [3]u21{ 0x03F2, 0, 0 };
+    if (cp == 0x03FA) return [3]u21{ 0x03FB, 0, 0 };
+    if (cp == 0x03FD) return [3]u21{ 0x037B, 0, 0 };
+    if (cp == 0x03FE) return [3]u21{ 0x037C, 0, 0 };
+    if (cp == 0x03FF) return [3]u21{ 0x037D, 0, 0 };
+    if (cp == 0x0400) return [3]u21{ 0x0450, 0, 0 };
+    if (cp == 0x0401) return [3]u21{ 0x0451, 0, 0 };
+    if (cp == 0x0402) return [3]u21{ 0x0452, 0, 0 };
+    if (cp == 0x0403) return [3]u21{ 0x0453, 0, 0 };
+    if (cp == 0x0404) return [3]u21{ 0x0454, 0, 0 };
+    if (cp == 0x0405) return [3]u21{ 0x0455, 0, 0 };
+    if (cp == 0x0406) return [3]u21{ 0x0456, 0, 0 };
+    if (cp == 0x0407) return [3]u21{ 0x0457, 0, 0 };
+    if (cp == 0x0408) return [3]u21{ 0x0458, 0, 0 };
+    if (cp == 0x0409) return [3]u21{ 0x0459, 0, 0 };
+    if (cp == 0x040A) return [3]u21{ 0x045A, 0, 0 };
+    if (cp == 0x040B) return [3]u21{ 0x045B, 0, 0 };
+    if (cp == 0x040C) return [3]u21{ 0x045C, 0, 0 };
+    if (cp == 0x040D) return [3]u21{ 0x045D, 0, 0 };
+    if (cp == 0x040E) return [3]u21{ 0x045E, 0, 0 };
+    if (cp == 0x040F) return [3]u21{ 0x045F, 0, 0 };
+    if (cp == 0x0410) return [3]u21{ 0x0430, 0, 0 };
+    if (cp == 0x0411) return [3]u21{ 0x0431, 0, 0 };
+    if (cp == 0x0412) return [3]u21{ 0x0432, 0, 0 };
+    if (cp == 0x0413) return [3]u21{ 0x0433, 0, 0 };
+    if (cp == 0x0414) return [3]u21{ 0x0434, 0, 0 };
+    if (cp == 0x0415) return [3]u21{ 0x0435, 0, 0 };
+    if (cp == 0x0416) return [3]u21{ 0x0436, 0, 0 };
+    if (cp == 0x0417) return [3]u21{ 0x0437, 0, 0 };
+    if (cp == 0x0418) return [3]u21{ 0x0438, 0, 0 };
+    if (cp == 0x0419) return [3]u21{ 0x0439, 0, 0 };
+    if (cp == 0x041A) return [3]u21{ 0x043A, 0, 0 };
+    if (cp == 0x041B) return [3]u21{ 0x043B, 0, 0 };
+    if (cp == 0x041C) return [3]u21{ 0x043C, 0, 0 };
+    if (cp == 0x041D) return [3]u21{ 0x043D, 0, 0 };
+    if (cp == 0x041E) return [3]u21{ 0x043E, 0, 0 };
+    if (cp == 0x041F) return [3]u21{ 0x043F, 0, 0 };
+    if (cp == 0x0420) return [3]u21{ 0x0440, 0, 0 };
+    if (cp == 0x0421) return [3]u21{ 0x0441, 0, 0 };
+    if (cp == 0x0422) return [3]u21{ 0x0442, 0, 0 };
+    if (cp == 0x0423) return [3]u21{ 0x0443, 0, 0 };
+    if (cp == 0x0424) return [3]u21{ 0x0444, 0, 0 };
+    if (cp == 0x0425) return [3]u21{ 0x0445, 0, 0 };
+    if (cp == 0x0426) return [3]u21{ 0x0446, 0, 0 };
+    if (cp == 0x0427) return [3]u21{ 0x0447, 0, 0 };
+    if (cp == 0x0428) return [3]u21{ 0x0448, 0, 0 };
+    if (cp == 0x0429) return [3]u21{ 0x0449, 0, 0 };
+    if (cp == 0x042A) return [3]u21{ 0x044A, 0, 0 };
+    if (cp == 0x042B) return [3]u21{ 0x044B, 0, 0 };
+    if (cp == 0x042C) return [3]u21{ 0x044C, 0, 0 };
+    if (cp == 0x042D) return [3]u21{ 0x044D, 0, 0 };
+    if (cp == 0x042E) return [3]u21{ 0x044E, 0, 0 };
+    if (cp == 0x042F) return [3]u21{ 0x044F, 0, 0 };
+    if (cp == 0x0460) return [3]u21{ 0x0461, 0, 0 };
+    if (cp == 0x0462) return [3]u21{ 0x0463, 0, 0 };
+    if (cp == 0x0464) return [3]u21{ 0x0465, 0, 0 };
+    if (cp == 0x0466) return [3]u21{ 0x0467, 0, 0 };
+    if (cp == 0x0468) return [3]u21{ 0x0469, 0, 0 };
+    if (cp == 0x046A) return [3]u21{ 0x046B, 0, 0 };
+    if (cp == 0x046C) return [3]u21{ 0x046D, 0, 0 };
+    if (cp == 0x046E) return [3]u21{ 0x046F, 0, 0 };
+    if (cp == 0x0470) return [3]u21{ 0x0471, 0, 0 };
+    if (cp == 0x0472) return [3]u21{ 0x0473, 0, 0 };
+    if (cp == 0x0474) return [3]u21{ 0x0475, 0, 0 };
+    if (cp == 0x0476) return [3]u21{ 0x0477, 0, 0 };
+    if (cp == 0x0478) return [3]u21{ 0x0479, 0, 0 };
+    if (cp == 0x047A) return [3]u21{ 0x047B, 0, 0 };
+    if (cp == 0x047C) return [3]u21{ 0x047D, 0, 0 };
+    if (cp == 0x047E) return [3]u21{ 0x047F, 0, 0 };
+    if (cp == 0x0480) return [3]u21{ 0x0481, 0, 0 };
+    if (cp == 0x048A) return [3]u21{ 0x048B, 0, 0 };
+    if (cp == 0x048C) return [3]u21{ 0x048D, 0, 0 };
+    if (cp == 0x048E) return [3]u21{ 0x048F, 0, 0 };
+    if (cp == 0x0490) return [3]u21{ 0x0491, 0, 0 };
+    if (cp == 0x0492) return [3]u21{ 0x0493, 0, 0 };
+    if (cp == 0x0494) return [3]u21{ 0x0495, 0, 0 };
+    if (cp == 0x0496) return [3]u21{ 0x0497, 0, 0 };
+    if (cp == 0x0498) return [3]u21{ 0x0499, 0, 0 };
+    if (cp == 0x049A) return [3]u21{ 0x049B, 0, 0 };
+    if (cp == 0x049C) return [3]u21{ 0x049D, 0, 0 };
+    if (cp == 0x049E) return [3]u21{ 0x049F, 0, 0 };
+    if (cp == 0x04A0) return [3]u21{ 0x04A1, 0, 0 };
+    if (cp == 0x04A2) return [3]u21{ 0x04A3, 0, 0 };
+    if (cp == 0x04A4) return [3]u21{ 0x04A5, 0, 0 };
+    if (cp == 0x04A6) return [3]u21{ 0x04A7, 0, 0 };
+    if (cp == 0x04A8) return [3]u21{ 0x04A9, 0, 0 };
+    if (cp == 0x04AA) return [3]u21{ 0x04AB, 0, 0 };
+    if (cp == 0x04AC) return [3]u21{ 0x04AD, 0, 0 };
+    if (cp == 0x04AE) return [3]u21{ 0x04AF, 0, 0 };
+    if (cp == 0x04B0) return [3]u21{ 0x04B1, 0, 0 };
+    if (cp == 0x04B2) return [3]u21{ 0x04B3, 0, 0 };
+    if (cp == 0x04B4) return [3]u21{ 0x04B5, 0, 0 };
+    if (cp == 0x04B6) return [3]u21{ 0x04B7, 0, 0 };
+    if (cp == 0x04B8) return [3]u21{ 0x04B9, 0, 0 };
+    if (cp == 0x04BA) return [3]u21{ 0x04BB, 0, 0 };
+    if (cp == 0x04BC) return [3]u21{ 0x04BD, 0, 0 };
+    if (cp == 0x04BE) return [3]u21{ 0x04BF, 0, 0 };
+    if (cp == 0x04C0) return [3]u21{ 0x04CF, 0, 0 };
+    if (cp == 0x04C1) return [3]u21{ 0x04C2, 0, 0 };
+    if (cp == 0x04C3) return [3]u21{ 0x04C4, 0, 0 };
+    if (cp == 0x04C5) return [3]u21{ 0x04C6, 0, 0 };
+    if (cp == 0x04C7) return [3]u21{ 0x04C8, 0, 0 };
+    if (cp == 0x04C9) return [3]u21{ 0x04CA, 0, 0 };
+    if (cp == 0x04CB) return [3]u21{ 0x04CC, 0, 0 };
+    if (cp == 0x04CD) return [3]u21{ 0x04CE, 0, 0 };
+    if (cp == 0x04D0) return [3]u21{ 0x04D1, 0, 0 };
+    if (cp == 0x04D2) return [3]u21{ 0x04D3, 0, 0 };
+    if (cp == 0x04D4) return [3]u21{ 0x04D5, 0, 0 };
+    if (cp == 0x04D6) return [3]u21{ 0x04D7, 0, 0 };
+    if (cp == 0x04D8) return [3]u21{ 0x04D9, 0, 0 };
+    if (cp == 0x04DA) return [3]u21{ 0x04DB, 0, 0 };
+    if (cp == 0x04DC) return [3]u21{ 0x04DD, 0, 0 };
+    if (cp == 0x04DE) return [3]u21{ 0x04DF, 0, 0 };
+    if (cp == 0x04E0) return [3]u21{ 0x04E1, 0, 0 };
+    if (cp == 0x04E2) return [3]u21{ 0x04E3, 0, 0 };
+    if (cp == 0x04E4) return [3]u21{ 0x04E5, 0, 0 };
+    if (cp == 0x04E6) return [3]u21{ 0x04E7, 0, 0 };
+    if (cp == 0x04E8) return [3]u21{ 0x04E9, 0, 0 };
+    if (cp == 0x04EA) return [3]u21{ 0x04EB, 0, 0 };
+    if (cp == 0x04EC) return [3]u21{ 0x04ED, 0, 0 };
+    if (cp == 0x04EE) return [3]u21{ 0x04EF, 0, 0 };
+    if (cp == 0x04F0) return [3]u21{ 0x04F1, 0, 0 };
+    if (cp == 0x04F2) return [3]u21{ 0x04F3, 0, 0 };
+    if (cp == 0x04F4) return [3]u21{ 0x04F5, 0, 0 };
+    if (cp == 0x04F6) return [3]u21{ 0x04F7, 0, 0 };
+    if (cp == 0x04F8) return [3]u21{ 0x04F9, 0, 0 };
+    if (cp == 0x04FA) return [3]u21{ 0x04FB, 0, 0 };
+    if (cp == 0x04FC) return [3]u21{ 0x04FD, 0, 0 };
+    if (cp == 0x04FE) return [3]u21{ 0x04FF, 0, 0 };
+    if (cp == 0x0500) return [3]u21{ 0x0501, 0, 0 };
+    if (cp == 0x0502) return [3]u21{ 0x0503, 0, 0 };
+    if (cp == 0x0504) return [3]u21{ 0x0505, 0, 0 };
+    if (cp == 0x0506) return [3]u21{ 0x0507, 0, 0 };
+    if (cp == 0x0508) return [3]u21{ 0x0509, 0, 0 };
+    if (cp == 0x050A) return [3]u21{ 0x050B, 0, 0 };
+    if (cp == 0x050C) return [3]u21{ 0x050D, 0, 0 };
+    if (cp == 0x050E) return [3]u21{ 0x050F, 0, 0 };
+    if (cp == 0x0510) return [3]u21{ 0x0511, 0, 0 };
+    if (cp == 0x0512) return [3]u21{ 0x0513, 0, 0 };
+    if (cp == 0x0514) return [3]u21{ 0x0515, 0, 0 };
+    if (cp == 0x0516) return [3]u21{ 0x0517, 0, 0 };
+    if (cp == 0x0518) return [3]u21{ 0x0519, 0, 0 };
+    if (cp == 0x051A) return [3]u21{ 0x051B, 0, 0 };
+    if (cp == 0x051C) return [3]u21{ 0x051D, 0, 0 };
+    if (cp == 0x051E) return [3]u21{ 0x051F, 0, 0 };
+    if (cp == 0x0520) return [3]u21{ 0x0521, 0, 0 };
+    if (cp == 0x0522) return [3]u21{ 0x0523, 0, 0 };
+    if (cp == 0x0524) return [3]u21{ 0x0525, 0, 0 };
+    if (cp == 0x0526) return [3]u21{ 0x0527, 0, 0 };
+    if (cp == 0x0528) return [3]u21{ 0x0529, 0, 0 };
+    if (cp == 0x052A) return [3]u21{ 0x052B, 0, 0 };
+    if (cp == 0x052C) return [3]u21{ 0x052D, 0, 0 };
+    if (cp == 0x052E) return [3]u21{ 0x052F, 0, 0 };
+    if (cp == 0x0531) return [3]u21{ 0x0561, 0, 0 };
+    if (cp == 0x0532) return [3]u21{ 0x0562, 0, 0 };
+    if (cp == 0x0533) return [3]u21{ 0x0563, 0, 0 };
+    if (cp == 0x0534) return [3]u21{ 0x0564, 0, 0 };
+    if (cp == 0x0535) return [3]u21{ 0x0565, 0, 0 };
+    if (cp == 0x0536) return [3]u21{ 0x0566, 0, 0 };
+    if (cp == 0x0537) return [3]u21{ 0x0567, 0, 0 };
+    if (cp == 0x0538) return [3]u21{ 0x0568, 0, 0 };
+    if (cp == 0x0539) return [3]u21{ 0x0569, 0, 0 };
+    if (cp == 0x053A) return [3]u21{ 0x056A, 0, 0 };
+    if (cp == 0x053B) return [3]u21{ 0x056B, 0, 0 };
+    if (cp == 0x053C) return [3]u21{ 0x056C, 0, 0 };
+    if (cp == 0x053D) return [3]u21{ 0x056D, 0, 0 };
+    if (cp == 0x053E) return [3]u21{ 0x056E, 0, 0 };
+    if (cp == 0x053F) return [3]u21{ 0x056F, 0, 0 };
+    if (cp == 0x0540) return [3]u21{ 0x0570, 0, 0 };
+    if (cp == 0x0541) return [3]u21{ 0x0571, 0, 0 };
+    if (cp == 0x0542) return [3]u21{ 0x0572, 0, 0 };
+    if (cp == 0x0543) return [3]u21{ 0x0573, 0, 0 };
+    if (cp == 0x0544) return [3]u21{ 0x0574, 0, 0 };
+    if (cp == 0x0545) return [3]u21{ 0x0575, 0, 0 };
+    if (cp == 0x0546) return [3]u21{ 0x0576, 0, 0 };
+    if (cp == 0x0547) return [3]u21{ 0x0577, 0, 0 };
+    if (cp == 0x0548) return [3]u21{ 0x0578, 0, 0 };
+    if (cp == 0x0549) return [3]u21{ 0x0579, 0, 0 };
+    if (cp == 0x054A) return [3]u21{ 0x057A, 0, 0 };
+    if (cp == 0x054B) return [3]u21{ 0x057B, 0, 0 };
+    if (cp == 0x054C) return [3]u21{ 0x057C, 0, 0 };
+    if (cp == 0x054D) return [3]u21{ 0x057D, 0, 0 };
+    if (cp == 0x054E) return [3]u21{ 0x057E, 0, 0 };
+    if (cp == 0x054F) return [3]u21{ 0x057F, 0, 0 };
+    if (cp == 0x0550) return [3]u21{ 0x0580, 0, 0 };
+    if (cp == 0x0551) return [3]u21{ 0x0581, 0, 0 };
+    if (cp == 0x0552) return [3]u21{ 0x0582, 0, 0 };
+    if (cp == 0x0553) return [3]u21{ 0x0583, 0, 0 };
+    if (cp == 0x0554) return [3]u21{ 0x0584, 0, 0 };
+    if (cp == 0x0555) return [3]u21{ 0x0585, 0, 0 };
+    if (cp == 0x0556) return [3]u21{ 0x0586, 0, 0 };
+    if (cp == 0x0587) return [3]u21{ 0x0565, 0x0582, 0 };
+    if (cp == 0x10A0) return [3]u21{ 0x2D00, 0, 0 };
+    if (cp == 0x10A1) return [3]u21{ 0x2D01, 0, 0 };
+    if (cp == 0x10A2) return [3]u21{ 0x2D02, 0, 0 };
+    if (cp == 0x10A3) return [3]u21{ 0x2D03, 0, 0 };
+    if (cp == 0x10A4) return [3]u21{ 0x2D04, 0, 0 };
+    if (cp == 0x10A5) return [3]u21{ 0x2D05, 0, 0 };
+    if (cp == 0x10A6) return [3]u21{ 0x2D06, 0, 0 };
+    if (cp == 0x10A7) return [3]u21{ 0x2D07, 0, 0 };
+    if (cp == 0x10A8) return [3]u21{ 0x2D08, 0, 0 };
+    if (cp == 0x10A9) return [3]u21{ 0x2D09, 0, 0 };
+    if (cp == 0x10AA) return [3]u21{ 0x2D0A, 0, 0 };
+    if (cp == 0x10AB) return [3]u21{ 0x2D0B, 0, 0 };
+    if (cp == 0x10AC) return [3]u21{ 0x2D0C, 0, 0 };
+    if (cp == 0x10AD) return [3]u21{ 0x2D0D, 0, 0 };
+    if (cp == 0x10AE) return [3]u21{ 0x2D0E, 0, 0 };
+    if (cp == 0x10AF) return [3]u21{ 0x2D0F, 0, 0 };
+    if (cp == 0x10B0) return [3]u21{ 0x2D10, 0, 0 };
+    if (cp == 0x10B1) return [3]u21{ 0x2D11, 0, 0 };
+    if (cp == 0x10B2) return [3]u21{ 0x2D12, 0, 0 };
+    if (cp == 0x10B3) return [3]u21{ 0x2D13, 0, 0 };
+    if (cp == 0x10B4) return [3]u21{ 0x2D14, 0, 0 };
+    if (cp == 0x10B5) return [3]u21{ 0x2D15, 0, 0 };
+    if (cp == 0x10B6) return [3]u21{ 0x2D16, 0, 0 };
+    if (cp == 0x10B7) return [3]u21{ 0x2D17, 0, 0 };
+    if (cp == 0x10B8) return [3]u21{ 0x2D18, 0, 0 };
+    if (cp == 0x10B9) return [3]u21{ 0x2D19, 0, 0 };
+    if (cp == 0x10BA) return [3]u21{ 0x2D1A, 0, 0 };
+    if (cp == 0x10BB) return [3]u21{ 0x2D1B, 0, 0 };
+    if (cp == 0x10BC) return [3]u21{ 0x2D1C, 0, 0 };
+    if (cp == 0x10BD) return [3]u21{ 0x2D1D, 0, 0 };
+    if (cp == 0x10BE) return [3]u21{ 0x2D1E, 0, 0 };
+    if (cp == 0x10BF) return [3]u21{ 0x2D1F, 0, 0 };
+    if (cp == 0x10C0) return [3]u21{ 0x2D20, 0, 0 };
+    if (cp == 0x10C1) return [3]u21{ 0x2D21, 0, 0 };
+    if (cp == 0x10C2) return [3]u21{ 0x2D22, 0, 0 };
+    if (cp == 0x10C3) return [3]u21{ 0x2D23, 0, 0 };
+    if (cp == 0x10C4) return [3]u21{ 0x2D24, 0, 0 };
+    if (cp == 0x10C5) return [3]u21{ 0x2D25, 0, 0 };
+    if (cp == 0x10C7) return [3]u21{ 0x2D27, 0, 0 };
+    if (cp == 0x10CD) return [3]u21{ 0x2D2D, 0, 0 };
+    if (cp == 0x13F8) return [3]u21{ 0x13F0, 0, 0 };
+    if (cp == 0x13F9) return [3]u21{ 0x13F1, 0, 0 };
+    if (cp == 0x13FA) return [3]u21{ 0x13F2, 0, 0 };
+    if (cp == 0x13FB) return [3]u21{ 0x13F3, 0, 0 };
+    if (cp == 0x13FC) return [3]u21{ 0x13F4, 0, 0 };
+    if (cp == 0x13FD) return [3]u21{ 0x13F5, 0, 0 };
+    if (cp == 0x1C80) return [3]u21{ 0x0432, 0, 0 };
+    if (cp == 0x1C81) return [3]u21{ 0x0434, 0, 0 };
+    if (cp == 0x1C82) return [3]u21{ 0x043E, 0, 0 };
+    if (cp == 0x1C83) return [3]u21{ 0x0441, 0, 0 };
+    if (cp == 0x1C84) return [3]u21{ 0x0442, 0, 0 };
+    if (cp == 0x1C85) return [3]u21{ 0x0442, 0, 0 };
+    if (cp == 0x1C86) return [3]u21{ 0x044A, 0, 0 };
+    if (cp == 0x1C87) return [3]u21{ 0x0463, 0, 0 };
+    if (cp == 0x1C88) return [3]u21{ 0xA64B, 0, 0 };
+    if (cp == 0x1C90) return [3]u21{ 0x10D0, 0, 0 };
+    if (cp == 0x1C91) return [3]u21{ 0x10D1, 0, 0 };
+    if (cp == 0x1C92) return [3]u21{ 0x10D2, 0, 0 };
+    if (cp == 0x1C93) return [3]u21{ 0x10D3, 0, 0 };
+    if (cp == 0x1C94) return [3]u21{ 0x10D4, 0, 0 };
+    if (cp == 0x1C95) return [3]u21{ 0x10D5, 0, 0 };
+    if (cp == 0x1C96) return [3]u21{ 0x10D6, 0, 0 };
+    if (cp == 0x1C97) return [3]u21{ 0x10D7, 0, 0 };
+    if (cp == 0x1C98) return [3]u21{ 0x10D8, 0, 0 };
+    if (cp == 0x1C99) return [3]u21{ 0x10D9, 0, 0 };
+    if (cp == 0x1C9A) return [3]u21{ 0x10DA, 0, 0 };
+    if (cp == 0x1C9B) return [3]u21{ 0x10DB, 0, 0 };
+    if (cp == 0x1C9C) return [3]u21{ 0x10DC, 0, 0 };
+    if (cp == 0x1C9D) return [3]u21{ 0x10DD, 0, 0 };
+    if (cp == 0x1C9E) return [3]u21{ 0x10DE, 0, 0 };
+    if (cp == 0x1C9F) return [3]u21{ 0x10DF, 0, 0 };
+    if (cp == 0x1CA0) return [3]u21{ 0x10E0, 0, 0 };
+    if (cp == 0x1CA1) return [3]u21{ 0x10E1, 0, 0 };
+    if (cp == 0x1CA2) return [3]u21{ 0x10E2, 0, 0 };
+    if (cp == 0x1CA3) return [3]u21{ 0x10E3, 0, 0 };
+    if (cp == 0x1CA4) return [3]u21{ 0x10E4, 0, 0 };
+    if (cp == 0x1CA5) return [3]u21{ 0x10E5, 0, 0 };
+    if (cp == 0x1CA6) return [3]u21{ 0x10E6, 0, 0 };
+    if (cp == 0x1CA7) return [3]u21{ 0x10E7, 0, 0 };
+    if (cp == 0x1CA8) return [3]u21{ 0x10E8, 0, 0 };
+    if (cp == 0x1CA9) return [3]u21{ 0x10E9, 0, 0 };
+    if (cp == 0x1CAA) return [3]u21{ 0x10EA, 0, 0 };
+    if (cp == 0x1CAB) return [3]u21{ 0x10EB, 0, 0 };
+    if (cp == 0x1CAC) return [3]u21{ 0x10EC, 0, 0 };
+    if (cp == 0x1CAD) return [3]u21{ 0x10ED, 0, 0 };
+    if (cp == 0x1CAE) return [3]u21{ 0x10EE, 0, 0 };
+    if (cp == 0x1CAF) return [3]u21{ 0x10EF, 0, 0 };
+    if (cp == 0x1CB0) return [3]u21{ 0x10F0, 0, 0 };
+    if (cp == 0x1CB1) return [3]u21{ 0x10F1, 0, 0 };
+    if (cp == 0x1CB2) return [3]u21{ 0x10F2, 0, 0 };
+    if (cp == 0x1CB3) return [3]u21{ 0x10F3, 0, 0 };
+    if (cp == 0x1CB4) return [3]u21{ 0x10F4, 0, 0 };
+    if (cp == 0x1CB5) return [3]u21{ 0x10F5, 0, 0 };
+    if (cp == 0x1CB6) return [3]u21{ 0x10F6, 0, 0 };
+    if (cp == 0x1CB7) return [3]u21{ 0x10F7, 0, 0 };
+    if (cp == 0x1CB8) return [3]u21{ 0x10F8, 0, 0 };
+    if (cp == 0x1CB9) return [3]u21{ 0x10F9, 0, 0 };
+    if (cp == 0x1CBA) return [3]u21{ 0x10FA, 0, 0 };
+    if (cp == 0x1CBD) return [3]u21{ 0x10FD, 0, 0 };
+    if (cp == 0x1CBE) return [3]u21{ 0x10FE, 0, 0 };
+    if (cp == 0x1CBF) return [3]u21{ 0x10FF, 0, 0 };
+    if (cp == 0x1E00) return [3]u21{ 0x1E01, 0, 0 };
+    if (cp == 0x1E02) return [3]u21{ 0x1E03, 0, 0 };
+    if (cp == 0x1E04) return [3]u21{ 0x1E05, 0, 0 };
+    if (cp == 0x1E06) return [3]u21{ 0x1E07, 0, 0 };
+    if (cp == 0x1E08) return [3]u21{ 0x1E09, 0, 0 };
+    if (cp == 0x1E0A) return [3]u21{ 0x1E0B, 0, 0 };
+    if (cp == 0x1E0C) return [3]u21{ 0x1E0D, 0, 0 };
+    if (cp == 0x1E0E) return [3]u21{ 0x1E0F, 0, 0 };
+    if (cp == 0x1E10) return [3]u21{ 0x1E11, 0, 0 };
+    if (cp == 0x1E12) return [3]u21{ 0x1E13, 0, 0 };
+    if (cp == 0x1E14) return [3]u21{ 0x1E15, 0, 0 };
+    if (cp == 0x1E16) return [3]u21{ 0x1E17, 0, 0 };
+    if (cp == 0x1E18) return [3]u21{ 0x1E19, 0, 0 };
+    if (cp == 0x1E1A) return [3]u21{ 0x1E1B, 0, 0 };
+    if (cp == 0x1E1C) return [3]u21{ 0x1E1D, 0, 0 };
+    if (cp == 0x1E1E) return [3]u21{ 0x1E1F, 0, 0 };
+    if (cp == 0x1E20) return [3]u21{ 0x1E21, 0, 0 };
+    if (cp == 0x1E22) return [3]u21{ 0x1E23, 0, 0 };
+    if (cp == 0x1E24) return [3]u21{ 0x1E25, 0, 0 };
+    if (cp == 0x1E26) return [3]u21{ 0x1E27, 0, 0 };
+    if (cp == 0x1E28) return [3]u21{ 0x1E29, 0, 0 };
+    if (cp == 0x1E2A) return [3]u21{ 0x1E2B, 0, 0 };
+    if (cp == 0x1E2C) return [3]u21{ 0x1E2D, 0, 0 };
+    if (cp == 0x1E2E) return [3]u21{ 0x1E2F, 0, 0 };
+    if (cp == 0x1E30) return [3]u21{ 0x1E31, 0, 0 };
+    if (cp == 0x1E32) return [3]u21{ 0x1E33, 0, 0 };
+    if (cp == 0x1E34) return [3]u21{ 0x1E35, 0, 0 };
+    if (cp == 0x1E36) return [3]u21{ 0x1E37, 0, 0 };
+    if (cp == 0x1E38) return [3]u21{ 0x1E39, 0, 0 };
+    if (cp == 0x1E3A) return [3]u21{ 0x1E3B, 0, 0 };
+    if (cp == 0x1E3C) return [3]u21{ 0x1E3D, 0, 0 };
+    if (cp == 0x1E3E) return [3]u21{ 0x1E3F, 0, 0 };
+    if (cp == 0x1E40) return [3]u21{ 0x1E41, 0, 0 };
+    if (cp == 0x1E42) return [3]u21{ 0x1E43, 0, 0 };
+    if (cp == 0x1E44) return [3]u21{ 0x1E45, 0, 0 };
+    if (cp == 0x1E46) return [3]u21{ 0x1E47, 0, 0 };
+    if (cp == 0x1E48) return [3]u21{ 0x1E49, 0, 0 };
+    if (cp == 0x1E4A) return [3]u21{ 0x1E4B, 0, 0 };
+    if (cp == 0x1E4C) return [3]u21{ 0x1E4D, 0, 0 };
+    if (cp == 0x1E4E) return [3]u21{ 0x1E4F, 0, 0 };
+    if (cp == 0x1E50) return [3]u21{ 0x1E51, 0, 0 };
+    if (cp == 0x1E52) return [3]u21{ 0x1E53, 0, 0 };
+    if (cp == 0x1E54) return [3]u21{ 0x1E55, 0, 0 };
+    if (cp == 0x1E56) return [3]u21{ 0x1E57, 0, 0 };
+    if (cp == 0x1E58) return [3]u21{ 0x1E59, 0, 0 };
+    if (cp == 0x1E5A) return [3]u21{ 0x1E5B, 0, 0 };
+    if (cp == 0x1E5C) return [3]u21{ 0x1E5D, 0, 0 };
+    if (cp == 0x1E5E) return [3]u21{ 0x1E5F, 0, 0 };
+    if (cp == 0x1E60) return [3]u21{ 0x1E61, 0, 0 };
+    if (cp == 0x1E62) return [3]u21{ 0x1E63, 0, 0 };
+    if (cp == 0x1E64) return [3]u21{ 0x1E65, 0, 0 };
+    if (cp == 0x1E66) return [3]u21{ 0x1E67, 0, 0 };
+    if (cp == 0x1E68) return [3]u21{ 0x1E69, 0, 0 };
+    if (cp == 0x1E6A) return [3]u21{ 0x1E6B, 0, 0 };
+    if (cp == 0x1E6C) return [3]u21{ 0x1E6D, 0, 0 };
+    if (cp == 0x1E6E) return [3]u21{ 0x1E6F, 0, 0 };
+    if (cp == 0x1E70) return [3]u21{ 0x1E71, 0, 0 };
+    if (cp == 0x1E72) return [3]u21{ 0x1E73, 0, 0 };
+    if (cp == 0x1E74) return [3]u21{ 0x1E75, 0, 0 };
+    if (cp == 0x1E76) return [3]u21{ 0x1E77, 0, 0 };
+    if (cp == 0x1E78) return [3]u21{ 0x1E79, 0, 0 };
+    if (cp == 0x1E7A) return [3]u21{ 0x1E7B, 0, 0 };
+    if (cp == 0x1E7C) return [3]u21{ 0x1E7D, 0, 0 };
+    if (cp == 0x1E7E) return [3]u21{ 0x1E7F, 0, 0 };
+    if (cp == 0x1E80) return [3]u21{ 0x1E81, 0, 0 };
+    if (cp == 0x1E82) return [3]u21{ 0x1E83, 0, 0 };
+    if (cp == 0x1E84) return [3]u21{ 0x1E85, 0, 0 };
+    if (cp == 0x1E86) return [3]u21{ 0x1E87, 0, 0 };
+    if (cp == 0x1E88) return [3]u21{ 0x1E89, 0, 0 };
+    if (cp == 0x1E8A) return [3]u21{ 0x1E8B, 0, 0 };
+    if (cp == 0x1E8C) return [3]u21{ 0x1E8D, 0, 0 };
+    if (cp == 0x1E8E) return [3]u21{ 0x1E8F, 0, 0 };
+    if (cp == 0x1E90) return [3]u21{ 0x1E91, 0, 0 };
+    if (cp == 0x1E92) return [3]u21{ 0x1E93, 0, 0 };
+    if (cp == 0x1E94) return [3]u21{ 0x1E95, 0, 0 };
+    if (cp == 0x1E96) return [3]u21{ 0x0068, 0x0331, 0 };
+    if (cp == 0x1E97) return [3]u21{ 0x0074, 0x0308, 0 };
+    if (cp == 0x1E98) return [3]u21{ 0x0077, 0x030A, 0 };
+    if (cp == 0x1E99) return [3]u21{ 0x0079, 0x030A, 0 };
+    if (cp == 0x1E9A) return [3]u21{ 0x0061, 0x02BE, 0 };
+    if (cp == 0x1E9B) return [3]u21{ 0x1E61, 0, 0 };
+    if (cp == 0x1E9E) return [3]u21{ 0x0073, 0x0073, 0 };
+    if (cp == 0x1EA0) return [3]u21{ 0x1EA1, 0, 0 };
+    if (cp == 0x1EA2) return [3]u21{ 0x1EA3, 0, 0 };
+    if (cp == 0x1EA4) return [3]u21{ 0x1EA5, 0, 0 };
+    if (cp == 0x1EA6) return [3]u21{ 0x1EA7, 0, 0 };
+    if (cp == 0x1EA8) return [3]u21{ 0x1EA9, 0, 0 };
+    if (cp == 0x1EAA) return [3]u21{ 0x1EAB, 0, 0 };
+    if (cp == 0x1EAC) return [3]u21{ 0x1EAD, 0, 0 };
+    if (cp == 0x1EAE) return [3]u21{ 0x1EAF, 0, 0 };
+    if (cp == 0x1EB0) return [3]u21{ 0x1EB1, 0, 0 };
+    if (cp == 0x1EB2) return [3]u21{ 0x1EB3, 0, 0 };
+    if (cp == 0x1EB4) return [3]u21{ 0x1EB5, 0, 0 };
+    if (cp == 0x1EB6) return [3]u21{ 0x1EB7, 0, 0 };
+    if (cp == 0x1EB8) return [3]u21{ 0x1EB9, 0, 0 };
+    if (cp == 0x1EBA) return [3]u21{ 0x1EBB, 0, 0 };
+    if (cp == 0x1EBC) return [3]u21{ 0x1EBD, 0, 0 };
+    if (cp == 0x1EBE) return [3]u21{ 0x1EBF, 0, 0 };
+    if (cp == 0x1EC0) return [3]u21{ 0x1EC1, 0, 0 };
+    if (cp == 0x1EC2) return [3]u21{ 0x1EC3, 0, 0 };
+    if (cp == 0x1EC4) return [3]u21{ 0x1EC5, 0, 0 };
+    if (cp == 0x1EC6) return [3]u21{ 0x1EC7, 0, 0 };
+    if (cp == 0x1EC8) return [3]u21{ 0x1EC9, 0, 0 };
+    if (cp == 0x1ECA) return [3]u21{ 0x1ECB, 0, 0 };
+    if (cp == 0x1ECC) return [3]u21{ 0x1ECD, 0, 0 };
+    if (cp == 0x1ECE) return [3]u21{ 0x1ECF, 0, 0 };
+    if (cp == 0x1ED0) return [3]u21{ 0x1ED1, 0, 0 };
+    if (cp == 0x1ED2) return [3]u21{ 0x1ED3, 0, 0 };
+    if (cp == 0x1ED4) return [3]u21{ 0x1ED5, 0, 0 };
+    if (cp == 0x1ED6) return [3]u21{ 0x1ED7, 0, 0 };
+    if (cp == 0x1ED8) return [3]u21{ 0x1ED9, 0, 0 };
+    if (cp == 0x1EDA) return [3]u21{ 0x1EDB, 0, 0 };
+    if (cp == 0x1EDC) return [3]u21{ 0x1EDD, 0, 0 };
+    if (cp == 0x1EDE) return [3]u21{ 0x1EDF, 0, 0 };
+    if (cp == 0x1EE0) return [3]u21{ 0x1EE1, 0, 0 };
+    if (cp == 0x1EE2) return [3]u21{ 0x1EE3, 0, 0 };
+    if (cp == 0x1EE4) return [3]u21{ 0x1EE5, 0, 0 };
+    if (cp == 0x1EE6) return [3]u21{ 0x1EE7, 0, 0 };
+    if (cp == 0x1EE8) return [3]u21{ 0x1EE9, 0, 0 };
+    if (cp == 0x1EEA) return [3]u21{ 0x1EEB, 0, 0 };
+    if (cp == 0x1EEC) return [3]u21{ 0x1EED, 0, 0 };
+    if (cp == 0x1EEE) return [3]u21{ 0x1EEF, 0, 0 };
+    if (cp == 0x1EF0) return [3]u21{ 0x1EF1, 0, 0 };
+    if (cp == 0x1EF2) return [3]u21{ 0x1EF3, 0, 0 };
+    if (cp == 0x1EF4) return [3]u21{ 0x1EF5, 0, 0 };
+    if (cp == 0x1EF6) return [3]u21{ 0x1EF7, 0, 0 };
+    if (cp == 0x1EF8) return [3]u21{ 0x1EF9, 0, 0 };
+    if (cp == 0x1EFA) return [3]u21{ 0x1EFB, 0, 0 };
+    if (cp == 0x1EFC) return [3]u21{ 0x1EFD, 0, 0 };
+    if (cp == 0x1EFE) return [3]u21{ 0x1EFF, 0, 0 };
+    if (cp == 0x1F08) return [3]u21{ 0x1F00, 0, 0 };
+    if (cp == 0x1F09) return [3]u21{ 0x1F01, 0, 0 };
+    if (cp == 0x1F0A) return [3]u21{ 0x1F02, 0, 0 };
+    if (cp == 0x1F0B) return [3]u21{ 0x1F03, 0, 0 };
+    if (cp == 0x1F0C) return [3]u21{ 0x1F04, 0, 0 };
+    if (cp == 0x1F0D) return [3]u21{ 0x1F05, 0, 0 };
+    if (cp == 0x1F0E) return [3]u21{ 0x1F06, 0, 0 };
+    if (cp == 0x1F0F) return [3]u21{ 0x1F07, 0, 0 };
+    if (cp == 0x1F18) return [3]u21{ 0x1F10, 0, 0 };
+    if (cp == 0x1F19) return [3]u21{ 0x1F11, 0, 0 };
+    if (cp == 0x1F1A) return [3]u21{ 0x1F12, 0, 0 };
+    if (cp == 0x1F1B) return [3]u21{ 0x1F13, 0, 0 };
+    if (cp == 0x1F1C) return [3]u21{ 0x1F14, 0, 0 };
+    if (cp == 0x1F1D) return [3]u21{ 0x1F15, 0, 0 };
+    if (cp == 0x1F28) return [3]u21{ 0x1F20, 0, 0 };
+    if (cp == 0x1F29) return [3]u21{ 0x1F21, 0, 0 };
+    if (cp == 0x1F2A) return [3]u21{ 0x1F22, 0, 0 };
+    if (cp == 0x1F2B) return [3]u21{ 0x1F23, 0, 0 };
+    if (cp == 0x1F2C) return [3]u21{ 0x1F24, 0, 0 };
+    if (cp == 0x1F2D) return [3]u21{ 0x1F25, 0, 0 };
+    if (cp == 0x1F2E) return [3]u21{ 0x1F26, 0, 0 };
+    if (cp == 0x1F2F) return [3]u21{ 0x1F27, 0, 0 };
+    if (cp == 0x1F38) return [3]u21{ 0x1F30, 0, 0 };
+    if (cp == 0x1F39) return [3]u21{ 0x1F31, 0, 0 };
+    if (cp == 0x1F3A) return [3]u21{ 0x1F32, 0, 0 };
+    if (cp == 0x1F3B) return [3]u21{ 0x1F33, 0, 0 };
+    if (cp == 0x1F3C) return [3]u21{ 0x1F34, 0, 0 };
+    if (cp == 0x1F3D) return [3]u21{ 0x1F35, 0, 0 };
+    if (cp == 0x1F3E) return [3]u21{ 0x1F36, 0, 0 };
+    if (cp == 0x1F3F) return [3]u21{ 0x1F37, 0, 0 };
+    if (cp == 0x1F48) return [3]u21{ 0x1F40, 0, 0 };
+    if (cp == 0x1F49) return [3]u21{ 0x1F41, 0, 0 };
+    if (cp == 0x1F4A) return [3]u21{ 0x1F42, 0, 0 };
+    if (cp == 0x1F4B) return [3]u21{ 0x1F43, 0, 0 };
+    if (cp == 0x1F4C) return [3]u21{ 0x1F44, 0, 0 };
+    if (cp == 0x1F4D) return [3]u21{ 0x1F45, 0, 0 };
+    if (cp == 0x1F50) return [3]u21{ 0x03C5, 0x0313, 0 };
+    if (cp == 0x1F52) return [3]u21{ 0x03C5, 0x0313, 0x0300 };
+    if (cp == 0x1F54) return [3]u21{ 0x03C5, 0x0313, 0x0301 };
+    if (cp == 0x1F56) return [3]u21{ 0x03C5, 0x0313, 0x0342 };
+    if (cp == 0x1F59) return [3]u21{ 0x1F51, 0, 0 };
+    if (cp == 0x1F5B) return [3]u21{ 0x1F53, 0, 0 };
+    if (cp == 0x1F5D) return [3]u21{ 0x1F55, 0, 0 };
+    if (cp == 0x1F5F) return [3]u21{ 0x1F57, 0, 0 };
+    if (cp == 0x1F68) return [3]u21{ 0x1F60, 0, 0 };
+    if (cp == 0x1F69) return [3]u21{ 0x1F61, 0, 0 };
+    if (cp == 0x1F6A) return [3]u21{ 0x1F62, 0, 0 };
+    if (cp == 0x1F6B) return [3]u21{ 0x1F63, 0, 0 };
+    if (cp == 0x1F6C) return [3]u21{ 0x1F64, 0, 0 };
+    if (cp == 0x1F6D) return [3]u21{ 0x1F65, 0, 0 };
+    if (cp == 0x1F6E) return [3]u21{ 0x1F66, 0, 0 };
+    if (cp == 0x1F6F) return [3]u21{ 0x1F67, 0, 0 };
+    if (cp == 0x1F80) return [3]u21{ 0x1F00, 0x03B9, 0 };
+    if (cp == 0x1F81) return [3]u21{ 0x1F01, 0x03B9, 0 };
+    if (cp == 0x1F82) return [3]u21{ 0x1F02, 0x03B9, 0 };
+    if (cp == 0x1F83) return [3]u21{ 0x1F03, 0x03B9, 0 };
+    if (cp == 0x1F84) return [3]u21{ 0x1F04, 0x03B9, 0 };
+    if (cp == 0x1F85) return [3]u21{ 0x1F05, 0x03B9, 0 };
+    if (cp == 0x1F86) return [3]u21{ 0x1F06, 0x03B9, 0 };
+    if (cp == 0x1F87) return [3]u21{ 0x1F07, 0x03B9, 0 };
+    if (cp == 0x1F88) return [3]u21{ 0x1F00, 0x03B9, 0 };
+    if (cp == 0x1F89) return [3]u21{ 0x1F01, 0x03B9, 0 };
+    if (cp == 0x1F8A) return [3]u21{ 0x1F02, 0x03B9, 0 };
+    if (cp == 0x1F8B) return [3]u21{ 0x1F03, 0x03B9, 0 };
+    if (cp == 0x1F8C) return [3]u21{ 0x1F04, 0x03B9, 0 };
+    if (cp == 0x1F8D) return [3]u21{ 0x1F05, 0x03B9, 0 };
+    if (cp == 0x1F8E) return [3]u21{ 0x1F06, 0x03B9, 0 };
+    if (cp == 0x1F8F) return [3]u21{ 0x1F07, 0x03B9, 0 };
+    if (cp == 0x1F90) return [3]u21{ 0x1F20, 0x03B9, 0 };
+    if (cp == 0x1F91) return [3]u21{ 0x1F21, 0x03B9, 0 };
+    if (cp == 0x1F92) return [3]u21{ 0x1F22, 0x03B9, 0 };
+    if (cp == 0x1F93) return [3]u21{ 0x1F23, 0x03B9, 0 };
+    if (cp == 0x1F94) return [3]u21{ 0x1F24, 0x03B9, 0 };
+    if (cp == 0x1F95) return [3]u21{ 0x1F25, 0x03B9, 0 };
+    if (cp == 0x1F96) return [3]u21{ 0x1F26, 0x03B9, 0 };
+    if (cp == 0x1F97) return [3]u21{ 0x1F27, 0x03B9, 0 };
+    if (cp == 0x1F98) return [3]u21{ 0x1F20, 0x03B9, 0 };
+    if (cp == 0x1F99) return [3]u21{ 0x1F21, 0x03B9, 0 };
+    if (cp == 0x1F9A) return [3]u21{ 0x1F22, 0x03B9, 0 };
+    if (cp == 0x1F9B) return [3]u21{ 0x1F23, 0x03B9, 0 };
+    if (cp == 0x1F9C) return [3]u21{ 0x1F24, 0x03B9, 0 };
+    if (cp == 0x1F9D) return [3]u21{ 0x1F25, 0x03B9, 0 };
+    if (cp == 0x1F9E) return [3]u21{ 0x1F26, 0x03B9, 0 };
+    if (cp == 0x1F9F) return [3]u21{ 0x1F27, 0x03B9, 0 };
+    if (cp == 0x1FA0) return [3]u21{ 0x1F60, 0x03B9, 0 };
+    if (cp == 0x1FA1) return [3]u21{ 0x1F61, 0x03B9, 0 };
+    if (cp == 0x1FA2) return [3]u21{ 0x1F62, 0x03B9, 0 };
+    if (cp == 0x1FA3) return [3]u21{ 0x1F63, 0x03B9, 0 };
+    if (cp == 0x1FA4) return [3]u21{ 0x1F64, 0x03B9, 0 };
+    if (cp == 0x1FA5) return [3]u21{ 0x1F65, 0x03B9, 0 };
+    if (cp == 0x1FA6) return [3]u21{ 0x1F66, 0x03B9, 0 };
+    if (cp == 0x1FA7) return [3]u21{ 0x1F67, 0x03B9, 0 };
+    if (cp == 0x1FA8) return [3]u21{ 0x1F60, 0x03B9, 0 };
+    if (cp == 0x1FA9) return [3]u21{ 0x1F61, 0x03B9, 0 };
+    if (cp == 0x1FAA) return [3]u21{ 0x1F62, 0x03B9, 0 };
+    if (cp == 0x1FAB) return [3]u21{ 0x1F63, 0x03B9, 0 };
+    if (cp == 0x1FAC) return [3]u21{ 0x1F64, 0x03B9, 0 };
+    if (cp == 0x1FAD) return [3]u21{ 0x1F65, 0x03B9, 0 };
+    if (cp == 0x1FAE) return [3]u21{ 0x1F66, 0x03B9, 0 };
+    if (cp == 0x1FAF) return [3]u21{ 0x1F67, 0x03B9, 0 };
+    if (cp == 0x1FB2) return [3]u21{ 0x1F70, 0x03B9, 0 };
+    if (cp == 0x1FB3) return [3]u21{ 0x03B1, 0x03B9, 0 };
+    if (cp == 0x1FB4) return [3]u21{ 0x03AC, 0x03B9, 0 };
+    if (cp == 0x1FB6) return [3]u21{ 0x03B1, 0x0342, 0 };
+    if (cp == 0x1FB7) return [3]u21{ 0x03B1, 0x0342, 0x03B9 };
+    if (cp == 0x1FB8) return [3]u21{ 0x1FB0, 0, 0 };
+    if (cp == 0x1FB9) return [3]u21{ 0x1FB1, 0, 0 };
+    if (cp == 0x1FBA) return [3]u21{ 0x1F70, 0, 0 };
+    if (cp == 0x1FBB) return [3]u21{ 0x1F71, 0, 0 };
+    if (cp == 0x1FBC) return [3]u21{ 0x03B1, 0x03B9, 0 };
+    if (cp == 0x1FBE) return [3]u21{ 0x03B9, 0, 0 };
+    if (cp == 0x1FC2) return [3]u21{ 0x1F74, 0x03B9, 0 };
+    if (cp == 0x1FC3) return [3]u21{ 0x03B7, 0x03B9, 0 };
+    if (cp == 0x1FC4) return [3]u21{ 0x03AE, 0x03B9, 0 };
+    if (cp == 0x1FC6) return [3]u21{ 0x03B7, 0x0342, 0 };
+    if (cp == 0x1FC7) return [3]u21{ 0x03B7, 0x0342, 0x03B9 };
+    if (cp == 0x1FC8) return [3]u21{ 0x1F72, 0, 0 };
+    if (cp == 0x1FC9) return [3]u21{ 0x1F73, 0, 0 };
+    if (cp == 0x1FCA) return [3]u21{ 0x1F74, 0, 0 };
+    if (cp == 0x1FCB) return [3]u21{ 0x1F75, 0, 0 };
+    if (cp == 0x1FCC) return [3]u21{ 0x03B7, 0x03B9, 0 };
+    if (cp == 0x1FD2) return [3]u21{ 0x03B9, 0x0308, 0x0300 };
+    if (cp == 0x1FD3) return [3]u21{ 0x03B9, 0x0308, 0x0301 };
+    if (cp == 0x1FD6) return [3]u21{ 0x03B9, 0x0342, 0 };
+    if (cp == 0x1FD7) return [3]u21{ 0x03B9, 0x0308, 0x0342 };
+    if (cp == 0x1FD8) return [3]u21{ 0x1FD0, 0, 0 };
+    if (cp == 0x1FD9) return [3]u21{ 0x1FD1, 0, 0 };
+    if (cp == 0x1FDA) return [3]u21{ 0x1F76, 0, 0 };
+    if (cp == 0x1FDB) return [3]u21{ 0x1F77, 0, 0 };
+    if (cp == 0x1FE2) return [3]u21{ 0x03C5, 0x0308, 0x0300 };
+    if (cp == 0x1FE3) return [3]u21{ 0x03C5, 0x0308, 0x0301 };
+    if (cp == 0x1FE4) return [3]u21{ 0x03C1, 0x0313, 0 };
+    if (cp == 0x1FE6) return [3]u21{ 0x03C5, 0x0342, 0 };
+    if (cp == 0x1FE7) return [3]u21{ 0x03C5, 0x0308, 0x0342 };
+    if (cp == 0x1FE8) return [3]u21{ 0x1FE0, 0, 0 };
+    if (cp == 0x1FE9) return [3]u21{ 0x1FE1, 0, 0 };
+    if (cp == 0x1FEA) return [3]u21{ 0x1F7A, 0, 0 };
+    if (cp == 0x1FEB) return [3]u21{ 0x1F7B, 0, 0 };
+    if (cp == 0x1FEC) return [3]u21{ 0x1FE5, 0, 0 };
+    if (cp == 0x1FF2) return [3]u21{ 0x1F7C, 0x03B9, 0 };
+    if (cp == 0x1FF3) return [3]u21{ 0x03C9, 0x03B9, 0 };
+    if (cp == 0x1FF4) return [3]u21{ 0x03CE, 0x03B9, 0 };
+    if (cp == 0x1FF6) return [3]u21{ 0x03C9, 0x0342, 0 };
+    if (cp == 0x1FF7) return [3]u21{ 0x03C9, 0x0342, 0x03B9 };
+    if (cp == 0x1FF8) return [3]u21{ 0x1F78, 0, 0 };
+    if (cp == 0x1FF9) return [3]u21{ 0x1F79, 0, 0 };
+    if (cp == 0x1FFA) return [3]u21{ 0x1F7C, 0, 0 };
+    if (cp == 0x1FFB) return [3]u21{ 0x1F7D, 0, 0 };
+    if (cp == 0x1FFC) return [3]u21{ 0x03C9, 0x03B9, 0 };
+    if (cp == 0x2126) return [3]u21{ 0x03C9, 0, 0 };
+    if (cp == 0x212A) return [3]u21{ 0x006B, 0, 0 };
+    if (cp == 0x212B) return [3]u21{ 0x00E5, 0, 0 };
+    if (cp == 0x2132) return [3]u21{ 0x214E, 0, 0 };
+    if (cp == 0x2160) return [3]u21{ 0x2170, 0, 0 };
+    if (cp == 0x2161) return [3]u21{ 0x2171, 0, 0 };
+    if (cp == 0x2162) return [3]u21{ 0x2172, 0, 0 };
+    if (cp == 0x2163) return [3]u21{ 0x2173, 0, 0 };
+    if (cp == 0x2164) return [3]u21{ 0x2174, 0, 0 };
+    if (cp == 0x2165) return [3]u21{ 0x2175, 0, 0 };
+    if (cp == 0x2166) return [3]u21{ 0x2176, 0, 0 };
+    if (cp == 0x2167) return [3]u21{ 0x2177, 0, 0 };
+    if (cp == 0x2168) return [3]u21{ 0x2178, 0, 0 };
+    if (cp == 0x2169) return [3]u21{ 0x2179, 0, 0 };
+    if (cp == 0x216A) return [3]u21{ 0x217A, 0, 0 };
+    if (cp == 0x216B) return [3]u21{ 0x217B, 0, 0 };
+    if (cp == 0x216C) return [3]u21{ 0x217C, 0, 0 };
+    if (cp == 0x216D) return [3]u21{ 0x217D, 0, 0 };
+    if (cp == 0x216E) return [3]u21{ 0x217E, 0, 0 };
+    if (cp == 0x216F) return [3]u21{ 0x217F, 0, 0 };
+    if (cp == 0x2183) return [3]u21{ 0x2184, 0, 0 };
+    if (cp == 0x24B6) return [3]u21{ 0x24D0, 0, 0 };
+    if (cp == 0x24B7) return [3]u21{ 0x24D1, 0, 0 };
+    if (cp == 0x24B8) return [3]u21{ 0x24D2, 0, 0 };
+    if (cp == 0x24B9) return [3]u21{ 0x24D3, 0, 0 };
+    if (cp == 0x24BA) return [3]u21{ 0x24D4, 0, 0 };
+    if (cp == 0x24BB) return [3]u21{ 0x24D5, 0, 0 };
+    if (cp == 0x24BC) return [3]u21{ 0x24D6, 0, 0 };
+    if (cp == 0x24BD) return [3]u21{ 0x24D7, 0, 0 };
+    if (cp == 0x24BE) return [3]u21{ 0x24D8, 0, 0 };
+    if (cp == 0x24BF) return [3]u21{ 0x24D9, 0, 0 };
+    if (cp == 0x24C0) return [3]u21{ 0x24DA, 0, 0 };
+    if (cp == 0x24C1) return [3]u21{ 0x24DB, 0, 0 };
+    if (cp == 0x24C2) return [3]u21{ 0x24DC, 0, 0 };
+    if (cp == 0x24C3) return [3]u21{ 0x24DD, 0, 0 };
+    if (cp == 0x24C4) return [3]u21{ 0x24DE, 0, 0 };
+    if (cp == 0x24C5) return [3]u21{ 0x24DF, 0, 0 };
+    if (cp == 0x24C6) return [3]u21{ 0x24E0, 0, 0 };
+    if (cp == 0x24C7) return [3]u21{ 0x24E1, 0, 0 };
+    if (cp == 0x24C8) return [3]u21{ 0x24E2, 0, 0 };
+    if (cp == 0x24C9) return [3]u21{ 0x24E3, 0, 0 };
+    if (cp == 0x24CA) return [3]u21{ 0x24E4, 0, 0 };
+    if (cp == 0x24CB) return [3]u21{ 0x24E5, 0, 0 };
+    if (cp == 0x24CC) return [3]u21{ 0x24E6, 0, 0 };
+    if (cp == 0x24CD) return [3]u21{ 0x24E7, 0, 0 };
+    if (cp == 0x24CE) return [3]u21{ 0x24E8, 0, 0 };
+    if (cp == 0x24CF) return [3]u21{ 0x24E9, 0, 0 };
+    if (cp == 0x2C00) return [3]u21{ 0x2C30, 0, 0 };
+    if (cp == 0x2C01) return [3]u21{ 0x2C31, 0, 0 };
+    if (cp == 0x2C02) return [3]u21{ 0x2C32, 0, 0 };
+    if (cp == 0x2C03) return [3]u21{ 0x2C33, 0, 0 };
+    if (cp == 0x2C04) return [3]u21{ 0x2C34, 0, 0 };
+    if (cp == 0x2C05) return [3]u21{ 0x2C35, 0, 0 };
+    if (cp == 0x2C06) return [3]u21{ 0x2C36, 0, 0 };
+    if (cp == 0x2C07) return [3]u21{ 0x2C37, 0, 0 };
+    if (cp == 0x2C08) return [3]u21{ 0x2C38, 0, 0 };
+    if (cp == 0x2C09) return [3]u21{ 0x2C39, 0, 0 };
+    if (cp == 0x2C0A) return [3]u21{ 0x2C3A, 0, 0 };
+    if (cp == 0x2C0B) return [3]u21{ 0x2C3B, 0, 0 };
+    if (cp == 0x2C0C) return [3]u21{ 0x2C3C, 0, 0 };
+    if (cp == 0x2C0D) return [3]u21{ 0x2C3D, 0, 0 };
+    if (cp == 0x2C0E) return [3]u21{ 0x2C3E, 0, 0 };
+    if (cp == 0x2C0F) return [3]u21{ 0x2C3F, 0, 0 };
+    if (cp == 0x2C10) return [3]u21{ 0x2C40, 0, 0 };
+    if (cp == 0x2C11) return [3]u21{ 0x2C41, 0, 0 };
+    if (cp == 0x2C12) return [3]u21{ 0x2C42, 0, 0 };
+    if (cp == 0x2C13) return [3]u21{ 0x2C43, 0, 0 };
+    if (cp == 0x2C14) return [3]u21{ 0x2C44, 0, 0 };
+    if (cp == 0x2C15) return [3]u21{ 0x2C45, 0, 0 };
+    if (cp == 0x2C16) return [3]u21{ 0x2C46, 0, 0 };
+    if (cp == 0x2C17) return [3]u21{ 0x2C47, 0, 0 };
+    if (cp == 0x2C18) return [3]u21{ 0x2C48, 0, 0 };
+    if (cp == 0x2C19) return [3]u21{ 0x2C49, 0, 0 };
+    if (cp == 0x2C1A) return [3]u21{ 0x2C4A, 0, 0 };
+    if (cp == 0x2C1B) return [3]u21{ 0x2C4B, 0, 0 };
+    if (cp == 0x2C1C) return [3]u21{ 0x2C4C, 0, 0 };
+    if (cp == 0x2C1D) return [3]u21{ 0x2C4D, 0, 0 };
+    if (cp == 0x2C1E) return [3]u21{ 0x2C4E, 0, 0 };
+    if (cp == 0x2C1F) return [3]u21{ 0x2C4F, 0, 0 };
+    if (cp == 0x2C20) return [3]u21{ 0x2C50, 0, 0 };
+    if (cp == 0x2C21) return [3]u21{ 0x2C51, 0, 0 };
+    if (cp == 0x2C22) return [3]u21{ 0x2C52, 0, 0 };
+    if (cp == 0x2C23) return [3]u21{ 0x2C53, 0, 0 };
+    if (cp == 0x2C24) return [3]u21{ 0x2C54, 0, 0 };
+    if (cp == 0x2C25) return [3]u21{ 0x2C55, 0, 0 };
+    if (cp == 0x2C26) return [3]u21{ 0x2C56, 0, 0 };
+    if (cp == 0x2C27) return [3]u21{ 0x2C57, 0, 0 };
+    if (cp == 0x2C28) return [3]u21{ 0x2C58, 0, 0 };
+    if (cp == 0x2C29) return [3]u21{ 0x2C59, 0, 0 };
+    if (cp == 0x2C2A) return [3]u21{ 0x2C5A, 0, 0 };
+    if (cp == 0x2C2B) return [3]u21{ 0x2C5B, 0, 0 };
+    if (cp == 0x2C2C) return [3]u21{ 0x2C5C, 0, 0 };
+    if (cp == 0x2C2D) return [3]u21{ 0x2C5D, 0, 0 };
+    if (cp == 0x2C2E) return [3]u21{ 0x2C5E, 0, 0 };
+    if (cp == 0x2C60) return [3]u21{ 0x2C61, 0, 0 };
+    if (cp == 0x2C62) return [3]u21{ 0x026B, 0, 0 };
+    if (cp == 0x2C63) return [3]u21{ 0x1D7D, 0, 0 };
+    if (cp == 0x2C64) return [3]u21{ 0x027D, 0, 0 };
+    if (cp == 0x2C67) return [3]u21{ 0x2C68, 0, 0 };
+    if (cp == 0x2C69) return [3]u21{ 0x2C6A, 0, 0 };
+    if (cp == 0x2C6B) return [3]u21{ 0x2C6C, 0, 0 };
+    if (cp == 0x2C6D) return [3]u21{ 0x0251, 0, 0 };
+    if (cp == 0x2C6E) return [3]u21{ 0x0271, 0, 0 };
+    if (cp == 0x2C6F) return [3]u21{ 0x0250, 0, 0 };
+    if (cp == 0x2C70) return [3]u21{ 0x0252, 0, 0 };
+    if (cp == 0x2C72) return [3]u21{ 0x2C73, 0, 0 };
+    if (cp == 0x2C75) return [3]u21{ 0x2C76, 0, 0 };
+    if (cp == 0x2C7E) return [3]u21{ 0x023F, 0, 0 };
+    if (cp == 0x2C7F) return [3]u21{ 0x0240, 0, 0 };
+    if (cp == 0x2C80) return [3]u21{ 0x2C81, 0, 0 };
+    if (cp == 0x2C82) return [3]u21{ 0x2C83, 0, 0 };
+    if (cp == 0x2C84) return [3]u21{ 0x2C85, 0, 0 };
+    if (cp == 0x2C86) return [3]u21{ 0x2C87, 0, 0 };
+    if (cp == 0x2C88) return [3]u21{ 0x2C89, 0, 0 };
+    if (cp == 0x2C8A) return [3]u21{ 0x2C8B, 0, 0 };
+    if (cp == 0x2C8C) return [3]u21{ 0x2C8D, 0, 0 };
+    if (cp == 0x2C8E) return [3]u21{ 0x2C8F, 0, 0 };
+    if (cp == 0x2C90) return [3]u21{ 0x2C91, 0, 0 };
+    if (cp == 0x2C92) return [3]u21{ 0x2C93, 0, 0 };
+    if (cp == 0x2C94) return [3]u21{ 0x2C95, 0, 0 };
+    if (cp == 0x2C96) return [3]u21{ 0x2C97, 0, 0 };
+    if (cp == 0x2C98) return [3]u21{ 0x2C99, 0, 0 };
+    if (cp == 0x2C9A) return [3]u21{ 0x2C9B, 0, 0 };
+    if (cp == 0x2C9C) return [3]u21{ 0x2C9D, 0, 0 };
+    if (cp == 0x2C9E) return [3]u21{ 0x2C9F, 0, 0 };
+    if (cp == 0x2CA0) return [3]u21{ 0x2CA1, 0, 0 };
+    if (cp == 0x2CA2) return [3]u21{ 0x2CA3, 0, 0 };
+    if (cp == 0x2CA4) return [3]u21{ 0x2CA5, 0, 0 };
+    if (cp == 0x2CA6) return [3]u21{ 0x2CA7, 0, 0 };
+    if (cp == 0x2CA8) return [3]u21{ 0x2CA9, 0, 0 };
+    if (cp == 0x2CAA) return [3]u21{ 0x2CAB, 0, 0 };
+    if (cp == 0x2CAC) return [3]u21{ 0x2CAD, 0, 0 };
+    if (cp == 0x2CAE) return [3]u21{ 0x2CAF, 0, 0 };
+    if (cp == 0x2CB0) return [3]u21{ 0x2CB1, 0, 0 };
+    if (cp == 0x2CB2) return [3]u21{ 0x2CB3, 0, 0 };
+    if (cp == 0x2CB4) return [3]u21{ 0x2CB5, 0, 0 };
+    if (cp == 0x2CB6) return [3]u21{ 0x2CB7, 0, 0 };
+    if (cp == 0x2CB8) return [3]u21{ 0x2CB9, 0, 0 };
+    if (cp == 0x2CBA) return [3]u21{ 0x2CBB, 0, 0 };
+    if (cp == 0x2CBC) return [3]u21{ 0x2CBD, 0, 0 };
+    if (cp == 0x2CBE) return [3]u21{ 0x2CBF, 0, 0 };
+    if (cp == 0x2CC0) return [3]u21{ 0x2CC1, 0, 0 };
+    if (cp == 0x2CC2) return [3]u21{ 0x2CC3, 0, 0 };
+    if (cp == 0x2CC4) return [3]u21{ 0x2CC5, 0, 0 };
+    if (cp == 0x2CC6) return [3]u21{ 0x2CC7, 0, 0 };
+    if (cp == 0x2CC8) return [3]u21{ 0x2CC9, 0, 0 };
+    if (cp == 0x2CCA) return [3]u21{ 0x2CCB, 0, 0 };
+    if (cp == 0x2CCC) return [3]u21{ 0x2CCD, 0, 0 };
+    if (cp == 0x2CCE) return [3]u21{ 0x2CCF, 0, 0 };
+    if (cp == 0x2CD0) return [3]u21{ 0x2CD1, 0, 0 };
+    if (cp == 0x2CD2) return [3]u21{ 0x2CD3, 0, 0 };
+    if (cp == 0x2CD4) return [3]u21{ 0x2CD5, 0, 0 };
+    if (cp == 0x2CD6) return [3]u21{ 0x2CD7, 0, 0 };
+    if (cp == 0x2CD8) return [3]u21{ 0x2CD9, 0, 0 };
+    if (cp == 0x2CDA) return [3]u21{ 0x2CDB, 0, 0 };
+    if (cp == 0x2CDC) return [3]u21{ 0x2CDD, 0, 0 };
+    if (cp == 0x2CDE) return [3]u21{ 0x2CDF, 0, 0 };
+    if (cp == 0x2CE0) return [3]u21{ 0x2CE1, 0, 0 };
+    if (cp == 0x2CE2) return [3]u21{ 0x2CE3, 0, 0 };
+    if (cp == 0x2CEB) return [3]u21{ 0x2CEC, 0, 0 };
+    if (cp == 0x2CED) return [3]u21{ 0x2CEE, 0, 0 };
+    if (cp == 0x2CF2) return [3]u21{ 0x2CF3, 0, 0 };
+    if (cp == 0xA640) return [3]u21{ 0xA641, 0, 0 };
+    if (cp == 0xA642) return [3]u21{ 0xA643, 0, 0 };
+    if (cp == 0xA644) return [3]u21{ 0xA645, 0, 0 };
+    if (cp == 0xA646) return [3]u21{ 0xA647, 0, 0 };
+    if (cp == 0xA648) return [3]u21{ 0xA649, 0, 0 };
+    if (cp == 0xA64A) return [3]u21{ 0xA64B, 0, 0 };
+    if (cp == 0xA64C) return [3]u21{ 0xA64D, 0, 0 };
+    if (cp == 0xA64E) return [3]u21{ 0xA64F, 0, 0 };
+    if (cp == 0xA650) return [3]u21{ 0xA651, 0, 0 };
+    if (cp == 0xA652) return [3]u21{ 0xA653, 0, 0 };
+    if (cp == 0xA654) return [3]u21{ 0xA655, 0, 0 };
+    if (cp == 0xA656) return [3]u21{ 0xA657, 0, 0 };
+    if (cp == 0xA658) return [3]u21{ 0xA659, 0, 0 };
+    if (cp == 0xA65A) return [3]u21{ 0xA65B, 0, 0 };
+    if (cp == 0xA65C) return [3]u21{ 0xA65D, 0, 0 };
+    if (cp == 0xA65E) return [3]u21{ 0xA65F, 0, 0 };
+    if (cp == 0xA660) return [3]u21{ 0xA661, 0, 0 };
+    if (cp == 0xA662) return [3]u21{ 0xA663, 0, 0 };
+    if (cp == 0xA664) return [3]u21{ 0xA665, 0, 0 };
+    if (cp == 0xA666) return [3]u21{ 0xA667, 0, 0 };
+    if (cp == 0xA668) return [3]u21{ 0xA669, 0, 0 };
+    if (cp == 0xA66A) return [3]u21{ 0xA66B, 0, 0 };
+    if (cp == 0xA66C) return [3]u21{ 0xA66D, 0, 0 };
+    if (cp == 0xA680) return [3]u21{ 0xA681, 0, 0 };
+    if (cp == 0xA682) return [3]u21{ 0xA683, 0, 0 };
+    if (cp == 0xA684) return [3]u21{ 0xA685, 0, 0 };
+    if (cp == 0xA686) return [3]u21{ 0xA687, 0, 0 };
+    if (cp == 0xA688) return [3]u21{ 0xA689, 0, 0 };
+    if (cp == 0xA68A) return [3]u21{ 0xA68B, 0, 0 };
+    if (cp == 0xA68C) return [3]u21{ 0xA68D, 0, 0 };
+    if (cp == 0xA68E) return [3]u21{ 0xA68F, 0, 0 };
+    if (cp == 0xA690) return [3]u21{ 0xA691, 0, 0 };
+    if (cp == 0xA692) return [3]u21{ 0xA693, 0, 0 };
+    if (cp == 0xA694) return [3]u21{ 0xA695, 0, 0 };
+    if (cp == 0xA696) return [3]u21{ 0xA697, 0, 0 };
+    if (cp == 0xA698) return [3]u21{ 0xA699, 0, 0 };
+    if (cp == 0xA69A) return [3]u21{ 0xA69B, 0, 0 };
+    if (cp == 0xA722) return [3]u21{ 0xA723, 0, 0 };
+    if (cp == 0xA724) return [3]u21{ 0xA725, 0, 0 };
+    if (cp == 0xA726) return [3]u21{ 0xA727, 0, 0 };
+    if (cp == 0xA728) return [3]u21{ 0xA729, 0, 0 };
+    if (cp == 0xA72A) return [3]u21{ 0xA72B, 0, 0 };
+    if (cp == 0xA72C) return [3]u21{ 0xA72D, 0, 0 };
+    if (cp == 0xA72E) return [3]u21{ 0xA72F, 0, 0 };
+    if (cp == 0xA732) return [3]u21{ 0xA733, 0, 0 };
+    if (cp == 0xA734) return [3]u21{ 0xA735, 0, 0 };
+    if (cp == 0xA736) return [3]u21{ 0xA737, 0, 0 };
+    if (cp == 0xA738) return [3]u21{ 0xA739, 0, 0 };
+    if (cp == 0xA73A) return [3]u21{ 0xA73B, 0, 0 };
+    if (cp == 0xA73C) return [3]u21{ 0xA73D, 0, 0 };
+    if (cp == 0xA73E) return [3]u21{ 0xA73F, 0, 0 };
+    if (cp == 0xA740) return [3]u21{ 0xA741, 0, 0 };
+    if (cp == 0xA742) return [3]u21{ 0xA743, 0, 0 };
+    if (cp == 0xA744) return [3]u21{ 0xA745, 0, 0 };
+    if (cp == 0xA746) return [3]u21{ 0xA747, 0, 0 };
+    if (cp == 0xA748) return [3]u21{ 0xA749, 0, 0 };
+    if (cp == 0xA74A) return [3]u21{ 0xA74B, 0, 0 };
+    if (cp == 0xA74C) return [3]u21{ 0xA74D, 0, 0 };
+    if (cp == 0xA74E) return [3]u21{ 0xA74F, 0, 0 };
+    if (cp == 0xA750) return [3]u21{ 0xA751, 0, 0 };
+    if (cp == 0xA752) return [3]u21{ 0xA753, 0, 0 };
+    if (cp == 0xA754) return [3]u21{ 0xA755, 0, 0 };
+    if (cp == 0xA756) return [3]u21{ 0xA757, 0, 0 };
+    if (cp == 0xA758) return [3]u21{ 0xA759, 0, 0 };
+    if (cp == 0xA75A) return [3]u21{ 0xA75B, 0, 0 };
+    if (cp == 0xA75C) return [3]u21{ 0xA75D, 0, 0 };
+    if (cp == 0xA75E) return [3]u21{ 0xA75F, 0, 0 };
+    if (cp == 0xA760) return [3]u21{ 0xA761, 0, 0 };
+    if (cp == 0xA762) return [3]u21{ 0xA763, 0, 0 };
+    if (cp == 0xA764) return [3]u21{ 0xA765, 0, 0 };
+    if (cp == 0xA766) return [3]u21{ 0xA767, 0, 0 };
+    if (cp == 0xA768) return [3]u21{ 0xA769, 0, 0 };
+    if (cp == 0xA76A) return [3]u21{ 0xA76B, 0, 0 };
+    if (cp == 0xA76C) return [3]u21{ 0xA76D, 0, 0 };
+    if (cp == 0xA76E) return [3]u21{ 0xA76F, 0, 0 };
+    if (cp == 0xA779) return [3]u21{ 0xA77A, 0, 0 };
+    if (cp == 0xA77B) return [3]u21{ 0xA77C, 0, 0 };
+    if (cp == 0xA77D) return [3]u21{ 0x1D79, 0, 0 };
+    if (cp == 0xA77E) return [3]u21{ 0xA77F, 0, 0 };
+    if (cp == 0xA780) return [3]u21{ 0xA781, 0, 0 };
+    if (cp == 0xA782) return [3]u21{ 0xA783, 0, 0 };
+    if (cp == 0xA784) return [3]u21{ 0xA785, 0, 0 };
+    if (cp == 0xA786) return [3]u21{ 0xA787, 0, 0 };
+    if (cp == 0xA78B) return [3]u21{ 0xA78C, 0, 0 };
+    if (cp == 0xA78D) return [3]u21{ 0x0265, 0, 0 };
+    if (cp == 0xA790) return [3]u21{ 0xA791, 0, 0 };
+    if (cp == 0xA792) return [3]u21{ 0xA793, 0, 0 };
+    if (cp == 0xA796) return [3]u21{ 0xA797, 0, 0 };
+    if (cp == 0xA798) return [3]u21{ 0xA799, 0, 0 };
+    if (cp == 0xA79A) return [3]u21{ 0xA79B, 0, 0 };
+    if (cp == 0xA79C) return [3]u21{ 0xA79D, 0, 0 };
+    if (cp == 0xA79E) return [3]u21{ 0xA79F, 0, 0 };
+    if (cp == 0xA7A0) return [3]u21{ 0xA7A1, 0, 0 };
+    if (cp == 0xA7A2) return [3]u21{ 0xA7A3, 0, 0 };
+    if (cp == 0xA7A4) return [3]u21{ 0xA7A5, 0, 0 };
+    if (cp == 0xA7A6) return [3]u21{ 0xA7A7, 0, 0 };
+    if (cp == 0xA7A8) return [3]u21{ 0xA7A9, 0, 0 };
+    if (cp == 0xA7AA) return [3]u21{ 0x0266, 0, 0 };
+    if (cp == 0xA7AB) return [3]u21{ 0x025C, 0, 0 };
+    if (cp == 0xA7AC) return [3]u21{ 0x0261, 0, 0 };
+    if (cp == 0xA7AD) return [3]u21{ 0x026C, 0, 0 };
+    if (cp == 0xA7AE) return [3]u21{ 0x026A, 0, 0 };
+    if (cp == 0xA7B0) return [3]u21{ 0x029E, 0, 0 };
+    if (cp == 0xA7B1) return [3]u21{ 0x0287, 0, 0 };
+    if (cp == 0xA7B2) return [3]u21{ 0x029D, 0, 0 };
+    if (cp == 0xA7B3) return [3]u21{ 0xAB53, 0, 0 };
+    if (cp == 0xA7B4) return [3]u21{ 0xA7B5, 0, 0 };
+    if (cp == 0xA7B6) return [3]u21{ 0xA7B7, 0, 0 };
+    if (cp == 0xA7B8) return [3]u21{ 0xA7B9, 0, 0 };
+    if (cp == 0xA7BA) return [3]u21{ 0xA7BB, 0, 0 };
+    if (cp == 0xA7BC) return [3]u21{ 0xA7BD, 0, 0 };
+    if (cp == 0xA7BE) return [3]u21{ 0xA7BF, 0, 0 };
+    if (cp == 0xA7C2) return [3]u21{ 0xA7C3, 0, 0 };
+    if (cp == 0xA7C4) return [3]u21{ 0xA794, 0, 0 };
+    if (cp == 0xA7C5) return [3]u21{ 0x0282, 0, 0 };
+    if (cp == 0xA7C6) return [3]u21{ 0x1D8E, 0, 0 };
+    if (cp == 0xA7C7) return [3]u21{ 0xA7C8, 0, 0 };
+    if (cp == 0xA7C9) return [3]u21{ 0xA7CA, 0, 0 };
+    if (cp == 0xA7F5) return [3]u21{ 0xA7F6, 0, 0 };
+    if (cp == 0xAB70) return [3]u21{ 0x13A0, 0, 0 };
+    if (cp == 0xAB71) return [3]u21{ 0x13A1, 0, 0 };
+    if (cp == 0xAB72) return [3]u21{ 0x13A2, 0, 0 };
+    if (cp == 0xAB73) return [3]u21{ 0x13A3, 0, 0 };
+    if (cp == 0xAB74) return [3]u21{ 0x13A4, 0, 0 };
+    if (cp == 0xAB75) return [3]u21{ 0x13A5, 0, 0 };
+    if (cp == 0xAB76) return [3]u21{ 0x13A6, 0, 0 };
+    if (cp == 0xAB77) return [3]u21{ 0x13A7, 0, 0 };
+    if (cp == 0xAB78) return [3]u21{ 0x13A8, 0, 0 };
+    if (cp == 0xAB79) return [3]u21{ 0x13A9, 0, 0 };
+    if (cp == 0xAB7A) return [3]u21{ 0x13AA, 0, 0 };
+    if (cp == 0xAB7B) return [3]u21{ 0x13AB, 0, 0 };
+    if (cp == 0xAB7C) return [3]u21{ 0x13AC, 0, 0 };
+    if (cp == 0xAB7D) return [3]u21{ 0x13AD, 0, 0 };
+    if (cp == 0xAB7E) return [3]u21{ 0x13AE, 0, 0 };
+    if (cp == 0xAB7F) return [3]u21{ 0x13AF, 0, 0 };
+    if (cp == 0xAB80) return [3]u21{ 0x13B0, 0, 0 };
+    if (cp == 0xAB81) return [3]u21{ 0x13B1, 0, 0 };
+    if (cp == 0xAB82) return [3]u21{ 0x13B2, 0, 0 };
+    if (cp == 0xAB83) return [3]u21{ 0x13B3, 0, 0 };
+    if (cp == 0xAB84) return [3]u21{ 0x13B4, 0, 0 };
+    if (cp == 0xAB85) return [3]u21{ 0x13B5, 0, 0 };
+    if (cp == 0xAB86) return [3]u21{ 0x13B6, 0, 0 };
+    if (cp == 0xAB87) return [3]u21{ 0x13B7, 0, 0 };
+    if (cp == 0xAB88) return [3]u21{ 0x13B8, 0, 0 };
+    if (cp == 0xAB89) return [3]u21{ 0x13B9, 0, 0 };
+    if (cp == 0xAB8A) return [3]u21{ 0x13BA, 0, 0 };
+    if (cp == 0xAB8B) return [3]u21{ 0x13BB, 0, 0 };
+    if (cp == 0xAB8C) return [3]u21{ 0x13BC, 0, 0 };
+    if (cp == 0xAB8D) return [3]u21{ 0x13BD, 0, 0 };
+    if (cp == 0xAB8E) return [3]u21{ 0x13BE, 0, 0 };
+    if (cp == 0xAB8F) return [3]u21{ 0x13BF, 0, 0 };
+    if (cp == 0xAB90) return [3]u21{ 0x13C0, 0, 0 };
+    if (cp == 0xAB91) return [3]u21{ 0x13C1, 0, 0 };
+    if (cp == 0xAB92) return [3]u21{ 0x13C2, 0, 0 };
+    if (cp == 0xAB93) return [3]u21{ 0x13C3, 0, 0 };
+    if (cp == 0xAB94) return [3]u21{ 0x13C4, 0, 0 };
+    if (cp == 0xAB95) return [3]u21{ 0x13C5, 0, 0 };
+    if (cp == 0xAB96) return [3]u21{ 0x13C6, 0, 0 };
+    if (cp == 0xAB97) return [3]u21{ 0x13C7, 0, 0 };
+    if (cp == 0xAB98) return [3]u21{ 0x13C8, 0, 0 };
+    if (cp == 0xAB99) return [3]u21{ 0x13C9, 0, 0 };
+    if (cp == 0xAB9A) return [3]u21{ 0x13CA, 0, 0 };
+    if (cp == 0xAB9B) return [3]u21{ 0x13CB, 0, 0 };
+    if (cp == 0xAB9C) return [3]u21{ 0x13CC, 0, 0 };
+    if (cp == 0xAB9D) return [3]u21{ 0x13CD, 0, 0 };
+    if (cp == 0xAB9E) return [3]u21{ 0x13CE, 0, 0 };
+    if (cp == 0xAB9F) return [3]u21{ 0x13CF, 0, 0 };
+    if (cp == 0xABA0) return [3]u21{ 0x13D0, 0, 0 };
+    if (cp == 0xABA1) return [3]u21{ 0x13D1, 0, 0 };
+    if (cp == 0xABA2) return [3]u21{ 0x13D2, 0, 0 };
+    if (cp == 0xABA3) return [3]u21{ 0x13D3, 0, 0 };
+    if (cp == 0xABA4) return [3]u21{ 0x13D4, 0, 0 };
+    if (cp == 0xABA5) return [3]u21{ 0x13D5, 0, 0 };
+    if (cp == 0xABA6) return [3]u21{ 0x13D6, 0, 0 };
+    if (cp == 0xABA7) return [3]u21{ 0x13D7, 0, 0 };
+    if (cp == 0xABA8) return [3]u21{ 0x13D8, 0, 0 };
+    if (cp == 0xABA9) return [3]u21{ 0x13D9, 0, 0 };
+    if (cp == 0xABAA) return [3]u21{ 0x13DA, 0, 0 };
+    if (cp == 0xABAB) return [3]u21{ 0x13DB, 0, 0 };
+    if (cp == 0xABAC) return [3]u21{ 0x13DC, 0, 0 };
+    if (cp == 0xABAD) return [3]u21{ 0x13DD, 0, 0 };
+    if (cp == 0xABAE) return [3]u21{ 0x13DE, 0, 0 };
+    if (cp == 0xABAF) return [3]u21{ 0x13DF, 0, 0 };
+    if (cp == 0xABB0) return [3]u21{ 0x13E0, 0, 0 };
+    if (cp == 0xABB1) return [3]u21{ 0x13E1, 0, 0 };
+    if (cp == 0xABB2) return [3]u21{ 0x13E2, 0, 0 };
+    if (cp == 0xABB3) return [3]u21{ 0x13E3, 0, 0 };
+    if (cp == 0xABB4) return [3]u21{ 0x13E4, 0, 0 };
+    if (cp == 0xABB5) return [3]u21{ 0x13E5, 0, 0 };
+    if (cp == 0xABB6) return [3]u21{ 0x13E6, 0, 0 };
+    if (cp == 0xABB7) return [3]u21{ 0x13E7, 0, 0 };
+    if (cp == 0xABB8) return [3]u21{ 0x13E8, 0, 0 };
+    if (cp == 0xABB9) return [3]u21{ 0x13E9, 0, 0 };
+    if (cp == 0xABBA) return [3]u21{ 0x13EA, 0, 0 };
+    if (cp == 0xABBB) return [3]u21{ 0x13EB, 0, 0 };
+    if (cp == 0xABBC) return [3]u21{ 0x13EC, 0, 0 };
+    if (cp == 0xABBD) return [3]u21{ 0x13ED, 0, 0 };
+    if (cp == 0xABBE) return [3]u21{ 0x13EE, 0, 0 };
+    if (cp == 0xABBF) return [3]u21{ 0x13EF, 0, 0 };
+    if (cp == 0xFB00) return [3]u21{ 0x0066, 0x0066, 0 };
+    if (cp == 0xFB01) return [3]u21{ 0x0066, 0x0069, 0 };
+    if (cp == 0xFB02) return [3]u21{ 0x0066, 0x006C, 0 };
+    if (cp == 0xFB03) return [3]u21{ 0x0066, 0x0066, 0x0069 };
+    if (cp == 0xFB04) return [3]u21{ 0x0066, 0x0066, 0x006C };
+    if (cp == 0xFB05) return [3]u21{ 0x0073, 0x0074, 0 };
+    if (cp == 0xFB06) return [3]u21{ 0x0073, 0x0074, 0 };
+    if (cp == 0xFB13) return [3]u21{ 0x0574, 0x0576, 0 };
+    if (cp == 0xFB14) return [3]u21{ 0x0574, 0x0565, 0 };
+    if (cp == 0xFB15) return [3]u21{ 0x0574, 0x056B, 0 };
+    if (cp == 0xFB16) return [3]u21{ 0x057E, 0x0576, 0 };
+    if (cp == 0xFB17) return [3]u21{ 0x0574, 0x056D, 0 };
+    if (cp == 0xFF21) return [3]u21{ 0xFF41, 0, 0 };
+    if (cp == 0xFF22) return [3]u21{ 0xFF42, 0, 0 };
+    if (cp == 0xFF23) return [3]u21{ 0xFF43, 0, 0 };
+    if (cp == 0xFF24) return [3]u21{ 0xFF44, 0, 0 };
+    if (cp == 0xFF25) return [3]u21{ 0xFF45, 0, 0 };
+    if (cp == 0xFF26) return [3]u21{ 0xFF46, 0, 0 };
+    if (cp == 0xFF27) return [3]u21{ 0xFF47, 0, 0 };
+    if (cp == 0xFF28) return [3]u21{ 0xFF48, 0, 0 };
+    if (cp == 0xFF29) return [3]u21{ 0xFF49, 0, 0 };
+    if (cp == 0xFF2A) return [3]u21{ 0xFF4A, 0, 0 };
+    if (cp == 0xFF2B) return [3]u21{ 0xFF4B, 0, 0 };
+    if (cp == 0xFF2C) return [3]u21{ 0xFF4C, 0, 0 };
+    if (cp == 0xFF2D) return [3]u21{ 0xFF4D, 0, 0 };
+    if (cp == 0xFF2E) return [3]u21{ 0xFF4E, 0, 0 };
+    if (cp == 0xFF2F) return [3]u21{ 0xFF4F, 0, 0 };
+    if (cp == 0xFF30) return [3]u21{ 0xFF50, 0, 0 };
+    if (cp == 0xFF31) return [3]u21{ 0xFF51, 0, 0 };
+    if (cp == 0xFF32) return [3]u21{ 0xFF52, 0, 0 };
+    if (cp == 0xFF33) return [3]u21{ 0xFF53, 0, 0 };
+    if (cp == 0xFF34) return [3]u21{ 0xFF54, 0, 0 };
+    if (cp == 0xFF35) return [3]u21{ 0xFF55, 0, 0 };
+    if (cp == 0xFF36) return [3]u21{ 0xFF56, 0, 0 };
+    if (cp == 0xFF37) return [3]u21{ 0xFF57, 0, 0 };
+    if (cp == 0xFF38) return [3]u21{ 0xFF58, 0, 0 };
+    if (cp == 0xFF39) return [3]u21{ 0xFF59, 0, 0 };
+    if (cp == 0xFF3A) return [3]u21{ 0xFF5A, 0, 0 };
+    if (cp == 0x10400) return [3]u21{ 0x10428, 0, 0 };
+    if (cp == 0x10401) return [3]u21{ 0x10429, 0, 0 };
+    if (cp == 0x10402) return [3]u21{ 0x1042A, 0, 0 };
+    if (cp == 0x10403) return [3]u21{ 0x1042B, 0, 0 };
+    if (cp == 0x10404) return [3]u21{ 0x1042C, 0, 0 };
+    if (cp == 0x10405) return [3]u21{ 0x1042D, 0, 0 };
+    if (cp == 0x10406) return [3]u21{ 0x1042E, 0, 0 };
+    if (cp == 0x10407) return [3]u21{ 0x1042F, 0, 0 };
+    if (cp == 0x10408) return [3]u21{ 0x10430, 0, 0 };
+    if (cp == 0x10409) return [3]u21{ 0x10431, 0, 0 };
+    if (cp == 0x1040A) return [3]u21{ 0x10432, 0, 0 };
+    if (cp == 0x1040B) return [3]u21{ 0x10433, 0, 0 };
+    if (cp == 0x1040C) return [3]u21{ 0x10434, 0, 0 };
+    if (cp == 0x1040D) return [3]u21{ 0x10435, 0, 0 };
+    if (cp == 0x1040E) return [3]u21{ 0x10436, 0, 0 };
+    if (cp == 0x1040F) return [3]u21{ 0x10437, 0, 0 };
+    if (cp == 0x10410) return [3]u21{ 0x10438, 0, 0 };
+    if (cp == 0x10411) return [3]u21{ 0x10439, 0, 0 };
+    if (cp == 0x10412) return [3]u21{ 0x1043A, 0, 0 };
+    if (cp == 0x10413) return [3]u21{ 0x1043B, 0, 0 };
+    if (cp == 0x10414) return [3]u21{ 0x1043C, 0, 0 };
+    if (cp == 0x10415) return [3]u21{ 0x1043D, 0, 0 };
+    if (cp == 0x10416) return [3]u21{ 0x1043E, 0, 0 };
+    if (cp == 0x10417) return [3]u21{ 0x1043F, 0, 0 };
+    if (cp == 0x10418) return [3]u21{ 0x10440, 0, 0 };
+    if (cp == 0x10419) return [3]u21{ 0x10441, 0, 0 };
+    if (cp == 0x1041A) return [3]u21{ 0x10442, 0, 0 };
+    if (cp == 0x1041B) return [3]u21{ 0x10443, 0, 0 };
+    if (cp == 0x1041C) return [3]u21{ 0x10444, 0, 0 };
+    if (cp == 0x1041D) return [3]u21{ 0x10445, 0, 0 };
+    if (cp == 0x1041E) return [3]u21{ 0x10446, 0, 0 };
+    if (cp == 0x1041F) return [3]u21{ 0x10447, 0, 0 };
+    if (cp == 0x10420) return [3]u21{ 0x10448, 0, 0 };
+    if (cp == 0x10421) return [3]u21{ 0x10449, 0, 0 };
+    if (cp == 0x10422) return [3]u21{ 0x1044A, 0, 0 };
+    if (cp == 0x10423) return [3]u21{ 0x1044B, 0, 0 };
+    if (cp == 0x10424) return [3]u21{ 0x1044C, 0, 0 };
+    if (cp == 0x10425) return [3]u21{ 0x1044D, 0, 0 };
+    if (cp == 0x10426) return [3]u21{ 0x1044E, 0, 0 };
+    if (cp == 0x10427) return [3]u21{ 0x1044F, 0, 0 };
+    if (cp == 0x104B0) return [3]u21{ 0x104D8, 0, 0 };
+    if (cp == 0x104B1) return [3]u21{ 0x104D9, 0, 0 };
+    if (cp == 0x104B2) return [3]u21{ 0x104DA, 0, 0 };
+    if (cp == 0x104B3) return [3]u21{ 0x104DB, 0, 0 };
+    if (cp == 0x104B4) return [3]u21{ 0x104DC, 0, 0 };
+    if (cp == 0x104B5) return [3]u21{ 0x104DD, 0, 0 };
+    if (cp == 0x104B6) return [3]u21{ 0x104DE, 0, 0 };
+    if (cp == 0x104B7) return [3]u21{ 0x104DF, 0, 0 };
+    if (cp == 0x104B8) return [3]u21{ 0x104E0, 0, 0 };
+    if (cp == 0x104B9) return [3]u21{ 0x104E1, 0, 0 };
+    if (cp == 0x104BA) return [3]u21{ 0x104E2, 0, 0 };
+    if (cp == 0x104BB) return [3]u21{ 0x104E3, 0, 0 };
+    if (cp == 0x104BC) return [3]u21{ 0x104E4, 0, 0 };
+    if (cp == 0x104BD) return [3]u21{ 0x104E5, 0, 0 };
+    if (cp == 0x104BE) return [3]u21{ 0x104E6, 0, 0 };
+    if (cp == 0x104BF) return [3]u21{ 0x104E7, 0, 0 };
+    if (cp == 0x104C0) return [3]u21{ 0x104E8, 0, 0 };
+    if (cp == 0x104C1) return [3]u21{ 0x104E9, 0, 0 };
+    if (cp == 0x104C2) return [3]u21{ 0x104EA, 0, 0 };
+    if (cp == 0x104C3) return [3]u21{ 0x104EB, 0, 0 };
+    if (cp == 0x104C4) return [3]u21{ 0x104EC, 0, 0 };
+    if (cp == 0x104C5) return [3]u21{ 0x104ED, 0, 0 };
+    if (cp == 0x104C6) return [3]u21{ 0x104EE, 0, 0 };
+    if (cp == 0x104C7) return [3]u21{ 0x104EF, 0, 0 };
+    if (cp == 0x104C8) return [3]u21{ 0x104F0, 0, 0 };
+    if (cp == 0x104C9) return [3]u21{ 0x104F1, 0, 0 };
+    if (cp == 0x104CA) return [3]u21{ 0x104F2, 0, 0 };
+    if (cp == 0x104CB) return [3]u21{ 0x104F3, 0, 0 };
+    if (cp == 0x104CC) return [3]u21{ 0x104F4, 0, 0 };
+    if (cp == 0x104CD) return [3]u21{ 0x104F5, 0, 0 };
+    if (cp == 0x104CE) return [3]u21{ 0x104F6, 0, 0 };
+    if (cp == 0x104CF) return [3]u21{ 0x104F7, 0, 0 };
+    if (cp == 0x104D0) return [3]u21{ 0x104F8, 0, 0 };
+    if (cp == 0x104D1) return [3]u21{ 0x104F9, 0, 0 };
+    if (cp == 0x104D2) return [3]u21{ 0x104FA, 0, 0 };
+    if (cp == 0x104D3) return [3]u21{ 0x104FB, 0, 0 };
+    if (cp == 0x10C80) return [3]u21{ 0x10CC0, 0, 0 };
+    if (cp == 0x10C81) return [3]u21{ 0x10CC1, 0, 0 };
+    if (cp == 0x10C82) return [3]u21{ 0x10CC2, 0, 0 };
+    if (cp == 0x10C83) return [3]u21{ 0x10CC3, 0, 0 };
+    if (cp == 0x10C84) return [3]u21{ 0x10CC4, 0, 0 };
+    if (cp == 0x10C85) return [3]u21{ 0x10CC5, 0, 0 };
+    if (cp == 0x10C86) return [3]u21{ 0x10CC6, 0, 0 };
+    if (cp == 0x10C87) return [3]u21{ 0x10CC7, 0, 0 };
+    if (cp == 0x10C88) return [3]u21{ 0x10CC8, 0, 0 };
+    if (cp == 0x10C89) return [3]u21{ 0x10CC9, 0, 0 };
+    if (cp == 0x10C8A) return [3]u21{ 0x10CCA, 0, 0 };
+    if (cp == 0x10C8B) return [3]u21{ 0x10CCB, 0, 0 };
+    if (cp == 0x10C8C) return [3]u21{ 0x10CCC, 0, 0 };
+    if (cp == 0x10C8D) return [3]u21{ 0x10CCD, 0, 0 };
+    if (cp == 0x10C8E) return [3]u21{ 0x10CCE, 0, 0 };
+    if (cp == 0x10C8F) return [3]u21{ 0x10CCF, 0, 0 };
+    if (cp == 0x10C90) return [3]u21{ 0x10CD0, 0, 0 };
+    if (cp == 0x10C91) return [3]u21{ 0x10CD1, 0, 0 };
+    if (cp == 0x10C92) return [3]u21{ 0x10CD2, 0, 0 };
+    if (cp == 0x10C93) return [3]u21{ 0x10CD3, 0, 0 };
+    if (cp == 0x10C94) return [3]u21{ 0x10CD4, 0, 0 };
+    if (cp == 0x10C95) return [3]u21{ 0x10CD5, 0, 0 };
+    if (cp == 0x10C96) return [3]u21{ 0x10CD6, 0, 0 };
+    if (cp == 0x10C97) return [3]u21{ 0x10CD7, 0, 0 };
+    if (cp == 0x10C98) return [3]u21{ 0x10CD8, 0, 0 };
+    if (cp == 0x10C99) return [3]u21{ 0x10CD9, 0, 0 };
+    if (cp == 0x10C9A) return [3]u21{ 0x10CDA, 0, 0 };
+    if (cp == 0x10C9B) return [3]u21{ 0x10CDB, 0, 0 };
+    if (cp == 0x10C9C) return [3]u21{ 0x10CDC, 0, 0 };
+    if (cp == 0x10C9D) return [3]u21{ 0x10CDD, 0, 0 };
+    if (cp == 0x10C9E) return [3]u21{ 0x10CDE, 0, 0 };
+    if (cp == 0x10C9F) return [3]u21{ 0x10CDF, 0, 0 };
+    if (cp == 0x10CA0) return [3]u21{ 0x10CE0, 0, 0 };
+    if (cp == 0x10CA1) return [3]u21{ 0x10CE1, 0, 0 };
+    if (cp == 0x10CA2) return [3]u21{ 0x10CE2, 0, 0 };
+    if (cp == 0x10CA3) return [3]u21{ 0x10CE3, 0, 0 };
+    if (cp == 0x10CA4) return [3]u21{ 0x10CE4, 0, 0 };
+    if (cp == 0x10CA5) return [3]u21{ 0x10CE5, 0, 0 };
+    if (cp == 0x10CA6) return [3]u21{ 0x10CE6, 0, 0 };
+    if (cp == 0x10CA7) return [3]u21{ 0x10CE7, 0, 0 };
+    if (cp == 0x10CA8) return [3]u21{ 0x10CE8, 0, 0 };
+    if (cp == 0x10CA9) return [3]u21{ 0x10CE9, 0, 0 };
+    if (cp == 0x10CAA) return [3]u21{ 0x10CEA, 0, 0 };
+    if (cp == 0x10CAB) return [3]u21{ 0x10CEB, 0, 0 };
+    if (cp == 0x10CAC) return [3]u21{ 0x10CEC, 0, 0 };
+    if (cp == 0x10CAD) return [3]u21{ 0x10CED, 0, 0 };
+    if (cp == 0x10CAE) return [3]u21{ 0x10CEE, 0, 0 };
+    if (cp == 0x10CAF) return [3]u21{ 0x10CEF, 0, 0 };
+    if (cp == 0x10CB0) return [3]u21{ 0x10CF0, 0, 0 };
+    if (cp == 0x10CB1) return [3]u21{ 0x10CF1, 0, 0 };
+    if (cp == 0x10CB2) return [3]u21{ 0x10CF2, 0, 0 };
+    if (cp == 0x118A0) return [3]u21{ 0x118C0, 0, 0 };
+    if (cp == 0x118A1) return [3]u21{ 0x118C1, 0, 0 };
+    if (cp == 0x118A2) return [3]u21{ 0x118C2, 0, 0 };
+    if (cp == 0x118A3) return [3]u21{ 0x118C3, 0, 0 };
+    if (cp == 0x118A4) return [3]u21{ 0x118C4, 0, 0 };
+    if (cp == 0x118A5) return [3]u21{ 0x118C5, 0, 0 };
+    if (cp == 0x118A6) return [3]u21{ 0x118C6, 0, 0 };
+    if (cp == 0x118A7) return [3]u21{ 0x118C7, 0, 0 };
+    if (cp == 0x118A8) return [3]u21{ 0x118C8, 0, 0 };
+    if (cp == 0x118A9) return [3]u21{ 0x118C9, 0, 0 };
+    if (cp == 0x118AA) return [3]u21{ 0x118CA, 0, 0 };
+    if (cp == 0x118AB) return [3]u21{ 0x118CB, 0, 0 };
+    if (cp == 0x118AC) return [3]u21{ 0x118CC, 0, 0 };
+    if (cp == 0x118AD) return [3]u21{ 0x118CD, 0, 0 };
+    if (cp == 0x118AE) return [3]u21{ 0x118CE, 0, 0 };
+    if (cp == 0x118AF) return [3]u21{ 0x118CF, 0, 0 };
+    if (cp == 0x118B0) return [3]u21{ 0x118D0, 0, 0 };
+    if (cp == 0x118B1) return [3]u21{ 0x118D1, 0, 0 };
+    if (cp == 0x118B2) return [3]u21{ 0x118D2, 0, 0 };
+    if (cp == 0x118B3) return [3]u21{ 0x118D3, 0, 0 };
+    if (cp == 0x118B4) return [3]u21{ 0x118D4, 0, 0 };
+    if (cp == 0x118B5) return [3]u21{ 0x118D5, 0, 0 };
+    if (cp == 0x118B6) return [3]u21{ 0x118D6, 0, 0 };
+    if (cp == 0x118B7) return [3]u21{ 0x118D7, 0, 0 };
+    if (cp == 0x118B8) return [3]u21{ 0x118D8, 0, 0 };
+    if (cp == 0x118B9) return [3]u21{ 0x118D9, 0, 0 };
+    if (cp == 0x118BA) return [3]u21{ 0x118DA, 0, 0 };
+    if (cp == 0x118BB) return [3]u21{ 0x118DB, 0, 0 };
+    if (cp == 0x118BC) return [3]u21{ 0x118DC, 0, 0 };
+    if (cp == 0x118BD) return [3]u21{ 0x118DD, 0, 0 };
+    if (cp == 0x118BE) return [3]u21{ 0x118DE, 0, 0 };
+    if (cp == 0x118BF) return [3]u21{ 0x118DF, 0, 0 };
+    if (cp == 0x16E40) return [3]u21{ 0x16E60, 0, 0 };
+    if (cp == 0x16E41) return [3]u21{ 0x16E61, 0, 0 };
+    if (cp == 0x16E42) return [3]u21{ 0x16E62, 0, 0 };
+    if (cp == 0x16E43) return [3]u21{ 0x16E63, 0, 0 };
+    if (cp == 0x16E44) return [3]u21{ 0x16E64, 0, 0 };
+    if (cp == 0x16E45) return [3]u21{ 0x16E65, 0, 0 };
+    if (cp == 0x16E46) return [3]u21{ 0x16E66, 0, 0 };
+    if (cp == 0x16E47) return [3]u21{ 0x16E67, 0, 0 };
+    if (cp == 0x16E48) return [3]u21{ 0x16E68, 0, 0 };
+    if (cp == 0x16E49) return [3]u21{ 0x16E69, 0, 0 };
+    if (cp == 0x16E4A) return [3]u21{ 0x16E6A, 0, 0 };
+    if (cp == 0x16E4B) return [3]u21{ 0x16E6B, 0, 0 };
+    if (cp == 0x16E4C) return [3]u21{ 0x16E6C, 0, 0 };
+    if (cp == 0x16E4D) return [3]u21{ 0x16E6D, 0, 0 };
+    if (cp == 0x16E4E) return [3]u21{ 0x16E6E, 0, 0 };
+    if (cp == 0x16E4F) return [3]u21{ 0x16E6F, 0, 0 };
+    if (cp == 0x16E50) return [3]u21{ 0x16E70, 0, 0 };
+    if (cp == 0x16E51) return [3]u21{ 0x16E71, 0, 0 };
+    if (cp == 0x16E52) return [3]u21{ 0x16E72, 0, 0 };
+    if (cp == 0x16E53) return [3]u21{ 0x16E73, 0, 0 };
+    if (cp == 0x16E54) return [3]u21{ 0x16E74, 0, 0 };
+    if (cp == 0x16E55) return [3]u21{ 0x16E75, 0, 0 };
+    if (cp == 0x16E56) return [3]u21{ 0x16E76, 0, 0 };
+    if (cp == 0x16E57) return [3]u21{ 0x16E77, 0, 0 };
+    if (cp == 0x16E58) return [3]u21{ 0x16E78, 0, 0 };
+    if (cp == 0x16E59) return [3]u21{ 0x16E79, 0, 0 };
+    if (cp == 0x16E5A) return [3]u21{ 0x16E7A, 0, 0 };
+    if (cp == 0x16E5B) return [3]u21{ 0x16E7B, 0, 0 };
+    if (cp == 0x16E5C) return [3]u21{ 0x16E7C, 0, 0 };
+    if (cp == 0x16E5D) return [3]u21{ 0x16E7D, 0, 0 };
+    if (cp == 0x16E5E) return [3]u21{ 0x16E7E, 0, 0 };
+    if (cp == 0x16E5F) return [3]u21{ 0x16E7F, 0, 0 };
+    if (cp == 0x1E900) return [3]u21{ 0x1E922, 0, 0 };
+    if (cp == 0x1E901) return [3]u21{ 0x1E923, 0, 0 };
+    if (cp == 0x1E902) return [3]u21{ 0x1E924, 0, 0 };
+    if (cp == 0x1E903) return [3]u21{ 0x1E925, 0, 0 };
+    if (cp == 0x1E904) return [3]u21{ 0x1E926, 0, 0 };
+    if (cp == 0x1E905) return [3]u21{ 0x1E927, 0, 0 };
+    if (cp == 0x1E906) return [3]u21{ 0x1E928, 0, 0 };
+    if (cp == 0x1E907) return [3]u21{ 0x1E929, 0, 0 };
+    if (cp == 0x1E908) return [3]u21{ 0x1E92A, 0, 0 };
+    if (cp == 0x1E909) return [3]u21{ 0x1E92B, 0, 0 };
+    if (cp == 0x1E90A) return [3]u21{ 0x1E92C, 0, 0 };
+    if (cp == 0x1E90B) return [3]u21{ 0x1E92D, 0, 0 };
+    if (cp == 0x1E90C) return [3]u21{ 0x1E92E, 0, 0 };
+    if (cp == 0x1E90D) return [3]u21{ 0x1E92F, 0, 0 };
+    if (cp == 0x1E90E) return [3]u21{ 0x1E930, 0, 0 };
+    if (cp == 0x1E90F) return [3]u21{ 0x1E931, 0, 0 };
+    if (cp == 0x1E910) return [3]u21{ 0x1E932, 0, 0 };
+    if (cp == 0x1E911) return [3]u21{ 0x1E933, 0, 0 };
+    if (cp == 0x1E912) return [3]u21{ 0x1E934, 0, 0 };
+    if (cp == 0x1E913) return [3]u21{ 0x1E935, 0, 0 };
+    if (cp == 0x1E914) return [3]u21{ 0x1E936, 0, 0 };
+    if (cp == 0x1E915) return [3]u21{ 0x1E937, 0, 0 };
+    if (cp == 0x1E916) return [3]u21{ 0x1E938, 0, 0 };
+    if (cp == 0x1E917) return [3]u21{ 0x1E939, 0, 0 };
+    if (cp == 0x1E918) return [3]u21{ 0x1E93A, 0, 0 };
+    if (cp == 0x1E919) return [3]u21{ 0x1E93B, 0, 0 };
+    if (cp == 0x1E91A) return [3]u21{ 0x1E93C, 0, 0 };
+    if (cp == 0x1E91B) return [3]u21{ 0x1E93D, 0, 0 };
+    if (cp == 0x1E91C) return [3]u21{ 0x1E93E, 0, 0 };
+    if (cp == 0x1E91D) return [3]u21{ 0x1E93F, 0, 0 };
+    if (cp == 0x1E91E) return [3]u21{ 0x1E940, 0, 0 };
+    if (cp == 0x1E91F) return [3]u21{ 0x1E941, 0, 0 };
+    if (cp == 0x1E920) return [3]u21{ 0x1E942, 0, 0 };
+    if (cp == 0x1E921) return [3]u21{ 0x1E943, 0, 0 };
+    return [3]u21{ cp, 0, 0 };
 }
