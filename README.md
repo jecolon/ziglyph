@@ -135,8 +135,7 @@ called *Grapheme Clusters* and Ziglyph provides the `GraphemeIterator` to extrac
 const GraphemeIterator = @import("Ziglyph").GraphemeIterator;
 
 test "GraphemeIterator" {
-    var giter = try GraphemeIterator.init(std.testing.allocator, "H\u{0065}\u{0301}llo");
-    defer giter.deinit();
+    var giter = try GraphemeIterator.new("H\u{0065}\u{0301}llo");
 
     const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
 
@@ -156,8 +155,7 @@ occupy. The `Width` component struct provides methods to do just that.
 const Width = @import("Ziglyph").Width;
 
 test "Code point / string widths" {
-    var width = try Width.init(std.testing.allocator);
-    defer width.deinit();
+    var width = Width.new();
 
     // The width methods take a second parameter of value .half or .full to determine the width of 
     // ambiguous code points as per the Unicode standard. .half is the most common case.
