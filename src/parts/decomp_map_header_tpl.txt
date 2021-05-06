@@ -24,41 +24,18 @@ pub const Decomposed = union(enum) {
     compat: []const u21,
 };
 
-allocator: *mem.Allocator,
 ccc_map: CccMap,
 hangul_map: HangulMap,
 nfd_check: NFDCheck,
 
 const Self = @This();
 
-const Singleton = struct {
-    instance: *Self,
-    ref_count: usize,
-};
-
-var singleton: ?Singleton = null;
-
-pub fn init(allocator: *mem.Allocator) !*Self {
-    if (singleton) |*s| {
-        s.ref_count += 1;
-        return s.instance;
-    }
-
-    var instance = try allocator.create(Self);
-
-    instance.* = Self{
-        .allocator = allocator,
+pub fn new() Self {
+    return Self{
         .ccc_map = CccMap{},
         .hangul_map = HangulMap{},
         .nfd_check = NFDCheck{},
     };
-
-    singleton = Singleton{
-        .instance = instance,
-        .ref_count = 1,
-    };
-
-    return instance;
 }
 
 /// mapping retrieves the decomposition mapping for a code point as per the UCD.

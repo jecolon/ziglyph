@@ -19,7 +19,7 @@ ascii_only: bool,
 bytes: []const u8,
 code_points: ?[]u21,
 cp_count: usize,
-decomp_map: ?*DecomposeMap,
+decomp_map: DecomposeMap,
 grapheme_clusters: ?[]Grapheme,
 giter: ?GraphemeIterator,
 letter: *Letter,
@@ -37,7 +37,7 @@ pub fn init(allocator: *mem.Allocator, str: []const u8) !Self { // Self is Zigst
         },
         .code_points = null,
         .cp_count = 0,
-        .decomp_map = null,
+        .decomp_map = DecomposeMap.new(),
         .grapheme_clusters = null,
         .giter = null,
         .letter = try Letter.init(allocator),
@@ -56,10 +56,6 @@ pub fn deinit(self: *Self) void {
 
     if (self.code_points) |code_points| {
         self.allocator.free(code_points);
-    }
-
-    if (self.decomp_map) |decomp_map| {
-        decomp_map.deinit();
     }
 
     if (self.giter) |*giter| {
@@ -282,11 +278,8 @@ fn eqlNorm(self: *Self, other: []const u8) !bool {
     var arena = std.heap.ArenaAllocator.init(self.allocator);
     defer arena.deinit();
 
-    if (self.decomp_map == null) {
-        self.decomp_map = try DecomposeMap.init(self.allocator);
-    }
-    const norm_a = try self.decomp_map.?.normalizeTo(&arena.allocator, .KD, self.bytes);
-    const norm_b = try self.decomp_map.?.normalizeTo(&arena.allocator, .KD, other);
+    const norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .KD, self.bytes);
+    const norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .KD, other);
 
     return mem.eql(u8, norm_a, norm_b);
 }
@@ -295,17 +288,14 @@ fn eqlNormIgnore(self: *Self, other: []const u8) !bool {
     var arena = std.heap.ArenaAllocator.init(self.allocator);
     defer arena.deinit();
 
-    if (self.decomp_map == null) {
-        self.decomp_map = try DecomposeMap.init(self.allocator);
-    }
     // The long winding road of normalized caseless matching...
     // NFD(CaseFold(NFD(str)))
-    var norm_a = try self.decomp_map.?.normalizeTo(&arena.allocator, .D, self.bytes);
+    var norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .D, self.bytes);
     var cf_a = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_a);
-    norm_a = try self.decomp_map.?.normalizeTo(&arena.allocator, .D, cf_a);
-    var norm_b = try self.decomp_map.?.normalizeTo(&arena.allocator, .D, other);
+    norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .D, cf_a);
+    var norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .D, other);
     var cf_b = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_b);
-    norm_b = try self.decomp_map.?.normalizeTo(&arena.allocator, .D, cf_b);
+    norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .D, cf_b);
 
     return mem.eql(u8, norm_a, norm_b);
 }

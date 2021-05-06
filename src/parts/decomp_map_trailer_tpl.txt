@@ -5,16 +5,6 @@ pub const Form = enum {
     KD, // Compatibility Decomposition
 };
 
-pub fn deinit(self: *Self) void {
-    if (singleton) |*s| {
-        s.ref_count -= 1;
-        if (s.ref_count == 0) {
-            self.allocator.destroy(s.instance);
-            singleton = null;
-        }
-    }
-}
-
 /// codePointTo takes a code point and returns a sequence of code points that represent its conversion 
 /// to the specified Form. Caller must free returned bytes.
 pub fn codePointTo(self: Self, allocator: *mem.Allocator, form: Form, cp: u21) anyerror![]u21 {
@@ -266,8 +256,7 @@ fn allDone(dcs: []const Decomposed) bool {
 
 test "Decomp codePointTo D" {
     var allocator = std.testing.allocator;
-    var decomp_map = try init(allocator);
-    defer decomp_map.deinit();
+    var decomp_map = new();
 
     var result = try decomp_map.codePointTo(allocator, .D, '\u{00E9}');
     defer allocator.free(result);
@@ -280,8 +269,7 @@ test "Decomp codePointTo D" {
 
 test "Decomp codePointTo KD" {
     var allocator = std.testing.allocator;
-    var decomp_map = try init(allocator);
-    defer decomp_map.deinit();
+    var decomp_map = new();
 
     var result = try decomp_map.codePointTo(allocator, .KD, '\u{00E9}');
     defer allocator.free(result);
@@ -294,8 +282,7 @@ test "Decomp codePointTo KD" {
 
 test "Decomp normalizeTo" {
     var allocator = std.testing.allocator;
-    var decomp_map = try init(allocator);
-    defer decomp_map.deinit();
+    var decomp_map = new();
 
     var file = try std.fs.cwd().openFile("src/data/ucd/NormalizationTest.txt", .{});
     defer file.close();
