@@ -8,10 +8,26 @@ const unicode = std.unicode;
 
 const CccMap = @import("../DerivedCombiningClass/CccMap.zig");
 const HangulMap = @import("../HangulSyllableType/HangulMap.zig");
+const NFDCheck = @import("../DerivedNormalizationProps/NFDCheck.zig");
+
+/// Decomposed is the result of a code point full decomposition. It can be one of:
+/// * .src: Sorce code point.
+/// * .same : Default canonical decomposition to the code point itself.
+/// * .single : Singleton canonical decomposition to a different single code point.
+/// * .canon : Canonical decomposition, which always results in two code points.
+/// * .compat : Compatibility decomposition, which can results in at most 18 code points.
+pub const Decomposed = union(enum) {
+    src: u21,
+    same: u21,
+    single: u21,
+    canon: [2]u21,
+    compat: []const u21,
+};
 
 allocator: *mem.Allocator,
 ccc_map: CccMap,
 hangul_map: HangulMap,
+nfd_check: NFDCheck,
 
 const Self = @This();
 
@@ -34,6 +50,7 @@ pub fn init(allocator: *mem.Allocator) !*Self {
         .allocator = allocator,
         .ccc_map = CccMap{},
         .hangul_map = HangulMap{},
+        .nfd_check = NFDCheck{},
     };
 
     singleton = Singleton{
@@ -43,25 +60,6 @@ pub fn init(allocator: *mem.Allocator) !*Self {
 
     return instance;
 }
-
-/// Decomposed is the result of a code point full decomposition. It can be one of:
-/// * .src: Sorce code point.
-/// * .same : Default canonical decomposition to the code point itself.
-/// * .single : Singleton canonical decomposition to a different single code point.
-/// * .canon : Canonical decomposition, which always results in two code points.
-/// * .compat : Compatibility decomposition, which can results in at most 18 code points.
-pub const Decomposed = union(enum) {
-    src: u21,
-    same: u21,
-    single: u21,
-    canon: [2]u21,
-    compat: []const u21,
-};
-
-pub const Form = enum {
-    D, // Canonical Decomposition
-    KD, // Compatibility Decomposition
-};
 
 /// mapping retrieves the decomposition mapping for a code point as per the UCD.
 pub fn mapping(self: Self, cp: u21) Decomposed {
@@ -18012,6 +18010,11 @@ pub fn mapping(self: Self, cp: u21) Decomposed {
     return .{ .same = cp };
 }
 
+pub const Form = enum {
+    D, // Canonical Decomposition
+    KD, // Compatibility Decomposition
+};
+
 pub fn deinit(self: *Self) void {
     if (singleton) |*s| {
         s.ref_count -= 1;
@@ -18158,36 +18161,61 @@ fn decompKD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anye
     return rdcs.toOwnedSlice();
 }
 
+fn finalizeAndEncode(self: Self, allocator: *mem.Allocator, code_points: []u21) ![]u8 {
+    var result = std.ArrayList(u8).init(allocator);
+    defer result.deinit();
+
+    // Apply canonical sort algorithm.
+    self.canonicalSort(code_points);
+
+    // Encode as UTF-8 code units.
+    var buf: [4]u8 = undefined;
+    for (code_points) |dcp| {
+        const len = try unicode.utf8Encode(dcp, &buf);
+        try result.appendSlice(buf[0..len]);
+    }
+
+    return result.toOwnedSlice();
+}
+
 /// normalizeTo will normalize the code points in str, producing a slice of u8 with the new bytes
 /// corresponding to the specified Normalization Form. Caller must free returned bytes.
 pub fn normalizeTo(self: *Self, allocator: *mem.Allocator, form: Form, str: []const u8) anyerror![]u8 {
     if (form != .D and form != .KD) return error.FormUnimplemented;
 
-    var result = std.ArrayList(u8).init(allocator);
-    defer result.deinit();
+    // Gather source code points.
     var code_points = std.ArrayList(u21).init(allocator);
     defer code_points.deinit();
 
-    // Gather decomposed code points.
     var iter = (try unicode.Utf8View.init(str)).iterator();
+
     while (iter.nextCodepoint()) |cp| {
+        try code_points.append(cp);
+    }
+
+    // NFD Quick Check.
+    if (form == .D) {
+        var already_nfd = true;
+
+        for (code_points.items) |cp| {
+            if (!self.nfd_check.isNFD(cp)) already_nfd = false;
+        }
+
+        // Already NFD, nothing more to do.
+        if (already_nfd) return self.finalizeAndEncode(allocator, code_points.items);
+    }
+
+    var d_code_points = std.ArrayList(u21).init(allocator);
+    defer d_code_points.deinit();
+
+    // Gather decomposed code points.
+    for (code_points.items) |cp| {
         const cp_slice = try self.codePointTo(allocator, form, cp);
         defer allocator.free(cp_slice);
-        try code_points.appendSlice(cp_slice);
+        try d_code_points.appendSlice(cp_slice);
     }
 
-    // Apply canonical sort algorithm.
-    self.canonicalSort(code_points.items);
-
-    // Encode as UTF-8 code units.
-    var buf: [4]u8 = undefined;
-    for (code_points.items) |dcp| {
-        const len = try unicode.utf8Encode(dcp, &buf);
-        try result.appendSlice(buf[0..len]);
-    }
-
-    // NFKD result.
-    return result.toOwnedSlice();
+    return self.finalizeAndEncode(allocator, d_code_points.items);
 }
 
 fn cccLess(self: Self, lhs: u21, rhs: u21) bool {

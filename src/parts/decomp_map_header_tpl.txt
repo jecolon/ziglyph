@@ -8,10 +8,26 @@ const unicode = std.unicode;
 
 const CccMap = @import("../DerivedCombiningClass/CccMap.zig");
 const HangulMap = @import("../HangulSyllableType/HangulMap.zig");
+const NFDCheck = @import("../DerivedNormalizationProps/NFDCheck.zig");
+
+/// Decomposed is the result of a code point full decomposition. It can be one of:
+/// * .src: Sorce code point.
+/// * .same : Default canonical decomposition to the code point itself.
+/// * .single : Singleton canonical decomposition to a different single code point.
+/// * .canon : Canonical decomposition, which always results in two code points.
+/// * .compat : Compatibility decomposition, which can results in at most 18 code points.
+pub const Decomposed = union(enum) {
+    src: u21,
+    same: u21,
+    single: u21,
+    canon: [2]u21,
+    compat: []const u21,
+};
 
 allocator: *mem.Allocator,
 ccc_map: CccMap,
 hangul_map: HangulMap,
+nfd_check: NFDCheck,
 
 const Self = @This();
 
@@ -34,6 +50,7 @@ pub fn init(allocator: *mem.Allocator) !*Self {
         .allocator = allocator,
         .ccc_map = CccMap{},
         .hangul_map = HangulMap{},
+        .nfd_check = NFDCheck{},
     };
 
     singleton = Singleton{
@@ -43,25 +60,6 @@ pub fn init(allocator: *mem.Allocator) !*Self {
 
     return instance;
 }
-
-/// Decomposed is the result of a code point full decomposition. It can be one of:
-/// * .src: Sorce code point.
-/// * .same : Default canonical decomposition to the code point itself.
-/// * .single : Singleton canonical decomposition to a different single code point.
-/// * .canon : Canonical decomposition, which always results in two code points.
-/// * .compat : Compatibility decomposition, which can results in at most 18 code points.
-pub const Decomposed = union(enum) {
-    src: u21,
-    same: u21,
-    single: u21,
-    canon: [2]u21,
-    compat: []const u21,
-};
-
-pub const Form = enum {
-    D, // Canonical Decomposition
-    KD, // Compatibility Decomposition
-};
 
 /// mapping retrieves the decomposition mapping for a code point as per the UCD.
 pub fn mapping(self: Self, cp: u21) Decomposed {
