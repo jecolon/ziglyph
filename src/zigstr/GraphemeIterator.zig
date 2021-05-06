@@ -6,13 +6,14 @@ const mem = std.mem;
 const unicode = std.unicode;
 
 const CodePointIterator = @import("CodePointIterator.zig");
-pub const Control = @import("../components.zig").Control;
-pub const Extend = @import("../components.zig").Extend;
-pub const ExtPic = @import("../components.zig").ExtPic;
-pub const HangulMap = @import("../components.zig").HangulMap;
-pub const Prepend = @import("../components.zig").Prepend;
-pub const Regional = @import("../components.zig").Regional;
-pub const Spacing = @import("../components.zig").Spacing;
+const Control = @import("../components.zig").Control;
+const Extend = @import("../components.zig").Extend;
+const ExtPic = @import("../components.zig").ExtPic;
+pub const Grapheme = @import("Grapheme.zig");
+const HangulMap = @import("../components.zig").HangulMap;
+const Prepend = @import("../components.zig").Prepend;
+const Regional = @import("../components.zig").Regional;
+const Spacing = @import("../components.zig").Spacing;
 
 control: Control,
 cp_iter: CodePointIterator,
@@ -56,14 +57,6 @@ const LF: u21 = 0x000A;
 const Slice = struct {
     start: usize,
     end: usize,
-};
-
-pub const Grapheme = struct {
-    bytes: []const u8,
-
-    pub fn eql(self: Grapheme, str: []const u8) bool {
-        return mem.eql(u8, self.bytes, str);
-    }
 };
 
 /// next retrieves the next grapheme cluster.
