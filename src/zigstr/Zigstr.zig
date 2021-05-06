@@ -145,9 +145,6 @@ pub fn codePointCount(self: *Self) usize {
     return self.cp_count;
 }
 
-const expectEqual = std.testing.expectEqual;
-const expectEqualSlices = std.testing.expectEqualSlices;
-
 /// graphemeIter returns a grapheme cluster iterator based on the bytes of this Zigstr. Each grapheme
 /// can be composed of multiple code points, so the next method returns a slice of bytes.
 pub fn graphemeIter(self: *Self) !GraphemeIterator {
@@ -184,8 +181,6 @@ pub fn graphemeCount(self: *Self) !usize {
     }
 }
 
-const expectEqualStrings = std.testing.expectEqualStrings;
-
 /// copy a Zigstr to a new Zigstr. Don't forget to to `deinit` the returned Zigstr!
 pub fn copy(self: Self) !Self {
     return init(self.allocator, self.bytes);
@@ -195,8 +190,6 @@ pub fn copy(self: Self) !Self {
 pub fn sameAs(self: Self, other: Self) bool {
     return self.eql(other.bytes);
 }
-
-const expect = std.testing.expect;
 
 pub const CmpMode = enum {
     ignore_case,
@@ -229,7 +222,10 @@ pub fn eqlBy(self: *Self, other: []const u8, mode: CmpMode) !bool {
         if (ascii_only) {
             // ASCII case insensitive.
             for (self.bytes) |c, i| {
-                if (ascii.toLower(c) != ascii.toLower(other[i])) return false;
+                const oc = other[i];
+                const lc = if (c >= 'A' and c <= 'Z') c ^ 32 else c;
+                const olc = if (oc >= 'A' and oc <= 'Z') oc ^ 32 else oc;
+                if (lc != olc) return false;
             }
             return true;
         }
@@ -313,20 +309,17 @@ pub fn isAsciiStr(str: []const u8) !bool {
 
 /// trimLeft removes `str` from the left of this Zigstr, mutating it.
 pub fn trimLeft(self: *Self, str: []const u8) !void {
-    const trimmed = mem.trimLeft(u8, self.bytes, str);
-    try self.reset(trimmed);
+    try self.reset(mem.trimLeft(u8, self.bytes, str));
 }
 
 /// trimRight removes `str` from the right of this Zigstr, mutating it.
 pub fn trimRight(self: *Self, str: []const u8) !void {
-    const trimmed = mem.trimRight(u8, self.bytes, str);
-    try self.reset(trimmed);
+    try self.reset(mem.trimRight(u8, self.bytes, str));
 }
 
 /// trim removes `str` from both the left and right of this Zigstr, mutating it.
 pub fn trim(self: *Self, str: []const u8) !void {
-    const trimmed = mem.trim(u8, self.bytes, str);
-    try self.reset(trimmed);
+    try self.reset(mem.trim(u8, self.bytes, str));
 }
 
 /// indexOf returns the index of `needle` in this Zigstr or null if not found.
@@ -502,8 +495,6 @@ pub fn graphemeAt(self: *Self, i: usize) !Grapheme {
     return gcs[i];
 }
 
-const expectError = std.testing.expectError;
-
 /// byteSlice returnes the bytes from this Zigstr in the specified range from `start` to `end` - 1.
 pub fn byteSlice(self: Self, start: usize, end: usize) ![]const u8 {
     if (start >= self.bytes.len or end > self.bytes.len) return error.IndexOutOfBounds;
@@ -643,6 +634,12 @@ pub fn format(self: Self, comptime fmt: []const u8, options: std.fmt.FormatOptio
 pub fn width(self: *Self) !usize {
     return self.widths.strWidth(self.bytes, .half);
 }
+
+const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
+const expectEqualSlices = std.testing.expectEqualSlices;
+const expectEqualStrings = std.testing.expectEqualStrings;
+const expectError = std.testing.expectError;
 
 test "Zigstr code points" {
     var str = try init(std.testing.allocator, "Héllo");
