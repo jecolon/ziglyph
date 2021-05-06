@@ -258,8 +258,8 @@ fn eqlNorm(self: *Self, other: []const u8) !bool {
     var arena = std.heap.ArenaAllocator.init(self.allocator);
     defer arena.deinit();
 
-    const norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .KD, self.bytes);
-    const norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .KD, other);
+    const norm_a = try self.decomp_map.normalizeTo(&arena.allocator, .D, self.bytes);
+    const norm_b = try self.decomp_map.normalizeTo(&arena.allocator, .D, other);
 
     return mem.eql(u8, norm_a, norm_b);
 }
@@ -709,7 +709,7 @@ test "Zigstr eql" {
     expect(try str.eqlBy("foe\u{0301}", .normalize));
 
     try str.reset("foϓ");
-    expect(try str.eqlBy("foΥ\u{0301}", .normalize));
+    expect(try str.eqlBy("fo\u{03D2}\u{0301}", .normalize));
 
     try str.reset("Foϓ");
     expect(try str.eqlBy("fo\u{03D2}\u{0301}", .norm_ignore));
