@@ -25,7 +25,7 @@ spacing: Spacing,
 
 const Self = @This();
 
-pub fn init(allocator: *mem.Allocator, str: []const u8) !Self {
+pub fn new(str: []const u8) !Self {
     return Self{
         .control = Control{},
         .cp_iter = try CodePointIterator.init(str),
@@ -37,8 +37,6 @@ pub fn init(allocator: *mem.Allocator, str: []const u8) !Self {
         .spacing = Spacing{},
     };
 }
-
-pub fn deinit(self: *Self) void {}
 
 /// reinit reinitializes the iterator with a new string.
 pub fn reinit(self: *Self, str: []const u8) !void {
@@ -244,11 +242,6 @@ test "Grapheme iterator" {
     var buf: [640]u8 = undefined;
     var line_no: usize = 1;
 
-    var giter: ?Self = null;
-    defer {
-        if (giter) |*gi| gi.deinit();
-    }
-
     while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |raw| : (line_no += 1) {
         // Skip comments or empty lines.
         if (raw.len == 0 or raw[0] == '#' or raw[0] == '@') continue;
@@ -297,15 +290,11 @@ test "Grapheme iterator" {
             bytes_index += cp_index;
         }
 
-        if (giter) |*gi| {
-            try gi.reinit(all_bytes.items);
-        } else {
-            giter = try init(allocator, all_bytes.items);
-        }
+        var giter = try new(all_bytes.items);
 
         // Chaeck.
         for (want.items) |w| {
-            const g = (giter.?.next()).?;
+            const g = (giter.next()).?;
             //std.debug.print("line {d}: w:({s}), g:({s})\n", .{ line_no, w.bytes, g.bytes });
             std.testing.expectEqualStrings(w.bytes, g.bytes);
         }

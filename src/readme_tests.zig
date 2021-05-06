@@ -102,8 +102,7 @@ test "normalizeTo" {
 }
 
 test "GraphemeIterator" {
-    var giter = try GraphemeIterator.init(std.testing.allocator, "H\u{0065}\u{0301}llo");
-    defer giter.deinit();
+    var giter = try GraphemeIterator.new("H\u{0065}\u{0301}llo");
 
     const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
 
@@ -114,8 +113,7 @@ test "GraphemeIterator" {
 }
 
 test "Code point / string widths" {
-    var width = try Width.init(std.testing.allocator);
-    defer width.deinit();
+    var width = Width.new();
 
     expectEqual(width.codePointWidth('é', .half), 1);
     expectEqual(width.codePointWidth('😊', .half), 2);

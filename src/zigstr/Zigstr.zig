@@ -21,9 +21,8 @@ code_points: ?[]u21,
 cp_count: usize,
 decomp_map: DecomposeMap,
 grapheme_clusters: ?[]Grapheme,
-giter: ?GraphemeIterator,
 letter: *Letter,
-widths: ?*Width,
+widths: Width,
 
 /// new creates a new Zigstr instance.
 pub fn init(allocator: *mem.Allocator, str: []const u8) !Self { // Self is Zigstr
@@ -39,9 +38,8 @@ pub fn init(allocator: *mem.Allocator, str: []const u8) !Self { // Self is Zigst
         .cp_count = 0,
         .decomp_map = DecomposeMap.new(),
         .grapheme_clusters = null,
-        .giter = null,
         .letter = try Letter.init(allocator),
-        .widths = null,
+        .widths = Width.new(),
     };
 
     // Validates UTF-8, sets cp_count and ascii_only.
@@ -58,16 +56,8 @@ pub fn deinit(self: *Self) void {
         self.allocator.free(code_points);
     }
 
-    if (self.giter) |*giter| {
-        giter.deinit();
-    }
-
     if (self.grapheme_clusters) |gcs| {
         self.allocator.free(gcs);
-    }
-
-    if (self.widths) |widths| {
-        widths.deinit();
     }
 }
 
@@ -80,10 +70,6 @@ pub fn reset(self: *Self, str: []const u8) !void {
     // Free and reset old content.
     if (self.code_points) |code_points| {
         self.allocator.free(code_points);
-    }
-
-    if (self.giter) |*giter| {
-        try giter.reinit(bytes);
     }
 
     if (self.grapheme_clusters) |gcs| {
@@ -165,14 +151,8 @@ const expectEqualSlices = std.testing.expectEqualSlices;
 
 /// graphemeIter returns a grapheme cluster iterator based on the bytes of this Zigstr. Each grapheme
 /// can be composed of multiple code points, so the next method returns a slice of bytes.
-pub fn graphemeIter(self: *Self) !*GraphemeIterator {
-    if (self.giter) |*giter| {
-        giter.reset();
-        return giter;
-    } else {
-        self.giter = try GraphemeIterator.init(self.allocator, self.bytes);
-        return &self.giter.?;
-    }
+pub fn graphemeIter(self: *Self) !GraphemeIterator {
+    return GraphemeIterator.new(self.bytes);
 }
 
 /// graphemes returns the grapheme clusters that make up this Zigstr.
@@ -662,10 +642,7 @@ pub fn format(self: Self, comptime fmt: []const u8, options: std.fmt.FormatOptio
 
 /// width returns the cells (or columns) this Zigstr would occupy in a fixed-width context.
 pub fn width(self: *Self) !usize {
-    if (self.widths == null) {
-        self.widths = try Width.init(self.allocator);
-    }
-    return self.widths.?.strWidth(self.bytes, .half);
+    return self.widths.strWidth(self.bytes, .half);
 }
 
 test "Zigstr code points" {

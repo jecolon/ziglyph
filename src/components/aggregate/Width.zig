@@ -14,63 +14,26 @@ const Nonspacing = @import("../../components.zig").Nonspacing;
 
 const Self = @This();
 
-allocator: *mem.Allocator,
 ambiguous: Ambiguous,
 enclosing: Enclosing,
 extpic: ExtPic,
 format: Format,
 fullwidth: Fullwidth,
-giter: GraphemeIterator,
 nonspacing: Nonspacing,
 regional: Regional,
 wide: Wide,
 
-const Singleton = struct {
-    instance: *Self,
-    ref_count: usize,
-};
-
-var singleton: ?Singleton = null;
-
-pub fn init(allocator: *mem.Allocator) !*Self {
-    if (singleton) |*s| {
-        s.ref_count += 1;
-        return s.instance;
-    }
-
-    var instance = try allocator.create(Self);
-
-    instance.* = Self{
-        .allocator = allocator,
+pub fn new() Self {
+    return Self{
         .ambiguous = Ambiguous{},
         .enclosing = Enclosing{},
         .extpic = ExtPic{},
         .format = Format{},
         .fullwidth = Fullwidth{},
-        .giter = try GraphemeIterator.init(allocator, ""),
         .nonspacing = Nonspacing{},
         .regional = Regional{},
         .wide = Wide{},
     };
-
-    singleton = Singleton{
-        .instance = instance,
-        .ref_count = 1,
-    };
-
-    return instance;
-}
-
-pub fn deinit(self: *Self) void {
-    if (singleton) |*s| {
-        s.ref_count -= 1;
-        if (s.ref_count == 0) {
-            self.giter.deinit();
-
-            self.allocator.destroy(s.instance);
-            singleton = null;
-        }
-    }
 }
 
 /// AmbiguousWidth determines the width of ambiguous characters according to the context. In an 
@@ -133,9 +96,9 @@ pub fn codePointWidth(self: Self, cp: u21, am_width: AmbiguousWidth) i8 {
 pub fn strWidth(self: *Self, str: []const u8, am_width: AmbiguousWidth) !usize {
     var total: isize = 0;
 
-    try self.giter.reinit(str);
+    var giter = try GraphemeIterator.new(str);
 
-    while (self.giter.next()) |gc| {
+    while (giter.next()) |gc| {
         var cp_iter = (try unicode.Utf8View.init(gc.bytes)).iterator();
 
         while (cp_iter.nextCodepoint()) |cp| {
@@ -159,8 +122,7 @@ pub fn strWidth(self: *Self, str: []const u8, am_width: AmbiguousWidth) !usize {
 const expectEqual = std.testing.expectEqual;
 
 test "Grapheme Width" {
-    var width = try init(std.testing.allocator);
-    defer width.deinit();
+    var width = new();
 
     expectEqual(@as(i8, -1), width.codePointWidth(0x0008, .half)); // \b DEL
     expectEqual(@as(i8, 0), width.codePointWidth(0x0000, .half)); // null
