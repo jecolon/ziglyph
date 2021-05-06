@@ -102,8 +102,7 @@ const DecomposeMap = @import("Ziglyph").DecomposeMap;
 
 test "normalizeTo" {
     var allocator = std.testing.allocator;
-    var decomp_map = try DecomposeMap.init(allocator);
-    defer decomp_map.deinit();
+    var decomp_map = DecomposeMap.new();
 
     // Canonical (NFD)
     var input = "Complex char: \u{03D3}";

@@ -73,7 +73,7 @@ test "Zigstr README tests" {
     expect(try str.eqlBy("foΥ\u{0301}", .normalize));
 
     try str.reset("Foϓ");
-    expect(try str.eqlBy("foΥ\u{0301}", .norm_ignore));
+    expect(try str.eqlBy("fo\u{03D2}\u{0301}", .norm_ignore));
 
     try str.reset("FOÉ");
     expect(try str.eqlBy("foe\u{0301}", .norm_ignore)); // foÉ == foé

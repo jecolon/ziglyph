@@ -45,12 +45,9 @@ test "Aggregate struct" {
 }
 
 test "Component structs" {
-    var lower = try Lower.init(std.testing.allocator);
-    defer lower.deinit();
-    var upper = try Upper.init(std.testing.allocator);
-    defer upper.deinit();
-    var upper_map = try UpperMap.init(std.testing.allocator);
-    defer upper_map.deinit();
+    var lower = Lower{};
+    var upper = Upper{};
+    var upper_map = UpperMap{};
 
     const z = 'z';
     expect(lower.isLowercase(z));
@@ -62,8 +59,7 @@ test "Component structs" {
 
 test "decomposeTo" {
     var allocator = std.testing.allocator;
-    var decomp_map = try DecomposeMap.init(allocator);
-    defer decomp_map.deinit();
+    var decomp_map = DecomposeMap.new();
 
     const Decomposed = DecomposeMap.Decomposed;
 
@@ -88,8 +84,7 @@ test "decomposeTo" {
 
 test "normalizeTo" {
     var allocator = std.testing.allocator;
-    var decomp_map = try DecomposeMap.init(allocator);
-    defer decomp_map.deinit();
+    var decomp_map = DecomposeMap.new();
 
     // Canonical (NFD)
     var input = "Complex char: \u{03D3}";
