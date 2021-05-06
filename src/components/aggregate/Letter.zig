@@ -1,5 +1,4 @@
 const std = @import("std");
-const mem = std.mem;
 
 pub const CaseFoldMap = @import("../../components.zig").CaseFoldMap;
 pub const Cased = @import("../../components.zig").Cased;
@@ -14,7 +13,6 @@ pub const UpperMap = @import("../../components.zig").UpperMap;
 
 const Self = @This();
 
-allocator: *mem.Allocator,
 fold_map: CaseFoldMap,
 cased: Cased,
 lower: Lower,
@@ -26,23 +24,8 @@ title_map: TitleMap,
 upper: Upper,
 upper_map: UpperMap,
 
-const Singleton = struct {
-    instance: *Self,
-    ref_count: usize,
-};
-
-var singleton: ?Singleton = null;
-
-pub fn init(allocator: *mem.Allocator) !*Self {
-    if (singleton) |*s| {
-        s.ref_count += 1;
-        return s.instance;
-    }
-
-    var instance = try allocator.create(Self);
-
-    instance.* = Self{
-        .allocator = allocator,
+pub fn new() Self {
+    return Self{
         .fold_map = CaseFoldMap{},
         .cased = Cased{},
         .lower = Lower{},
@@ -54,23 +37,6 @@ pub fn init(allocator: *mem.Allocator) !*Self {
         .upper = Upper{},
         .upper_map = UpperMap{},
     };
-
-    singleton = Singleton{
-        .instance = instance,
-        .ref_count = 1,
-    };
-
-    return instance;
-}
-
-pub fn deinit(self: *Self) void {
-    if (singleton) |*s| {
-        s.ref_count -= 1;
-        if (s.ref_count == 0) {
-            self.allocator.destroy(s.instance);
-            singleton = null;
-        }
-    }
 }
 
 /// isCased detects cased letters.
@@ -172,8 +138,7 @@ const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 
 test "Component struct" {
-    var letter = try init(std.testing.allocator);
-    defer letter.deinit();
+    var letter = new();
 
     const z = 'z';
     expect(letter.isLetter(z));
@@ -184,8 +149,7 @@ test "Component struct" {
 }
 
 test "Component isCased" {
-    var letter = try init(std.testing.allocator);
-    defer letter.deinit();
+    var letter = new();
 
     expect(letter.isCased('a'));
     expect(letter.isCased('A'));
@@ -193,8 +157,7 @@ test "Component isCased" {
 }
 
 test "Component isLower" {
-    var letter = try init(std.testing.allocator);
-    defer letter.deinit();
+    var letter = new();
 
     expect(letter.isLower('a'));
     expect(letter.isLower('é'));
@@ -209,8 +172,7 @@ test "Component isLower" {
 const expectEqualSlices = std.testing.expectEqualSlices;
 
 test "Component toCaseFold" {
-    var letter = try init(std.testing.allocator);
-    defer letter.deinit();
+    var letter = new();
 
     var result = letter.toCaseFold('A');
     expectEqualSlices(u21, &[_]u21{ 'a', 0, 0 }, &result);
@@ -229,8 +191,7 @@ test "Component toCaseFold" {
 }
 
 test "Component toLower" {
-    var letter = try init(std.testing.allocator);
-    defer letter.deinit();
+    var letter = new();
 
     expectEqual(letter.toLower('a'), 'a');
     expectEqual(letter.toLower('A'), 'a');
@@ -245,8 +206,7 @@ test "Component toLower" {
 }
 
 test "Component isUpper" {
-    var letter = try init(std.testing.allocator);
-    defer letter.deinit();
+    var letter = new();
 
     expect(!letter.isUpper('a'));
     expect(!letter.isUpper('é'));
@@ -259,8 +219,7 @@ test "Component isUpper" {
 }
 
 test "Component toUpper" {
-    var letter = try init(std.testing.allocator);
-    defer letter.deinit();
+    var letter = new();
 
     expectEqual(letter.toUpper('a'), 'A');
     expectEqual(letter.toUpper('A'), 'A');
@@ -273,8 +232,7 @@ test "Component toUpper" {
 }
 
 test "Component isTitle" {
-    var letter = try init(std.testing.allocator);
-    defer letter.deinit();
+    var letter = new();
 
     expect(!letter.isTitle('a'));
     expect(!letter.isTitle('é'));
@@ -287,8 +245,7 @@ test "Component isTitle" {
 }
 
 test "Component toTitle" {
-    var letter = try init(std.testing.allocator);
-    defer letter.deinit();
+    var letter = new();
 
     expectEqual(letter.toTitle('a'), 'A');
     expectEqual(letter.toTitle('A'), 'A');
@@ -298,8 +255,7 @@ test "Component toTitle" {
 }
 
 test "Component isLetter" {
-    var letter = try init(std.testing.allocator);
-    defer letter.deinit();
+    var letter = new();
 
     var cp: u21 = 'a';
     while (cp <= 'z') : (cp += 1) {

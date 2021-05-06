@@ -21,10 +21,10 @@ code_points: ?[]u21,
 cp_count: usize,
 decomp_map: DecomposeMap,
 grapheme_clusters: ?[]Grapheme,
-letter: *Letter,
+letter: Letter,
 widths: Width,
 
-/// new creates a new Zigstr instance.
+/// init creates a new Zigstr instance.
 pub fn init(allocator: *mem.Allocator, str: []const u8) !Self { // Self is Zigstr
     var zigstr = Self{
         .allocator = allocator,
@@ -38,7 +38,7 @@ pub fn init(allocator: *mem.Allocator, str: []const u8) !Self { // Self is Zigst
         .cp_count = 0,
         .decomp_map = DecomposeMap.new(),
         .grapheme_clusters = null,
-        .letter = try Letter.init(allocator),
+        .letter = Letter.new(),
         .widths = Width.new(),
     };
 
@@ -49,7 +49,6 @@ pub fn init(allocator: *mem.Allocator, str: []const u8) !Self { // Self is Zigst
 }
 
 pub fn deinit(self: *Self) void {
-    self.letter.deinit();
     self.allocator.free(self.bytes);
 
     if (self.code_points) |code_points| {

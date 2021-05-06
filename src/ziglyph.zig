@@ -72,34 +72,26 @@ pub const Zigstr = @import("components.zig").Zigstr;
 pub const Ziglyph = struct {
     alphabetic: Alphabetic,
     control: Control,
-    letter: *Letter,
-    mark: *Mark,
-    number: *Number,
-    punct: *Punct,
+    letter: Letter,
+    mark: Mark,
+    number: Number,
+    punct: Punct,
     space: WhiteSpace,
-    symbol: *Symbol,
+    symbol: Symbol,
 
     const Self = @This();
 
-    pub fn init(allocator: *mem.Allocator) !Self {
+    pub fn new() Self {
         return Self{
             .alphabetic = Alphabetic{},
             .control = Control{},
-            .letter = try Letter.init(allocator),
-            .mark = try Mark.init(allocator),
-            .number = try Number.init(allocator),
-            .punct = try Punct.init(allocator),
+            .letter = Letter.new(),
+            .mark = Mark.new(),
+            .number = Number.new(),
+            .punct = Punct.new(),
             .space = WhiteSpace{},
-            .symbol = try Symbol.init(allocator),
+            .symbol = Symbol.new(),
         };
-    }
-
-    pub fn deinit(self: *Self) void {
-        self.letter.deinit();
-        self.mark.deinit();
-        self.number.deinit();
-        self.punct.deinit();
-        self.symbol.deinit();
     }
 
     pub fn isAlphabetic(self: Self, cp: u21) bool {
@@ -292,8 +284,7 @@ test "Ziglyph ASCII methods" {
 }
 
 test "Ziglyph struct" {
-    var ziglyph = try Ziglyph.init(std.testing.allocator);
-    defer ziglyph.deinit();
+    var ziglyph = Ziglyph.new();
 
     const z = 'z';
     expect(ziglyph.isAlphaNum(z));
@@ -324,8 +315,7 @@ test "Ziglyph struct" {
 }
 
 test "Ziglyph isGraphic" {
-    var ziglyph = try Ziglyph.init(std.testing.allocator);
-    defer ziglyph.deinit();
+    var ziglyph = Ziglyph.new();
 
     expect(ziglyph.isGraphic('A'));
     expect(ziglyph.isGraphic('\u{20E4}'));
@@ -337,8 +327,7 @@ test "Ziglyph isGraphic" {
 }
 
 test "Ziglyph isHexDigit" {
-    var ziglyph = try Ziglyph.init(std.testing.allocator);
-    defer ziglyph.deinit();
+    var ziglyph = Ziglyph.new();
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
@@ -360,8 +349,7 @@ test "Ziglyph isHexDigit" {
 }
 
 test "Ziglyph isPrint" {
-    var ziglyph = try Ziglyph.init(std.testing.allocator);
-    defer ziglyph.deinit();
+    var ziglyph = Ziglyph.new();
 
     expect(ziglyph.isPrint('A'));
     expect(ziglyph.isPrint('\u{20E4}'));
@@ -374,8 +362,7 @@ test "Ziglyph isPrint" {
 }
 
 test "Ziglyph isAlphaNum" {
-    var ziglyph = try Ziglyph.init(std.testing.allocator);
-    defer ziglyph.deinit();
+    var ziglyph = Ziglyph.new();
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
@@ -396,8 +383,7 @@ test "Ziglyph isAlphaNum" {
 }
 
 test "Ziglyph isControl" {
-    var ziglyph = try Ziglyph.init(std.testing.allocator);
-    defer ziglyph.deinit();
+    var ziglyph = Ziglyph.new();
 
     expect(ziglyph.isControl('\n'));
     expect(ziglyph.isControl('\r'));

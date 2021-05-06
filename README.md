@@ -51,8 +51,7 @@ The `Ziglyph` struct provides convenient acces to the most frequently-used funct
 const Ziglyph = @import("Ziglyph").Ziglyph;
 
 test "Ziglyph struct" {
-    var ziglyph = try Ziglyph.init(std.testing.allocator);
-    defer ziglyph.deinit();
+    var ziglyph = Ziglyph.new();
 
     const z = 'z';
     expect(ziglyph.isLetter(z));
@@ -75,10 +74,8 @@ const Letter = @import("Ziglyph").Letter;
 const Punct = @import("Ziglyph").Punct;
 
 test "Aggregate struct" {
-    var letter = try Letter.init(std.testing.allocator);
-    defer letter.deinit();
-    var punct = try Punct.init(std.testing.allocator);
-    defer punct.deinit();
+    var letter = Letter.new();
+    var punct = Punct.new();
 
     const z = 'z';
     expect(letter.isLetter(z));

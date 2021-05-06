@@ -6,32 +6,10 @@ Zigstr tries to emphasize the clear distinction between bytes (`u8`), code point
 grapheme clusters (`[]const u8`) as per the Unicode standard. Note that the term *character* is glaringly
 missing here, as it tends to produce more confusion than clarity, and in fact Unicode has no concrete 
 *character* concept, only abstract characters are broadly mentioned. The closes concrete element resembling
-a human-readable *character* is the Grapheme Cluster, which Zigstr handles as sub-slices of bytes.
+a human-readable *character* is the Grapheme Cluster, represented here as the `Grapheme` type returned
+from each call to the `next` method on a `GraphemeIterator` (see sample code below).
 
 ## Usage
-The usual pattern of `init` and `deinit` is used, but given the large datasets that are involved in
-initializing a new `Zigstr`, unless you need more than one instance at a time, it is **strongly** recommended
-to reuse an existing instance via the `reset` method. This reuses the existing datasets in memory,
-avoiding de-allocating and re-allocating, which is extremely costly in terms of performance. Here's
-an example of iterating over the lines in a file:
-
-```zig
-    // Initialize the single Zigstr for re-use, outside of the loop.
-    var str = try Zigstr.init(allocator, "");
-    defer str.deinit();
-
-    var buf: [1024]u8 = undefined;
-
-    while (try buf_reader.readUntilDelimiterOrEof(&buf, '\n')) |line| {
-        // Re-use the Zigstr in the loop, avoiding costly allocations.
-        try str.reset(line);
-
-        // do stuff with str...
-    }
-```
-
-### General Usage
-
 ```zig
 const Zigstr = @import("Ziglyph").Zigstr;
 

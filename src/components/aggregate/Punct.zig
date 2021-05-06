@@ -1,5 +1,4 @@
 const std = @import("std");
-const mem = std.mem;
 const ascii = @import("../../ascii.zig");
 
 pub const Close = @import("../../components.zig").Close;
@@ -12,7 +11,6 @@ pub const OtherPunct = @import("../../components.zig").OtherPunct;
 
 const Self = @This();
 
-allocator: *mem.Allocator,
 close: Close,
 connector: Connector,
 dash: Dash,
@@ -21,23 +19,8 @@ initial: Initial,
 open: Open,
 other_punct: OtherPunct,
 
-const Singleton = struct {
-    instance: *Self,
-    ref_count: usize,
-};
-
-var singleton: ?Singleton = null;
-
-pub fn init(allocator: *mem.Allocator) !*Self {
-    if (singleton) |*s| {
-        s.ref_count += 1;
-        return s.instance;
-    }
-
-    var instance = try allocator.create(Self);
-
-    instance.* = Self{
-        .allocator = allocator,
+pub fn new() Self {
+    return Self{
         .close = Close{},
         .connector = Connector{},
         .dash = Dash{},
@@ -46,23 +29,6 @@ pub fn init(allocator: *mem.Allocator) !*Self {
         .open = Open{},
         .other_punct = OtherPunct{},
     };
-
-    singleton = Singleton{
-        .instance = instance,
-        .ref_count = 1,
-    };
-
-    return instance;
-}
-
-pub fn deinit(self: *Self) void {
-    if (singleton) |*s| {
-        s.ref_count -= 1;
-        if (s.ref_count == 0) {
-            self.allocator.destroy(s.instance);
-            singleton = null;
-        }
-    }
 }
 
 /// isPunct detects punctuation characters. Note some punctuation maybe considered symbols by Unicode.
@@ -81,8 +47,7 @@ pub fn isAsciiPunct(cp: u21) bool {
 const expect = std.testing.expect;
 
 test "Component isPunct" {
-    var punct = try init(std.testing.allocator);
-    defer punct.deinit();
+    var punct = new();
 
     expect(punct.isPunct('!'));
     expect(punct.isPunct('?'));

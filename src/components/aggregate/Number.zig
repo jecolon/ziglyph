@@ -1,5 +1,4 @@
 const std = @import("std");
-const mem = std.mem;
 
 pub const Decimal = @import("../../components.zig").Decimal;
 pub const Digit = @import("../../components.zig").Digit;
@@ -9,53 +8,20 @@ pub const OtherNumber = @import("../../components.zig").OtherNumber;
 
 const Self = @This();
 
-allocator: *mem.Allocator,
 decimal: Decimal,
 digit: Digit,
 hex: Hex,
 letter_number: LetterNumber,
 other_number: OtherNumber,
 
-const Singleton = struct {
-    instance: *Self,
-    ref_count: usize,
-};
-
-var singleton: ?Singleton = null;
-
-pub fn init(allocator: *mem.Allocator) !*Self {
-    if (singleton) |*s| {
-        s.ref_count += 1;
-        return s.instance;
-    }
-
-    var instance = try allocator.create(Self);
-
-    instance.* = Self{
-        .allocator = allocator,
+pub fn new() Self {
+    return Self{
         .decimal = Decimal{},
         .digit = Digit{},
         .hex = Hex{},
         .letter_number = LetterNumber{},
         .other_number = OtherNumber{},
     };
-
-    singleton = Singleton{
-        .instance = instance,
-        .ref_count = 1,
-    };
-
-    return instance;
-}
-
-pub fn deinit(self: *Self) void {
-    if (singleton) |*s| {
-        s.ref_count -= 1;
-        if (s.ref_count == 0) {
-            self.allocator.destroy(s.instance);
-            singleton = null;
-        }
-    }
 }
 
 // isDecimal detects all Unicode digits.
@@ -105,8 +71,7 @@ pub fn isAsciiNumber(cp: u21) bool {
 const expect = std.testing.expect;
 
 test "Component isDecimal" {
-    var number = try init(std.testing.allocator);
-    defer number.deinit();
+    var number = new();
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
@@ -118,8 +83,7 @@ test "Component isDecimal" {
 }
 
 test "Component isHexDigit" {
-    var number = try init(std.testing.allocator);
-    defer number.deinit();
+    var number = new();
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
@@ -131,8 +95,7 @@ test "Component isHexDigit" {
 }
 
 test "Component isNumber" {
-    var number = try init(std.testing.allocator);
-    defer number.deinit();
+    var number = new();
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {

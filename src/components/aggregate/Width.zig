@@ -1,5 +1,4 @@
 const std = @import("std");
-const mem = std.mem;
 const unicode = std.unicode;
 
 const Ambiguous = @import("../../components.zig").Ambiguous;
