@@ -74,6 +74,7 @@ pub fn next(self: *Self) ?Grapheme {
             if (ncp == CR or ncp == LF or (self.control.isControl(ncp))) {
                 return Grapheme{
                     .bytes = self.cp_iter.bytes[cp_start..cp_end],
+                    .offset = cp_start,
                 };
             }
 
@@ -84,17 +85,20 @@ pub fn next(self: *Self) ?Grapheme {
             const s = self.processNonPrepend(pncp, pncp_start, pncp_end, pncp_next_cp);
             return Grapheme{
                 .bytes = self.cp_iter.bytes[cp_start..s.end],
+                .offset = cp_start,
             };
         }
 
         return Grapheme{
             .bytes = self.cp_iter.bytes[cp_start..cp_end],
+            .offset = cp_start,
         };
     }
 
     const s = self.processNonPrepend(cp, cp_start, cp_end, next_cp);
     return Grapheme{
         .bytes = self.cp_iter.bytes[s.start..s.end],
+        .offset = s.start,
     };
 }
 
@@ -278,6 +282,7 @@ test "Grapheme iterator" {
 
             try want.append(Grapheme{
                 .bytes = cp_bytes.toOwnedSlice(),
+                .offset = bytes_index,
             });
 
             bytes_index += cp_index;
@@ -289,7 +294,7 @@ test "Grapheme iterator" {
         for (want.items) |w| {
             const g = (giter.next()).?;
             //std.debug.print("line {d}: w:({s}), g:({s})\n", .{ line_no, w.bytes, g.bytes });
-            std.testing.expectEqualStrings(w.bytes, g.bytes);
+            std.testing.expect(w.sameAs(g));
         }
     }
 }

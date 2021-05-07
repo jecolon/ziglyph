@@ -198,9 +198,8 @@ test "Zigstr README tests" {
 
     // Substrings
     var str3 = try str.substr(1, 2);
-    defer str3.deinit();
-    expect(str3.eql("\u{0065}\u{0301}"));
-    expect(str3.eql(try str.byteSlice(1, 4)));
+    expectEqualStrings("\u{0065}\u{0301}", str3);
+    expectEqualStrings(try str.byteSlice(1, 4), str3);
 
     // Letter case detection.
     try str.reset("hello! 123");
