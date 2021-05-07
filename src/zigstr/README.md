@@ -25,7 +25,7 @@ defer str.deinit(); // still need `deinit` to free other internal state, but not
 ```
 
 To create a Zigstr with an owned slice of bytes, use the `initOwned` function. The passed in bytes will
-the be freed when `deinit` is called.
+then be freed when `deinit` is called.
 
 ```zig
 var list = std.ArrayList(u8).init(allocator);
