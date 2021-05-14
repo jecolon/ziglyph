@@ -487,11 +487,11 @@ const UcdGenerator = struct {
             else => return err,
         };
         // Templates.
-        const decomp_header_tpl = @embedFile("parts/decomp_map_header_tpl.txt");
-        const decomp_trailer_tpl = @embedFile("parts/decomp_map_trailer_tpl.txt");
+        const normalizer_header_tpl = @embedFile("parts/normalizer_header_tpl.txt");
+        const normalizer_trailer_tpl = @embedFile("parts/normalizer_trailer_tpl.txt");
         const map_header_tpl = @embedFile("parts/map_header_tpl.txt");
         // Setup output.
-        var d_file = try cwd.createFile("components/autogen/UnicodeData/DecomposeMap.zig", .{});
+        var d_file = try cwd.createFile("components/autogen/UnicodeData/Normalizer.zig", .{});
         defer d_file.close();
         var d_buf = io.bufferedWriter(d_file.writer());
         const d_writer = d_buf.writer();
@@ -509,7 +509,7 @@ const UcdGenerator = struct {
         const u_writer = u_buf.writer();
 
         // Headers.
-        _ = try d_writer.write(decomp_header_tpl);
+        _ = try d_writer.write(normalizer_header_tpl);
         _ = try l_writer.print(map_header_tpl, .{ "Lower", "LowerMap" });
         _ = try t_writer.print(map_header_tpl, .{ "Title", "TitleMap" });
         _ = try u_writer.print(map_header_tpl, .{ "Upper", "UpperMap" });
@@ -533,7 +533,7 @@ const UcdGenerator = struct {
                     const cp = try fmt.parseInt(u21, code_point, 16);
                     try pf_records.append(.{ .single = cp });
                 } else if (field_index == 5 and raw.len != 0) {
-                    // Decomposition.
+                    // Normalization.
                     var is_compat = false;
                     var cp_list = ArrayList([]const u8).init(self.allocator);
                     defer cp_list.deinit();
@@ -582,7 +582,7 @@ const UcdGenerator = struct {
 
         // Finish writing.
         _ = try d_writer.write("    return .{ .same = cp };\n}");
-        _ = try d_writer.write(decomp_trailer_tpl);
+        _ = try d_writer.write(normalizer_trailer_tpl);
         _ = try l_writer.write("    return cp;\n}");
         _ = try t_writer.write("    return cp;\n}");
         _ = try u_writer.write("    return cp;\n}");
@@ -966,16 +966,13 @@ pub fn main() !void {
     var ugen = UcdGenerator.new(allocator);
     //try ugen.processF1("data/ucd/Blocks.txt");
     try ugen.processF1("data/ucd/PropList.txt");
-    //try ugen.processF1("data/ucd/Scripts.txt");
     try ugen.processF1("data/ucd/auxiliary/GraphemeBreakProperty.txt");
     try ugen.processF1("data/ucd/DerivedCoreProperties.txt");
-    //try ugen.processF1("data/ucd/extracted/DerivedDecompositionType.txt");
     try ugen.processF1("data/ucd/extracted/DerivedNumericType.txt");
     try ugen.processF1("data/ucd/emoji/emoji-data.txt");
     try ugen.processGenCat();
     try ugen.processCaseFold();
     try ugen.processUcd();
-    //try ugen.processSpecialCasing();
     try ugen.processCccMap();
     try ugen.processHangul();
     try ugen.processNFDQC();

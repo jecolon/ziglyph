@@ -2,8 +2,8 @@ test "Ziglyph" {
     _ = @import("ziglyph.zig");
 }
 
-test "Decomp Norm" {
-    _ = @import("components.zig").DecomposeMap;
+test "Normalization" {
+    _ = @import("components.zig").Normalizer;
 }
 
 test "Grapheme" {

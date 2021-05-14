@@ -7,8 +7,8 @@ const unicode = std.unicode;
 
 const CccMap = @import("../components.zig").CccMap;
 const Control = @import("../components.zig").Control;
-const DecomposeMap = @import("../components.zig").DecomposeMap;
-const Trie = @import("Trie.zig");
+const Normalizer = @import("../components.zig").Normalizer;
+const Trie = @import("CollatorTrie.zig");
 const UnifiedIdeo = @import("../components/autogen/PropList/UnifiedIdeograph.zig");
 
 const Implicit = struct {
@@ -22,7 +22,7 @@ const ImplicitList = std.ArrayList(Implicit);
 allocator: *mem.Allocator,
 ccc_map: CccMap,
 control: Control,
-decomp_map: DecomposeMap,
+normalizer: Normalizer,
 ideographs: UnifiedIdeo,
 implicits: ImplicitList,
 table: Trie,
@@ -49,7 +49,7 @@ pub fn init(allocator: *mem.Allocator, filename: []const u8) !*Self {
         .allocator = allocator,
         .ccc_map = CccMap{},
         .control = Control{},
-        .decomp_map = DecomposeMap.new(),
+        .normalizer = Normalizer.new(),
         .ideographs = UnifiedIdeo{},
         .implicits = ImplicitList.init(allocator),
         .table = try Trie.init(allocator),
@@ -254,7 +254,7 @@ pub fn sortKey(self: *Self, str: []const u8) ![]const u16 {
     var arena = std.heap.ArenaAllocator.init(self.allocator);
     defer arena.deinit();
 
-    const normalized = try self.decomp_map.normalizeCodePointsTo(&arena.allocator, .D, str);
+    const normalized = try self.normalizer.normalizeCodePointsTo(&arena.allocator, .D, str);
     const collation_elements = try self.collationElements(normalized);
     defer self.allocator.free(collation_elements);
 

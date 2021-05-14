@@ -11,12 +11,12 @@ pub const Element = struct {
 pub const Elements = [18]?Element;
 const NodeMap = std.AutoHashMap(u21, *Node);
 
-pub const Node = struct {
+const Node = struct {
     allocator: *mem.Allocator,
     value: ?Elements,
     children: ?NodeMap,
 
-    pub fn init(allocator: *mem.Allocator) Node {
+    fn init(allocator: *mem.Allocator) Node {
         return Node{
             .allocator = allocator,
             .value = null,
@@ -24,7 +24,7 @@ pub const Node = struct {
         };
     }
 
-    pub fn deinit(self: *Node) void {
+    fn deinit(self: *Node) void {
         if (self.children) |*children| {
             var iter = children.iterator();
             while (iter.next()) |entry| {
