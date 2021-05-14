@@ -29,8 +29,23 @@ table: Trie,
 
 const Self = @This();
 
-pub fn init(allocator: *mem.Allocator, filename: []const u8) !Self {
-    var self = Self{
+const Singleton = struct {
+    instance: *Self,
+    ref_count: usize,
+};
+
+var singleton: ?Singleton = null;
+
+pub fn init(allocator: *mem.Allocator, filename: []const u8) !*Self {
+    if (singleton) |*s| {
+        s.ref_count += 1;
+        return s.instance;
+    }
+
+    var self = try allocator.create(Self);
+    errdefer allocator.destroy(self);
+
+    self.* = Self{
         .allocator = allocator,
         .ccc_map = CccMap{},
         .control = Control{},
@@ -42,12 +57,24 @@ pub fn init(allocator: *mem.Allocator, filename: []const u8) !Self {
 
     try self.load(filename);
 
+    singleton = Singleton{
+        .instance = self,
+        .ref_count = 1,
+    };
+
     return self;
 }
 
 pub fn deinit(self: *Self) void {
-    self.table.deinit();
-    self.implicits.deinit();
+    if (singleton) |*s| {
+        s.ref_count -= 1;
+        if (s.ref_count == 0) {
+            self.table.deinit();
+            self.implicits.deinit();
+            self.allocator.destroy(s.instance);
+            singleton = null;
+        }
+    }
 }
 
 pub fn load(self: *Self, filename: []const u8) !void {
@@ -305,46 +332,48 @@ test "Collator" {
     var key_b = try collator.sortKey("\u{0308}\u{0301}\u{0334}");
     defer allocator.free(key_b);
 
-    // Level 1.
-    var total_a: u32 = 0;
-    var ai: usize = 0;
-    while (ai < key_a.len) : (ai += 1) {
-        if (key_a[ai] == 0) break;
-        total_a += key_a[ai];
+    // Compare
+    var outer_is_a = true;
+    var outer = key_a;
+    var inner = key_b;
+
+    if (key_a.len < key_b.len) {
+        outer_is_a = false;
+        outer = key_b;
+        inner = key_a;
     }
 
-    var total_b: u32 = 0;
-    var bi: usize = 0;
-    while (bi < key_b.len) : (bi += 1) {
-        if (key_b[bi] == 0) break;
-        total_b += key_b[bi];
+    for (outer) |ow, i| {
+        if (ow == inner[i]) {
+            continue;
+        }
+
+        if (ow == 0 and inner[i] != 0) {
+            // Outer less than inner.
+            if (outer_is_a) {
+                testing.expect(true);
+                break;
+            } else {
+                testing.expect(false);
+            }
+        }
+
+        if (ow != 0 and inner[i] == 0) {
+            // Inner less than outer.
+            if (outer_is_a) {
+                testing.expect(false);
+            } else {
+                testing.expect(true);
+                break;
+            }
+        }
+
+        if (outer_is_a) {
+            testing.expect(ow < inner[i]);
+        } else {
+            testing.expect(ow > inner[i]);
+        }
+
+        break;
     }
-
-    if (total_a != total_b) testing.expect(total_a < total_b);
-
-    // Level 2.
-    while (ai < key_a.len) : (ai += 1) {
-        if (key_a[ai] == 0) break;
-        total_a += key_a[ai];
-    }
-
-    while (bi < key_b.len) : (bi += 1) {
-        if (key_b[bi] == 0) break;
-        total_b += key_b[bi];
-    }
-
-    if (total_a != total_b) testing.expect(total_a < total_b);
-
-    // Level 3.
-    while (ai < key_a.len) : (ai += 1) {
-        if (key_a[ai] == 0) break;
-        total_a += key_a[ai];
-    }
-
-    while (bi < key_b.len) : (bi += 1) {
-        if (key_b[bi] == 0) break;
-        total_b += key_b[bi];
-    }
-
-    if (total_a != total_b) testing.expect(total_a < total_b);
 }
