@@ -7,10 +7,10 @@ const CaseFoldMap = @import("../components.zig").CaseFoldMap;
 const DecomposeMap = @import("../components.zig").DecomposeMap;
 const Letter = @import("../ziglyph.zig").Letter;
 
-pub const CodePointIterator = @import("CodePointIterator.zig");
-pub const GraphemeIterator = @import("GraphemeIterator.zig");
-pub const Grapheme = GraphemeIterator.Grapheme;
-pub const Width = @import("../components/aggregate/Width.zig");
+const CodePointIterator = @import("CodePointIterator.zig");
+const GraphemeIterator = @import("GraphemeIterator.zig");
+const Grapheme = GraphemeIterator.Grapheme;
+const Width = @import("../components/aggregate/Width.zig");
 
 const Self = @This();
 
@@ -96,6 +96,7 @@ fn resetWith(self: *Self, str: []const u8, owned: bool) !void {
         // No need to free or copy bytes.
         self.bytes = str;
         try self.processCodePoints();
+        return;
     }
 
     if (self.owned and !owned) {
@@ -104,6 +105,7 @@ fn resetWith(self: *Self, str: []const u8, owned: bool) !void {
         self.owned = false;
         self.bytes = str;
         try self.processCodePoints();
+        return;
     }
 
     if (self.owned and owned) {
@@ -111,6 +113,7 @@ fn resetWith(self: *Self, str: []const u8, owned: bool) !void {
         self.allocator.free(self.bytes);
         self.bytes = str;
         try self.processCodePoints();
+        return;
     }
 
     if (!self.owned and owned) {
@@ -118,6 +121,7 @@ fn resetWith(self: *Self, str: []const u8, owned: bool) !void {
         self.owned = true;
         self.bytes = str;
         try self.processCodePoints();
+        return;
     }
 }
 

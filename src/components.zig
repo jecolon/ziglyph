@@ -1,5 +1,6 @@
 pub const Alphabetic = @import("components/autogen/DerivedCoreProperties/Alphabetic.zig");
 pub const CccMap = @import("components/autogen/DerivedCombiningClass/CccMap.zig");
+pub const Collator = @import("zigstr/Collator.zig");
 pub const Control = @import("components/autogen/DerivedGeneralCategory/Control.zig");
 pub const DecomposeMap = @import("components/autogen/UnicodeData/DecomposeMap.zig");
 pub const GraphemeIterator = @import("zigstr/GraphemeIterator.zig");

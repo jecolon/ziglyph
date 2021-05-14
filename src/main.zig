@@ -21,3 +21,7 @@ test "Components" {
 test "Zigstr" {
     _ = @import("ziglyph.zig").Zigstr;
 }
+
+test "Collator" {
+    _ = @import("zigstr/Collator.zig");
+}

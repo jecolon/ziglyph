@@ -8,6 +8,7 @@ const ascii = @import("ascii.zig");
 /// Library Components
 pub const Alphabetic = @import("components.zig").Alphabetic;
 pub const CccMap = @import("components.zig").CccMap;
+pub const Collator = @import("components.zig").Collator;
 pub const Control = @import("components.zig").Control;
 pub const DecomposeMap = @import("components.zig").DecomposeMap;
 pub const GraphemeIterator = @import("components.zig").GraphemeIterator;

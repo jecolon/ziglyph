@@ -198,6 +198,52 @@ pub fn normalizeTo(self: *Self, allocator: *mem.Allocator, form: Form, str: []co
     return self.finalizeAndEncode(allocator, d_code_points.items);
 }
 
+/// normalizeCodePointsTo will normalize the code points in str, producing a new slice of code points
+/// corresponding to the specified Normalization Form. Caller must free returned bytes.
+pub fn normalizeCodePointsTo(self: *Self, allocator: *mem.Allocator, form: Form, str: []const u8) anyerror![]u21 {
+    if (form != .D and form != .KD) return error.FormUnimplemented;
+
+    // Gather source code points.
+    var code_points = std.ArrayList(u21).init(allocator);
+    defer code_points.deinit();
+
+    var iter = (try unicode.Utf8View.init(str)).iterator();
+
+    while (iter.nextCodepoint()) |cp| {
+        try code_points.append(cp);
+    }
+
+    // NFD Quick Check.
+    if (form == .D) {
+        var already_nfd = true;
+
+        for (code_points.items) |cp| {
+            if (!self.nfd_check.isNFD(cp)) already_nfd = false;
+        }
+
+        // Already NFD, nothing more to do.
+        if (already_nfd) {
+            // Apply canonical sort algorithm.
+            self.canonicalSort(code_points.items);
+            return code_points.toOwnedSlice();
+        }
+    }
+
+    var d_code_points = std.ArrayList(u21).init(allocator);
+    defer d_code_points.deinit();
+
+    // Gather decomposed code points.
+    for (code_points.items) |cp| {
+        const cp_slice = try self.codePointTo(allocator, form, cp);
+        defer allocator.free(cp_slice);
+        try d_code_points.appendSlice(cp_slice);
+    }
+
+    // Apply canonical sort algorithm.
+    self.canonicalSort(d_code_points.items);
+    return d_code_points.toOwnedSlice();
+}
+
 fn cccLess(self: Self, lhs: u21, rhs: u21) bool {
     return self.ccc_map.combiningClass(lhs) < self.ccc_map.combiningClass(rhs);
 }
