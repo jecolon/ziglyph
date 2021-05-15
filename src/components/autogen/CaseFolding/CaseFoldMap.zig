@@ -9,7 +9,7 @@ const CaseFoldMap = @This();
 
 /// caseFoldStr will caseFold the code points in str, producing a slice of u8 with the new bytes.
 /// Caller must free returned bytes.
-pub fn caseFoldStr(self: *CaseFoldMap, allocator: *mem.Allocator, str: []const u8) ![]u8 {
+pub fn caseFoldStr(self: CaseFoldMap, allocator: *mem.Allocator, str: []const u8) ![]u8 {
     var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
     var code_points = std.ArrayList(u21).init(allocator);

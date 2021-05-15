@@ -22,7 +22,7 @@ const ImplicitList = std.ArrayList(Implicit);
 allocator: *mem.Allocator,
 ccc_map: CccMap,
 control: Control,
-normalizer: Normalizer,
+normalizer: *Normalizer,
 ideographs: UnifiedIdeo,
 implicits: ImplicitList,
 table: Trie,
@@ -49,7 +49,7 @@ pub fn init(allocator: *mem.Allocator, filename: []const u8) !*Self {
         .allocator = allocator,
         .ccc_map = CccMap{},
         .control = Control{},
-        .normalizer = Normalizer.new(),
+        .normalizer = try Normalizer.init(allocator),
         .ideographs = UnifiedIdeo{},
         .implicits = ImplicitList.init(allocator),
         .table = try Trie.init(allocator),
@@ -71,6 +71,7 @@ pub fn deinit(self: *Self) void {
         if (s.ref_count == 0) {
             self.table.deinit();
             self.implicits.deinit();
+            self.normalizer.deinit();
             self.allocator.destroy(s.instance);
             singleton = null;
         }

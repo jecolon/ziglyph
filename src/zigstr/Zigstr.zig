@@ -3,14 +3,11 @@ const mem = std.mem;
 const unicode = std.unicode;
 
 const ascii = @import("../ascii.zig");
-const CaseFoldMap = @import("../components.zig").CaseFoldMap;
-const Normalizer = @import("../components.zig").Normalizer;
 const Letter = @import("../ziglyph.zig").Letter;
 
 const CodePointIterator = @import("CodePointIterator.zig");
 const GraphemeIterator = @import("GraphemeIterator.zig");
 const Grapheme = GraphemeIterator.Grapheme;
-const Width = @import("../components/aggregate/Width.zig");
 
 const Self = @This();
 
@@ -19,11 +16,9 @@ ascii_only: bool,
 bytes: []const u8,
 code_points: ?[]u21,
 cp_count: usize,
-normalizer: Normalizer,
 grapheme_clusters: ?[]Grapheme,
 letter: Letter,
 owned: bool,
-widths: Width,
 
 /// init returns a new Zigstr from the byte slice `str`, which is owned elsewhere. It will *not* be 
 /// freed on `deinit`.
@@ -44,11 +39,9 @@ fn initWith(allocator: *mem.Allocator, str: []const u8, owned: bool) !Self {
         .bytes = str,
         .code_points = null,
         .cp_count = 0,
-        .normalizer = Normalizer.new(),
         .grapheme_clusters = null,
         .letter = Letter.new(),
         .owned = owned,
-        .widths = Width.new(),
     };
 
     try zstr.processCodePoints();
@@ -210,88 +203,9 @@ pub fn sameAs(self: Self, other: Self) bool {
     return self.eql(other.bytes);
 }
 
-pub const CmpMode = enum {
-    ignore_case,
-    normalize,
-    norm_ignore,
-};
-
 /// eql compares for exact byte per byte equality with `other`.
 pub fn eql(self: Self, other: []const u8) bool {
     return mem.eql(u8, self.bytes, other);
-}
-
-/// eqlBy compares for equality with `other` according to the specified comparison mode.
-pub fn eqlBy(self: *Self, other: []const u8, mode: CmpMode) !bool {
-    // Check for ASCII only comparison.
-    var ascii_only = self.ascii_only;
-
-    if (ascii_only) {
-        ascii_only = try isAsciiStr(other);
-    }
-
-    // If ASCII only, different lengths mean inequality.
-    const len_a = self.bytes.len;
-    const len_b = other.len;
-    var len_eql = len_a == len_b;
-
-    if (ascii_only and !len_eql) return false;
-
-    if (mode == .ignore_case and len_eql) {
-        if (ascii_only) {
-            // ASCII case insensitive.
-            for (self.bytes) |c, i| {
-                const oc = other[i];
-                const lc = if (c >= 'A' and c <= 'Z') c ^ 32 else c;
-                const olc = if (oc >= 'A' and oc <= 'Z') oc ^ 32 else oc;
-                if (lc != olc) return false;
-            }
-            return true;
-        }
-
-        // Non-ASCII case insensitive.
-        return self.eqlIgnoreCase(other);
-    }
-
-    if (mode == .normalize) return self.eqlNorm(other);
-    if (mode == .norm_ignore) return self.eqlNormIgnore(other);
-
-    return false;
-}
-
-fn eqlIgnoreCase(self: *Self, other: []const u8) !bool {
-    const cf_a = try self.letter.fold_map.caseFoldStr(self.allocator, self.bytes);
-    defer self.allocator.free(cf_a);
-    const cf_b = try self.letter.fold_map.caseFoldStr(self.allocator, other);
-    defer self.allocator.free(cf_b);
-
-    return mem.eql(u8, cf_a, cf_b);
-}
-
-fn eqlNorm(self: *Self, other: []const u8) !bool {
-    var arena = std.heap.ArenaAllocator.init(self.allocator);
-    defer arena.deinit();
-
-    const norm_a = try self.normalizer.normalizeTo(&arena.allocator, .D, self.bytes);
-    const norm_b = try self.normalizer.normalizeTo(&arena.allocator, .D, other);
-
-    return mem.eql(u8, norm_a, norm_b);
-}
-
-fn eqlNormIgnore(self: *Self, other: []const u8) !bool {
-    var arena = std.heap.ArenaAllocator.init(self.allocator);
-    defer arena.deinit();
-
-    // The long winding road of normalized caseless matching...
-    // NFD(CaseFold(NFD(str)))
-    var norm_a = try self.normalizer.normalizeTo(&arena.allocator, .D, self.bytes);
-    var cf_a = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_a);
-    norm_a = try self.normalizer.normalizeTo(&arena.allocator, .D, cf_a);
-    var norm_b = try self.normalizer.normalizeTo(&arena.allocator, .D, other);
-    var cf_b = try self.letter.fold_map.caseFoldStr(&arena.allocator, norm_b);
-    norm_b = try self.normalizer.normalizeTo(&arena.allocator, .D, cf_b);
-
-    return mem.eql(u8, norm_a, norm_b);
 }
 
 /// isAsciiStr checks if a string (`[]const uu`) is composed solely of ASCII characters.
@@ -672,11 +586,6 @@ pub fn format(self: Self, comptime fmt: []const u8, options: std.fmt.FormatOptio
     _ = try writer.print("{s}", .{self.bytes});
 }
 
-/// width returns the cells (or columns) this Zigstr would occupy in a fixed-width context.
-pub fn width(self: *Self) !usize {
-    return self.widths.strWidth(self.bytes, .half);
-}
-
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
@@ -731,29 +640,6 @@ test "Zigstr copy" {
     expect(str1.eql(str2.bytes));
     expect(str2.eql("Zig"));
     expect(str1.sameAs(str2));
-}
-
-test "Zigstr eql" {
-    var str = try initWith(std.testing.allocator, "foo", false);
-    defer str.deinit();
-
-    expect(str.eql("foo")); // exact
-    expect(!str.eql("fooo")); // lengths
-    expect(!str.eql("foó")); // combining
-    expect(!str.eql("Foo")); // letter case
-    expect(try str.eqlBy("Foo", .ignore_case));
-
-    try str.resetWith("foé", false);
-    expect(try str.eqlBy("foe\u{0301}", .normalize));
-
-    try str.resetWith("foϓ", false);
-    expect(try str.eqlBy("fo\u{03D2}\u{0301}", .normalize));
-
-    try str.resetWith("Foϓ", false);
-    expect(try str.eqlBy("fo\u{03D2}\u{0301}", .norm_ignore));
-
-    try str.resetWith("FOÉ", false);
-    expect(try str.eqlBy("foe\u{0301}", .norm_ignore)); // foÉ == foé
 }
 
 test "Zigstr isAsciiStr" {
@@ -975,11 +861,4 @@ test "Zigstr format" {
     defer str.deinit();
 
     std.debug.print("{}\n", .{str});
-}
-
-test "Zigstr width" {
-    var str = try initWith(std.testing.allocator, "Héllo 😊", false);
-    defer str.deinit();
-
-    expectEqual(@as(usize, 8), try str.width());
 }

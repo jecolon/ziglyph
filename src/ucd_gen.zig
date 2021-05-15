@@ -4,6 +4,7 @@ const ArrayList = std.ArrayList;
 const fmt = std.fmt;
 const io = std.io;
 const mem = std.mem;
+const unicode = std.unicode;
 
 const Collection = @import("Collection.zig");
 const Record = @import("record.zig").Record;
@@ -518,7 +519,9 @@ const UcdGenerator = struct {
         // pf == Final_Punctuation
         var pf_records = ArrayList(Record).init(self.allocator);
         defer pf_records.deinit();
+        var utf8_buf: [4]u8 = undefined;
         var buf: [640]u8 = undefined;
+
         while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
             // Iterate over fields.
             var fields = mem.split(line, ";");
@@ -545,25 +548,47 @@ const UcdGenerator = struct {
                         }
                         try cp_list.append(cp);
                     }
+
+                    // Parse and encode code point.
+                    const utf8_cp = try fmt.parseInt(u21, code_point, 16);
+                    const len = try unicode.utf8Encode(utf8_cp, &utf8_buf);
+
                     if (!is_compat and cp_list.items.len == 1) {
                         // Singleton
-                        _ = try d_writer.print("    if (cp == 0x{s}) return .{{ .single = 0x{s} }};\n", .{ code_point, cp_list.items[0] });
+                        _ = try d_writer.write("    try self.decomp_trie.add(&[_]u8{ ");
+                        for (utf8_buf[0..len]) |b, i| {
+                            if (i != 0) _ = try d_writer.write(", ");
+                            try d_writer.print("0x{x}", .{b});
+                        }
+                        _ = try d_writer.print(" }}, .{{ .single = 0x{s} }});\n", .{cp_list.items[0]});
                     } else if (!is_compat) {
                         // Canonical
-                        std.debug.assert(cp_list.items.len != 0);
-                        _ = try d_writer.print("    if (cp == 0x{s}) return .{{ .canon = [2]u21{{\n", .{code_point});
-                        for (cp_list.items) |cp| {
-                            _ = try d_writer.print("        0x{s},\n", .{cp});
+                        std.debug.assert(cp_list.items.len == 2);
+                        _ = try d_writer.write("    try self.decomp_trie.add(&[_]u8{ ");
+                        for (utf8_buf[0..len]) |b, i| {
+                            if (i != 0) _ = try d_writer.write(", ");
+                            try d_writer.print("0x{x}", .{b});
                         }
-                        _ = try d_writer.write("    } };\n");
+                        _ = try d_writer.write(" }, .{ .canon = [2]u21{ ");
+                        for (cp_list.items) |cp, i| {
+                            if (i != 0) _ = try d_writer.write(", ");
+                            _ = try d_writer.print("0x{s}", .{cp});
+                        }
+                        _ = try d_writer.write(" } });\n");
                     } else {
                         // Compatibility
                         std.debug.assert(cp_list.items.len != 0);
-                        _ = try d_writer.print("    if (cp == 0x{s}) return .{{ .compat = &[_]u21{{\n", .{code_point});
-                        for (cp_list.items) |cp| {
-                            _ = try d_writer.print("        0x{s},\n", .{cp});
+                        _ = try d_writer.write("    try self.decomp_trie.add(&[_]u8{ ");
+                        for (utf8_buf[0..len]) |b, i| {
+                            if (i != 0) _ = try d_writer.write(", ");
+                            try d_writer.print("0x{x}", .{b});
                         }
-                        _ = try d_writer.write("    } };\n");
+                        _ = try d_writer.write(" }, .{ .compat = &[_]u21{ ");
+                        for (cp_list.items) |cp, i| {
+                            if (i != 0) _ = try d_writer.write(", ");
+                            _ = try d_writer.print("0x{s}", .{cp});
+                        }
+                        _ = try d_writer.write(" } });\n");
                     }
                 } else if (field_index == 12 and raw.len != 0) {
                     // Uppercase mapping.
@@ -581,7 +606,6 @@ const UcdGenerator = struct {
         }
 
         // Finish writing.
-        _ = try d_writer.write("    return .{ .same = cp };\n}");
         _ = try d_writer.write(normalizer_trailer_tpl);
         _ = try l_writer.write("    return cp;\n}");
         _ = try t_writer.write("    return cp;\n}");

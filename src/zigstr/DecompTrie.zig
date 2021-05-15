@@ -2,18 +2,25 @@ const std = @import("std");
 const mem = std.mem;
 const testing = std.testing;
 
-pub const Element = struct {
-    l1: u16,
-    l2: u16,
-    l3: u16,
+/// Decomposed is the result of a code point full decomposition. It can be one of:
+/// * .src: Sorce code point.
+/// * .same : Default canonical decomposition to the code point itself.
+/// * .single : Singleton canonical decomposition to a different single code point.
+/// * .canon : Canonical decomposition, which always results in two code points.
+/// * .compat : Compatibility decomposition, which can results in at most 18 code points.
+pub const Decomposed = union(enum) {
+    src: u21,
+    same: u21,
+    single: u21,
+    canon: [2]u21,
+    compat: []const u21,
 };
 
-pub const Elements = [18]?Element;
 const NodeMap = std.AutoHashMap(u21, *Node);
 
 const Node = struct {
     allocator: *mem.Allocator,
-    value: ?Elements,
+    value: ?Decomposed,
     children: ?NodeMap,
 
     fn init(allocator: *mem.Allocator) Node {
@@ -38,7 +45,7 @@ const Node = struct {
 
 pub const Lookup = struct {
     index: usize,
-    value: ?Elements,
+    value: ?Decomposed,
 };
 
 allocator: *mem.Allocator,
@@ -61,7 +68,7 @@ pub fn deinit(self: *Self) void {
     self.allocator.destroy(self.root);
 }
 
-pub fn add(self: *Self, key: []const u21, value: Elements) !void {
+pub fn add(self: *Self, key: []const u8, value: Decomposed) !void {
     var current_node = self.root;
 
     for (key) |cp| {
@@ -78,15 +85,15 @@ pub fn add(self: *Self, key: []const u21, value: Elements) !void {
     current_node.value = value;
 }
 
-pub fn find(self: Self, key: []const u21) Lookup {
+pub fn find(self: Self, key: []const u8) Lookup {
     var current_node = self.root;
     var success_index: usize = 0;
-    var success_value: ?Elements = null;
+    var success_value: ?Decomposed = null;
 
-    for (key) |cp, i| {
-        if (current_node.children == null or current_node.children.?.get(cp) == null) break;
+    for (key) |byte, i| {
+        if (current_node.children == null or current_node.children.?.get(byte) == null) break;
 
-        current_node = current_node.children.?.get(cp).?;
+        current_node = current_node.children.?.get(byte).?;
 
         if (current_node.value) |value| {
             success_index = i;
@@ -97,28 +104,33 @@ pub fn find(self: Self, key: []const u21) Lookup {
     return .{ .index = success_index, .value = success_value };
 }
 
-test "Collator Trie" {
+test "DecompTrie" {
     var trie = try init(std.testing.allocator);
     defer trie.deinit();
 
-    var a1 = [_]?Element{null} ** 18;
-    a1[0] = .{ .l1 = 1, .l2 = 1, .l3 = 1 };
-    a1[1] = .{ .l1 = 2, .l2 = 2, .l3 = 2 };
-    var a2 = [_]?Element{null} ** 18;
-    a2[0] = .{ .l1 = 1, .l2 = 1, .l3 = 1 };
-    a2[1] = .{ .l1 = 2, .l2 = 2, .l3 = 2 };
-    a2[2] = .{ .l1 = 3, .l2 = 3, .l3 = 3 };
+    var d1 = Decomposed{ .same = 1 };
+    var d2 = Decomposed{ .same = 2 };
+    var d3 = Decomposed{ .same = 3 };
+    var d4 = Decomposed{ .same = 4 };
 
-    try trie.add(&[_]u21{ 1, 2 }, a1);
-    try trie.add(&[_]u21{ 1, 2, 3 }, a2);
+    try trie.add(&[_]u8{1}, d1);
+    try trie.add(&[_]u8{ 1, 2 }, d2);
+    try trie.add(&[_]u8{ 1, 2, 3 }, d3);
+    try trie.add(&[_]u8{ 1, 2, 3, 4 }, d4);
 
-    var lookup = trie.find(&[_]u21{ 1, 2 });
-    testing.expectEqual(@as(usize, 1), lookup.index);
-    testing.expectEqualSlices(?Element, &a1, &lookup.value.?);
-    lookup = trie.find(&[_]u21{ 1, 2, 3 });
-    testing.expectEqual(@as(usize, 2), lookup.index);
-    testing.expectEqualSlices(?Element, &a2, &lookup.value.?);
-    lookup = trie.find(&[_]u21{1});
+    var lookup = trie.find(&[_]u8{1});
     testing.expectEqual(@as(usize, 0), lookup.index);
-    testing.expect(lookup.value == null);
+    testing.expectEqual(d1, lookup.value.?);
+
+    lookup = trie.find(&[_]u8{ 1, 2 });
+    testing.expectEqual(@as(usize, 1), lookup.index);
+    testing.expectEqual(d2, lookup.value.?);
+
+    lookup = trie.find(&[_]u8{ 1, 2, 3 });
+    testing.expectEqual(@as(usize, 2), lookup.index);
+    testing.expectEqual(d3, lookup.value.?);
+
+    lookup = trie.find(&[_]u8{ 1, 2, 3, 4 });
+    testing.expectEqual(@as(usize, 3), lookup.index);
+    testing.expectEqual(d4, lookup.value.?);
 }

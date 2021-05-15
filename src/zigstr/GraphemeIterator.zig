@@ -294,7 +294,8 @@ test "Grapheme iterator" {
         for (want.items) |w| {
             const g = (giter.next()).?;
             //std.debug.print("line {d}: w:({s}), g:({s})\n", .{ line_no, w.bytes, g.bytes });
-            std.testing.expect(w.sameAs(g));
+            std.testing.expect(w.eql(g.bytes));
+            std.testing.expectEqual(w.offset, g.offset);
         }
     }
 }
