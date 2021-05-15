@@ -9,16 +9,14 @@ pub const Element = struct {
 };
 
 pub const Elements = [18]?Element;
-const NodeMap = std.AutoHashMap(u21, *Node);
+const NodeMap = std.AutoHashMap(u21, Node);
 
 const Node = struct {
-    allocator: *mem.Allocator,
     value: ?Elements,
     children: ?NodeMap,
 
-    fn init(allocator: *mem.Allocator) Node {
+    fn init() Node {
         return Node{
-            .allocator = allocator,
             .value = null,
             .children = null,
         };
@@ -29,7 +27,6 @@ const Node = struct {
             var iter = children.iterator();
             while (iter.next()) |entry| {
                 entry.value.deinit();
-                self.allocator.destroy(entry.value);
             }
             children.deinit();
         }
@@ -42,37 +39,31 @@ pub const Lookup = struct {
 };
 
 allocator: *mem.Allocator,
-root: *Node,
+root: Node,
 
 const Self = @This();
 
-pub fn init(allocator: *mem.Allocator) !Self {
-    var root = try allocator.create(Node);
-    root.* = Node.init(allocator);
-
+pub fn init(allocator: *mem.Allocator) Self {
     return Self{
         .allocator = allocator,
-        .root = root,
+        .root = Node.init(),
     };
 }
 
 pub fn deinit(self: *Self) void {
     self.root.deinit();
-    self.allocator.destroy(self.root);
 }
 
 pub fn add(self: *Self, key: []const u21, value: Elements) !void {
-    var current_node = self.root;
+    var current_node = &self.root;
 
     for (key) |cp| {
         if (current_node.children == null) current_node.children = NodeMap.init(self.allocator);
         var result = try current_node.children.?.getOrPut(cp);
         if (!result.found_existing) {
-            var node = try self.allocator.create(Node);
-            node.* = Node.init(self.allocator);
-            result.entry.value = node;
+            result.entry.value = Node.init();
         }
-        current_node = result.entry.value;
+        current_node = &result.entry.value;
     }
 
     current_node.value = value;
@@ -98,7 +89,7 @@ pub fn find(self: Self, key: []const u21) Lookup {
 }
 
 test "Collator Trie" {
-    var trie = try init(std.testing.allocator);
+    var trie = init(std.testing.allocator);
     defer trie.deinit();
 
     var a1 = [_]?Element{null} ** 18;

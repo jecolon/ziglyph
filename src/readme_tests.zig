@@ -4,13 +4,14 @@ const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
 // Import structs.
-const DecomposeMap = @import("components.zig").DecomposeMap;
+const Collator = @import("zigstr/Collator.zig");
 const GraphemeIterator = @import("ziglyph.zig").GraphemeIterator;
 const Letter = @import("components/aggregate/Letter.zig");
 const Lower = @import("components/autogen/DerivedCoreProperties/Lowercase.zig");
+const Normalizer = @import("components.zig").Normalizer;
+const Punct = @import("components/aggregate/Punct.zig");
 const Upper = @import("components/autogen/DerivedCoreProperties/Uppercase.zig");
 const UpperMap = @import("components/autogen/UnicodeData/UpperMap.zig");
-const Punct = @import("components/aggregate/Punct.zig");
 const Width = @import("components/aggregate/Width.zig");
 const Ziglyph = @import("ziglyph.zig").Ziglyph;
 
@@ -56,13 +57,13 @@ test "Component structs" {
 
 test "decomposeTo" {
     var allocator = std.testing.allocator;
-    var decomp_map = DecomposeMap.new();
+    var normalizer = Normalizer.new(allocator);
 
-    const Decomposed = DecomposeMap.Decomposed;
+    const Decomposed = Normalizer.Decomposed;
 
     // CD: ox03D3 -> 0x03D2, 0x0301
     var src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    var result = try decomp_map.decomposeTo(allocator, .D, &src);
+    var result = try normalizer.decomposeTo(allocator, .D, &src);
     defer allocator.free(result);
     expectEqual(result.len, 2);
     expectEqual(result[0].same, 0x03D2);
@@ -71,7 +72,7 @@ test "decomposeTo" {
 
     // KD: ox03D3 -> 0x03D2, 0x0301 -> 0x03A5, 0x0301
     src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    result = try decomp_map.decomposeTo(allocator, .KD, &src);
+    result = try normalizer.decomposeTo(allocator, .KD, &src);
     expectEqual(result.len, 2);
     expect(result[0] == .same);
     expectEqual(result[0].same, 0x03A5);
@@ -81,12 +82,12 @@ test "decomposeTo" {
 
 test "normalizeTo" {
     var allocator = std.testing.allocator;
-    var decomp_map = DecomposeMap.new();
+    var normalizer = Normalizer.new(allocator);
 
     // Canonical (NFD)
     var input = "Complex char: \u{03D3}";
     var want = "Complex char: \u{03D2}\u{0301}";
-    var got = try decomp_map.normalizeTo(allocator, .D, input);
+    var got = try normalizer.normalizeTo(allocator, .D, input);
     defer allocator.free(got);
     expectEqualSlices(u8, want, got);
     allocator.free(got);
@@ -94,7 +95,7 @@ test "normalizeTo" {
     // Compatibility (NFKD)
     input = "Complex char: \u{03D3}";
     want = "Complex char: \u{03A5}\u{0301}";
-    got = try decomp_map.normalizeTo(allocator, .KD, input);
+    got = try normalizer.normalizeTo(allocator, .KD, input);
     expectEqualSlices(u8, want, got);
 }
 
@@ -120,4 +121,17 @@ test "Code point / string widths" {
     expectEqual(try width.strWidth("Héllo 🇪🇸", .half), 8);
     expectEqual(try width.strWidth("\u{26A1}\u{FE0E}", .half), 1); // Text sequence
     expectEqual(try width.strWidth("\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
+}
+
+test "Collation" {
+    var allocator = std.testing.allocator;
+    var collator = try Collator.init(allocator, "src/data/uca/allkeys.txt");
+    defer collator.deinit();
+
+    expect(try collator.lessThan("abc", "def"));
+    var strings: [3][]const u8 = .{ "xyz", "def", "abc" };
+    collator.sort(&strings);
+    expectEqual(strings[0], "abc");
+    expectEqual(strings[1], "def");
+    expectEqual(strings[2], "xyz");
 }

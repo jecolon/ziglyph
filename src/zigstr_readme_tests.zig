@@ -64,20 +64,6 @@ test "Zigstr README tests" {
     expect(!str.eql("foó")); // combining marks
     expect(!str.eql("Foo")); // letter case
 
-    expect(try str.eqlBy("Foo", .ignore_case));
-
-    try str.reset("foé");
-    expect(try str.eqlBy("foe\u{0301}", .normalize));
-
-    try str.reset("foϓ");
-    expect(try str.eqlBy("fo\u{03D2}\u{0301}", .normalize));
-
-    try str.reset("Foϓ");
-    expect(try str.eqlBy("fo\u{03D2}\u{0301}", .norm_ignore));
-
-    try str.reset("FOÉ");
-    expect(try str.eqlBy("foe\u{0301}", .norm_ignore)); // foÉ == foé
-
     // Trimming.
     try str.reset("   Hello");
     try str.trimLeft(" ");
@@ -215,11 +201,6 @@ test "Zigstr README tests" {
     expect(str.eql("héllo! 123"));
     try str.toUpper();
     expect(str.eql("HÉLLO! 123"));
-
-    // Fixed-width cell / columns size. This uses halfwidth for ambiguous code points, which is the
-    // most common case. To use fullwidth, use the Zigstr.Width component struct directly.
-    try str.reset("Héllo 😊");
-    expectEqual(@as(usize, 8), try str.width());
 
     // Zigstr implements the std.fmt.format interface.
     std.debug.print("Zigstr: {}\n", .{str});

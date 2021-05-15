@@ -25,7 +25,3 @@ test "Zigstr" {
 test "Collator" {
     _ = @import("zigstr/Collator.zig");
 }
-
-test "DecompTrie" {
-    _ = @import("zigstr/DecompTrie.zig");
-}

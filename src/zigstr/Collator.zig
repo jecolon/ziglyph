@@ -2,11 +2,10 @@ const std = @import("std");
 const fmt = std.fmt;
 const io = std.io;
 const mem = std.mem;
-const sort = std.sort.sort;
+const zort = std.sort.sort;
 const unicode = std.unicode;
 
 const CccMap = @import("../components.zig").CccMap;
-const Control = @import("../components.zig").Control;
 const Normalizer = @import("../components.zig").Normalizer;
 const Trie = @import("CollatorTrie.zig");
 const UnifiedIdeo = @import("../components/autogen/PropList/UnifiedIdeograph.zig");
@@ -21,8 +20,7 @@ const ImplicitList = std.ArrayList(Implicit);
 
 allocator: *mem.Allocator,
 ccc_map: CccMap,
-control: Control,
-normalizer: *Normalizer,
+normalizer: Normalizer,
 ideographs: UnifiedIdeo,
 implicits: ImplicitList,
 table: Trie,
@@ -48,11 +46,10 @@ pub fn init(allocator: *mem.Allocator, filename: []const u8) !*Self {
     self.* = Self{
         .allocator = allocator,
         .ccc_map = CccMap{},
-        .control = Control{},
-        .normalizer = try Normalizer.init(allocator),
+        .normalizer = Normalizer.new(allocator),
         .ideographs = UnifiedIdeo{},
         .implicits = ImplicitList.init(allocator),
-        .table = try Trie.init(allocator),
+        .table = Trie.init(allocator),
     };
 
     try self.load(filename);
@@ -71,7 +68,6 @@ pub fn deinit(self: *Self) void {
         if (s.ref_count == 0) {
             self.table.deinit();
             self.implicits.deinit();
-            self.normalizer.deinit();
             self.allocator.destroy(s.instance);
             singleton = null;
         }
@@ -251,7 +247,7 @@ pub fn sortKeyFromCollationElements(self: Self, collation_elements: []Trie.Eleme
     return sort_key.toOwnedSlice();
 }
 
-pub fn sortKey(self: *Self, str: []const u8) ![]const u16 {
+pub fn sortKey(self: Self, str: []const u8) ![]const u16 {
     var arena = std.heap.ArenaAllocator.init(self.allocator);
     defer arena.deinit();
 
@@ -267,28 +263,12 @@ pub fn implicitWeight(self: Self, cp: u21) Trie.Elements {
     var aaaa: ?u21 = null;
     var bbbb: u21 = 0;
 
-    //if ((!self.control.isControl(cp) and ((cp >= 0x4E00 and cp <= 0x9FCC) or
-    //    (cp >= 0x9FCD and cp <= 0x9FD5) or
-    //    (cp >= 0x9FD6 and cp <= 0x9FEA) or
-    //    for ([_]u21{
-    //    0xFA0E, 0xFA0F, 0xFA11, 0xFA13, 0xFA14, 0xFA1F, 0xFA21, 0xFA23, 0xFA24,
-    //    0xFA27, 0xFA28, 0xFA29,
-    //}) |match| {
-    //    if (cp == match) break true;
-    //} else false))) {
     if (self.ideographs.isUnifiedIdeograph(cp) and ((cp >= 0x4E00 and cp <= 0x9FFF) or
         (cp >= 0xF900 and cp <= 0xFAFF)))
     {
         base = 0xFB40;
         aaaa = base + (cp >> 15);
         bbbb = (cp & 0x7FFF) | 0x8000;
-        //} else if ((!self.control.isControl(cp) and ((cp >= 0x3400 and cp <= 0x4DB5) or
-        //    (cp >= 0x20000 and cp <= 0x2A6D6) or
-        //    (cp >= 0x2A700 and cp <= 0x2B734) or
-        //    (cp >= 0x2B740 and cp <= 0x2B81D) or
-        //    (cp >= 0x2B820 and cp <= 0x2CEAF) or
-        //    (cp >= 0x2CEB0 and cp <= 0x2EBE0))))
-        //{
     } else if (self.ideographs.isUnifiedIdeograph(cp) and !((cp >= 0x4E00 and cp <= 0x9FFF) or
         (cp >= 0xF900 and cp <= 0xFAFF)))
     {
@@ -321,60 +301,133 @@ pub fn implicitWeight(self: Self, cp: u21) Trie.Elements {
     return elements;
 }
 
+/// keyEql returns true if key `a` is equal to key `b`.
+pub fn keyEql(self: Self, a: []const u16, b: []const u16) bool {
+    if (a.len != b.len) return false;
+    return for (a) |aw, i| {
+        if (aw != b[i]) break false;
+    } else true;
+}
+
+/// keyLessThan returns true if key `a` is less than key `b`.
+pub fn keyLessThan(self: Self, a: []const u16, b: []const u16) bool {
+    // Compare
+    var outer_is_a = true;
+    var outer = a;
+    var inner = b;
+
+    if (a.len < b.len) {
+        outer_is_a = false;
+        outer = b;
+        inner = a;
+    }
+
+    return for (outer) |ow, i| {
+        if (ow == inner[i]) continue;
+
+        if (ow == 0) {
+            // Outer less than inner.
+            break if (outer_is_a) true else false;
+        }
+
+        if (inner[i] == 0) {
+            // Inner less than outer.
+            break if (outer_is_a) false else true;
+        }
+
+        break if (outer_is_a) ow < inner[i] else ow > inner[i];
+    } else false; // equal is not less than.
+}
+
+/// lessThan returns true if `a` is less than `b` according to the Unicode Collation Algorithm and 
+/// the Default Unicode Collation Element Table (DUCET) found at 
+/// http://www.unicode.org/Public/UCA/latest/allkeys.txt .
+pub fn lessThan(self: Self, a: []const u8, b: []const u8) !bool {
+    var key_a = try self.sortKey(a);
+    defer self.allocator.free(key_a);
+    var key_b = try self.sortKey(b);
+    defer self.allocator.free(key_b);
+
+    return self.keyLessThan(key_a, key_b);
+}
+
+fn lessThanNoFail(self: Self, a: []const u8, b: []const u8) bool {
+    return self.lessThan(a, b) catch |e| {
+        std.debug.print("Collator.lessThanNoFail: {}\n", .{e});
+        @panic("Collator.sort -> lessThanNoFail failed!");
+    };
+}
+
+/// sort orders the strings in `strings` according to the Unicode Collation Algorithm.
+pub fn sort(self: Self, strings: [][]const u8) void {
+    zort([]const u8, strings, self, lessThanNoFail);
+}
+
 const testing = std.testing;
 
-test "Collator" {
+test "Collator sort" {
     var allocator = std.testing.allocator;
     var collator = try init(allocator, "src/data/uca/allkeys.txt");
     defer collator.deinit();
 
-    var key_a = try collator.sortKey("\u{0334}\u{0308}");
-    defer allocator.free(key_a);
-    var key_b = try collator.sortKey("\u{0308}\u{0301}\u{0334}");
-    defer allocator.free(key_b);
+    testing.expect(try collator.lessThan("abc", "def"));
+    var strings: [3][]const u8 = .{ "xyz", "def", "abc" };
+    collator.sort(&strings);
+    testing.expectEqual(strings[0], "abc");
+    testing.expectEqual(strings[1], "def");
+    testing.expectEqual(strings[2], "xyz");
+}
 
-    // Compare
-    var outer_is_a = true;
-    var outer = key_a;
-    var inner = key_b;
+test "Collator UCA" {
+    const uca_tests = "/home/jecolon/dev/zig/corpus_tests/src/CollationTest/CollationTest_NON_IGNORABLE_SHORT.txt";
+    var file = try std.fs.cwd().openFile(uca_tests, .{});
+    defer file.close();
+    var buf_reader = std.io.bufferedReader(file.reader()).reader();
 
-    if (key_a.len < key_b.len) {
-        outer_is_a = false;
-        outer = key_b;
-        inner = key_a;
+    var allocator = std.testing.allocator;
+    var buf: [1024]u8 = undefined;
+
+    // Skip header.
+    var line_no: usize = 1;
+    while (try buf_reader.readUntilDelimiterOrEof(&buf, '\n')) |line| : (line_no += 1) {
+        if (line.len == 0) {
+            line_no += 1;
+            break;
+        }
     }
 
-    for (outer) |ow, i| {
-        if (ow == inner[i]) {
+    var prev_key: []const u16 = &[_]u16{};
+    defer allocator.free(prev_key);
+
+    var collator = try init(allocator, "src/data/uca/allkeys.txt");
+    defer collator.deinit();
+    var cp_buf: [4]u8 = undefined;
+
+    lines: while (try buf_reader.readUntilDelimiterOrEof(&buf, '\n')) |line| : (line_no += 1) {
+        if (line.len == 0 or line[0] == '#') continue;
+
+        //std.debug.print("line {d}: {s}\n", .{ line_no, line });
+        var bytes = std.ArrayList(u8).init(allocator);
+        defer bytes.deinit();
+
+        var cp_strs = mem.split(line, " ");
+
+        while (cp_strs.next()) |cp_str| {
+            const cp = try fmt.parseInt(u21, cp_str, 16);
+            const len = unicode.utf8Encode(cp, &cp_buf) catch |_| continue :lines;
+            try bytes.appendSlice(cp_buf[0..len]);
+        }
+
+        const current_key = try collator.sortKey(bytes.items);
+
+        if (prev_key.len == 0) {
+            prev_key = current_key;
             continue;
         }
 
-        if (ow == 0 and inner[i] != 0) {
-            // Outer less than inner.
-            if (outer_is_a) {
-                testing.expect(true);
-                break;
-            } else {
-                testing.expect(false);
-            }
-        }
+        testing.expect(collator.keyEql(prev_key, current_key) or collator.keyLessThan(prev_key, current_key));
 
-        if (ow != 0 and inner[i] == 0) {
-            // Inner less than outer.
-            if (outer_is_a) {
-                testing.expect(false);
-            } else {
-                testing.expect(true);
-                break;
-            }
-        }
-
-        if (outer_is_a) {
-            testing.expect(ow < inner[i]);
-        } else {
-            testing.expect(ow > inner[i]);
-        }
-
-        break;
+        allocator.free(prev_key);
+        prev_key = current_key;
     }
 }

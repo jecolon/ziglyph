@@ -6,66 +6,42 @@ const mem = std.mem;
 const sort = std.sort.sort;
 const unicode = std.unicode;
 
+const CaseFoldMap = @import("../CaseFolding/CaseFoldMap.zig");
 const CccMap = @import("../DerivedCombiningClass/CccMap.zig");
-const DecompTrie = @import("../../../zigstr/DecompTrie.zig");
 const HangulMap = @import("../HangulSyllableType/HangulMap.zig");
-const Letter = @import("../../aggregate/Letter.zig");
 const NFDCheck = @import("../DerivedNormalizationProps/NFDCheck.zig");
 
 allocator: *mem.Allocator,
 ccc_map: CccMap,
-decomp_trie: DecompTrie,
+fold_map: CaseFoldMap,
 hangul_map: HangulMap,
-letter: Letter,
 nfd_check: NFDCheck,
 
-const Decomposed = DecompTrie.Decomposed;
 const Self = @This();
 
-const Singleton = struct {
-    instance: *Self,
-    ref_count: usize,
+/// Decomposed is the result of a code point full decomposition. It can be one of:
+/// * .src: Sorce code point.
+/// * .same : Default canonical decomposition to the code point itself.
+/// * .single : Singleton canonical decomposition to a different single code point.
+/// * .canon : Canonical decomposition, which always results in two code points.
+/// * .compat : Compatibility decomposition, which can results in at most 18 code points.
+pub const Decomposed = union(enum) {
+    src: u21,
+    same: u21,
+    single: u21,
+    canon: [2]u21,
+    compat: []const u21,
 };
 
-var singleton: ?Singleton = null;
-
-pub fn init(allocator: *mem.Allocator) !*Self {
-    if (singleton) |*s| {
-        s.ref_count += 1;
-        return s.instance;
-    }
-
-    var self = try allocator.create(Self);
-    errdefer allocator.destroy(self);
-
-    self.* = Self{
+pub fn new(allocator: *mem.Allocator) Self {
+    return Self{
         .allocator = allocator,
         .ccc_map = CccMap{},
-        .decomp_trie = try DecompTrie.init(allocator),
+        .fold_map = CaseFoldMap{},
         .hangul_map = HangulMap{},
-        .letter = Letter.new(),
         .nfd_check = NFDCheck{},
     };
-
-    try self.addEntries();
-
-    singleton = Singleton{
-        .instance = self,
-        .ref_count = 1,
-    };
-
-    return self;
 }
 
-pub fn deinit(self: *Self) void {
-    if (singleton) |*s| {
-        s.ref_count -= 1;
-        if (s.ref_count == 0) {
-            self.decomp_trie.deinit();
-            self.allocator.destroy(s.instance);
-            singleton = null;
-        }
-    }
-}
-
-fn addEntries(self: *Self) !void {
+/// mapping retrieves the decomposition mapping for a code point as per the UCD.
+pub fn mapping(self: Self, cp: u21) Decomposed {
