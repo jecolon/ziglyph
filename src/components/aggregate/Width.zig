@@ -1,4 +1,5 @@
 const std = @import("std");
+const mem = std.mem;
 const unicode = std.unicode;
 
 const Ambiguous = @import("../../components.zig").Ambiguous;
@@ -6,10 +7,10 @@ const Enclosing = @import("../../components.zig").Enclosing;
 const ExtPic = @import("../../components.zig").ExtPic;
 const Format = @import("../../components.zig").Format;
 const Fullwidth = @import("../../components.zig").Fullwidth;
-const Regional = @import("../../components.zig").Regional;
-const Wide = @import("../../components.zig").Wide;
 const GraphemeIterator = @import("../../zigstr/GraphemeIterator.zig");
 const Nonspacing = @import("../../components.zig").Nonspacing;
+const Regional = @import("../../components.zig").Regional;
+const Wide = @import("../../components.zig").Wide;
 
 const Self = @This();
 
@@ -92,7 +93,7 @@ pub fn codePointWidth(self: Self, cp: u21, am_width: AmbiguousWidth) i8 {
 
 /// strWidth returns how many cells (or columns) wide `str` should be when rendered in a
 /// fixed-width font.
-pub fn strWidth(self: *Self, str: []const u8, am_width: AmbiguousWidth) !usize {
+pub fn strWidth(self: Self, str: []const u8, am_width: AmbiguousWidth) !usize {
     var total: isize = 0;
 
     var giter = try GraphemeIterator.new(str);
@@ -104,9 +105,11 @@ pub fn strWidth(self: *Self, str: []const u8, am_width: AmbiguousWidth) !usize {
             var w = self.codePointWidth(cp, am_width);
 
             if (w != 0) {
+                // Only adding width of first non-zero-width code point.
                 if (self.extpic.isExtendedPictographic(cp)) {
                     if (cp_iter.nextCodepoint()) |ncp| {
-                        if (ncp == 0xFE0E) w = 1; // Emoji text sequence.
+                        // Emoji text sequence.
+                        if (ncp == 0xFE0E) w = 1;
                     }
                 }
                 total += w;
@@ -118,7 +121,43 @@ pub fn strWidth(self: *Self, str: []const u8, am_width: AmbiguousWidth) !usize {
     return if (total > 0) @intCast(usize, total) else 0;
 }
 
+/// centers `str` in a new string of width `total_width` (in display cells) using `pad` as padding.
+/// Caller must free returned bytes.
+pub fn center(self: Self, allocator: *mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
+    var str_width = try self.strWidth(str, .half);
+    if (str_width > total_width) return error.StrTooLong;
+
+    var pad_width = try self.strWidth(pad, .half);
+    if (pad_width > total_width or str_width + pad_width > total_width) return error.PadTooLong;
+
+    const margin_width = @divFloor((total_width - str_width), 2);
+    if (pad_width > margin_width) return error.PadTooLong;
+
+    const pads = @divFloor(margin_width, pad_width) * 2;
+
+    var result = try allocator.alloc(u8, pads * pad.len + str.len);
+    var bytes_index: usize = 0;
+    var pads_index: usize = 0;
+
+    while (pads_index < pads / 2) : (pads_index += 1) {
+        mem.copy(u8, result[bytes_index..], pad);
+        bytes_index += pad.len;
+    }
+
+    mem.copy(u8, result[bytes_index..], str);
+    bytes_index += str.len;
+
+    pads_index = 0;
+    while (pads_index < pads / 2) : (pads_index += 1) {
+        mem.copy(u8, result[bytes_index..], pad);
+        bytes_index += pad.len;
+    }
+
+    return result;
+}
+
 const expectEqual = std.testing.expectEqual;
+const expectEqualSlices = std.testing.expectEqualSlices;
 
 test "Grapheme Width" {
     var width = new();
@@ -158,4 +197,21 @@ test "Grapheme Width" {
     expectEqual(@as(usize, 2), try width.strWidth("\u{26A1}", .half)); // Lone emoji
     expectEqual(@as(usize, 1), try width.strWidth("\u{26A1}\u{FE0E}", .half)); // Text sequence
     expectEqual(@as(usize, 2), try width.strWidth("\u{26A1}\u{FE0F}", .half)); // Presentation sequence
+}
+
+test "Grapheme center" {
+    var allocator = std.testing.allocator;
+    var width = new();
+
+    var centered = try width.center(allocator, "abc", 9, "*");
+    defer allocator.free(centered);
+    expectEqualSlices(u8, "***abc***", centered);
+
+    allocator.free(centered);
+    centered = try width.center(allocator, "w😊w", 10, "-");
+    expectEqualSlices(u8, "---w😊w---", centered);
+
+    allocator.free(centered);
+    centered = try width.center(allocator, " w😊w ", 80, "~:~");
+    std.debug.print("\n{s}\n", .{centered});
 }
