@@ -377,12 +377,62 @@ pub fn split(self: Self, delim: []const u8) ![][]const u8 {
     var ss = std.ArrayList([]const u8).init(self.allocator);
     defer ss.deinit();
 
-    var iter = self.splitIter(delim);
+    var iter = mem.split(self.bytes, delim);
     while (iter.next()) |s| {
         try ss.append(s);
     }
 
     return ss.toOwnedSlice();
+}
+
+/// lineIter returns an iterator of lines separated by \n in this Zigstr.
+pub fn lineIter(self: Self) mem.SplitIterator {
+    return self.splitIter("\n");
+}
+
+/// lines returns a slice of substrings resulting from splitting this Zigstr at every \n.
+pub fn lines(self: Self) ![][]const u8 {
+    return self.split("\n");
+}
+
+test "Zigstr lines" {
+    var allocator = std.testing.allocator;
+    var str = try init(allocator, "Hello\nWorld");
+    defer str.deinit();
+
+    var iter = str.lineIter();
+    expectEqualStrings(iter.next().?, "Hello");
+    expectEqualStrings(iter.next().?, "World");
+
+    var lines_array = try str.lines();
+    defer allocator.free(lines_array);
+    expectEqualStrings(lines_array[0], "Hello");
+    expectEqualStrings(lines_array[1], "World");
+}
+
+/// reverses the grapheme clusters in this Zigstr, mutating it.
+pub fn reverse(self: *Self) !void {
+    var gcs = try self.graphemes();
+    var bytes = try self.allocator.alloc(u8, self.bytes.len);
+    var bytes_index: usize = 0;
+    var gc_index: usize = gcs.len - 1;
+
+    while (gc_index >= 0) {
+        mem.copy(u8, bytes[bytes_index..], gcs[gc_index].bytes);
+        if (gc_index == 0) break;
+        bytes_index += gcs[gc_index].bytes.len;
+        gc_index -= 1;
+    }
+
+    try self.resetWith(bytes, true);
+}
+
+test "Zigstr reverse" {
+    var str = try init(std.testing.allocator, "Héllo 😊");
+    defer str.deinit();
+
+    try str.reverse();
+    expectEqualStrings(str.bytes, "😊 olléH");
 }
 
 /// startsWith returns true if this Zigstr starts with `str`.
@@ -668,6 +718,129 @@ pub fn toUpper(self: *Self) !void {
 /// format implements the `std.fmt` format interface for printing types.
 pub fn format(self: Self, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
     _ = try writer.print("{s}", .{self.bytes});
+}
+
+/// parseInt tries to parse this Zigstr as an integer of type `T` in base `radix`.
+pub fn parseInt(self: Self, comptime T: type, radix: u8) !T {
+    return std.fmt.parseInt(T, self.bytes, radix);
+}
+
+/// parseFloat tries to parse this Zigstr as an floating point number of type `T`.
+pub fn parseFloat(self: Self, comptime T: type) !T {
+    return std.fmt.parseFloat(T, self.bytes);
+}
+
+test "Zigstr parse numbers" {
+    var str = try initWith(std.testing.allocator, "2112", false);
+    defer str.deinit();
+
+    expectEqual(@as(u16, 2112), try str.parseInt(u16, 10));
+    expectEqual(@as(i16, 2112), try str.parseInt(i16, 10));
+    expectEqual(@as(f16, 2112.0), try str.parseFloat(f16));
+}
+
+/// repeats the contents of this Zigstr `n` times, mutating it.
+pub fn repeat(self: *Self, n: usize) !void {
+    if (n == 1) return;
+
+    var bytes = try self.allocator.alloc(u8, self.bytes.len * n);
+    var bytes_index: usize = 0;
+
+    while (bytes_index < n) : (bytes_index += self.bytes.len) {
+        mem.copy(u8, bytes[bytes_index..], self.bytes);
+    }
+
+    try self.resetWith(bytes, true);
+}
+
+test "Zigstr repeat" {
+    var str = try initWith(std.testing.allocator, "*", false);
+    defer str.deinit();
+
+    try str.repeat(10);
+    expectEqualStrings(str.bytes, "**********");
+    try str.repeat(1);
+    expectEqualStrings(str.bytes, "**********");
+    try str.repeat(0);
+    expectEqualStrings(str.bytes, "");
+}
+
+/// parseBool parses this Zigstr as either true or false.
+pub fn parseBool(self: Self) !bool {
+    if (mem.eql(u8, self.bytes, "true")) return true;
+    if (mem.eql(u8, self.bytes, "false")) return false;
+
+    return error.ParseBoolError;
+}
+
+/// parseTruthy parses this Zigstr as a *truthy* value:
+/// * True and T in any case combination are true.
+/// * False and F in any case combination are false.
+/// * 0 is false, 1 is true.
+/// * Yes, Y, and On in any case combination are true.
+/// * No, N, and Off in any case combination are false.
+pub fn parseTruthy(self: Self) !bool {
+    var lstr = try init(self.allocator, self.bytes);
+    defer lstr.deinit();
+
+    try lstr.toLower();
+    // True
+    if (mem.eql(u8, lstr.bytes, "true")) return true;
+    if (mem.eql(u8, lstr.bytes, "t")) return true;
+    if (mem.eql(u8, lstr.bytes, "on")) return true;
+    if (mem.eql(u8, lstr.bytes, "yes")) return true;
+    if (mem.eql(u8, lstr.bytes, "y")) return true;
+    if (mem.eql(u8, lstr.bytes, "1")) return true;
+    // False
+    if (mem.eql(u8, lstr.bytes, "false")) return false;
+    if (mem.eql(u8, lstr.bytes, "f")) return false;
+    if (mem.eql(u8, lstr.bytes, "off")) return false;
+    if (mem.eql(u8, lstr.bytes, "no")) return false;
+    if (mem.eql(u8, lstr.bytes, "n")) return false;
+    if (mem.eql(u8, lstr.bytes, "0")) return false;
+
+    return error.ParseTruthyError;
+}
+
+test "Zigstr parse bool truthy" {
+    var str = try initWith(std.testing.allocator, "true", false);
+    defer str.deinit();
+
+    expect(try str.parseBool());
+    expect(try str.parseTruthy());
+    try str.reset("false");
+    expect(!try str.parseBool());
+    expect(!try str.parseTruthy());
+
+    try str.reset("true");
+    expect(try str.parseTruthy());
+    try str.reset("t");
+    expect(try str.parseTruthy());
+    try str.reset("on");
+    expect(try str.parseTruthy());
+    try str.reset("yes");
+    expect(try str.parseTruthy());
+    try str.reset("y");
+    expect(try str.parseTruthy());
+    try str.reset("1");
+    expect(try str.parseTruthy());
+    try str.reset("TrUe");
+    expect(try str.parseTruthy());
+
+    try str.reset("false");
+    expect(!try str.parseTruthy());
+    try str.reset("f");
+    expect(!try str.parseTruthy());
+    try str.reset("off");
+    expect(!try str.parseTruthy());
+    try str.reset("no");
+    expect(!try str.parseTruthy());
+    try str.reset("n");
+    expect(!try str.parseTruthy());
+    try str.reset("0");
+    expect(!try str.parseTruthy());
+    try str.reset("FaLsE");
+    expect(!try str.parseTruthy());
 }
 
 const expect = std.testing.expect;
