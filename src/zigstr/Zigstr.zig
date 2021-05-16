@@ -6,8 +6,9 @@ const ascii = @import("../ascii.zig");
 const Letter = @import("../ziglyph.zig").Letter;
 
 const CodePointIterator = @import("CodePointIterator.zig");
-const GraphemeIterator = @import("GraphemeIterator.zig");
 const Grapheme = GraphemeIterator.Grapheme;
+const GraphemeIterator = @import("GraphemeIterator.zig");
+const WhiteSpace = @import("../components.zig").WhiteSpace;
 
 const Self = @This();
 
@@ -17,7 +18,6 @@ bytes: []const u8,
 code_points: ?[]u21,
 cp_count: usize,
 grapheme_clusters: ?[]Grapheme,
-letter: Letter,
 owned: bool,
 
 /// init returns a new Zigstr from the byte slice `str`, which is owned elsewhere. It will *not* be 
@@ -40,7 +40,6 @@ fn initWith(allocator: *mem.Allocator, str: []const u8, owned: bool) !Self {
         .code_points = null,
         .cp_count = 0,
         .grapheme_clusters = null,
-        .letter = Letter.new(),
         .owned = owned,
     };
 
@@ -463,14 +462,31 @@ pub fn appendAll(self: *Self, cp_list: []const u21) !void {
     try self.concat(cp_bytes.items);
 }
 
-/// empty returns true if this Zigstr has no bytes.
-pub fn empty(self: Self) bool {
+/// isEmpty returns true if this Zigstr has no bytes.
+pub fn isEmpty(self: Self) bool {
     return self.bytes.len == 0;
+}
+
+/// isBlank returns true if this Zigstr consits of whitespace only .
+pub fn isBlank(self: *Self) !bool {
+    const whitespace = WhiteSpace{};
+    return for (try self.codePoints()) |cp| {
+        if (!whitespace.isWhiteSpace(cp)) break false;
+    } else true;
+}
+
+test "Zigstr isBlank" {
+    var str = try init(std.testing.allocator, " \t   ");
+    defer str.deinit();
+
+    expect(try str.isBlank());
+    try str.reset(" a b \t");
+    expect(!try str.isBlank());
 }
 
 /// chomp will remove trailing \n or \r\n from this Zigstr, mutating it.
 pub fn chomp(self: *Self) !void {
-    if (self.empty()) return;
+    if (self.isEmpty()) return;
 
     const len = self.bytes.len;
     const last = self.bytes[len - 1];
@@ -599,8 +615,9 @@ pub fn processCodePoints(self: *Self) !void {
 
 /// isLower detects if all the code points in this Zigstr are lowercase.
 pub fn isLower(self: *Self) !bool {
+    const letter = Letter.new();
     for (try self.codePoints()) |cp| {
-        if (!self.letter.isLower(cp)) return false;
+        if (!letter.isLower(cp)) return false;
     }
 
     return true;
@@ -611,9 +628,10 @@ pub fn toLower(self: *Self) !void {
     var bytes = std.ArrayList(u8).init(self.allocator);
     defer bytes.deinit();
 
+    const letter = Letter.new();
     var buf: [4]u8 = undefined;
     for (try self.codePoints()) |cp| {
-        const lcp = self.letter.toLower(cp);
+        const lcp = letter.toLower(cp);
         const len = try unicode.utf8Encode(lcp, &buf);
         try bytes.appendSlice(buf[0..len]);
     }
@@ -623,8 +641,9 @@ pub fn toLower(self: *Self) !void {
 
 /// isUpper detects if all the code points in this Zigstr are uppercase.
 pub fn isUpper(self: *Self) !bool {
+    const letter = Letter.new();
     for (try self.codePoints()) |cp| {
-        if (!self.letter.isUpper(cp)) return false;
+        if (!letter.isUpper(cp)) return false;
     }
 
     return true;
@@ -635,9 +654,10 @@ pub fn toUpper(self: *Self) !void {
     var bytes = std.ArrayList(u8).init(self.allocator);
     defer bytes.deinit();
 
+    const letter = Letter.new();
     var buf: [4]u8 = undefined;
     for (try self.codePoints()) |cp| {
-        const lcp = self.letter.toUpper(cp);
+        const lcp = letter.toUpper(cp);
         const len = try unicode.utf8Encode(lcp, &buf);
         try bytes.appendSlice(buf[0..len]);
     }
