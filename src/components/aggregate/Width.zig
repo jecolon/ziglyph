@@ -156,6 +156,63 @@ pub fn center(self: Self, allocator: *mem.Allocator, str: []const u8, total_widt
     return result;
 }
 
+/// padLeft returns a new string of width `total_width` (in display cells) using `pad` as padding
+/// on the left side.  Caller must free returned bytes.
+pub fn padLeft(self: Self, allocator: *mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
+    var str_width = try self.strWidth(str, .half);
+    if (str_width > total_width) return error.StrTooLong;
+
+    var pad_width = try self.strWidth(pad, .half);
+    if (pad_width > total_width or str_width + pad_width > total_width) return error.PadTooLong;
+
+    const margin_width = total_width - str_width;
+    if (pad_width > margin_width) return error.PadTooLong;
+
+    const pads = @divFloor(margin_width, pad_width);
+
+    var result = try allocator.alloc(u8, pads * pad.len + str.len);
+    var bytes_index: usize = 0;
+    var pads_index: usize = 0;
+
+    while (pads_index < pads) : (pads_index += 1) {
+        mem.copy(u8, result[bytes_index..], pad);
+        bytes_index += pad.len;
+    }
+
+    mem.copy(u8, result[bytes_index..], str);
+
+    return result;
+}
+
+/// padRight returns a new string of width `total_width` (in display cells) using `pad` as padding
+/// on the right side.  Caller must free returned bytes.
+pub fn padRight(self: Self, allocator: *mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
+    var str_width = try self.strWidth(str, .half);
+    if (str_width > total_width) return error.StrTooLong;
+
+    var pad_width = try self.strWidth(pad, .half);
+    if (pad_width > total_width or str_width + pad_width > total_width) return error.PadTooLong;
+
+    const margin_width = total_width - str_width;
+    if (pad_width > margin_width) return error.PadTooLong;
+
+    const pads = @divFloor(margin_width, pad_width);
+
+    var result = try allocator.alloc(u8, pads * pad.len + str.len);
+    var bytes_index: usize = 0;
+    var pads_index: usize = 0;
+
+    mem.copy(u8, result[bytes_index..], str);
+    bytes_index += str.len;
+
+    while (pads_index < pads) : (pads_index += 1) {
+        mem.copy(u8, result[bytes_index..], pad);
+        bytes_index += pad.len;
+    }
+
+    return result;
+}
+
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
@@ -210,8 +267,34 @@ test "Grapheme center" {
     allocator.free(centered);
     centered = try width.center(allocator, "w😊w", 10, "-");
     expectEqualSlices(u8, "---w😊w---", centered);
+}
 
-    allocator.free(centered);
-    centered = try width.center(allocator, " w😊w ", 80, "~:~");
-    std.debug.print("\n{s}\n", .{centered});
+test "Grapheme padLeft" {
+    var allocator = std.testing.allocator;
+    var width = new();
+
+    var right_aligned = try width.padLeft(allocator, "abc", 9, "*");
+    defer allocator.free(right_aligned);
+    expectEqualSlices(u8, "******abc", right_aligned);
+
+    allocator.free(right_aligned);
+    right_aligned = try width.padLeft(allocator, "w😊w", 10, "-");
+    expectEqualSlices(u8, "------w😊w", right_aligned);
+}
+
+test "Grapheme padRight" {
+    var allocator = std.testing.allocator;
+    var width = new();
+
+    var left_aligned = try width.padRight(allocator, "abc", 9, "*");
+    defer allocator.free(left_aligned);
+    expectEqualSlices(u8, "abc******", left_aligned);
+
+    allocator.free(left_aligned);
+    left_aligned = try width.padRight(allocator, "w😊w", 10, "-");
+    expectEqualSlices(u8, "w😊w------", left_aligned);
+
+    allocator.free(left_aligned);
+    left_aligned = try width.padRight(allocator, "w😊w ", 80, "~:~");
+    std.debug.print("\n{s}\n", .{left_aligned});
 }
