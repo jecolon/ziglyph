@@ -293,8 +293,4 @@ test "Grapheme padRight" {
     allocator.free(left_aligned);
     left_aligned = try width.padRight(allocator, "w😊w", 10, "-");
     expectEqualSlices(u8, "w😊w------", left_aligned);
-
-    allocator.free(left_aligned);
-    left_aligned = try width.padRight(allocator, "w😊w ", 80, "~:~");
-    std.debug.print("\n{s}\n", .{left_aligned});
 }

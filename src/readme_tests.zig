@@ -121,6 +121,21 @@ test "Code point / string widths" {
     expectEqual(try width.strWidth("Héllo 🇪🇸", .half), 8);
     expectEqual(try width.strWidth("\u{26A1}\u{FE0E}", .half), 1); // Text sequence
     expectEqual(try width.strWidth("\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
+
+    var allocator = std.testing.allocator;
+
+    // padLeft, center, padRight
+    const right_aligned = try width.padLeft(allocator, "w😊w", 10, "-");
+    defer allocator.free(right_aligned);
+    expectEqualSlices(u8, "------w😊w", right_aligned);
+
+    const centered = try width.center(allocator, "w😊w", 10, "-");
+    defer allocator.free(centered);
+    expectEqualSlices(u8, "---w😊w---", centered);
+
+    const left_aligned = try width.padRight(allocator, "w😊w", 10, "-");
+    defer allocator.free(left_aligned);
+    expectEqualSlices(u8, "w😊w------", left_aligned);
 }
 
 test "Collation" {

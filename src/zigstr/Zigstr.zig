@@ -440,22 +440,37 @@ pub fn chomp(self: *Self) !void {
 }
 
 /// byteAt returns the byte at index `i`.
-pub fn byteAt(self: Self, i: usize) !u8 {
+pub fn byteAt(self: Self, i: isize) !u8 {
     if (i >= self.bytes.len) return error.IndexOutOfBounds;
-    return self.bytes[i];
+    if (i < 0) {
+        if (-i > self.bytes.len) return error.IndexOutOfBounds;
+        return self.bytes[self.bytes.len - @intCast(usize, -i)];
+    }
+
+    return self.bytes[@intCast(usize, i)];
 }
 
 /// codePointAt returns the `i`th code point.
-pub fn codePointAt(self: *Self, i: usize) !u21 {
+pub fn codePointAt(self: *Self, i: isize) !u21 {
     if (i >= self.cp_count) return error.IndexOutOfBounds;
-    return (try self.codePoints())[i];
+    if (i < 0) {
+        if (-i > self.cp_count) return error.IndexOutOfBounds;
+        return (try self.codePoints())[self.cp_count - @intCast(usize, -i)];
+    }
+
+    return (try self.codePoints())[@intCast(usize, i)];
 }
 
 /// graphemeAt returns the `i`th grapheme cluster.
-pub fn graphemeAt(self: *Self, i: usize) !Grapheme {
+pub fn graphemeAt(self: *Self, i: isize) !Grapheme {
     const gcs = try self.graphemes();
     if (i >= gcs.len) return error.IndexOutOfBounds;
-    return gcs[i];
+    if (i < 0) {
+        if (-i > gcs.len) return error.IndexOutOfBounds;
+        return gcs[gcs.len - @intCast(usize, -i)];
+    }
+
+    return gcs[@intCast(usize, i)];
 }
 
 /// byteSlice returnes the bytes from this Zigstr in the specified range from `start` to `end` - 1.
@@ -819,11 +834,17 @@ test "Zigstr xAt" {
     defer str.deinit();
 
     expectEqual(try str.byteAt(2), 0x00CC);
+    expectEqual(try str.byteAt(-5), 0x00CC);
     expectError(error.IndexOutOfBounds, str.byteAt(7));
+    expectError(error.IndexOutOfBounds, str.byteAt(-8));
     expectEqual(try str.codePointAt(1), 0x0065);
+    expectEqual(try str.codePointAt(-5), 0x0065);
     expectError(error.IndexOutOfBounds, str.codePointAt(6));
+    expectError(error.IndexOutOfBounds, str.codePointAt(-7));
     expect((try str.graphemeAt(1)).eql("\u{0065}\u{0301}"));
+    expect((try str.graphemeAt(-4)).eql("\u{0065}\u{0301}"));
     expectError(error.IndexOutOfBounds, str.graphemeAt(5));
+    expectError(error.IndexOutOfBounds, str.graphemeAt(-6));
 }
 
 test "Zigstr extractions" {

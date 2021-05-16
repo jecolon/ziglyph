@@ -90,6 +90,16 @@ test "Zigstr README tests" {
     // Grapheme count.
     expectEqual(@as(usize, 5), try str.graphemeCount());
 
+    // byteAt, codePointAt, graphemeAt
+    try str.reset("H\u{0065}\u{0301}llo");
+
+    expectEqual(try str.byteAt(2), 0x00CC);
+    expectEqual(try str.byteAt(-5), 0x00CC);
+    expectEqual(try str.codePointAt(1), 0x0065);
+    expectEqual(try str.codePointAt(-5), 0x0065);
+    expect((try str.graphemeAt(1)).eql("\u{0065}\u{0301}"));
+    expect((try str.graphemeAt(-4)).eql("\u{0065}\u{0301}"));
+
     // Copy
     var str2 = try str.copy();
     defer str2.deinit();
