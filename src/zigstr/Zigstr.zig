@@ -279,6 +279,55 @@ pub fn trim(self: *Self, str: []const u8) !void {
     }
 }
 
+/// dropLeft removes `n` graphemes from the left of this Zigstr, mutating it.
+pub fn dropLeft(self: *Self, n: usize) !void {
+    const gcs = try self.graphemes();
+    if (n >= gcs.len) return error.IndexOutOfBounds;
+
+    const offset = gcs[n].offset;
+
+    if (self.owned) {
+        var bytes = try self.allocator.alloc(u8, self.bytes[offset..].len);
+        mem.copy(u8, bytes, self.bytes[offset..]);
+        try self.resetWith(bytes, true);
+    } else {
+        try self.resetWith(self.bytes[offset..], false);
+    }
+}
+
+test "Zigstr dropLeft" {
+    var str = try init(std.testing.allocator, "Héllo");
+    defer str.deinit();
+
+    try str.dropLeft(4);
+    expect(str.eql("o"));
+}
+
+/// dropRight removes `n` graphemes from the right of this Zigstr, mutating it.
+pub fn dropRight(self: *Self, n: usize) !void {
+    const gcs = try self.graphemes();
+    if (n > gcs.len) return error.IndexOutOfBounds;
+    if (n == gcs.len) try self.resetWith("", false);
+
+    const offset = gcs[gcs.len - n].offset;
+
+    if (self.owned) {
+        var bytes = try self.allocator.alloc(u8, self.bytes[0..offset].len);
+        mem.copy(u8, bytes, self.bytes[0..offset]);
+        try self.resetWith(bytes, true);
+    } else {
+        try self.resetWith(self.bytes[0..offset], false);
+    }
+}
+
+test "Zigstr dropRight" {
+    var str = try init(std.testing.allocator, "Héllo");
+    defer str.deinit();
+
+    try str.dropRight(4);
+    expect(str.eql("H"));
+}
+
 /// indexOf returns the index of `needle` in this Zigstr or null if not found.
 pub fn indexOf(self: Self, needle: []const u8) ?usize {
     return mem.indexOf(u8, self.bytes, needle);
