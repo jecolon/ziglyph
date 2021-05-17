@@ -171,6 +171,17 @@ test "Zigstr README tests" {
     expectEqualStrings("World", ss[2]);
     expectEqualStrings("", ss[3]);
 
+    // Convenience methods for splitting on newline '\n'.
+    try str.reset("Hello\nWorld");
+    var iter = str.lineIter(); // line iterator
+    expectEqualStrings(iter.next().?, "Hello");
+    expectEqualStrings(iter.next().?, "World");
+
+    var lines_array = try str.lines(); // array of lines without ending \n.
+    defer allocator.free(lines_array);
+    expectEqualStrings(lines_array[0], "Hello");
+    expectEqualStrings(lines_array[1], "World");
+
     // startsWith / endsWith
     try str.reset("Hello World");
     expect(str.startsWith("Hell"));
