@@ -1,4 +1,5 @@
 const std = @import("std");
+const atomic = std.atomic;
 const fmt = std.fmt;
 const io = std.io;
 const mem = std.mem;
@@ -29,14 +30,14 @@ const Self = @This();
 
 const Singleton = struct {
     instance: *Self,
-    ref_count: usize,
+    ref_count: atomic.Int(usize),
 };
 
 var singleton: ?Singleton = null;
 
 pub fn init(allocator: *mem.Allocator, filename: []const u8) !*Self {
     if (singleton) |*s| {
-        s.ref_count += 1;
+        _ = s.ref_count.incr();
         return s.instance;
     }
 
@@ -56,7 +57,7 @@ pub fn init(allocator: *mem.Allocator, filename: []const u8) !*Self {
 
     singleton = Singleton{
         .instance = self,
-        .ref_count = 1,
+        .ref_count = atomic.Int(usize).init(1),
     };
 
     return self;
@@ -64,8 +65,8 @@ pub fn init(allocator: *mem.Allocator, filename: []const u8) !*Self {
 
 pub fn deinit(self: *Self) void {
     if (singleton) |*s| {
-        s.ref_count -= 1;
-        if (s.ref_count == 0) {
+        _ = s.ref_count.decr();
+        if (s.ref_count.get() == 0) {
             self.table.deinit();
             self.implicits.deinit();
             self.allocator.destroy(s.instance);
