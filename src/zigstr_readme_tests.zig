@@ -8,7 +8,7 @@ const Zigstr = @import("zigstr/Zigstr.zig");
 
 test "Zigstr README tests" {
     var allocator = std.testing.allocator;
-    var str = try Zigstr.init(std.testing.allocator, "Héllo");
+    var str = try Zigstr.fromBytes(std.testing.allocator, "Héllo");
     defer str.deinit();
 
     // Byte count.
@@ -157,7 +157,41 @@ test "Zigstr README tests" {
     expect(str.eql("Hello World"));
 
     // Test for empty string.
-    expect(!str.empty());
+    expect(!str.isEmpty());
+
+    // Test for whitespace only (blank) strings.
+    try str.reset("  \t  ");
+    expect(try str.isBlank());
+    expect(!str.isEmpty());
+
+    // Remove grapheme clusters (characters) from strings.
+    try str.reset("Hello World");
+    try str.dropLeft(6);
+    expect(str.eql("World"));
+    try str.reset("Hello World");
+    try str.dropRight(6);
+    expect(str.eql("Hello"));
+
+    // Repeat a string's content.
+    try str.reset("*");
+    try str.repeat(10);
+    expect(str.eql("**********"));
+    try str.repeat(1);
+    expect(str.eql("**********"));
+    try str.repeat(0);
+    expect(str.eql(""));
+
+    // Reverse a string. Note correct handling of Unicode code point ordering.
+    try str.reset("Héllo 😊");
+    try str.reverse();
+    expect(str.eql("😊 olléH"));
+
+    // You can also construct a Zigstr from coce points.
+    const cp_array = [_]u21{ 0x68, 0x65, 0x6C, 0x6C, 0x6F }; // "hello"
+    str.deinit();
+    str = try Zigstr.fromCodePoints(allocator, &cp_array);
+    expect(str.eql("hello"));
+    expectEqual(str.codePointCount(), 5);
 
     // Chomp line breaks.
     try str.reset("Hello\n");

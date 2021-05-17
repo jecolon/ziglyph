@@ -10,38 +10,45 @@ a human-perceivable *character in Unicode* is the Grapheme Cluster, represented 
 type returned from each call to the `next` method on a `GraphemeIterator` (see sample code below).
 
 ## Ownership
-There are two possibilities when creating a new Zigstr:
+There are two possibilities when creating a new Zigstr, either with bytes or code points:
 
-* Creating a Zigstr from a string literal like `"Hell"`.
-* Creating a Zigstr from an owned byte slice, like the one you get from an ArrayList's `toOwnedSlice`
-  method, or one just allocated with an allocator.
+* You own the bytes or code points, requiring the `deinit` method to free them.
+* You don't own the bytes or code points, so `deinit` will not free them.
 
-To create a Zigstr with a string literal, you use the `init` function. This ensures that on `deinit`,
-no de-allocation occures.
+To create a Zigstr with bytes or code points that you don't own:
 
 ```zig
-var str = try Zigstr.init(allocator, "Hello");
-defer str.deinit(); // still need `deinit` to free other internal state, but not the passed-in bytes.
+// For bytes.
+var str = try Zigstr.fromBytes(allocator, "Hello");
+defer str.deinit(); // still need `deinit` to free other resources, but not the passed-in bytes.
+
+// For code points.
+var str = try Zigstr.fromCodePoints(allocator, &[_]u21{ 0x68, 0x65, 0x6C, 0x6C, 0x6F });
+defer str.deinit(); // still need `deinit` to free other resources, but not the passed-in code points.
 ```
 
-To create a Zigstr with an owned slice of bytes, use the `initOwned` function. The passed in bytes will
-then be freed when `deinit` is called.
+To create a Zigstr from bytes or code points you own:
 
 ```zig
-var list = std.ArrayList(u8).init(allocator);
-defer list.deinit();
-
-try list.appendSlice("Hello");
-var slice = list.toOwnedSlice();
-
-var str = try Zigstr.initOwned(allocator, slice);
+// For bytes.
+var str = try Zigstr.fromOwnedBytes(allocator, slice);
 defer str.deinit(); // owned bytes will be freed.
+
+// For code points.
+var str = try Zigstr.fromOwnedCodePoints(allocator, slice);
+defer str.deinit(); // owned code points will be freed.
 ```
 
 ## Comparison and Sorting (Collation)
 Given the large amounts of data required for comparisons and sorting of Unicode strings, these operations
 are not included in the `Zigstr` struct to keep it light and fast. Comparison and sorting of strings
-can be found in the `Normalizer` and `Collator` structs. See the main README file for examples.
+can be found in the `Normalizer` and `Collator` structs. See the main `README` file for examples.
+
+## Display Width
+The `Width` struct contains methods to calculate the fixed-width cells a given code point or string 
+occupies in a fixed-width context such as a terminal emulator. Since these calculations are required
+for methods that *pad* the string in different alignments, operations like `padLeft`, `padRight`, and 
+`center` are part of the `Width` struct and not Zigstr. See the main `README` for examples.
 
 ## Usage Examples
 ```zig
@@ -49,7 +56,7 @@ const Zigstr = @import("Ziglyph").Zigstr;
 
 test "Zigstr README tests" {
     var allocator = std.testing.allocator;
-    var str = try Zigstr.init(std.testing.allocator, "Héllo");
+    var str = try Zigstr.fromBytes(std.testing.allocator, "Héllo");
     defer str.deinit();
 
     // Byte count.
@@ -89,16 +96,6 @@ test "Zigstr README tests" {
 
     // Grapheme count.
     expectEqual(@as(usize, 5), try str.graphemeCount());
-
-    // byteAt, codePointAt, graphemeAt
-    try str.reset("H\u{0065}\u{0301}llo");
-
-    expectEqual(try str.byteAt(2), 0x00CC);
-    expectEqual(try str.byteAt(-5), 0x00CC);
-    expectEqual(try str.codePointAt(1), 0x0065);
-    expectEqual(try str.codePointAt(-5), 0x0065);
-    expect((try str.graphemeAt(1)).eql("\u{0065}\u{0301}"));
-    expect((try str.graphemeAt(-4)).eql("\u{0065}\u{0301}"));
 
     // Copy
     var str2 = try str.copy();
@@ -208,7 +205,41 @@ test "Zigstr README tests" {
     expect(str.eql("Hello World"));
 
     // Test for empty string.
-    expect(!str.empty());
+    expect(!str.isEmpty());
+
+    // Test for whitespace only (blank) strings.
+    try str.reset("  \t  ");
+    expect(try str.isBlank());
+    expect(!str.isEmpty());
+
+    // Remove grapheme clusters (characters) from strings.
+    try str.reset("Hello World");
+    try str.dropLeft(6);
+    expect(str.eql("World"));
+    try str.reset("Hello World");
+    try str.dropRight(6);
+    expect(str.eql("Hello"));
+
+    // Repeat a string's content.
+    try str.reset("*");
+    try str.repeat(10);
+    expect(str.eql("**********"));
+    try str.repeat(1);
+    expect(str.eql("**********"));
+    try str.repeat(0);
+    expect(str.eql(""));
+
+    // Reverse a string. Note correct handling of Unicode code point ordering.
+    try str.reset("Héllo 😊");
+    try str.reverse();
+    expect(str.eql("😊 olléH"));
+
+    // You can also construct a Zigstr from coce points.
+    const cp_array = [_]u21{ 0x68, 0x65, 0x6C, 0x6C, 0x6F }; // "hello"
+    str.deinit();
+    str = try Zigstr.fromCodePoints(allocator, &cp_array);
+    expect(str.eql("hello"));
+    expectEqual(str.codePointCount(), 5);
 
     // Chomp line breaks.
     try str.reset("Hello\n");
