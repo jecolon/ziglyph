@@ -71,31 +71,60 @@ pub fn fromOwnedCodePoints(allocator: *mem.Allocator, code_points: []const u21) 
 /// initCodePoints creates a new Zigstr instance using the code points in `code_points`. `owned`
 /// determines if `code_points` should be freed on `deinit`.
 fn initCodePoints(allocator: *mem.Allocator, code_points: []const u21, owned: bool) !Self {
-    var zstr = Self{
-        .allocator = allocator,
-        .ascii_only = blk_a: {
-            break :blk_a for (code_points) |cp| {
-                if (cp > 127) break false;
-            } else true;
-        },
-        .bytes = blk_b: {
-            var buf = std.ArrayList(u8).init(allocator);
-            defer buf.deinit();
-            var cp_buf: [4]u8 = undefined;
-            for (code_points) |cp| {
-                const len = try unicode.utf8Encode(cp, &cp_buf);
-                try buf.appendSlice(cp_buf[0..len]);
-            }
-            break :blk_b buf.toOwnedSlice();
-        },
-        .code_points = code_points,
-        .cp_count = code_points.len,
-        .grapheme_clusters = null,
-        .owned = true,
-        .owned_cp = owned,
+    const ascii_only = ascii_blk: {
+        break :ascii_blk for (code_points) |cp| {
+            if (cp > 127) break false;
+        } else true;
     };
 
-    return zstr;
+    if (ascii_only) {
+        return Self{
+            .allocator = allocator,
+            .ascii_only = true,
+            .bytes = blk_cp: {
+                var buf = try allocator.alloc(u8, code_points.len);
+                for (code_points) |cp, i| {
+                    buf[i] = @intCast(u8, cp);
+                }
+                break :blk_cp buf;
+            },
+            .code_points = code_points,
+            .cp_count = code_points.len,
+            .grapheme_clusters = blk_gc: {
+                var buf = try allocator.alloc(Grapheme, code_points.len);
+                for (code_points) |cp, i| {
+                    buf[i] = .{ .bytes = &[_]u8{@intCast(u8, cp)}, .offset = i };
+                }
+                break :blk_gc buf;
+            },
+            .owned = true,
+            .owned_cp = owned,
+        };
+    } else {
+        return Self{
+            .allocator = allocator,
+            .ascii_only = blk_a: {
+                break :blk_a for (code_points) |cp| {
+                    if (cp > 127) break false;
+                } else true;
+            },
+            .bytes = blk_b: {
+                var buf = std.ArrayList(u8).init(allocator);
+                defer buf.deinit();
+                var cp_buf: [4]u8 = undefined;
+                for (code_points) |cp| {
+                    const len = try unicode.utf8Encode(cp, &cp_buf);
+                    try buf.appendSlice(cp_buf[0..len]);
+                }
+                break :blk_b buf.toOwnedSlice();
+            },
+            .code_points = code_points,
+            .cp_count = code_points.len,
+            .grapheme_clusters = null,
+            .owned = true,
+            .owned_cp = owned,
+        };
+    }
 }
 
 test "Zigstr from code points" {
@@ -711,8 +740,26 @@ pub fn substr(self: *Self, start: usize, end: usize) ![]const u8 {
 /// Zigstr.  Asserts that our bytes are valid UTF-8.
 pub fn processCodePoints(self: *Self) !void {
     if (self.ascii_only) {
-        // Just set the count and nothing more to do.
-        self.cp_count = self.bytes.len;
+        // UTF-8 ASCII code points are just bytes.
+        if (self.code_points == null) {
+            var code_points = try self.allocator.alloc(u21, self.bytes.len);
+            for (self.bytes) |b, i| {
+                code_points[i] = b;
+            }
+            self.cp_count = code_points.len;
+            self.code_points = code_points;
+            self.owned_cp = true;
+        }
+
+        // UTF-8 ASCII grapheme clusters are just bytes.
+        if (self.grapheme_clusters == null) {
+            var grapheme_clusters = try self.allocator.alloc(Grapheme, self.bytes.len);
+            for (self.bytes) |b, i| {
+                grapheme_clusters[i] = .{ .bytes = &[_]u8{b}, .offset = i };
+            }
+            self.grapheme_clusters = grapheme_clusters;
+        }
+
         return;
     }
 
