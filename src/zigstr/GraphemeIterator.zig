@@ -15,6 +15,7 @@ const Prepend = @import("../components.zig").Prepend;
 const Regional = @import("../components.zig").Regional;
 const Spacing = @import("../components.zig").Spacing;
 
+ascii_only: bool = false,
 control: Control,
 cp_iter: CodePointIterator,
 extend: Extend,
@@ -27,7 +28,16 @@ spacing: Spacing,
 const Self = @This();
 
 pub fn new(str: []const u8) !Self {
+    return newOpt(str, false);
+}
+
+pub fn newAscii(str: []const u8) !Self {
+    return newOpt(str, true);
+}
+
+fn newOpt(str: []const u8, ascii_only: bool) !Self {
     return Self{
+        .ascii_only = ascii_only,
         .control = Control{},
         .cp_iter = try CodePointIterator.init(str),
         .extend = Extend{},
@@ -61,6 +71,13 @@ const Slice = struct {
 
 /// next retrieves the next grapheme cluster.
 pub fn next(self: *Self) ?Grapheme {
+    // ASCII is just bytes.
+    if (self.ascii_only) {
+        if (self.cp_iter.i >= self.cp_iter.bytes.len) return null;
+        self.cp_iter.i += 1;
+        return Grapheme{ .bytes = self.cp_iter.bytes[self.cp_iter.i - 1 .. self.cp_iter.i], .offset = self.cp_iter.i - 1 };
+    }
+
     var cpo = self.cp_iter.next();
     if (cpo == null) return null;
     const cp = cpo.?;
@@ -227,6 +244,15 @@ fn fullAdvance(self: *Self) void {
         self.lexRun(self.spacing, Spacing.isSpacingMark);
         self.fullAdvance();
     }
+}
+
+test "Grapheme ASCII" {
+    var iter = try newAscii("Hi!");
+
+    std.testing.expectEqualStrings(iter.next().?.bytes, "H");
+    std.testing.expectEqualStrings(iter.next().?.bytes, "i");
+    std.testing.expectEqualStrings(iter.next().?.bytes, "!");
+    std.testing.expect(iter.next() == null);
 }
 
 test "Grapheme iterator" {

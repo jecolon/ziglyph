@@ -21,31 +21,26 @@ grapheme_clusters: ?[]const Grapheme,
 owned: bool,
 owned_cp: bool = true,
 
-/// fromAscii returns a new Zigstr from the ASCII byte slice `str`, which will *not* be freed on `deinit`.
-pub fn fromAscii(allocator: *mem.Allocator, str: []const u8) !Self {
-    return initWith(allocator, str, true, false);
-}
-
-/// fromOwnedBytes returns a new Zigstr from the owned byte slice `str`, which will be freed on `deinit`.
-pub fn fromOwnedAscii(allocator: *mem.Allocator, str: []const u8) !Self {
-    return initWith(allocator, str, true, true);
-}
-
 /// fromBytes returns a new Zigstr from the byte slice `str`, which will *not* be freed on `deinit`.
 pub fn fromBytes(allocator: *mem.Allocator, str: []const u8) !Self {
-    return initWith(allocator, str, false, false);
+    return initWith(allocator, str, false);
 }
 
 /// fromOwnedBytes returns a new Zigstr from the owned byte slice `str`, which will be freed on `deinit`.
 pub fn fromOwnedBytes(allocator: *mem.Allocator, str: []const u8) !Self {
-    return initWith(allocator, str, false, true);
+    return initWith(allocator, str, true);
 }
 
 /// initWith creates a new Zigstr instance. `owned` determines if the bytes need to be freed on `deinit`.
-fn initWith(allocator: *mem.Allocator, str: []const u8, ascii_only: bool, owned: bool) !Self {
+fn initWith(allocator: *mem.Allocator, str: []const u8, owned: bool) !Self {
     var zstr = Self{
         .allocator = allocator,
-        .ascii_only = ascii_only,
+        .ascii_only = blk_ascii: {
+            var iter = try CodePointIterator.init(str);
+            break :blk_ascii while (iter.next()) |cp| {
+                if (cp > 127) break false;
+            } else true;
+        },
         .bytes = str,
         .code_points = null,
         .cp_count = 0,
@@ -71,8 +66,8 @@ pub fn fromOwnedCodePoints(allocator: *mem.Allocator, code_points: []const u21) 
 /// initCodePoints creates a new Zigstr instance using the code points in `code_points`. `owned`
 /// determines if `code_points` should be freed on `deinit`.
 fn initCodePoints(allocator: *mem.Allocator, code_points: []const u21, owned: bool) !Self {
-    const ascii_only = ascii_blk: {
-        break :ascii_blk for (code_points) |cp| {
+    const ascii_only = blk_ascii: {
+        break :blk_ascii for (code_points) |cp| {
             if (cp > 127) break false;
         } else true;
     };
@@ -103,11 +98,7 @@ fn initCodePoints(allocator: *mem.Allocator, code_points: []const u21, owned: bo
     } else {
         return Self{
             .allocator = allocator,
-            .ascii_only = blk_a: {
-                break :blk_a for (code_points) |cp| {
-                    if (cp > 127) break false;
-                } else true;
-            },
+            .ascii_only = false,
             .bytes = blk_b: {
                 var buf = std.ArrayList(u8).init(allocator);
                 defer buf.deinit();
@@ -199,6 +190,13 @@ pub fn resetOwned(self: *Self, str: []const u8) !void {
 fn resetWith(self: *Self, str: []const u8, owned: bool) !void {
     self.resetState();
 
+    self.ascii_only = blk_ascii: {
+        var iter = try CodePointIterator.init(str);
+        break :blk_ascii while (iter.next()) |cp| {
+            if (cp > 127) break false;
+        } else true;
+    };
+
     if (!self.owned and !owned) {
         // No need to free or copy bytes.
         self.bytes = str;
@@ -272,8 +270,8 @@ pub fn codePointCount(self: *Self) usize {
 
 /// graphemeIter returns a grapheme cluster iterator based on the bytes of this Zigstr. Each grapheme
 /// can be composed of multiple code points, so the next method returns a slice of bytes.
-pub fn graphemeIter(self: *Self) !GraphemeIterator {
-    return GraphemeIterator.new(self.bytes);
+pub fn graphemeIter(self: *Self) anyerror!GraphemeIterator {
+    return if (self.ascii_only) GraphemeIterator.newAscii(self.bytes) else GraphemeIterator.new(self.bytes);
 }
 
 /// graphemes returns the grapheme clusters that make up this Zigstr.
@@ -310,7 +308,7 @@ pub fn graphemeCount(self: *Self) !usize {
 pub fn copy(self: Self) !Self {
     var bytes = try self.allocator.alloc(u8, self.bytes.len);
     mem.copy(u8, bytes, self.bytes);
-    return initWith(self.allocator, bytes, self.ascii_only, true);
+    return initWith(self.allocator, bytes, true);
 }
 
 /// sameAs convenience method to test exact byte equality of two Zigstrs.
@@ -871,7 +869,7 @@ pub fn parseFloat(self: Self, comptime T: type) !T {
 }
 
 test "Zigstr parse numbers" {
-    var str = try fromAscii(std.testing.allocator, "2112");
+    var str = try fromBytes(std.testing.allocator, "2112");
     defer str.deinit();
 
     expectEqual(@as(u16, 2112), try str.parseInt(u16, 10));
@@ -894,7 +892,7 @@ pub fn repeat(self: *Self, n: usize) !void {
 }
 
 test "Zigstr repeat" {
-    var str = try fromAscii(std.testing.allocator, "*");
+    var str = try fromBytes(std.testing.allocator, "*");
     defer str.deinit();
 
     try str.repeat(10);
@@ -943,7 +941,7 @@ pub fn parseTruthy(self: Self) !bool {
 }
 
 test "Zigstr parse bool truthy" {
-    var str = try fromAscii(std.testing.allocator, "true");
+    var str = try fromBytes(std.testing.allocator, "true");
     defer str.deinit();
 
     expect(try str.parseBool());
@@ -1028,7 +1026,7 @@ test "Zigstr graphemes" {
 }
 
 test "Zigstr copy" {
-    var str1 = try fromAscii(std.testing.allocator, "Zig");
+    var str1 = try fromBytes(std.testing.allocator, "Zig");
     defer str1.deinit();
 
     var str2 = try str1.copy();
@@ -1045,7 +1043,7 @@ test "Zigstr isAsciiStr" {
 }
 
 test "Zigstr trimLeft" {
-    var str = try fromAscii(std.testing.allocator, "    Hello");
+    var str = try fromBytes(std.testing.allocator, "    Hello");
     defer str.deinit();
 
     try str.trimLeft(" ");
@@ -1053,7 +1051,7 @@ test "Zigstr trimLeft" {
 }
 
 test "Zigstr trimRight" {
-    var str = try fromAscii(std.testing.allocator, "Hello    ");
+    var str = try fromBytes(std.testing.allocator, "Hello    ");
     defer str.deinit();
 
     try str.trimRight(" ");
@@ -1061,7 +1059,7 @@ test "Zigstr trimRight" {
 }
 
 test "Zigstr trim" {
-    var str = try fromAscii(std.testing.allocator, "   Hello   ");
+    var str = try fromBytes(std.testing.allocator, "   Hello   ");
     defer str.deinit();
 
     try str.trim(" ");
@@ -1069,7 +1067,7 @@ test "Zigstr trim" {
 }
 
 test "Zigstr indexOf" {
-    var str = try fromAscii(std.testing.allocator, "Hello");
+    var str = try fromBytes(std.testing.allocator, "Hello");
     defer str.deinit();
 
     expectEqual(str.indexOf("l"), 2);
@@ -1079,7 +1077,7 @@ test "Zigstr indexOf" {
 }
 
 test "Zigstr lastIndexOf" {
-    var str = try fromAscii(std.testing.allocator, "Hello");
+    var str = try fromBytes(std.testing.allocator, "Hello");
     defer str.deinit();
 
     expectEqual(str.lastIndexOf("l"), 3);
@@ -1087,7 +1085,7 @@ test "Zigstr lastIndexOf" {
 }
 
 test "Zigstr count" {
-    var str = try fromAscii(std.testing.allocator, "Hello");
+    var str = try fromBytes(std.testing.allocator, "Hello");
     defer str.deinit();
 
     expectEqual(str.count("l"), 2);
@@ -1097,7 +1095,7 @@ test "Zigstr count" {
 
 test "Zigstr tokenize" {
     var allocator = std.testing.allocator;
-    var str = try fromAscii(allocator, " Hello World ");
+    var str = try fromBytes(allocator, " Hello World ");
     defer str.deinit();
 
     var iter = str.tokenIter(" ");
@@ -1114,7 +1112,7 @@ test "Zigstr tokenize" {
 
 test "Zigstr split" {
     var allocator = std.testing.allocator;
-    var str = try fromAscii(allocator, " Hello World ");
+    var str = try fromBytes(allocator, " Hello World ");
     defer str.deinit();
 
     var iter = str.splitIter(" ");
@@ -1134,7 +1132,7 @@ test "Zigstr split" {
 }
 
 test "Zigstr startsWith" {
-    var str = try fromAscii(std.testing.allocator, "Hello World");
+    var str = try fromBytes(std.testing.allocator, "Hello World");
     defer str.deinit();
 
     expect(str.startsWith("Hell"));
@@ -1142,7 +1140,7 @@ test "Zigstr startsWith" {
 }
 
 test "Zigstr endsWith" {
-    var str = try fromAscii(std.testing.allocator, "Hello World");
+    var str = try fromBytes(std.testing.allocator, "Hello World");
     defer str.deinit();
 
     expect(str.endsWith("World"));
@@ -1157,7 +1155,7 @@ test "Zigstr join" {
 }
 
 test "Zigstr concat" {
-    var str = try fromAscii(std.testing.allocator, "Hello");
+    var str = try fromBytes(std.testing.allocator, "Hello");
     defer str.deinit();
 
     try str.concat(" World");
@@ -1168,7 +1166,7 @@ test "Zigstr concat" {
 }
 
 test "Zigstr replace" {
-    var str = try fromAscii(std.testing.allocator, "Hello");
+    var str = try fromBytes(std.testing.allocator, "Hello");
     defer str.deinit();
 
     var replacements = try str.replace("l", "z");
@@ -1181,7 +1179,7 @@ test "Zigstr replace" {
 }
 
 test "Zigstr append" {
-    var str = try fromAscii(std.testing.allocator, "Hell");
+    var str = try fromBytes(std.testing.allocator, "Hell");
     defer str.deinit();
 
     try str.append('o');
@@ -1193,7 +1191,7 @@ test "Zigstr append" {
 }
 
 test "Zigstr chomp" {
-    var str = try fromAscii(std.testing.allocator, "Hello\n");
+    var str = try fromBytes(std.testing.allocator, "Hello\n");
     defer str.deinit();
 
     try str.chomp();
