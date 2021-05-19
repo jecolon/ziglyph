@@ -325,7 +325,3 @@ test "Grapheme iterator" {
         }
     }
 }
-
-test "Grapheme width" {
-    _ = @import("../components/aggregate/Width.zig");
-}

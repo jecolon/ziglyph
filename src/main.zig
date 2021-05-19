@@ -25,3 +25,7 @@ test "Zigstr" {
 test "Collator" {
     _ = @import("zigstr/Collator.zig");
 }
+
+test "Width" {
+    _ = @import("components/aggregate/Width.zig");
+}

@@ -8,6 +8,7 @@ const ExtPic = @import("../../components.zig").ExtPic;
 const Format = @import("../../components.zig").Format;
 const Fullwidth = @import("../../components.zig").Fullwidth;
 const GraphemeIterator = @import("../../zigstr/GraphemeIterator.zig");
+const isAsciiStr = @import("../../zigstr/Zigstr.zig").isAsciiStr;
 const Nonspacing = @import("../../components.zig").Nonspacing;
 const Regional = @import("../../components.zig").Regional;
 const Wide = @import("../../components.zig").Wide;
@@ -50,8 +51,8 @@ pub fn codePointWidth(self: Self, cp: u21, am_width: AmbiguousWidth) i8 {
     if (cp == 0x000 or cp == 0x0005 or cp == 0x0007 or (cp >= 0x000A and cp <= 0x000F)) {
         // Control.
         return 0;
-    } else if (cp == 0x0008) {
-        // backspace
+    } else if (cp == 0x0008 or cp == 0x007F) {
+        // backspace and DEL
         return -1;
     } else if (cp == 0x00AD) {
         // soft-hyphen
@@ -95,6 +96,25 @@ pub fn codePointWidth(self: Self, cp: u21, am_width: AmbiguousWidth) i8 {
 /// fixed-width font.
 pub fn strWidth(self: Self, str: []const u8, am_width: AmbiguousWidth) !usize {
     var total: isize = 0;
+
+    // ASCII bytes are all width == 1.
+    if (try isAsciiStr(str)) {
+        for (str) |b| {
+            // Backspace and DEL
+            if (b == 8 or b == 127) {
+                total -= 1;
+                continue;
+            }
+
+            // Control
+            if (b < 32) continue;
+
+            // All other ASCII.
+            total += 1;
+        }
+
+        return if (total > 0) @intCast(usize, total) else 0;
+    }
 
     var giter = try GraphemeIterator.new(str);
 
@@ -216,10 +236,10 @@ pub fn padRight(self: Self, allocator: *mem.Allocator, str: []const u8, total_wi
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
-test "Grapheme Width" {
+test "Width Width" {
     var width = new();
 
-    expectEqual(@as(i8, -1), width.codePointWidth(0x0008, .half)); // \b DEL
+    expectEqual(@as(i8, -1), width.codePointWidth(0x0008, .half)); // \b
     expectEqual(@as(i8, 0), width.codePointWidth(0x0000, .half)); // null
     expectEqual(@as(i8, 0), width.codePointWidth(0x0005, .half)); // Cf
     expectEqual(@as(i8, 0), width.codePointWidth(0x0007, .half)); // \a BEL
@@ -254,9 +274,12 @@ test "Grapheme Width" {
     expectEqual(@as(usize, 2), try width.strWidth("\u{26A1}", .half)); // Lone emoji
     expectEqual(@as(usize, 1), try width.strWidth("\u{26A1}\u{FE0E}", .half)); // Text sequence
     expectEqual(@as(usize, 2), try width.strWidth("\u{26A1}\u{FE0F}", .half)); // Presentation sequence
+    expectEqual(@as(usize, 0), try width.strWidth("A\x08", .half)); // Backspace
+    expectEqual(@as(usize, 0), try width.strWidth("\x7FA", .half)); // DEL
+    expectEqual(@as(usize, 0), try width.strWidth("\x7FA\x08\x08", .half)); // never less than o
 }
 
-test "Grapheme center" {
+test "Width center" {
     var allocator = std.testing.allocator;
     var width = new();
 
@@ -269,7 +292,7 @@ test "Grapheme center" {
     expectEqualSlices(u8, "---w😊w---", centered);
 }
 
-test "Grapheme padLeft" {
+test "Width padLeft" {
     var allocator = std.testing.allocator;
     var width = new();
 
@@ -282,7 +305,7 @@ test "Grapheme padLeft" {
     expectEqualSlices(u8, "------w😊w", right_aligned);
 }
 
-test "Grapheme padRight" {
+test "Width padRight" {
     var allocator = std.testing.allocator;
     var width = new();
 
