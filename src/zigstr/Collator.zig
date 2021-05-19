@@ -7,6 +7,7 @@ const zort = std.sort.sort;
 const unicode = std.unicode;
 
 const CccMap = @import("../components.zig").CccMap;
+const isAsciiStr = @import("Zigstr.zig").isAsciiStr;
 const Normalizer = @import("../components.zig").Normalizer;
 const Trie = @import("CollatorTrie.zig");
 const UnifiedIdeo = @import("../components/autogen/PropList/UnifiedIdeograph.zig");
@@ -313,37 +314,80 @@ pub fn keyEql(self: Self, a: []const u16, b: []const u16) bool {
 /// keyLessThan returns true if key `a` is less than key `b`.
 pub fn keyLessThan(self: Self, a: []const u16, b: []const u16) bool {
     // Compare
-    var outer_is_a = true;
-    var outer = a;
-    var inner = b;
+    var long_is_a = true;
+    var long = a;
+    var short = b;
 
     if (a.len < b.len) {
-        outer_is_a = false;
-        outer = b;
-        inner = a;
+        long_is_a = false;
+        long = b;
+        short = a;
     }
 
-    return for (outer) |ow, i| {
-        if (ow == inner[i]) continue;
+    return for (short) |w, i| {
+        if (w == long[i]) continue;
 
-        if (ow == 0) {
-            // Outer less than inner.
-            break if (outer_is_a) true else false;
+        if (w == 0) {
+            // Short less than long.
+            break if (long_is_a) false else true;
         }
 
-        if (inner[i] == 0) {
-            // Inner less than outer.
-            break if (outer_is_a) false else true;
+        if (long[i] == 0) {
+            // long less than short.
+            break if (long_is_a) true else false;
         }
 
-        break if (outer_is_a) ow < inner[i] else ow > inner[i];
+        break if (long_is_a) w > long[i] else w < long[i];
     } else false; // equal is not less than.
+}
+
+/// asciiLessThan returns true if `a` is less than `b` in binary order which works for ASCII.
+pub fn asciiLessThan(a: []const u8, b: []const u8) bool {
+    if (a.len == b.len) {
+        for (a) |c, i| {
+            if (b[i] < c) return false;
+        }
+
+        return if (mem.eql(u8, a, b)) false else true;
+    }
+
+    var long_is_a = true;
+    var long = a;
+    var short = b;
+
+    if (a.len < b.len) {
+        long_is_a = false;
+        long = b;
+        short = a;
+    }
+
+    for (short) |c, i| {
+        if (long_is_a) {
+            if (long[i] < c) return false;
+        } else {
+            if (c < long[i]) return false;
+        }
+    }
+
+    return a.len < b.len;
+}
+
+test "Collator ASCII less" {
+    testing.expect(asciiLessThan("abc", "def"));
+    testing.expect(asciiLessThan("Abc", "abc"));
+    testing.expect(asciiLessThan("abc", "abcd"));
+    testing.expect(!asciiLessThan("abc", "abc"));
+    testing.expect(!asciiLessThan("dbc", "abc"));
+    testing.expect(!asciiLessThan("adc", "abc"));
+    testing.expect(!asciiLessThan("abd", "abc"));
 }
 
 /// lessThan returns true if `a` is less than `b` according to the Unicode Collation Algorithm and 
 /// the Default Unicode Collation Element Table (DUCET) found at 
 /// http://www.unicode.org/Public/UCA/latest/allkeys.txt .
 pub fn lessThan(self: Self, a: []const u8, b: []const u8) !bool {
+    if ((try isAsciiStr(a)) and (try isAsciiStr(b))) return asciiLessThan(a, b);
+
     var key_a = try self.sortKey(a);
     defer self.allocator.free(key_a);
     var key_b = try self.sortKey(b);
@@ -353,6 +397,17 @@ pub fn lessThan(self: Self, a: []const u8, b: []const u8) !bool {
 }
 
 fn lessThanNoFail(self: Self, a: []const u8, b: []const u8) bool {
+    var a_ascii = isAsciiStr(a) catch |e| {
+        std.debug.print("Collator.lessThanNoFail: {}\n", .{e});
+        @panic("Collator.sort -> lessThanNoFail failed!");
+    };
+    var b_ascii = isAsciiStr(b) catch |e| {
+        std.debug.print("Collator.lessThanNoFail: {}\n", .{e});
+        @panic("Collator.sort -> lessThanNoFail failed!");
+    };
+
+    if (a_ascii and b_ascii) return asciiLessThan(a, b);
+
     return self.lessThan(a, b) catch |e| {
         std.debug.print("Collator.lessThanNoFail: {}\n", .{e});
         @panic("Collator.sort -> lessThanNoFail failed!");

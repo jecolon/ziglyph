@@ -35,12 +35,7 @@ pub fn fromOwnedBytes(allocator: *mem.Allocator, str: []const u8) !Self {
 fn initWith(allocator: *mem.Allocator, str: []const u8, owned: bool) !Self {
     var zstr = Self{
         .allocator = allocator,
-        .ascii_only = blk_ascii: {
-            var iter = try CodePointIterator.init(str);
-            break :blk_ascii while (iter.next()) |cp| {
-                if (cp > 127) break false;
-            } else true;
-        },
+        .ascii_only = try isAsciiStr(str),
         .bytes = str,
         .code_points = null,
         .cp_count = 0,
@@ -190,12 +185,7 @@ pub fn resetOwned(self: *Self, str: []const u8) !void {
 fn resetWith(self: *Self, str: []const u8, owned: bool) !void {
     self.resetState();
 
-    self.ascii_only = blk_ascii: {
-        var iter = try CodePointIterator.init(str);
-        break :blk_ascii while (iter.next()) |cp| {
-            if (cp > 127) break false;
-        } else true;
-    };
+    self.ascii_only = try isAsciiStr(str);
 
     if (!self.owned and !owned) {
         // No need to free or copy bytes.
