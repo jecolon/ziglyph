@@ -488,14 +488,8 @@ const UcdGenerator = struct {
             else => return err,
         };
         // Templates.
-        const normalizer_header_tpl = @embedFile("parts/normalizer_header_tpl.txt");
-        const normalizer_trailer_tpl = @embedFile("parts/normalizer_trailer_tpl.txt");
         const map_header_tpl = @embedFile("parts/map_header_tpl.txt");
         // Setup output.
-        var d_file = try cwd.createFile("components/autogen/UnicodeData/Normalizer.zig", .{});
-        defer d_file.close();
-        var d_buf = io.bufferedWriter(d_file.writer());
-        const d_writer = d_buf.writer();
         var l_file = try cwd.createFile("components/autogen/UnicodeData/LowerMap.zig", .{});
         defer l_file.close();
         var l_buf = io.bufferedWriter(l_file.writer());
@@ -510,7 +504,6 @@ const UcdGenerator = struct {
         const u_writer = u_buf.writer();
 
         // Headers.
-        _ = try d_writer.write(normalizer_header_tpl);
         _ = try l_writer.print(map_header_tpl, .{ "Lower", "LowerMap" });
         _ = try t_writer.print(map_header_tpl, .{ "Title", "TitleMap" });
         _ = try u_writer.print(map_header_tpl, .{ "Upper", "UpperMap" });
@@ -534,42 +527,6 @@ const UcdGenerator = struct {
                     // Final Punctuation.
                     const cp = try fmt.parseInt(u21, code_point, 16);
                     try pf_records.append(.{ .single = cp });
-                } else if (field_index == 5 and raw.len != 0) {
-                    // Normalization.
-                    var is_compat = false;
-                    var cp_list = ArrayList([]const u8).init(self.allocator);
-                    defer cp_list.deinit();
-                    var cp_iter = mem.split(raw, " ");
-                    while (cp_iter.next()) |cp| {
-                        if (mem.startsWith(u8, cp, "<")) {
-                            is_compat = true;
-                            continue;
-                        }
-                        try cp_list.append(cp);
-                    }
-
-                    if (!is_compat and cp_list.items.len == 1) {
-                        // Singleton
-                        _ = try d_writer.print("    if (cp == 0x{s}) return .{{ .single = 0x{s} }};\n", .{ code_point, cp_list.items[0] });
-                    } else if (!is_compat) {
-                        // Canonical
-                        std.debug.assert(cp_list.items.len == 2);
-                        _ = try d_writer.print("    if (cp == 0x{s}) return .{{ .canon = [2]u21{{ ", .{code_point});
-                        for (cp_list.items) |cp, i| {
-                            if (i != 0) _ = try d_writer.write(", ");
-                            _ = try d_writer.print("0x{s}", .{cp});
-                        }
-                        _ = try d_writer.write(" } };\n");
-                    } else {
-                        // Compatibility
-                        std.debug.assert(cp_list.items.len != 0);
-                        _ = try d_writer.print("    if (cp == 0x{s}) return .{{ .compat = &[_]u21{{ ", .{code_point});
-                        for (cp_list.items) |cp, i| {
-                            if (i != 0) _ = try d_writer.write(", ");
-                            _ = try d_writer.print("0x{s}", .{cp});
-                        }
-                        _ = try d_writer.write(" } };\n");
-                    }
                 } else if (field_index == 12 and raw.len != 0) {
                     // Uppercase mapping.
                     _ = try u_writer.print("    if (cp == 0x{s}) return 0x{s};\n", .{ code_point, raw });
@@ -586,12 +543,9 @@ const UcdGenerator = struct {
         }
 
         // Finish writing.
-        _ = try d_writer.write("    return .{ .same = cp };\n");
-        _ = try d_writer.write(normalizer_trailer_tpl);
         _ = try l_writer.write("    return cp;\n}");
         _ = try t_writer.write("    return cp;\n}");
         _ = try u_writer.write("    return cp;\n}");
-        try d_buf.flush();
         try l_buf.flush();
         try t_buf.flush();
         try u_buf.flush();
