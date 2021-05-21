@@ -57,7 +57,8 @@ test "Component structs" {
 
 test "decomposeTo" {
     var allocator = std.testing.allocator;
-    var normalizer = Normalizer.new(allocator);
+    var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
+    defer normalizer.deinit();
 
     const Decomposed = Normalizer.Decomposed;
 
@@ -82,7 +83,8 @@ test "decomposeTo" {
 
 test "normalizeTo" {
     var allocator = std.testing.allocator;
-    var normalizer = Normalizer.new(allocator);
+    var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
+    defer normalizer.deinit();
 
     // Canonical (NFD)
     var input = "Complex char: \u{03D3}";
@@ -140,7 +142,9 @@ test "Code point / string widths" {
 
 test "Collation" {
     var allocator = std.testing.allocator;
-    var collator = try Collator.init(allocator, "src/data/uca/allkeys.txt");
+    var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
+    defer normalizer.deinit();
+    var collator = try Collator.init(allocator, "src/data/uca/allkeys.txt", &normalizer);
     defer collator.deinit();
 
     expect(try collator.lessThan("abc", "def"));

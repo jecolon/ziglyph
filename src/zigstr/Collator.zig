@@ -22,18 +22,18 @@ const ImplicitList = std.ArrayList(Implicit);
 
 allocator: *mem.Allocator,
 ccc_map: CccMap,
-normalizer: Normalizer,
+normalizer: *Normalizer,
 ideographs: UnifiedIdeo,
 implicits: ImplicitList,
 table: Trie,
 
 const Self = @This();
 
-pub fn init(allocator: *mem.Allocator, allkeys: []const u8, unicodedata: []const u8) !Self {
+pub fn init(allocator: *mem.Allocator, allkeys: []const u8, normalizer: *Normalizer) !Self {
     var self = Self{
         .allocator = allocator,
         .ccc_map = CccMap{},
-        .normalizer = try Normalizer.init(allocator, unicodedata),
+        .normalizer = normalizer,
         .ideographs = UnifiedIdeo{},
         .implicits = ImplicitList.init(allocator),
         .table = Trie.init(allocator),
@@ -47,7 +47,6 @@ pub fn init(allocator: *mem.Allocator, allkeys: []const u8, unicodedata: []const
 pub fn deinit(self: *Self) void {
     self.table.deinit();
     self.implicits.deinit();
-    self.normalizer.deinit();
 }
 
 pub fn load(self: *Self, filename: []const u8) !void {
@@ -397,7 +396,9 @@ const testing = std.testing;
 
 test "Collator sort" {
     var allocator = std.testing.allocator;
-    var collator = try init(allocator, "src/data/uca/allkeys.txt", "src/data/ucd/UnicodeData.txt");
+    var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
+    defer normalizer.deinit();
+    var collator = try init(allocator, "src/data/uca/allkeys.txt", &normalizer);
     defer collator.deinit();
 
     testing.expect(try collator.lessThan("abc", "def"));
@@ -429,7 +430,9 @@ test "Collator UCA" {
     var prev_key: []const u16 = &[_]u16{};
     defer allocator.free(prev_key);
 
-    var collator = try init(allocator, "src/data/uca/allkeys.txt", "src/data/ucd/UnicodeData.txt");
+    var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
+    defer normalizer.deinit();
+    var collator = try init(allocator, "src/data/uca/allkeys.txt", &normalizer);
     defer collator.deinit();
     var cp_buf: [4]u8 = undefined;
 
