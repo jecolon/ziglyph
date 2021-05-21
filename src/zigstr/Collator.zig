@@ -29,23 +29,8 @@ table: Trie,
 
 const Self = @This();
 
-const Singleton = struct {
-    instance: *Self,
-    ref_count: atomic.Int(usize),
-};
-
-var singleton: ?Singleton = null;
-
-pub fn init(allocator: *mem.Allocator, filename: []const u8) !*Self {
-    if (singleton) |*s| {
-        _ = s.ref_count.incr();
-        return s.instance;
-    }
-
-    var self = try allocator.create(Self);
-    errdefer allocator.destroy(self);
-
-    self.* = Self{
+pub fn init(allocator: *mem.Allocator, filename: []const u8) !Self {
+    var self = Self{
         .allocator = allocator,
         .ccc_map = CccMap{},
         .normalizer = Normalizer.new(allocator),
@@ -56,24 +41,12 @@ pub fn init(allocator: *mem.Allocator, filename: []const u8) !*Self {
 
     try self.load(filename);
 
-    singleton = Singleton{
-        .instance = self,
-        .ref_count = atomic.Int(usize).init(1),
-    };
-
     return self;
 }
 
 pub fn deinit(self: *Self) void {
-    if (singleton) |*s| {
-        _ = s.ref_count.decr();
-        if (s.ref_count.get() == 0) {
-            self.table.deinit();
-            self.implicits.deinit();
-            self.allocator.destroy(s.instance);
-            singleton = null;
-        }
-    }
+    self.table.deinit();
+    self.implicits.deinit();
 }
 
 pub fn load(self: *Self, filename: []const u8) !void {
