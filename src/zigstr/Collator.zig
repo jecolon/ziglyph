@@ -2,6 +2,7 @@ const std = @import("std");
 const atomic = std.atomic;
 const fmt = std.fmt;
 const io = std.io;
+const math = std.math;
 const mem = std.mem;
 const zort = std.sort.sort;
 const unicode = std.unicode;
@@ -276,20 +277,62 @@ pub fn implicitWeight(self: Self, cp: u21) Trie.Elements {
     return elements;
 }
 
-/// keyEql returns true if key `a` is equal to key `b`.
-pub fn keyEql(self: Self, a: []const u16, b: []const u16) bool {
-    if (a.len != b.len) return false;
-    return for (a) |aw, i| {
-        if (aw != b[i]) break false;
-    } else true;
+/// asciiCmp compares `a` with `b` returing a `math.Order` result.
+pub fn asciiCmp(a: []const u8, b: []const u8) math.Order {
+    var long_is_a = true;
+    var long = a;
+    var short = b;
+
+    if (a.len < b.len) {
+        long_is_a = false;
+        long = b;
+        short = a;
+    }
+
+    for (short) |_, i| {
+        if (short[i] == long[i]) continue;
+        return if (long_is_a) math.order(long[i], short[i]) else math.order(short[i], long[i]);
+    }
+
+    return math.order(a.len, b.len);
 }
 
-/// keyLessThan returns true if key `a` is less than key `b`.
-pub fn keyLessThan(self: Self, a: []const u16, b: []const u16) bool {
+test "Collator ASCII compare" {
+    testing.expectEqual(asciiCmp("abc", "def"), .lt);
+    testing.expectEqual(asciiCmp("Abc", "abc"), .lt);
+    testing.expectEqual(asciiCmp("abc", "abcd"), .lt);
+    testing.expectEqual(asciiCmp("abc", "abc"), .eq);
+    testing.expectEqual(asciiCmp("dbc", "abc"), .gt);
+    testing.expectEqual(asciiCmp("adc", "abc"), .gt);
+    testing.expectEqual(asciiCmp("abd", "abc"), .gt);
+}
+
+/// asciiAsc is a sort function producing ascending binary order of ASCII strings.
+pub fn tertiaryAsc(self: Self, a: []const u8, b: []const u8) bool {
+    return asciiCmp(a, b) == .lt;
+}
+
+pub const Level = enum {
+    primary = 1, // different base letters.
+    secondary, // different marks (i.e. accents).
+    tertiary, // different letter case.
+
+    pub fn incr(self: Level) Level {
+        return switch (self) {
+            .primary => .secondary,
+            .secondary => .tertiary,
+            .tertiary => .tertiary,
+        };
+    }
+};
+
+/// keyLevelCmp compares key `a` with key `b` up to the given level, returning a `math.Order`.
+pub fn keyLevelCmp(a: []const u16, b: []const u16, level: Level) math.Order {
     // Compare
     var long_is_a = true;
     var long = a;
     var short = b;
+    var current_level: Level = .primary;
 
     if (a.len < b.len) {
         long_is_a = false;
@@ -297,99 +340,104 @@ pub fn keyLessThan(self: Self, a: []const u16, b: []const u16) bool {
         short = a;
     }
 
-    return for (short) |w, i| {
-        if (w == long[i]) continue;
+    return for (short) |_, i| {
+        if (short[i] == long[i]) {
+            if (short[i] == 0) {
+                // New level.
+                if (current_level == level) {
+                    break .eq;
+                }
 
-        if (w == 0) {
+                current_level = current_level.incr();
+            }
+            continue;
+        }
+
+        if (short[i] == 0) {
             // Short less than long.
-            break if (long_is_a) false else true;
+            if (long_is_a) {
+                break .gt;
+            } else {
+                break .lt;
+            }
         }
 
         if (long[i] == 0) {
             // long less than short.
-            break if (long_is_a) true else false;
+            if (long_is_a) {
+                break .lt;
+            } else {
+                break .gt;
+            }
         }
 
-        break if (long_is_a) w > long[i] else w < long[i];
-    } else false; // equal is not less than.
+        break if (long_is_a) math.order(long[i], short[i]) else math.order(short[i], long[i]);
+    } else .eq;
 }
 
-/// asciiLessThan returns true if `a` is less than `b` in binary order which works for ASCII.
-pub fn asciiLessThan(a: []const u8, b: []const u8) bool {
-    if (a.len == b.len) {
-        for (a) |c, i| {
-            if (b[i] < c) return false;
-        }
+test "Collator keyLevelCmp" {
+    var allocator = std.testing.allocator;
+    var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
+    defer normalizer.deinit();
+    var collator = try init(allocator, "src/data/uca/allkeys.txt", &normalizer);
+    defer collator.deinit();
 
-        return if (mem.eql(u8, a, b)) false else true;
-    }
+    var key_a = try collator.sortKey("cab");
+    defer allocator.free(key_a);
+    var key_b = try collator.sortKey("Cab");
+    defer allocator.free(key_b);
 
-    var long_is_a = true;
-    var long = a;
-    var short = b;
+    testing.expectEqual(keyLevelCmp(key_a, key_b, .tertiary), .lt);
+    testing.expectEqual(keyLevelCmp(key_a, key_b, .secondary), .eq);
+    testing.expectEqual(keyLevelCmp(key_a, key_b, .primary), .eq);
 
-    if (a.len < b.len) {
-        long_is_a = false;
-        long = b;
-        short = a;
-    }
+    allocator.free(key_a);
+    key_a = try collator.sortKey("Cab");
+    allocator.free(key_b);
+    key_b = try collator.sortKey("cáb");
 
-    for (short) |c, i| {
-        if (long_is_a) {
-            if (long[i] < c) return false;
-        } else {
-            if (c < long[i]) return false;
-        }
-    }
+    testing.expectEqual(keyLevelCmp(key_a, key_b, .tertiary), .lt);
+    testing.expectEqual(keyLevelCmp(key_a, key_b, .secondary), .lt);
+    testing.expectEqual(keyLevelCmp(key_a, key_b, .primary), .eq);
 
-    return a.len < b.len;
+    allocator.free(key_a);
+    key_a = try collator.sortKey("cáb");
+    allocator.free(key_b);
+    key_b = try collator.sortKey("dab");
+
+    testing.expectEqual(keyLevelCmp(key_a, key_b, .tertiary), .lt);
+    testing.expectEqual(keyLevelCmp(key_a, key_b, .secondary), .lt);
+    testing.expectEqual(keyLevelCmp(key_a, key_b, .primary), .lt);
 }
 
-test "Collator ASCII less" {
-    testing.expect(asciiLessThan("abc", "def"));
-    testing.expect(asciiLessThan("Abc", "abc"));
-    testing.expect(asciiLessThan("abc", "abcd"));
-    testing.expect(!asciiLessThan("abc", "abc"));
-    testing.expect(!asciiLessThan("dbc", "abc"));
-    testing.expect(!asciiLessThan("adc", "abc"));
-    testing.expect(!asciiLessThan("abd", "abc"));
+/// tertiaryAsc is a sort function producing a full weight matching ascending sort.
+pub fn asciiAsc(self: Self, a: []const u8, b: []const u8) bool {
+    return self.orderFn(a, b, .tertiary, .lt);
 }
 
-/// lessThan returns true if `a` is less than `b` according to the Unicode Collation Algorithm and 
-/// the Default Unicode Collation Element Table (DUCET) found at 
-/// http://www.unicode.org/Public/UCA/latest/allkeys.txt .
-pub fn lessThan(self: Self, a: []const u8, b: []const u8) !bool {
-    if ((try isAsciiStr(a)) and (try isAsciiStr(b))) return asciiLessThan(a, b);
+/// tertiaryDesc is a sort function producing a full weight matching descending sort.
+pub fn tertiaryDesc(self: Self, a: []const u8, b: []const u8) bool {
+    return self.orderFn(a, b, .tertiary, .gt);
+}
 
-    var key_a = try self.sortKey(a);
+/// orderFn can be used to match, compare, and sort strings at various collation element levels and orderings.
+pub fn orderFn(self: Self, a: []const u8, b: []const u8, level: Level, order: math.Order) bool {
+    var key_a = self.sortKey(a) catch unreachable;
     defer self.allocator.free(key_a);
-    var key_b = try self.sortKey(b);
+    var key_b = self.sortKey(b) catch unreachable;
     defer self.allocator.free(key_b);
 
-    return self.keyLessThan(key_a, key_b);
+    return keyLevelCmp(key_a, key_b, level) == order;
 }
 
-fn lessThanNoFail(self: Self, a: []const u8, b: []const u8) bool {
-    var a_ascii = isAsciiStr(a) catch |e| {
-        std.debug.print("Collator.lessThanNoFail: {}\n", .{e});
-        @panic("Collator.sort -> lessThanNoFail failed!");
-    };
-    var b_ascii = isAsciiStr(b) catch |e| {
-        std.debug.print("Collator.lessThanNoFail: {}\n", .{e});
-        @panic("Collator.sort -> lessThanNoFail failed!");
-    };
-
-    if (a_ascii and b_ascii) return asciiLessThan(a, b);
-
-    return self.lessThan(a, b) catch |e| {
-        std.debug.print("Collator.lessThanNoFail: {}\n", .{e});
-        @panic("Collator.sort -> lessThanNoFail failed!");
-    };
-}
-
-/// sort orders the strings in `strings` according to the Unicode Collation Algorithm.
+/// sort orders the strings in `strings` in ascending full tertiary level order.
 pub fn sort(self: Self, strings: [][]const u8) void {
-    zort([]const u8, strings, self, lessThanNoFail);
+    zort([]const u8, strings, self, tertiaryAsc);
+}
+
+/// sort orders the strings in `strings` in ascending full tertiary level order.
+pub fn sortAscii(self: Self, strings: [][]const u8) void {
+    zort([]const u8, strings, self, asciiAsc);
 }
 
 const testing = std.testing;
@@ -401,9 +449,18 @@ test "Collator sort" {
     var collator = try init(allocator, "src/data/uca/allkeys.txt", &normalizer);
     defer collator.deinit();
 
-    testing.expect(try collator.lessThan("abc", "def"));
+    testing.expect(collator.tertiaryAsc("abc", "def"));
+    testing.expect(collator.tertiaryDesc("def", "abc"));
+    testing.expect(collator.orderFn("José", "jose", .primary, .eq));
+
     var strings: [3][]const u8 = .{ "xyz", "def", "abc" };
     collator.sort(&strings);
+    testing.expectEqual(strings[0], "abc");
+    testing.expectEqual(strings[1], "def");
+    testing.expectEqual(strings[2], "xyz");
+
+    strings = .{ "xyz", "def", "abc" };
+    collator.sortAscii(&strings);
     testing.expectEqual(strings[0], "abc");
     testing.expectEqual(strings[1], "def");
     testing.expectEqual(strings[2], "xyz");
@@ -458,7 +515,8 @@ test "Collator UCA" {
             continue;
         }
 
-        testing.expect(collator.keyEql(prev_key, current_key) or collator.keyLessThan(prev_key, current_key));
+        testing.expect((keyLevelCmp(prev_key, current_key, .tertiary) == .eq) or
+            (keyLevelCmp(prev_key, current_key, .tertiary) == .lt));
 
         allocator.free(prev_key);
         prev_key = current_key;
