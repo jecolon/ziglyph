@@ -210,12 +210,31 @@ test "Collation" {
     var collator = try Collator.init(allocator, "path/to/allkeys.txt", &normalizer);
     defer collator.deinit();
 
-    expect(try collator.lessThan("abc", "def"));
+    // Collation weight levels overview:
+    // * .primary: different letters.
+    // * .secondary: could be same letters but with marks (like accents) differ.
+    // * .tertiary: same letters and marks but case is different.
+    // So cab < dab at .primary, and cab < cáb at .secondary, and cáb < Cáb at .tertiary level.
+    testing.expect(collator.tertiaryAsc("abc", "def"));
+    testing.expect(collator.tertiaryDesc("def", "abc"));
+
+    // At only primary level, José and jose are equal because base letters are the same, only marks 
+    // and case differ, which are .secondary and .tertiary respectively.
+    testing.expect(collator.orderFn("José", "jose", .primary, .eq));
+
+    // Full Unicode sort.
     var strings: [3][]const u8 = .{ "xyz", "def", "abc" };
     collator.sort(&strings);
-    expectEqual(strings[0], "abc");
-    expectEqual(strings[1], "def");
-    expectEqual(strings[2], "xyz");
+    testing.expectEqual(strings[0], "abc");
+    testing.expectEqual(strings[1], "def");
+    testing.expectEqual(strings[2], "xyz");
+
+    // ASCII only binary sort. If you know the strings are ASCII only, this is much faster.
+    strings = .{ "xyz", "def", "abc" };
+    collator.sortAscii(&strings);
+    testing.expectEqual(strings[0], "abc");
+    testing.expectEqual(strings[1], "def");
+    testing.expectEqual(strings[2], "xyz");
 }
 ```
 

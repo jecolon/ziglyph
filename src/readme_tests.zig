@@ -147,9 +147,18 @@ test "Collation" {
     var collator = try Collator.init(allocator, "src/data/uca/allkeys.txt", &normalizer);
     defer collator.deinit();
 
-    expect(try collator.lessThan("abc", "def"));
+    expect(collator.tertiaryAsc("abc", "def"));
+    expect(collator.tertiaryDesc("def", "abc"));
+    expect(collator.orderFn("José", "jose", .primary, .eq));
+
     var strings: [3][]const u8 = .{ "xyz", "def", "abc" };
     collator.sort(&strings);
+    expectEqual(strings[0], "abc");
+    expectEqual(strings[1], "def");
+    expectEqual(strings[2], "xyz");
+
+    strings = .{ "xyz", "def", "abc" };
+    collator.sortAscii(&strings);
     expectEqual(strings[0], "abc");
     expectEqual(strings[1], "def");
     expectEqual(strings[2], "xyz");
