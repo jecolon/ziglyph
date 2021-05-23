@@ -165,9 +165,13 @@ test "Code point / string widths" {
 
     // The width methods take a second parameter of value .half or .full to determine the width of 
     // ambiguous code points as per the Unicode standard. .half is the most common case.
+
+    // Note that codePointWidth returns an i8 because code points like backspace have width -1.
     expectEqual(width.codePointWidth('é', .half), 1);
     expectEqual(width.codePointWidth('😊', .half), 2);
     expectEqual(width.codePointWidth('统', .half), 2);
+
+    // strWidth returns usize because it can never be negative, regardless of the code points it contains.
     expectEqual(try width.strWidth("Hello\r\n", .half), 5);
     expectEqual(try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
     expectEqual(try width.strWidth("Héllo 🇪🇸", .half), 8);

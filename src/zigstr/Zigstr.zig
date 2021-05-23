@@ -33,7 +33,7 @@ pub fn fromOwnedBytes(allocator: *mem.Allocator, str: []const u8) !Self {
 
 /// initWith creates a new Zigstr instance. `owned` determines if the bytes need to be freed on `deinit`.
 fn initWith(allocator: *mem.Allocator, str: []const u8, owned: bool) !Self {
-    var zstr = Self{
+    var self = Self{
         .allocator = allocator,
         .ascii_only = try isAsciiStr(str),
         .bytes = str,
@@ -43,9 +43,9 @@ fn initWith(allocator: *mem.Allocator, str: []const u8, owned: bool) !Self {
         .owned = owned,
     };
 
-    try zstr.processCodePoints();
+    try self.processCodePoints();
 
-    return zstr;
+    return self;
 }
 
 /// fromCodePoints returns a new Zigstr from `code points`, which will *not* be freed on `deinit`.
@@ -296,9 +296,43 @@ pub fn graphemeCount(self: *Self) !usize {
 
 /// copy a Zigstr to a new Zigstr. Don't forget to to `deinit` the returned Zigstr!
 pub fn copy(self: Self) !Self {
-    var bytes = try self.allocator.alloc(u8, self.bytes.len);
-    mem.copy(u8, bytes, self.bytes);
-    return initWith(self.allocator, bytes, true);
+    var other = Self{
+        .allocator = self.allocator,
+        .ascii_only = self.ascii_only,
+        .bytes = b_blk: {
+            if (self.owned) {
+                var bytes = try self.allocator.alloc(u8, self.bytes.len);
+                mem.copy(u8, bytes, self.bytes);
+                break :b_blk bytes;
+            } else {
+                break :b_blk self.bytes;
+            }
+        },
+        .code_points = cp_blk: {
+            if (self.code_points) |code_points| {
+                var cps = try self.allocator.alloc(u21, code_points.len);
+                mem.copy(u21, cps, code_points);
+                break :cp_blk cps;
+            } else {
+                break :cp_blk null;
+            }
+        },
+        .cp_count = self.cp_count,
+        .grapheme_clusters = gc_blk: {
+            if (self.grapheme_clusters) |grapheme_clusters| {
+                var gcs = try self.allocator.alloc(Grapheme, grapheme_clusters.len);
+                mem.copy(Grapheme, gcs, grapheme_clusters);
+                break :gc_blk gcs;
+            } else {
+                break :gc_blk null;
+            }
+        },
+        .owned = self.owned,
+    };
+
+    try other.processCodePoints();
+
+    return other;
 }
 
 /// sameAs convenience method to test exact byte equality of two Zigstrs.
