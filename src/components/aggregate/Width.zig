@@ -47,7 +47,7 @@ pub const AmbiguousWidth = enum(u2) {
 
 /// codePointWidth returns how many cells (or columns) wide `cp` should be when rendered in a
 /// fixed-width font.
-pub fn codePointWidth(self: Self, cp: u21, am_width: AmbiguousWidth) i8 {
+pub fn codePointWidth(self: Self, cp: u21, am_width: AmbiguousWidth) i3 {
     if (cp == 0x000 or cp == 0x0005 or cp == 0x0007 or (cp >= 0x000A and cp <= 0x000F)) {
         // Control.
         return 0;
