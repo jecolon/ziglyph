@@ -448,7 +448,7 @@ const UcdGenerator = struct {
                         // Mapping.
                         var field = mem.trim(u8, raw, " ");
                         var cp_iter = mem.split(field, " ");
-                        _ = try writer.print("    if (cp == 0x{s}) return [3]u21{{ ", .{code_point});
+                        _ = try writer.print("        0x{s} => [3]u21{{ ", .{code_point});
                         var i: usize = 0;
                         while (cp_iter.next()) |cp| {
                             i += 1;
@@ -460,7 +460,7 @@ const UcdGenerator = struct {
                                 _ = try writer.write(", 0");
                             }
                         }
-                        _ = try writer.write(" };\n");
+                        _ = try writer.write(" },\n");
                         select = false;
                     }
                 } else {
@@ -470,7 +470,7 @@ const UcdGenerator = struct {
         }
 
         // Finish writing.
-        _ = try writer.write("    return [3]u21{ cp, 0, 0 };\n}");
+        _ = try writer.write("        else => [3]u21{ cp, 0, 0 },\n    };\n}");
         try buf_writer.flush();
     }
 

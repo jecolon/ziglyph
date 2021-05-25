@@ -37,3 +37,4 @@ pub fn caseFoldStr(self: CaseFoldMap, allocator: *mem.Allocator, str: []const u8
 /// toCaseFold will convert a code point into its case folded equivalent. Note that this can result
 /// in a mapping to more than one code point, known as the full case fold.
 pub fn toCaseFold(self: CaseFoldMap, cp: u21) [3]u21 {
+    return switch (cp) {
