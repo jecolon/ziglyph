@@ -894,9 +894,9 @@ const UcdGenerator = struct {
                         field = mem.trimRight(u8, field[0..octo], " ");
                     }
                     if (code_point) |cp| {
-                        _ = try writer.print("    if (cp == 0x{s}) return false;\n", .{code_point});
+                        _ = try writer.print("        0x{s} => false,\n", .{code_point});
                     } else {
-                        _ = try writer.print("    if (cp >= 0x{s} and cp <= 0x{s}) return false;\n", .{ r_lo.?, r_hi.? });
+                        _ = try writer.print("        0x{s}...0x{s} => false,\n", .{ r_lo.?, r_hi.? });
                     }
                     r_lo = null;
                     r_hi = null;
@@ -912,7 +912,7 @@ const UcdGenerator = struct {
         }
 
         // Finish writing.
-        _ = try writer.write("    return true;\n}");
+        _ = try writer.write("        else => true,\n    };\n}");
         try buf_writer.flush();
     }
 };

@@ -5,3 +5,4 @@ const NFDCheck = @This();
 
 /// isNFD checks if the code point is in Canonical Decomposed Form.
 pub fn isNFD(self: NFDCheck, cp: u21) bool {
+    return switch (cp) {

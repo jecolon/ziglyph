@@ -5,248 +5,250 @@ const NFDCheck = @This();
 
 /// isNFD checks if the code point is in Canonical Decomposed Form.
 pub fn isNFD(self: NFDCheck, cp: u21) bool {
-    if (cp >= 0x00C0 and cp <= 0x00C5) return false;
-    if (cp >= 0x00C7 and cp <= 0x00CF) return false;
-    if (cp >= 0x00D1 and cp <= 0x00D6) return false;
-    if (cp >= 0x00D9 and cp <= 0x00DD) return false;
-    if (cp >= 0x00E0 and cp <= 0x00E5) return false;
-    if (cp >= 0x00E7 and cp <= 0x00EF) return false;
-    if (cp >= 0x00F1 and cp <= 0x00F6) return false;
-    if (cp >= 0x00F9 and cp <= 0x00FD) return false;
-    if (cp >= 0x00FF and cp <= 0x010F) return false;
-    if (cp >= 0x0112 and cp <= 0x0125) return false;
-    if (cp >= 0x0128 and cp <= 0x0130) return false;
-    if (cp >= 0x0134 and cp <= 0x0137) return false;
-    if (cp >= 0x0139 and cp <= 0x013E) return false;
-    if (cp >= 0x0143 and cp <= 0x0148) return false;
-    if (cp >= 0x014C and cp <= 0x0151) return false;
-    if (cp >= 0x0154 and cp <= 0x0165) return false;
-    if (cp >= 0x0168 and cp <= 0x017E) return false;
-    if (cp >= 0x01A0 and cp <= 0x01A1) return false;
-    if (cp >= 0x01AF and cp <= 0x01B0) return false;
-    if (cp >= 0x01CD and cp <= 0x01DC) return false;
-    if (cp >= 0x01DE and cp <= 0x01E3) return false;
-    if (cp >= 0x01E6 and cp <= 0x01F0) return false;
-    if (cp >= 0x01F4 and cp <= 0x01F5) return false;
-    if (cp >= 0x01F8 and cp <= 0x021B) return false;
-    if (cp >= 0x021E and cp <= 0x021F) return false;
-    if (cp >= 0x0226 and cp <= 0x0233) return false;
-    if (cp >= 0x0340 and cp <= 0x0341) return false;
-    if (cp >= 0x0343 and cp <= 0x0344) return false;
-    if (cp == 0x0374) return false;
-    if (cp == 0x037E) return false;
-    if (cp == 0x0385) return false;
-    if (cp == 0x0386) return false;
-    if (cp == 0x0387) return false;
-    if (cp >= 0x0388 and cp <= 0x038A) return false;
-    if (cp == 0x038C) return false;
-    if (cp >= 0x038E and cp <= 0x0390) return false;
-    if (cp >= 0x03AA and cp <= 0x03B0) return false;
-    if (cp >= 0x03CA and cp <= 0x03CE) return false;
-    if (cp >= 0x03D3 and cp <= 0x03D4) return false;
-    if (cp >= 0x0400 and cp <= 0x0401) return false;
-    if (cp == 0x0403) return false;
-    if (cp == 0x0407) return false;
-    if (cp >= 0x040C and cp <= 0x040E) return false;
-    if (cp == 0x0419) return false;
-    if (cp == 0x0439) return false;
-    if (cp >= 0x0450 and cp <= 0x0451) return false;
-    if (cp == 0x0453) return false;
-    if (cp == 0x0457) return false;
-    if (cp >= 0x045C and cp <= 0x045E) return false;
-    if (cp >= 0x0476 and cp <= 0x0477) return false;
-    if (cp >= 0x04C1 and cp <= 0x04C2) return false;
-    if (cp >= 0x04D0 and cp <= 0x04D3) return false;
-    if (cp >= 0x04D6 and cp <= 0x04D7) return false;
-    if (cp >= 0x04DA and cp <= 0x04DF) return false;
-    if (cp >= 0x04E2 and cp <= 0x04E7) return false;
-    if (cp >= 0x04EA and cp <= 0x04F5) return false;
-    if (cp >= 0x04F8 and cp <= 0x04F9) return false;
-    if (cp >= 0x0622 and cp <= 0x0626) return false;
-    if (cp == 0x06C0) return false;
-    if (cp == 0x06C2) return false;
-    if (cp == 0x06D3) return false;
-    if (cp == 0x0929) return false;
-    if (cp == 0x0931) return false;
-    if (cp == 0x0934) return false;
-    if (cp >= 0x0958 and cp <= 0x095F) return false;
-    if (cp >= 0x09CB and cp <= 0x09CC) return false;
-    if (cp >= 0x09DC and cp <= 0x09DD) return false;
-    if (cp == 0x09DF) return false;
-    if (cp == 0x0A33) return false;
-    if (cp == 0x0A36) return false;
-    if (cp >= 0x0A59 and cp <= 0x0A5B) return false;
-    if (cp == 0x0A5E) return false;
-    if (cp == 0x0B48) return false;
-    if (cp >= 0x0B4B and cp <= 0x0B4C) return false;
-    if (cp >= 0x0B5C and cp <= 0x0B5D) return false;
-    if (cp == 0x0B94) return false;
-    if (cp >= 0x0BCA and cp <= 0x0BCC) return false;
-    if (cp == 0x0C48) return false;
-    if (cp == 0x0CC0) return false;
-    if (cp >= 0x0CC7 and cp <= 0x0CC8) return false;
-    if (cp >= 0x0CCA and cp <= 0x0CCB) return false;
-    if (cp >= 0x0D4A and cp <= 0x0D4C) return false;
-    if (cp == 0x0DDA) return false;
-    if (cp >= 0x0DDC and cp <= 0x0DDE) return false;
-    if (cp == 0x0F43) return false;
-    if (cp == 0x0F4D) return false;
-    if (cp == 0x0F52) return false;
-    if (cp == 0x0F57) return false;
-    if (cp == 0x0F5C) return false;
-    if (cp == 0x0F69) return false;
-    if (cp == 0x0F73) return false;
-    if (cp >= 0x0F75 and cp <= 0x0F76) return false;
-    if (cp == 0x0F78) return false;
-    if (cp == 0x0F81) return false;
-    if (cp == 0x0F93) return false;
-    if (cp == 0x0F9D) return false;
-    if (cp == 0x0FA2) return false;
-    if (cp == 0x0FA7) return false;
-    if (cp == 0x0FAC) return false;
-    if (cp == 0x0FB9) return false;
-    if (cp == 0x1026) return false;
-    if (cp == 0x1B06) return false;
-    if (cp == 0x1B08) return false;
-    if (cp == 0x1B0A) return false;
-    if (cp == 0x1B0C) return false;
-    if (cp == 0x1B0E) return false;
-    if (cp == 0x1B12) return false;
-    if (cp == 0x1B3B) return false;
-    if (cp == 0x1B3D) return false;
-    if (cp >= 0x1B40 and cp <= 0x1B41) return false;
-    if (cp == 0x1B43) return false;
-    if (cp >= 0x1E00 and cp <= 0x1E99) return false;
-    if (cp == 0x1E9B) return false;
-    if (cp >= 0x1EA0 and cp <= 0x1EF9) return false;
-    if (cp >= 0x1F00 and cp <= 0x1F15) return false;
-    if (cp >= 0x1F18 and cp <= 0x1F1D) return false;
-    if (cp >= 0x1F20 and cp <= 0x1F45) return false;
-    if (cp >= 0x1F48 and cp <= 0x1F4D) return false;
-    if (cp >= 0x1F50 and cp <= 0x1F57) return false;
-    if (cp == 0x1F59) return false;
-    if (cp == 0x1F5B) return false;
-    if (cp == 0x1F5D) return false;
-    if (cp >= 0x1F5F and cp <= 0x1F7D) return false;
-    if (cp >= 0x1F80 and cp <= 0x1FB4) return false;
-    if (cp >= 0x1FB6 and cp <= 0x1FBC) return false;
-    if (cp == 0x1FBE) return false;
-    if (cp == 0x1FC1) return false;
-    if (cp >= 0x1FC2 and cp <= 0x1FC4) return false;
-    if (cp >= 0x1FC6 and cp <= 0x1FCC) return false;
-    if (cp >= 0x1FCD and cp <= 0x1FCF) return false;
-    if (cp >= 0x1FD0 and cp <= 0x1FD3) return false;
-    if (cp >= 0x1FD6 and cp <= 0x1FDB) return false;
-    if (cp >= 0x1FDD and cp <= 0x1FDF) return false;
-    if (cp >= 0x1FE0 and cp <= 0x1FEC) return false;
-    if (cp >= 0x1FED and cp <= 0x1FEF) return false;
-    if (cp >= 0x1FF2 and cp <= 0x1FF4) return false;
-    if (cp >= 0x1FF6 and cp <= 0x1FFC) return false;
-    if (cp == 0x1FFD) return false;
-    if (cp >= 0x2000 and cp <= 0x2001) return false;
-    if (cp == 0x2126) return false;
-    if (cp >= 0x212A and cp <= 0x212B) return false;
-    if (cp >= 0x219A and cp <= 0x219B) return false;
-    if (cp == 0x21AE) return false;
-    if (cp == 0x21CD) return false;
-    if (cp >= 0x21CE and cp <= 0x21CF) return false;
-    if (cp == 0x2204) return false;
-    if (cp == 0x2209) return false;
-    if (cp == 0x220C) return false;
-    if (cp == 0x2224) return false;
-    if (cp == 0x2226) return false;
-    if (cp == 0x2241) return false;
-    if (cp == 0x2244) return false;
-    if (cp == 0x2247) return false;
-    if (cp == 0x2249) return false;
-    if (cp == 0x2260) return false;
-    if (cp == 0x2262) return false;
-    if (cp >= 0x226D and cp <= 0x2271) return false;
-    if (cp >= 0x2274 and cp <= 0x2275) return false;
-    if (cp >= 0x2278 and cp <= 0x2279) return false;
-    if (cp >= 0x2280 and cp <= 0x2281) return false;
-    if (cp >= 0x2284 and cp <= 0x2285) return false;
-    if (cp >= 0x2288 and cp <= 0x2289) return false;
-    if (cp >= 0x22AC and cp <= 0x22AF) return false;
-    if (cp >= 0x22E0 and cp <= 0x22E3) return false;
-    if (cp >= 0x22EA and cp <= 0x22ED) return false;
-    if (cp == 0x2329) return false;
-    if (cp == 0x232A) return false;
-    if (cp == 0x2ADC) return false;
-    if (cp == 0x304C) return false;
-    if (cp == 0x304E) return false;
-    if (cp == 0x3050) return false;
-    if (cp == 0x3052) return false;
-    if (cp == 0x3054) return false;
-    if (cp == 0x3056) return false;
-    if (cp == 0x3058) return false;
-    if (cp == 0x305A) return false;
-    if (cp == 0x305C) return false;
-    if (cp == 0x305E) return false;
-    if (cp == 0x3060) return false;
-    if (cp == 0x3062) return false;
-    if (cp == 0x3065) return false;
-    if (cp == 0x3067) return false;
-    if (cp == 0x3069) return false;
-    if (cp >= 0x3070 and cp <= 0x3071) return false;
-    if (cp >= 0x3073 and cp <= 0x3074) return false;
-    if (cp >= 0x3076 and cp <= 0x3077) return false;
-    if (cp >= 0x3079 and cp <= 0x307A) return false;
-    if (cp >= 0x307C and cp <= 0x307D) return false;
-    if (cp == 0x3094) return false;
-    if (cp == 0x309E) return false;
-    if (cp == 0x30AC) return false;
-    if (cp == 0x30AE) return false;
-    if (cp == 0x30B0) return false;
-    if (cp == 0x30B2) return false;
-    if (cp == 0x30B4) return false;
-    if (cp == 0x30B6) return false;
-    if (cp == 0x30B8) return false;
-    if (cp == 0x30BA) return false;
-    if (cp == 0x30BC) return false;
-    if (cp == 0x30BE) return false;
-    if (cp == 0x30C0) return false;
-    if (cp == 0x30C2) return false;
-    if (cp == 0x30C5) return false;
-    if (cp == 0x30C7) return false;
-    if (cp == 0x30C9) return false;
-    if (cp >= 0x30D0 and cp <= 0x30D1) return false;
-    if (cp >= 0x30D3 and cp <= 0x30D4) return false;
-    if (cp >= 0x30D6 and cp <= 0x30D7) return false;
-    if (cp >= 0x30D9 and cp <= 0x30DA) return false;
-    if (cp >= 0x30DC and cp <= 0x30DD) return false;
-    if (cp == 0x30F4) return false;
-    if (cp >= 0x30F7 and cp <= 0x30FA) return false;
-    if (cp == 0x30FE) return false;
-    if (cp >= 0xAC00 and cp <= 0xD7A3) return false;
-    if (cp >= 0xF900 and cp <= 0xFA0D) return false;
-    if (cp == 0xFA10) return false;
-    if (cp == 0xFA12) return false;
-    if (cp >= 0xFA15 and cp <= 0xFA1E) return false;
-    if (cp == 0xFA20) return false;
-    if (cp == 0xFA22) return false;
-    if (cp >= 0xFA25 and cp <= 0xFA26) return false;
-    if (cp >= 0xFA2A and cp <= 0xFA6D) return false;
-    if (cp >= 0xFA70 and cp <= 0xFAD9) return false;
-    if (cp == 0xFB1D) return false;
-    if (cp == 0xFB1F) return false;
-    if (cp >= 0xFB2A and cp <= 0xFB36) return false;
-    if (cp >= 0xFB38 and cp <= 0xFB3C) return false;
-    if (cp == 0xFB3E) return false;
-    if (cp >= 0xFB40 and cp <= 0xFB41) return false;
-    if (cp >= 0xFB43 and cp <= 0xFB44) return false;
-    if (cp >= 0xFB46 and cp <= 0xFB4E) return false;
-    if (cp == 0x1109A) return false;
-    if (cp == 0x1109C) return false;
-    if (cp == 0x110AB) return false;
-    if (cp >= 0x1112E and cp <= 0x1112F) return false;
-    if (cp >= 0x1134B and cp <= 0x1134C) return false;
-    if (cp >= 0x114BB and cp <= 0x114BC) return false;
-    if (cp == 0x114BE) return false;
-    if (cp >= 0x115BA and cp <= 0x115BB) return false;
-    if (cp == 0x11938) return false;
-    if (cp >= 0x1D15E and cp <= 0x1D164) return false;
-    if (cp >= 0x1D1BB and cp <= 0x1D1C0) return false;
-    if (cp >= 0x2F800 and cp <= 0x2FA1D) return false;
-    return true;
+    return switch (cp) {
+        0x00C0...0x00C5 => false,
+        0x00C7...0x00CF => false,
+        0x00D1...0x00D6 => false,
+        0x00D9...0x00DD => false,
+        0x00E0...0x00E5 => false,
+        0x00E7...0x00EF => false,
+        0x00F1...0x00F6 => false,
+        0x00F9...0x00FD => false,
+        0x00FF...0x010F => false,
+        0x0112...0x0125 => false,
+        0x0128...0x0130 => false,
+        0x0134...0x0137 => false,
+        0x0139...0x013E => false,
+        0x0143...0x0148 => false,
+        0x014C...0x0151 => false,
+        0x0154...0x0165 => false,
+        0x0168...0x017E => false,
+        0x01A0...0x01A1 => false,
+        0x01AF...0x01B0 => false,
+        0x01CD...0x01DC => false,
+        0x01DE...0x01E3 => false,
+        0x01E6...0x01F0 => false,
+        0x01F4...0x01F5 => false,
+        0x01F8...0x021B => false,
+        0x021E...0x021F => false,
+        0x0226...0x0233 => false,
+        0x0340...0x0341 => false,
+        0x0343...0x0344 => false,
+        0x0374 => false,
+        0x037E => false,
+        0x0385 => false,
+        0x0386 => false,
+        0x0387 => false,
+        0x0388...0x038A => false,
+        0x038C => false,
+        0x038E...0x0390 => false,
+        0x03AA...0x03B0 => false,
+        0x03CA...0x03CE => false,
+        0x03D3...0x03D4 => false,
+        0x0400...0x0401 => false,
+        0x0403 => false,
+        0x0407 => false,
+        0x040C...0x040E => false,
+        0x0419 => false,
+        0x0439 => false,
+        0x0450...0x0451 => false,
+        0x0453 => false,
+        0x0457 => false,
+        0x045C...0x045E => false,
+        0x0476...0x0477 => false,
+        0x04C1...0x04C2 => false,
+        0x04D0...0x04D3 => false,
+        0x04D6...0x04D7 => false,
+        0x04DA...0x04DF => false,
+        0x04E2...0x04E7 => false,
+        0x04EA...0x04F5 => false,
+        0x04F8...0x04F9 => false,
+        0x0622...0x0626 => false,
+        0x06C0 => false,
+        0x06C2 => false,
+        0x06D3 => false,
+        0x0929 => false,
+        0x0931 => false,
+        0x0934 => false,
+        0x0958...0x095F => false,
+        0x09CB...0x09CC => false,
+        0x09DC...0x09DD => false,
+        0x09DF => false,
+        0x0A33 => false,
+        0x0A36 => false,
+        0x0A59...0x0A5B => false,
+        0x0A5E => false,
+        0x0B48 => false,
+        0x0B4B...0x0B4C => false,
+        0x0B5C...0x0B5D => false,
+        0x0B94 => false,
+        0x0BCA...0x0BCC => false,
+        0x0C48 => false,
+        0x0CC0 => false,
+        0x0CC7...0x0CC8 => false,
+        0x0CCA...0x0CCB => false,
+        0x0D4A...0x0D4C => false,
+        0x0DDA => false,
+        0x0DDC...0x0DDE => false,
+        0x0F43 => false,
+        0x0F4D => false,
+        0x0F52 => false,
+        0x0F57 => false,
+        0x0F5C => false,
+        0x0F69 => false,
+        0x0F73 => false,
+        0x0F75...0x0F76 => false,
+        0x0F78 => false,
+        0x0F81 => false,
+        0x0F93 => false,
+        0x0F9D => false,
+        0x0FA2 => false,
+        0x0FA7 => false,
+        0x0FAC => false,
+        0x0FB9 => false,
+        0x1026 => false,
+        0x1B06 => false,
+        0x1B08 => false,
+        0x1B0A => false,
+        0x1B0C => false,
+        0x1B0E => false,
+        0x1B12 => false,
+        0x1B3B => false,
+        0x1B3D => false,
+        0x1B40...0x1B41 => false,
+        0x1B43 => false,
+        0x1E00...0x1E99 => false,
+        0x1E9B => false,
+        0x1EA0...0x1EF9 => false,
+        0x1F00...0x1F15 => false,
+        0x1F18...0x1F1D => false,
+        0x1F20...0x1F45 => false,
+        0x1F48...0x1F4D => false,
+        0x1F50...0x1F57 => false,
+        0x1F59 => false,
+        0x1F5B => false,
+        0x1F5D => false,
+        0x1F5F...0x1F7D => false,
+        0x1F80...0x1FB4 => false,
+        0x1FB6...0x1FBC => false,
+        0x1FBE => false,
+        0x1FC1 => false,
+        0x1FC2...0x1FC4 => false,
+        0x1FC6...0x1FCC => false,
+        0x1FCD...0x1FCF => false,
+        0x1FD0...0x1FD3 => false,
+        0x1FD6...0x1FDB => false,
+        0x1FDD...0x1FDF => false,
+        0x1FE0...0x1FEC => false,
+        0x1FED...0x1FEF => false,
+        0x1FF2...0x1FF4 => false,
+        0x1FF6...0x1FFC => false,
+        0x1FFD => false,
+        0x2000...0x2001 => false,
+        0x2126 => false,
+        0x212A...0x212B => false,
+        0x219A...0x219B => false,
+        0x21AE => false,
+        0x21CD => false,
+        0x21CE...0x21CF => false,
+        0x2204 => false,
+        0x2209 => false,
+        0x220C => false,
+        0x2224 => false,
+        0x2226 => false,
+        0x2241 => false,
+        0x2244 => false,
+        0x2247 => false,
+        0x2249 => false,
+        0x2260 => false,
+        0x2262 => false,
+        0x226D...0x2271 => false,
+        0x2274...0x2275 => false,
+        0x2278...0x2279 => false,
+        0x2280...0x2281 => false,
+        0x2284...0x2285 => false,
+        0x2288...0x2289 => false,
+        0x22AC...0x22AF => false,
+        0x22E0...0x22E3 => false,
+        0x22EA...0x22ED => false,
+        0x2329 => false,
+        0x232A => false,
+        0x2ADC => false,
+        0x304C => false,
+        0x304E => false,
+        0x3050 => false,
+        0x3052 => false,
+        0x3054 => false,
+        0x3056 => false,
+        0x3058 => false,
+        0x305A => false,
+        0x305C => false,
+        0x305E => false,
+        0x3060 => false,
+        0x3062 => false,
+        0x3065 => false,
+        0x3067 => false,
+        0x3069 => false,
+        0x3070...0x3071 => false,
+        0x3073...0x3074 => false,
+        0x3076...0x3077 => false,
+        0x3079...0x307A => false,
+        0x307C...0x307D => false,
+        0x3094 => false,
+        0x309E => false,
+        0x30AC => false,
+        0x30AE => false,
+        0x30B0 => false,
+        0x30B2 => false,
+        0x30B4 => false,
+        0x30B6 => false,
+        0x30B8 => false,
+        0x30BA => false,
+        0x30BC => false,
+        0x30BE => false,
+        0x30C0 => false,
+        0x30C2 => false,
+        0x30C5 => false,
+        0x30C7 => false,
+        0x30C9 => false,
+        0x30D0...0x30D1 => false,
+        0x30D3...0x30D4 => false,
+        0x30D6...0x30D7 => false,
+        0x30D9...0x30DA => false,
+        0x30DC...0x30DD => false,
+        0x30F4 => false,
+        0x30F7...0x30FA => false,
+        0x30FE => false,
+        0xAC00...0xD7A3 => false,
+        0xF900...0xFA0D => false,
+        0xFA10 => false,
+        0xFA12 => false,
+        0xFA15...0xFA1E => false,
+        0xFA20 => false,
+        0xFA22 => false,
+        0xFA25...0xFA26 => false,
+        0xFA2A...0xFA6D => false,
+        0xFA70...0xFAD9 => false,
+        0xFB1D => false,
+        0xFB1F => false,
+        0xFB2A...0xFB36 => false,
+        0xFB38...0xFB3C => false,
+        0xFB3E => false,
+        0xFB40...0xFB41 => false,
+        0xFB43...0xFB44 => false,
+        0xFB46...0xFB4E => false,
+        0x1109A => false,
+        0x1109C => false,
+        0x110AB => false,
+        0x1112E...0x1112F => false,
+        0x1134B...0x1134C => false,
+        0x114BB...0x114BC => false,
+        0x114BE => false,
+        0x115BA...0x115BB => false,
+        0x11938 => false,
+        0x1D15E...0x1D164 => false,
+        0x1D1BB...0x1D1C0 => false,
+        0x2F800...0x2FA1D => false,
+        else => true,
+    };
 }
