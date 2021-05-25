@@ -5,372 +5,374 @@ const CccMap = @This();
 
 /// combiningClass maps the code point to its combining class value.
 pub fn combiningClass(self: CccMap, cp: u21) u8 {
-    if (cp >= 0x0334 and cp <= 0x0338) return 1;
-    if (cp == 0x1CD4) return 1;
-    if (cp >= 0x1CE2 and cp <= 0x1CE8) return 1;
-    if (cp >= 0x20D2 and cp <= 0x20D3) return 1;
-    if (cp >= 0x20D8 and cp <= 0x20DA) return 1;
-    if (cp >= 0x20E5 and cp <= 0x20E6) return 1;
-    if (cp >= 0x20EA and cp <= 0x20EB) return 1;
-    if (cp == 0x10A39) return 1;
-    if (cp >= 0x16AF0 and cp <= 0x16AF4) return 1;
-    if (cp == 0x1BC9E) return 1;
-    if (cp >= 0x1D167 and cp <= 0x1D169) return 1;
-    if (cp >= 0x16FF0 and cp <= 0x16FF1) return 6;
-    if (cp == 0x093C) return 7;
-    if (cp == 0x09BC) return 7;
-    if (cp == 0x0A3C) return 7;
-    if (cp == 0x0ABC) return 7;
-    if (cp == 0x0B3C) return 7;
-    if (cp == 0x0CBC) return 7;
-    if (cp == 0x1037) return 7;
-    if (cp == 0x1B34) return 7;
-    if (cp == 0x1BE6) return 7;
-    if (cp == 0x1C37) return 7;
-    if (cp == 0xA9B3) return 7;
-    if (cp == 0x110BA) return 7;
-    if (cp == 0x11173) return 7;
-    if (cp == 0x111CA) return 7;
-    if (cp == 0x11236) return 7;
-    if (cp == 0x112E9) return 7;
-    if (cp >= 0x1133B and cp <= 0x1133C) return 7;
-    if (cp == 0x11446) return 7;
-    if (cp == 0x114C3) return 7;
-    if (cp == 0x115C0) return 7;
-    if (cp == 0x116B7) return 7;
-    if (cp == 0x1183A) return 7;
-    if (cp == 0x11943) return 7;
-    if (cp == 0x11D42) return 7;
-    if (cp == 0x1E94A) return 7;
-    if (cp >= 0x3099 and cp <= 0x309A) return 8;
-    if (cp == 0x094D) return 9;
-    if (cp == 0x09CD) return 9;
-    if (cp == 0x0A4D) return 9;
-    if (cp == 0x0ACD) return 9;
-    if (cp == 0x0B4D) return 9;
-    if (cp == 0x0BCD) return 9;
-    if (cp == 0x0C4D) return 9;
-    if (cp == 0x0CCD) return 9;
-    if (cp >= 0x0D3B and cp <= 0x0D3C) return 9;
-    if (cp == 0x0D4D) return 9;
-    if (cp == 0x0DCA) return 9;
-    if (cp == 0x0E3A) return 9;
-    if (cp == 0x0EBA) return 9;
-    if (cp == 0x0F84) return 9;
-    if (cp >= 0x1039 and cp <= 0x103A) return 9;
-    if (cp == 0x1714) return 9;
-    if (cp == 0x1734) return 9;
-    if (cp == 0x17D2) return 9;
-    if (cp == 0x1A60) return 9;
-    if (cp == 0x1B44) return 9;
-    if (cp == 0x1BAA) return 9;
-    if (cp == 0x1BAB) return 9;
-    if (cp >= 0x1BF2 and cp <= 0x1BF3) return 9;
-    if (cp == 0x2D7F) return 9;
-    if (cp == 0xA806) return 9;
-    if (cp == 0xA82C) return 9;
-    if (cp == 0xA8C4) return 9;
-    if (cp == 0xA953) return 9;
-    if (cp == 0xA9C0) return 9;
-    if (cp == 0xAAF6) return 9;
-    if (cp == 0xABED) return 9;
-    if (cp == 0x10A3F) return 9;
-    if (cp == 0x11046) return 9;
-    if (cp == 0x1107F) return 9;
-    if (cp == 0x110B9) return 9;
-    if (cp >= 0x11133 and cp <= 0x11134) return 9;
-    if (cp == 0x111C0) return 9;
-    if (cp == 0x11235) return 9;
-    if (cp == 0x112EA) return 9;
-    if (cp == 0x1134D) return 9;
-    if (cp == 0x11442) return 9;
-    if (cp == 0x114C2) return 9;
-    if (cp == 0x115BF) return 9;
-    if (cp == 0x1163F) return 9;
-    if (cp == 0x116B6) return 9;
-    if (cp == 0x1172B) return 9;
-    if (cp == 0x11839) return 9;
-    if (cp == 0x1193D) return 9;
-    if (cp == 0x1193E) return 9;
-    if (cp == 0x119E0) return 9;
-    if (cp == 0x11A34) return 9;
-    if (cp == 0x11A47) return 9;
-    if (cp == 0x11A99) return 9;
-    if (cp == 0x11C3F) return 9;
-    if (cp >= 0x11D44 and cp <= 0x11D45) return 9;
-    if (cp == 0x11D97) return 9;
-    if (cp == 0x05B0) return 10;
-    if (cp == 0x05B1) return 11;
-    if (cp == 0x05B2) return 12;
-    if (cp == 0x05B3) return 13;
-    if (cp == 0x05B4) return 14;
-    if (cp == 0x05B5) return 15;
-    if (cp == 0x05B6) return 16;
-    if (cp == 0x05B7) return 17;
-    if (cp == 0x05B8) return 18;
-    if (cp == 0x05C7) return 18;
-    if (cp >= 0x05B9 and cp <= 0x05BA) return 19;
-    if (cp == 0x05BB) return 20;
-    if (cp == 0x05BC) return 21;
-    if (cp == 0x05BD) return 22;
-    if (cp == 0x05BF) return 23;
-    if (cp == 0x05C1) return 24;
-    if (cp == 0x05C2) return 25;
-    if (cp == 0xFB1E) return 26;
-    if (cp == 0x064B) return 27;
-    if (cp == 0x08F0) return 27;
-    if (cp == 0x064C) return 28;
-    if (cp == 0x08F1) return 28;
-    if (cp == 0x064D) return 29;
-    if (cp == 0x08F2) return 29;
-    if (cp == 0x0618) return 30;
-    if (cp == 0x064E) return 30;
-    if (cp == 0x0619) return 31;
-    if (cp == 0x064F) return 31;
-    if (cp == 0x061A) return 32;
-    if (cp == 0x0650) return 32;
-    if (cp == 0x0651) return 33;
-    if (cp == 0x0652) return 34;
-    if (cp == 0x0670) return 35;
-    if (cp == 0x0711) return 36;
-    if (cp == 0x0C55) return 84;
-    if (cp == 0x0C56) return 91;
-    if (cp >= 0x0E38 and cp <= 0x0E39) return 103;
-    if (cp >= 0x0E48 and cp <= 0x0E4B) return 107;
-    if (cp >= 0x0EB8 and cp <= 0x0EB9) return 118;
-    if (cp >= 0x0EC8 and cp <= 0x0ECB) return 122;
-    if (cp == 0x0F71) return 129;
-    if (cp == 0x0F72) return 130;
-    if (cp >= 0x0F7A and cp <= 0x0F7D) return 130;
-    if (cp == 0x0F80) return 130;
-    if (cp == 0x0F74) return 132;
-    if (cp >= 0x0321 and cp <= 0x0322) return 202;
-    if (cp >= 0x0327 and cp <= 0x0328) return 202;
-    if (cp == 0x1DD0) return 202;
-    if (cp == 0x1DCE) return 214;
-    if (cp == 0x031B) return 216;
-    if (cp == 0x0F39) return 216;
-    if (cp >= 0x1D165 and cp <= 0x1D166) return 216;
-    if (cp >= 0x1D16E and cp <= 0x1D172) return 216;
-    if (cp == 0x302A) return 218;
-    if (cp >= 0x0316 and cp <= 0x0319) return 220;
-    if (cp >= 0x031C and cp <= 0x0320) return 220;
-    if (cp >= 0x0323 and cp <= 0x0326) return 220;
-    if (cp >= 0x0329 and cp <= 0x0333) return 220;
-    if (cp >= 0x0339 and cp <= 0x033C) return 220;
-    if (cp >= 0x0347 and cp <= 0x0349) return 220;
-    if (cp >= 0x034D and cp <= 0x034E) return 220;
-    if (cp >= 0x0353 and cp <= 0x0356) return 220;
-    if (cp >= 0x0359 and cp <= 0x035A) return 220;
-    if (cp == 0x0591) return 220;
-    if (cp == 0x0596) return 220;
-    if (cp == 0x059B) return 220;
-    if (cp >= 0x05A2 and cp <= 0x05A7) return 220;
-    if (cp == 0x05AA) return 220;
-    if (cp == 0x05C5) return 220;
-    if (cp >= 0x0655 and cp <= 0x0656) return 220;
-    if (cp == 0x065C) return 220;
-    if (cp == 0x065F) return 220;
-    if (cp == 0x06E3) return 220;
-    if (cp == 0x06EA) return 220;
-    if (cp == 0x06ED) return 220;
-    if (cp == 0x0731) return 220;
-    if (cp == 0x0734) return 220;
-    if (cp >= 0x0737 and cp <= 0x0739) return 220;
-    if (cp >= 0x073B and cp <= 0x073C) return 220;
-    if (cp == 0x073E) return 220;
-    if (cp == 0x0742) return 220;
-    if (cp == 0x0744) return 220;
-    if (cp == 0x0746) return 220;
-    if (cp == 0x0748) return 220;
-    if (cp == 0x07F2) return 220;
-    if (cp == 0x07FD) return 220;
-    if (cp >= 0x0859 and cp <= 0x085B) return 220;
-    if (cp == 0x08D3) return 220;
-    if (cp == 0x08E3) return 220;
-    if (cp == 0x08E6) return 220;
-    if (cp == 0x08E9) return 220;
-    if (cp >= 0x08ED and cp <= 0x08EF) return 220;
-    if (cp == 0x08F6) return 220;
-    if (cp >= 0x08F9 and cp <= 0x08FA) return 220;
-    if (cp == 0x0952) return 220;
-    if (cp >= 0x0F18 and cp <= 0x0F19) return 220;
-    if (cp == 0x0F35) return 220;
-    if (cp == 0x0F37) return 220;
-    if (cp == 0x0FC6) return 220;
-    if (cp == 0x108D) return 220;
-    if (cp == 0x193B) return 220;
-    if (cp == 0x1A18) return 220;
-    if (cp == 0x1A7F) return 220;
-    if (cp >= 0x1AB5 and cp <= 0x1ABA) return 220;
-    if (cp == 0x1ABD) return 220;
-    if (cp >= 0x1ABF and cp <= 0x1AC0) return 220;
-    if (cp == 0x1B6C) return 220;
-    if (cp >= 0x1CD5 and cp <= 0x1CD9) return 220;
-    if (cp >= 0x1CDC and cp <= 0x1CDF) return 220;
-    if (cp == 0x1CED) return 220;
-    if (cp == 0x1DC2) return 220;
-    if (cp == 0x1DCA) return 220;
-    if (cp == 0x1DCF) return 220;
-    if (cp == 0x1DF9) return 220;
-    if (cp == 0x1DFD) return 220;
-    if (cp == 0x1DFF) return 220;
-    if (cp == 0x20E8) return 220;
-    if (cp >= 0x20EC and cp <= 0x20EF) return 220;
-    if (cp >= 0xA92B and cp <= 0xA92D) return 220;
-    if (cp == 0xAAB4) return 220;
-    if (cp >= 0xFE27 and cp <= 0xFE2D) return 220;
-    if (cp == 0x101FD) return 220;
-    if (cp == 0x102E0) return 220;
-    if (cp == 0x10A0D) return 220;
-    if (cp == 0x10A3A) return 220;
-    if (cp == 0x10AE6) return 220;
-    if (cp >= 0x10F46 and cp <= 0x10F47) return 220;
-    if (cp == 0x10F4B) return 220;
-    if (cp >= 0x10F4D and cp <= 0x10F50) return 220;
-    if (cp >= 0x1D17B and cp <= 0x1D182) return 220;
-    if (cp >= 0x1D18A and cp <= 0x1D18B) return 220;
-    if (cp >= 0x1E8D0 and cp <= 0x1E8D6) return 220;
-    if (cp == 0x059A) return 222;
-    if (cp == 0x05AD) return 222;
-    if (cp == 0x1939) return 222;
-    if (cp == 0x302D) return 222;
-    if (cp >= 0x302E and cp <= 0x302F) return 224;
-    if (cp == 0x1D16D) return 226;
-    if (cp == 0x05AE) return 228;
-    if (cp == 0x18A9) return 228;
-    if (cp >= 0x1DF7 and cp <= 0x1DF8) return 228;
-    if (cp == 0x302B) return 228;
-    if (cp >= 0x0300 and cp <= 0x0314) return 230;
-    if (cp >= 0x033D and cp <= 0x0344) return 230;
-    if (cp == 0x0346) return 230;
-    if (cp >= 0x034A and cp <= 0x034C) return 230;
-    if (cp >= 0x0350 and cp <= 0x0352) return 230;
-    if (cp == 0x0357) return 230;
-    if (cp == 0x035B) return 230;
-    if (cp >= 0x0363 and cp <= 0x036F) return 230;
-    if (cp >= 0x0483 and cp <= 0x0487) return 230;
-    if (cp >= 0x0592 and cp <= 0x0595) return 230;
-    if (cp >= 0x0597 and cp <= 0x0599) return 230;
-    if (cp >= 0x059C and cp <= 0x05A1) return 230;
-    if (cp >= 0x05A8 and cp <= 0x05A9) return 230;
-    if (cp >= 0x05AB and cp <= 0x05AC) return 230;
-    if (cp == 0x05AF) return 230;
-    if (cp == 0x05C4) return 230;
-    if (cp >= 0x0610 and cp <= 0x0617) return 230;
-    if (cp >= 0x0653 and cp <= 0x0654) return 230;
-    if (cp >= 0x0657 and cp <= 0x065B) return 230;
-    if (cp >= 0x065D and cp <= 0x065E) return 230;
-    if (cp >= 0x06D6 and cp <= 0x06DC) return 230;
-    if (cp >= 0x06DF and cp <= 0x06E2) return 230;
-    if (cp == 0x06E4) return 230;
-    if (cp >= 0x06E7 and cp <= 0x06E8) return 230;
-    if (cp >= 0x06EB and cp <= 0x06EC) return 230;
-    if (cp == 0x0730) return 230;
-    if (cp >= 0x0732 and cp <= 0x0733) return 230;
-    if (cp >= 0x0735 and cp <= 0x0736) return 230;
-    if (cp == 0x073A) return 230;
-    if (cp == 0x073D) return 230;
-    if (cp >= 0x073F and cp <= 0x0741) return 230;
-    if (cp == 0x0743) return 230;
-    if (cp == 0x0745) return 230;
-    if (cp == 0x0747) return 230;
-    if (cp >= 0x0749 and cp <= 0x074A) return 230;
-    if (cp >= 0x07EB and cp <= 0x07F1) return 230;
-    if (cp == 0x07F3) return 230;
-    if (cp >= 0x0816 and cp <= 0x0819) return 230;
-    if (cp >= 0x081B and cp <= 0x0823) return 230;
-    if (cp >= 0x0825 and cp <= 0x0827) return 230;
-    if (cp >= 0x0829 and cp <= 0x082D) return 230;
-    if (cp >= 0x08D4 and cp <= 0x08E1) return 230;
-    if (cp >= 0x08E4 and cp <= 0x08E5) return 230;
-    if (cp >= 0x08E7 and cp <= 0x08E8) return 230;
-    if (cp >= 0x08EA and cp <= 0x08EC) return 230;
-    if (cp >= 0x08F3 and cp <= 0x08F5) return 230;
-    if (cp >= 0x08F7 and cp <= 0x08F8) return 230;
-    if (cp >= 0x08FB and cp <= 0x08FF) return 230;
-    if (cp == 0x0951) return 230;
-    if (cp >= 0x0953 and cp <= 0x0954) return 230;
-    if (cp == 0x09FE) return 230;
-    if (cp >= 0x0F82 and cp <= 0x0F83) return 230;
-    if (cp >= 0x0F86 and cp <= 0x0F87) return 230;
-    if (cp >= 0x135D and cp <= 0x135F) return 230;
-    if (cp == 0x17DD) return 230;
-    if (cp == 0x193A) return 230;
-    if (cp == 0x1A17) return 230;
-    if (cp >= 0x1A75 and cp <= 0x1A7C) return 230;
-    if (cp >= 0x1AB0 and cp <= 0x1AB4) return 230;
-    if (cp >= 0x1ABB and cp <= 0x1ABC) return 230;
-    if (cp == 0x1B6B) return 230;
-    if (cp >= 0x1B6D and cp <= 0x1B73) return 230;
-    if (cp >= 0x1CD0 and cp <= 0x1CD2) return 230;
-    if (cp >= 0x1CDA and cp <= 0x1CDB) return 230;
-    if (cp == 0x1CE0) return 230;
-    if (cp == 0x1CF4) return 230;
-    if (cp >= 0x1CF8 and cp <= 0x1CF9) return 230;
-    if (cp >= 0x1DC0 and cp <= 0x1DC1) return 230;
-    if (cp >= 0x1DC3 and cp <= 0x1DC9) return 230;
-    if (cp >= 0x1DCB and cp <= 0x1DCC) return 230;
-    if (cp >= 0x1DD1 and cp <= 0x1DF5) return 230;
-    if (cp == 0x1DFB) return 230;
-    if (cp == 0x1DFE) return 230;
-    if (cp >= 0x20D0 and cp <= 0x20D1) return 230;
-    if (cp >= 0x20D4 and cp <= 0x20D7) return 230;
-    if (cp >= 0x20DB and cp <= 0x20DC) return 230;
-    if (cp == 0x20E1) return 230;
-    if (cp == 0x20E7) return 230;
-    if (cp == 0x20E9) return 230;
-    if (cp == 0x20F0) return 230;
-    if (cp >= 0x2CEF and cp <= 0x2CF1) return 230;
-    if (cp >= 0x2DE0 and cp <= 0x2DFF) return 230;
-    if (cp == 0xA66F) return 230;
-    if (cp >= 0xA674 and cp <= 0xA67D) return 230;
-    if (cp >= 0xA69E and cp <= 0xA69F) return 230;
-    if (cp >= 0xA6F0 and cp <= 0xA6F1) return 230;
-    if (cp >= 0xA8E0 and cp <= 0xA8F1) return 230;
-    if (cp == 0xAAB0) return 230;
-    if (cp >= 0xAAB2 and cp <= 0xAAB3) return 230;
-    if (cp >= 0xAAB7 and cp <= 0xAAB8) return 230;
-    if (cp >= 0xAABE and cp <= 0xAABF) return 230;
-    if (cp == 0xAAC1) return 230;
-    if (cp >= 0xFE20 and cp <= 0xFE26) return 230;
-    if (cp >= 0xFE2E and cp <= 0xFE2F) return 230;
-    if (cp >= 0x10376 and cp <= 0x1037A) return 230;
-    if (cp == 0x10A0F) return 230;
-    if (cp == 0x10A38) return 230;
-    if (cp == 0x10AE5) return 230;
-    if (cp >= 0x10D24 and cp <= 0x10D27) return 230;
-    if (cp >= 0x10EAB and cp <= 0x10EAC) return 230;
-    if (cp >= 0x10F48 and cp <= 0x10F4A) return 230;
-    if (cp == 0x10F4C) return 230;
-    if (cp >= 0x11100 and cp <= 0x11102) return 230;
-    if (cp >= 0x11366 and cp <= 0x1136C) return 230;
-    if (cp >= 0x11370 and cp <= 0x11374) return 230;
-    if (cp == 0x1145E) return 230;
-    if (cp >= 0x16B30 and cp <= 0x16B36) return 230;
-    if (cp >= 0x1D185 and cp <= 0x1D189) return 230;
-    if (cp >= 0x1D1AA and cp <= 0x1D1AD) return 230;
-    if (cp >= 0x1D242 and cp <= 0x1D244) return 230;
-    if (cp >= 0x1E000 and cp <= 0x1E006) return 230;
-    if (cp >= 0x1E008 and cp <= 0x1E018) return 230;
-    if (cp >= 0x1E01B and cp <= 0x1E021) return 230;
-    if (cp >= 0x1E023 and cp <= 0x1E024) return 230;
-    if (cp >= 0x1E026 and cp <= 0x1E02A) return 230;
-    if (cp >= 0x1E130 and cp <= 0x1E136) return 230;
-    if (cp >= 0x1E2EC and cp <= 0x1E2EF) return 230;
-    if (cp >= 0x1E944 and cp <= 0x1E949) return 230;
-    if (cp == 0x0315) return 232;
-    if (cp == 0x031A) return 232;
-    if (cp == 0x0358) return 232;
-    if (cp == 0x1DF6) return 232;
-    if (cp == 0x302C) return 232;
-    if (cp == 0x035C) return 233;
-    if (cp == 0x035F) return 233;
-    if (cp == 0x0362) return 233;
-    if (cp == 0x1DFC) return 233;
-    if (cp >= 0x035D and cp <= 0x035E) return 234;
-    if (cp >= 0x0360 and cp <= 0x0361) return 234;
-    if (cp == 0x1DCD) return 234;
-    if (cp == 0x0345) return 240;
-    return 0;
+    return switch (cp) {
+        0x0334...0x0338 => 1,
+        0x1CD4 => 1,
+        0x1CE2...0x1CE8 => 1,
+        0x20D2...0x20D3 => 1,
+        0x20D8...0x20DA => 1,
+        0x20E5...0x20E6 => 1,
+        0x20EA...0x20EB => 1,
+        0x10A39 => 1,
+        0x16AF0...0x16AF4 => 1,
+        0x1BC9E => 1,
+        0x1D167...0x1D169 => 1,
+        0x16FF0...0x16FF1 => 6,
+        0x093C => 7,
+        0x09BC => 7,
+        0x0A3C => 7,
+        0x0ABC => 7,
+        0x0B3C => 7,
+        0x0CBC => 7,
+        0x1037 => 7,
+        0x1B34 => 7,
+        0x1BE6 => 7,
+        0x1C37 => 7,
+        0xA9B3 => 7,
+        0x110BA => 7,
+        0x11173 => 7,
+        0x111CA => 7,
+        0x11236 => 7,
+        0x112E9 => 7,
+        0x1133B...0x1133C => 7,
+        0x11446 => 7,
+        0x114C3 => 7,
+        0x115C0 => 7,
+        0x116B7 => 7,
+        0x1183A => 7,
+        0x11943 => 7,
+        0x11D42 => 7,
+        0x1E94A => 7,
+        0x3099...0x309A => 8,
+        0x094D => 9,
+        0x09CD => 9,
+        0x0A4D => 9,
+        0x0ACD => 9,
+        0x0B4D => 9,
+        0x0BCD => 9,
+        0x0C4D => 9,
+        0x0CCD => 9,
+        0x0D3B...0x0D3C => 9,
+        0x0D4D => 9,
+        0x0DCA => 9,
+        0x0E3A => 9,
+        0x0EBA => 9,
+        0x0F84 => 9,
+        0x1039...0x103A => 9,
+        0x1714 => 9,
+        0x1734 => 9,
+        0x17D2 => 9,
+        0x1A60 => 9,
+        0x1B44 => 9,
+        0x1BAA => 9,
+        0x1BAB => 9,
+        0x1BF2...0x1BF3 => 9,
+        0x2D7F => 9,
+        0xA806 => 9,
+        0xA82C => 9,
+        0xA8C4 => 9,
+        0xA953 => 9,
+        0xA9C0 => 9,
+        0xAAF6 => 9,
+        0xABED => 9,
+        0x10A3F => 9,
+        0x11046 => 9,
+        0x1107F => 9,
+        0x110B9 => 9,
+        0x11133...0x11134 => 9,
+        0x111C0 => 9,
+        0x11235 => 9,
+        0x112EA => 9,
+        0x1134D => 9,
+        0x11442 => 9,
+        0x114C2 => 9,
+        0x115BF => 9,
+        0x1163F => 9,
+        0x116B6 => 9,
+        0x1172B => 9,
+        0x11839 => 9,
+        0x1193D => 9,
+        0x1193E => 9,
+        0x119E0 => 9,
+        0x11A34 => 9,
+        0x11A47 => 9,
+        0x11A99 => 9,
+        0x11C3F => 9,
+        0x11D44...0x11D45 => 9,
+        0x11D97 => 9,
+        0x05B0 => 10,
+        0x05B1 => 11,
+        0x05B2 => 12,
+        0x05B3 => 13,
+        0x05B4 => 14,
+        0x05B5 => 15,
+        0x05B6 => 16,
+        0x05B7 => 17,
+        0x05B8 => 18,
+        0x05C7 => 18,
+        0x05B9...0x05BA => 19,
+        0x05BB => 20,
+        0x05BC => 21,
+        0x05BD => 22,
+        0x05BF => 23,
+        0x05C1 => 24,
+        0x05C2 => 25,
+        0xFB1E => 26,
+        0x064B => 27,
+        0x08F0 => 27,
+        0x064C => 28,
+        0x08F1 => 28,
+        0x064D => 29,
+        0x08F2 => 29,
+        0x0618 => 30,
+        0x064E => 30,
+        0x0619 => 31,
+        0x064F => 31,
+        0x061A => 32,
+        0x0650 => 32,
+        0x0651 => 33,
+        0x0652 => 34,
+        0x0670 => 35,
+        0x0711 => 36,
+        0x0C55 => 84,
+        0x0C56 => 91,
+        0x0E38...0x0E39 => 103,
+        0x0E48...0x0E4B => 107,
+        0x0EB8...0x0EB9 => 118,
+        0x0EC8...0x0ECB => 122,
+        0x0F71 => 129,
+        0x0F72 => 130,
+        0x0F7A...0x0F7D => 130,
+        0x0F80 => 130,
+        0x0F74 => 132,
+        0x0321...0x0322 => 202,
+        0x0327...0x0328 => 202,
+        0x1DD0 => 202,
+        0x1DCE => 214,
+        0x031B => 216,
+        0x0F39 => 216,
+        0x1D165...0x1D166 => 216,
+        0x1D16E...0x1D172 => 216,
+        0x302A => 218,
+        0x0316...0x0319 => 220,
+        0x031C...0x0320 => 220,
+        0x0323...0x0326 => 220,
+        0x0329...0x0333 => 220,
+        0x0339...0x033C => 220,
+        0x0347...0x0349 => 220,
+        0x034D...0x034E => 220,
+        0x0353...0x0356 => 220,
+        0x0359...0x035A => 220,
+        0x0591 => 220,
+        0x0596 => 220,
+        0x059B => 220,
+        0x05A2...0x05A7 => 220,
+        0x05AA => 220,
+        0x05C5 => 220,
+        0x0655...0x0656 => 220,
+        0x065C => 220,
+        0x065F => 220,
+        0x06E3 => 220,
+        0x06EA => 220,
+        0x06ED => 220,
+        0x0731 => 220,
+        0x0734 => 220,
+        0x0737...0x0739 => 220,
+        0x073B...0x073C => 220,
+        0x073E => 220,
+        0x0742 => 220,
+        0x0744 => 220,
+        0x0746 => 220,
+        0x0748 => 220,
+        0x07F2 => 220,
+        0x07FD => 220,
+        0x0859...0x085B => 220,
+        0x08D3 => 220,
+        0x08E3 => 220,
+        0x08E6 => 220,
+        0x08E9 => 220,
+        0x08ED...0x08EF => 220,
+        0x08F6 => 220,
+        0x08F9...0x08FA => 220,
+        0x0952 => 220,
+        0x0F18...0x0F19 => 220,
+        0x0F35 => 220,
+        0x0F37 => 220,
+        0x0FC6 => 220,
+        0x108D => 220,
+        0x193B => 220,
+        0x1A18 => 220,
+        0x1A7F => 220,
+        0x1AB5...0x1ABA => 220,
+        0x1ABD => 220,
+        0x1ABF...0x1AC0 => 220,
+        0x1B6C => 220,
+        0x1CD5...0x1CD9 => 220,
+        0x1CDC...0x1CDF => 220,
+        0x1CED => 220,
+        0x1DC2 => 220,
+        0x1DCA => 220,
+        0x1DCF => 220,
+        0x1DF9 => 220,
+        0x1DFD => 220,
+        0x1DFF => 220,
+        0x20E8 => 220,
+        0x20EC...0x20EF => 220,
+        0xA92B...0xA92D => 220,
+        0xAAB4 => 220,
+        0xFE27...0xFE2D => 220,
+        0x101FD => 220,
+        0x102E0 => 220,
+        0x10A0D => 220,
+        0x10A3A => 220,
+        0x10AE6 => 220,
+        0x10F46...0x10F47 => 220,
+        0x10F4B => 220,
+        0x10F4D...0x10F50 => 220,
+        0x1D17B...0x1D182 => 220,
+        0x1D18A...0x1D18B => 220,
+        0x1E8D0...0x1E8D6 => 220,
+        0x059A => 222,
+        0x05AD => 222,
+        0x1939 => 222,
+        0x302D => 222,
+        0x302E...0x302F => 224,
+        0x1D16D => 226,
+        0x05AE => 228,
+        0x18A9 => 228,
+        0x1DF7...0x1DF8 => 228,
+        0x302B => 228,
+        0x0300...0x0314 => 230,
+        0x033D...0x0344 => 230,
+        0x0346 => 230,
+        0x034A...0x034C => 230,
+        0x0350...0x0352 => 230,
+        0x0357 => 230,
+        0x035B => 230,
+        0x0363...0x036F => 230,
+        0x0483...0x0487 => 230,
+        0x0592...0x0595 => 230,
+        0x0597...0x0599 => 230,
+        0x059C...0x05A1 => 230,
+        0x05A8...0x05A9 => 230,
+        0x05AB...0x05AC => 230,
+        0x05AF => 230,
+        0x05C4 => 230,
+        0x0610...0x0617 => 230,
+        0x0653...0x0654 => 230,
+        0x0657...0x065B => 230,
+        0x065D...0x065E => 230,
+        0x06D6...0x06DC => 230,
+        0x06DF...0x06E2 => 230,
+        0x06E4 => 230,
+        0x06E7...0x06E8 => 230,
+        0x06EB...0x06EC => 230,
+        0x0730 => 230,
+        0x0732...0x0733 => 230,
+        0x0735...0x0736 => 230,
+        0x073A => 230,
+        0x073D => 230,
+        0x073F...0x0741 => 230,
+        0x0743 => 230,
+        0x0745 => 230,
+        0x0747 => 230,
+        0x0749...0x074A => 230,
+        0x07EB...0x07F1 => 230,
+        0x07F3 => 230,
+        0x0816...0x0819 => 230,
+        0x081B...0x0823 => 230,
+        0x0825...0x0827 => 230,
+        0x0829...0x082D => 230,
+        0x08D4...0x08E1 => 230,
+        0x08E4...0x08E5 => 230,
+        0x08E7...0x08E8 => 230,
+        0x08EA...0x08EC => 230,
+        0x08F3...0x08F5 => 230,
+        0x08F7...0x08F8 => 230,
+        0x08FB...0x08FF => 230,
+        0x0951 => 230,
+        0x0953...0x0954 => 230,
+        0x09FE => 230,
+        0x0F82...0x0F83 => 230,
+        0x0F86...0x0F87 => 230,
+        0x135D...0x135F => 230,
+        0x17DD => 230,
+        0x193A => 230,
+        0x1A17 => 230,
+        0x1A75...0x1A7C => 230,
+        0x1AB0...0x1AB4 => 230,
+        0x1ABB...0x1ABC => 230,
+        0x1B6B => 230,
+        0x1B6D...0x1B73 => 230,
+        0x1CD0...0x1CD2 => 230,
+        0x1CDA...0x1CDB => 230,
+        0x1CE0 => 230,
+        0x1CF4 => 230,
+        0x1CF8...0x1CF9 => 230,
+        0x1DC0...0x1DC1 => 230,
+        0x1DC3...0x1DC9 => 230,
+        0x1DCB...0x1DCC => 230,
+        0x1DD1...0x1DF5 => 230,
+        0x1DFB => 230,
+        0x1DFE => 230,
+        0x20D0...0x20D1 => 230,
+        0x20D4...0x20D7 => 230,
+        0x20DB...0x20DC => 230,
+        0x20E1 => 230,
+        0x20E7 => 230,
+        0x20E9 => 230,
+        0x20F0 => 230,
+        0x2CEF...0x2CF1 => 230,
+        0x2DE0...0x2DFF => 230,
+        0xA66F => 230,
+        0xA674...0xA67D => 230,
+        0xA69E...0xA69F => 230,
+        0xA6F0...0xA6F1 => 230,
+        0xA8E0...0xA8F1 => 230,
+        0xAAB0 => 230,
+        0xAAB2...0xAAB3 => 230,
+        0xAAB7...0xAAB8 => 230,
+        0xAABE...0xAABF => 230,
+        0xAAC1 => 230,
+        0xFE20...0xFE26 => 230,
+        0xFE2E...0xFE2F => 230,
+        0x10376...0x1037A => 230,
+        0x10A0F => 230,
+        0x10A38 => 230,
+        0x10AE5 => 230,
+        0x10D24...0x10D27 => 230,
+        0x10EAB...0x10EAC => 230,
+        0x10F48...0x10F4A => 230,
+        0x10F4C => 230,
+        0x11100...0x11102 => 230,
+        0x11366...0x1136C => 230,
+        0x11370...0x11374 => 230,
+        0x1145E => 230,
+        0x16B30...0x16B36 => 230,
+        0x1D185...0x1D189 => 230,
+        0x1D1AA...0x1D1AD => 230,
+        0x1D242...0x1D244 => 230,
+        0x1E000...0x1E006 => 230,
+        0x1E008...0x1E018 => 230,
+        0x1E01B...0x1E021 => 230,
+        0x1E023...0x1E024 => 230,
+        0x1E026...0x1E02A => 230,
+        0x1E130...0x1E136 => 230,
+        0x1E2EC...0x1E2EF => 230,
+        0x1E944...0x1E949 => 230,
+        0x0315 => 232,
+        0x031A => 232,
+        0x0358 => 232,
+        0x1DF6 => 232,
+        0x302C => 232,
+        0x035C => 233,
+        0x035F => 233,
+        0x0362 => 233,
+        0x1DFC => 233,
+        0x035D...0x035E => 234,
+        0x0360...0x0361 => 234,
+        0x1DCD => 234,
+        0x0345 => 240,
+        else => 0,
+    };
 }

@@ -753,9 +753,9 @@ const UcdGenerator = struct {
                         continue;
                     }
                     if (code_point) |cp| {
-                        _ = try writer.print("    if (cp == 0x{s}) return {s};\n", .{ code_point, field });
+                        _ = try writer.print("        0x{s} => {s},\n", .{ code_point, field });
                     } else {
-                        _ = try writer.print("    if (cp >= 0x{s} and cp <= 0x{s}) return {s};\n", .{ r_lo.?, r_hi.?, field });
+                        _ = try writer.print("        0x{s}...0x{s} => {s},\n", .{ r_lo.?, r_hi.?, field });
                     }
                     r_lo = null;
                     r_hi = null;
@@ -771,7 +771,7 @@ const UcdGenerator = struct {
         }
 
         // Finish writing.
-        _ = try writer.write("    return 0;\n}");
+        _ = try writer.write("        else => 0,\n    };\n}");
         try buf_writer.flush();
     }
 

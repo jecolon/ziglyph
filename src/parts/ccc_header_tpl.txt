@@ -5,3 +5,4 @@ const CccMap = @This();
 
 /// combiningClass maps the code point to its combining class value.
 pub fn combiningClass(self: CccMap, cp: u21) u8 {
+    return switch (cp) {
