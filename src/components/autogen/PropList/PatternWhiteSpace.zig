@@ -12,11 +12,13 @@ const PatternWhiteSpace = @This();
 
 pub fn isPatternWhiteSpace(self: PatternWhiteSpace, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 9 and cp <= 13) return true;
-    if (cp == 32) return true;
-    if (cp == 133) return true;
-    if (cp >= 8206 and cp <= 8207) return true;
-    if (cp == 8232) return true;
-    if (cp == 8233) return true;
-    return false;
+    return switch (cp) {
+        0x9...0xd => true,
+        0x20 => true,
+        0x85 => true,
+        0x200e...0x200f => true,
+        0x2028 => true,
+        0x2029 => true,
+        else => false,
+    };
 }

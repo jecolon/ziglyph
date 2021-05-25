@@ -12,35 +12,37 @@ const ModifierSymbol = @This();
 
 pub fn isModifierSymbol(self: ModifierSymbol, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 94) return true;
-    if (cp == 96) return true;
-    if (cp == 168) return true;
-    if (cp == 175) return true;
-    if (cp == 180) return true;
-    if (cp == 184) return true;
-    if (cp >= 706 and cp <= 709) return true;
-    if (cp >= 722 and cp <= 735) return true;
-    if (cp >= 741 and cp <= 747) return true;
-    if (cp == 749) return true;
-    if (cp >= 751 and cp <= 767) return true;
-    if (cp == 885) return true;
-    if (cp >= 900 and cp <= 901) return true;
-    if (cp == 8125) return true;
-    if (cp >= 8127 and cp <= 8129) return true;
-    if (cp >= 8141 and cp <= 8143) return true;
-    if (cp >= 8157 and cp <= 8159) return true;
-    if (cp >= 8173 and cp <= 8175) return true;
-    if (cp >= 8189 and cp <= 8190) return true;
-    if (cp >= 12443 and cp <= 12444) return true;
-    if (cp >= 42752 and cp <= 42774) return true;
-    if (cp >= 42784 and cp <= 42785) return true;
-    if (cp >= 42889 and cp <= 42890) return true;
-    if (cp == 43867) return true;
-    if (cp >= 43882 and cp <= 43883) return true;
-    if (cp >= 64434 and cp <= 64449) return true;
-    if (cp == 65342) return true;
-    if (cp == 65344) return true;
-    if (cp == 65507) return true;
-    if (cp >= 127995 and cp <= 127999) return true;
-    return false;
+    return switch (cp) {
+        0x5e => true,
+        0x60 => true,
+        0xa8 => true,
+        0xaf => true,
+        0xb4 => true,
+        0xb8 => true,
+        0x2c2...0x2c5 => true,
+        0x2d2...0x2df => true,
+        0x2e5...0x2eb => true,
+        0x2ed => true,
+        0x2ef...0x2ff => true,
+        0x375 => true,
+        0x384...0x385 => true,
+        0x1fbd => true,
+        0x1fbf...0x1fc1 => true,
+        0x1fcd...0x1fcf => true,
+        0x1fdd...0x1fdf => true,
+        0x1fed...0x1fef => true,
+        0x1ffd...0x1ffe => true,
+        0x309b...0x309c => true,
+        0xa700...0xa716 => true,
+        0xa720...0xa721 => true,
+        0xa789...0xa78a => true,
+        0xab5b => true,
+        0xab6a...0xab6b => true,
+        0xfbb2...0xfbc1 => true,
+        0xff3e => true,
+        0xff40 => true,
+        0xffe3 => true,
+        0x1f3fb...0x1f3ff => true,
+        else => false,
+    };
 }

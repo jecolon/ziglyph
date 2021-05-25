@@ -12,30 +12,32 @@ const OtherGraphemeExtend = @This();
 
 pub fn isOtherGraphemeExtend(self: OtherGraphemeExtend, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 2494) return true;
-    if (cp == 2519) return true;
-    if (cp == 2878) return true;
-    if (cp == 2903) return true;
-    if (cp == 3006) return true;
-    if (cp == 3031) return true;
-    if (cp == 3266) return true;
-    if (cp >= 3285 and cp <= 3286) return true;
-    if (cp == 3390) return true;
-    if (cp == 3415) return true;
-    if (cp == 3535) return true;
-    if (cp == 3551) return true;
-    if (cp == 6965) return true;
-    if (cp == 8204) return true;
-    if (cp >= 12334 and cp <= 12335) return true;
-    if (cp >= 65438 and cp <= 65439) return true;
-    if (cp == 70462) return true;
-    if (cp == 70487) return true;
-    if (cp == 70832) return true;
-    if (cp == 70845) return true;
-    if (cp == 71087) return true;
-    if (cp == 71984) return true;
-    if (cp == 119141) return true;
-    if (cp >= 119150 and cp <= 119154) return true;
-    if (cp >= 917536 and cp <= 917631) return true;
-    return false;
+    return switch (cp) {
+        0x9be => true,
+        0x9d7 => true,
+        0xb3e => true,
+        0xb57 => true,
+        0xbbe => true,
+        0xbd7 => true,
+        0xcc2 => true,
+        0xcd5...0xcd6 => true,
+        0xd3e => true,
+        0xd57 => true,
+        0xdcf => true,
+        0xddf => true,
+        0x1b35 => true,
+        0x200c => true,
+        0x302e...0x302f => true,
+        0xff9e...0xff9f => true,
+        0x1133e => true,
+        0x11357 => true,
+        0x114b0 => true,
+        0x114bd => true,
+        0x115af => true,
+        0x11930 => true,
+        0x1d165 => true,
+        0x1d16e...0x1d172 => true,
+        0xe0020...0xe007f => true,
+        else => false,
+    };
 }

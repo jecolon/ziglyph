@@ -12,6 +12,8 @@ const IDSTrinaryOperator = @This();
 
 pub fn isIDSTrinaryOperator(self: IDSTrinaryOperator, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 12274 and cp <= 12275) return true;
-    return false;
+    return switch (cp) {
+        0x2ff2...0x2ff3 => true,
+        else => false,
+    };
 }

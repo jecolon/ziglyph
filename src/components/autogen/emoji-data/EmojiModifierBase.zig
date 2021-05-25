@@ -12,52 +12,54 @@ const EmojiModifierBase = @This();
 
 pub fn isEmojiModifierBase(self: EmojiModifierBase, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 9757) return true;
-    if (cp == 9977) return true;
-    if (cp >= 9994 and cp <= 9996) return true;
-    if (cp == 9997) return true;
-    if (cp == 127877) return true;
-    if (cp >= 127938 and cp <= 127940) return true;
-    if (cp == 127943) return true;
-    if (cp == 127946) return true;
-    if (cp >= 127947 and cp <= 127948) return true;
-    if (cp >= 128066 and cp <= 128067) return true;
-    if (cp >= 128070 and cp <= 128080) return true;
-    if (cp >= 128102 and cp <= 128107) return true;
-    if (cp >= 128108 and cp <= 128109) return true;
-    if (cp >= 128110 and cp <= 128120) return true;
-    if (cp == 128124) return true;
-    if (cp >= 128129 and cp <= 128131) return true;
-    if (cp >= 128133 and cp <= 128135) return true;
-    if (cp == 128143) return true;
-    if (cp == 128145) return true;
-    if (cp == 128170) return true;
-    if (cp >= 128372 and cp <= 128373) return true;
-    if (cp == 128378) return true;
-    if (cp == 128400) return true;
-    if (cp >= 128405 and cp <= 128406) return true;
-    if (cp >= 128581 and cp <= 128583) return true;
-    if (cp >= 128587 and cp <= 128591) return true;
-    if (cp == 128675) return true;
-    if (cp >= 128692 and cp <= 128693) return true;
-    if (cp == 128694) return true;
-    if (cp == 128704) return true;
-    if (cp == 128716) return true;
-    if (cp == 129292) return true;
-    if (cp == 129295) return true;
-    if (cp == 129304) return true;
-    if (cp >= 129305 and cp <= 129310) return true;
-    if (cp == 129311) return true;
-    if (cp == 129318) return true;
-    if (cp == 129328) return true;
-    if (cp >= 129329 and cp <= 129330) return true;
-    if (cp >= 129331 and cp <= 129337) return true;
-    if (cp >= 129340 and cp <= 129342) return true;
-    if (cp == 129399) return true;
-    if (cp >= 129461 and cp <= 129462) return true;
-    if (cp >= 129464 and cp <= 129465) return true;
-    if (cp == 129467) return true;
-    if (cp >= 129485 and cp <= 129487) return true;
-    if (cp >= 129489 and cp <= 129501) return true;
-    return false;
+    return switch (cp) {
+        0x261d => true,
+        0x26f9 => true,
+        0x270a...0x270c => true,
+        0x270d => true,
+        0x1f385 => true,
+        0x1f3c2...0x1f3c4 => true,
+        0x1f3c7 => true,
+        0x1f3ca => true,
+        0x1f3cb...0x1f3cc => true,
+        0x1f442...0x1f443 => true,
+        0x1f446...0x1f450 => true,
+        0x1f466...0x1f46b => true,
+        0x1f46c...0x1f46d => true,
+        0x1f46e...0x1f478 => true,
+        0x1f47c => true,
+        0x1f481...0x1f483 => true,
+        0x1f485...0x1f487 => true,
+        0x1f48f => true,
+        0x1f491 => true,
+        0x1f4aa => true,
+        0x1f574...0x1f575 => true,
+        0x1f57a => true,
+        0x1f590 => true,
+        0x1f595...0x1f596 => true,
+        0x1f645...0x1f647 => true,
+        0x1f64b...0x1f64f => true,
+        0x1f6a3 => true,
+        0x1f6b4...0x1f6b5 => true,
+        0x1f6b6 => true,
+        0x1f6c0 => true,
+        0x1f6cc => true,
+        0x1f90c => true,
+        0x1f90f => true,
+        0x1f918 => true,
+        0x1f919...0x1f91e => true,
+        0x1f91f => true,
+        0x1f926 => true,
+        0x1f930 => true,
+        0x1f931...0x1f932 => true,
+        0x1f933...0x1f939 => true,
+        0x1f93c...0x1f93e => true,
+        0x1f977 => true,
+        0x1f9b5...0x1f9b6 => true,
+        0x1f9b8...0x1f9b9 => true,
+        0x1f9bb => true,
+        0x1f9cd...0x1f9cf => true,
+        0x1f9d1...0x1f9dd => true,
+        else => false,
+    };
 }

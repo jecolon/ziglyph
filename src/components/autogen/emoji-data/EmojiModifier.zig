@@ -12,6 +12,8 @@ const EmojiModifier = @This();
 
 pub fn isEmojiModifier(self: EmojiModifier, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 127995 and cp <= 127999) return true;
-    return false;
+    return switch (cp) {
+        0x1f3fb...0x1f3ff => true,
+        else => false,
+    };
 }

@@ -12,37 +12,39 @@ const Extender = @This();
 
 pub fn isExtender(self: Extender, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 183) return true;
-    if (cp >= 720 and cp <= 721) return true;
-    if (cp == 1600) return true;
-    if (cp == 2042) return true;
-    if (cp == 2901) return true;
-    if (cp == 3654) return true;
-    if (cp == 3782) return true;
-    if (cp == 6154) return true;
-    if (cp == 6211) return true;
-    if (cp == 6823) return true;
-    if (cp == 7222) return true;
-    if (cp == 7291) return true;
-    if (cp == 12293) return true;
-    if (cp >= 12337 and cp <= 12341) return true;
-    if (cp >= 12445 and cp <= 12446) return true;
-    if (cp >= 12540 and cp <= 12542) return true;
-    if (cp == 40981) return true;
-    if (cp == 42508) return true;
-    if (cp == 43471) return true;
-    if (cp == 43494) return true;
-    if (cp == 43632) return true;
-    if (cp == 43741) return true;
-    if (cp >= 43763 and cp <= 43764) return true;
-    if (cp == 65392) return true;
-    if (cp == 70493) return true;
-    if (cp >= 71110 and cp <= 71112) return true;
-    if (cp == 72344) return true;
-    if (cp >= 92994 and cp <= 92995) return true;
-    if (cp >= 94176 and cp <= 94177) return true;
-    if (cp == 94179) return true;
-    if (cp >= 123196 and cp <= 123197) return true;
-    if (cp >= 125252 and cp <= 125254) return true;
-    return false;
+    return switch (cp) {
+        0xb7 => true,
+        0x2d0...0x2d1 => true,
+        0x640 => true,
+        0x7fa => true,
+        0xb55 => true,
+        0xe46 => true,
+        0xec6 => true,
+        0x180a => true,
+        0x1843 => true,
+        0x1aa7 => true,
+        0x1c36 => true,
+        0x1c7b => true,
+        0x3005 => true,
+        0x3031...0x3035 => true,
+        0x309d...0x309e => true,
+        0x30fc...0x30fe => true,
+        0xa015 => true,
+        0xa60c => true,
+        0xa9cf => true,
+        0xa9e6 => true,
+        0xaa70 => true,
+        0xaadd => true,
+        0xaaf3...0xaaf4 => true,
+        0xff70 => true,
+        0x1135d => true,
+        0x115c6...0x115c8 => true,
+        0x11a98 => true,
+        0x16b42...0x16b43 => true,
+        0x16fe0...0x16fe1 => true,
+        0x16fe3 => true,
+        0x1e13c...0x1e13d => true,
+        0x1e944...0x1e946 => true,
+        else => false,
+    };
 }

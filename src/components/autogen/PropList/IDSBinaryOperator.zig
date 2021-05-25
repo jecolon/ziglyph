@@ -12,7 +12,9 @@ const IDSBinaryOperator = @This();
 
 pub fn isIDSBinaryOperator(self: IDSBinaryOperator, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 12272 and cp <= 12273) return true;
-    if (cp >= 12276 and cp <= 12283) return true;
-    return false;
+    return switch (cp) {
+        0x2ff0...0x2ff1 => true,
+        0x2ff4...0x2ffb => true,
+        else => false,
+    };
 }

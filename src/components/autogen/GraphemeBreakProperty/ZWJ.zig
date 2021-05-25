@@ -12,6 +12,8 @@ const ZWJ = @This();
 
 pub fn isZWJ(self: ZWJ, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 8205) return true;
-    return false;
+    return switch (cp) {
+        0x200d => true,
+        else => false,
+    };
 }

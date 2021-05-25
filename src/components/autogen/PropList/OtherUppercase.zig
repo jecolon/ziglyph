@@ -12,10 +12,12 @@ const OtherUppercase = @This();
 
 pub fn isOtherUppercase(self: OtherUppercase, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 8544 and cp <= 8559) return true;
-    if (cp >= 9398 and cp <= 9423) return true;
-    if (cp >= 127280 and cp <= 127305) return true;
-    if (cp >= 127312 and cp <= 127337) return true;
-    if (cp >= 127344 and cp <= 127369) return true;
-    return false;
+    return switch (cp) {
+        0x2160...0x216f => true,
+        0x24b6...0x24cf => true,
+        0x1f130...0x1f149 => true,
+        0x1f150...0x1f169 => true,
+        0x1f170...0x1f189 => true,
+        else => false,
+    };
 }

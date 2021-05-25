@@ -12,7 +12,9 @@ const Control = @This();
 
 pub fn isControl(self: Control, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 0 and cp <= 31) return true;
-    if (cp >= 127 and cp <= 159) return true;
-    return false;
+    return switch (cp) {
+        0x0...0x1f => true,
+        0x7f...0x9f => true,
+        else => false,
+    };
 }

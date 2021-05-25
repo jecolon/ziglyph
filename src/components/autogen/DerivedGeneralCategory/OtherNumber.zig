@@ -12,76 +12,78 @@ const OtherNumber = @This();
 
 pub fn isOtherNumber(self: OtherNumber, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 178 and cp <= 179) return true;
-    if (cp == 185) return true;
-    if (cp >= 188 and cp <= 190) return true;
-    if (cp >= 2548 and cp <= 2553) return true;
-    if (cp >= 2930 and cp <= 2935) return true;
-    if (cp >= 3056 and cp <= 3058) return true;
-    if (cp >= 3192 and cp <= 3198) return true;
-    if (cp >= 3416 and cp <= 3422) return true;
-    if (cp >= 3440 and cp <= 3448) return true;
-    if (cp >= 3882 and cp <= 3891) return true;
-    if (cp >= 4969 and cp <= 4988) return true;
-    if (cp >= 6128 and cp <= 6137) return true;
-    if (cp == 6618) return true;
-    if (cp == 8304) return true;
-    if (cp >= 8308 and cp <= 8313) return true;
-    if (cp >= 8320 and cp <= 8329) return true;
-    if (cp >= 8528 and cp <= 8543) return true;
-    if (cp == 8585) return true;
-    if (cp >= 9312 and cp <= 9371) return true;
-    if (cp >= 9450 and cp <= 9471) return true;
-    if (cp >= 10102 and cp <= 10131) return true;
-    if (cp == 11517) return true;
-    if (cp >= 12690 and cp <= 12693) return true;
-    if (cp >= 12832 and cp <= 12841) return true;
-    if (cp >= 12872 and cp <= 12879) return true;
-    if (cp >= 12881 and cp <= 12895) return true;
-    if (cp >= 12928 and cp <= 12937) return true;
-    if (cp >= 12977 and cp <= 12991) return true;
-    if (cp >= 43056 and cp <= 43061) return true;
-    if (cp >= 65799 and cp <= 65843) return true;
-    if (cp >= 65909 and cp <= 65912) return true;
-    if (cp >= 65930 and cp <= 65931) return true;
-    if (cp >= 66273 and cp <= 66299) return true;
-    if (cp >= 66336 and cp <= 66339) return true;
-    if (cp >= 67672 and cp <= 67679) return true;
-    if (cp >= 67705 and cp <= 67711) return true;
-    if (cp >= 67751 and cp <= 67759) return true;
-    if (cp >= 67835 and cp <= 67839) return true;
-    if (cp >= 67862 and cp <= 67867) return true;
-    if (cp >= 68028 and cp <= 68029) return true;
-    if (cp >= 68032 and cp <= 68047) return true;
-    if (cp >= 68050 and cp <= 68095) return true;
-    if (cp >= 68160 and cp <= 68168) return true;
-    if (cp >= 68221 and cp <= 68222) return true;
-    if (cp >= 68253 and cp <= 68255) return true;
-    if (cp >= 68331 and cp <= 68335) return true;
-    if (cp >= 68440 and cp <= 68447) return true;
-    if (cp >= 68472 and cp <= 68479) return true;
-    if (cp >= 68521 and cp <= 68527) return true;
-    if (cp >= 68858 and cp <= 68863) return true;
-    if (cp >= 69216 and cp <= 69246) return true;
-    if (cp >= 69405 and cp <= 69414) return true;
-    if (cp >= 69457 and cp <= 69460) return true;
-    if (cp >= 69573 and cp <= 69579) return true;
-    if (cp >= 69714 and cp <= 69733) return true;
-    if (cp >= 70113 and cp <= 70132) return true;
-    if (cp >= 71482 and cp <= 71483) return true;
-    if (cp >= 71914 and cp <= 71922) return true;
-    if (cp >= 72794 and cp <= 72812) return true;
-    if (cp >= 73664 and cp <= 73684) return true;
-    if (cp >= 93019 and cp <= 93025) return true;
-    if (cp >= 93824 and cp <= 93846) return true;
-    if (cp >= 119520 and cp <= 119539) return true;
-    if (cp >= 119648 and cp <= 119672) return true;
-    if (cp >= 125127 and cp <= 125135) return true;
-    if (cp >= 126065 and cp <= 126123) return true;
-    if (cp >= 126125 and cp <= 126127) return true;
-    if (cp >= 126129 and cp <= 126132) return true;
-    if (cp >= 126209 and cp <= 126253) return true;
-    if (cp >= 126255 and cp <= 126269) return true;
-    if (cp >= 127232 and cp <= 127244) return true;
-    return false;
+    return switch (cp) {
+        0xb2...0xb3 => true,
+        0xb9 => true,
+        0xbc...0xbe => true,
+        0x9f4...0x9f9 => true,
+        0xb72...0xb77 => true,
+        0xbf0...0xbf2 => true,
+        0xc78...0xc7e => true,
+        0xd58...0xd5e => true,
+        0xd70...0xd78 => true,
+        0xf2a...0xf33 => true,
+        0x1369...0x137c => true,
+        0x17f0...0x17f9 => true,
+        0x19da => true,
+        0x2070 => true,
+        0x2074...0x2079 => true,
+        0x2080...0x2089 => true,
+        0x2150...0x215f => true,
+        0x2189 => true,
+        0x2460...0x249b => true,
+        0x24ea...0x24ff => true,
+        0x2776...0x2793 => true,
+        0x2cfd => true,
+        0x3192...0x3195 => true,
+        0x3220...0x3229 => true,
+        0x3248...0x324f => true,
+        0x3251...0x325f => true,
+        0x3280...0x3289 => true,
+        0x32b1...0x32bf => true,
+        0xa830...0xa835 => true,
+        0x10107...0x10133 => true,
+        0x10175...0x10178 => true,
+        0x1018a...0x1018b => true,
+        0x102e1...0x102fb => true,
+        0x10320...0x10323 => true,
+        0x10858...0x1085f => true,
+        0x10879...0x1087f => true,
+        0x108a7...0x108af => true,
+        0x108fb...0x108ff => true,
+        0x10916...0x1091b => true,
+        0x109bc...0x109bd => true,
+        0x109c0...0x109cf => true,
+        0x109d2...0x109ff => true,
+        0x10a40...0x10a48 => true,
+        0x10a7d...0x10a7e => true,
+        0x10a9d...0x10a9f => true,
+        0x10aeb...0x10aef => true,
+        0x10b58...0x10b5f => true,
+        0x10b78...0x10b7f => true,
+        0x10ba9...0x10baf => true,
+        0x10cfa...0x10cff => true,
+        0x10e60...0x10e7e => true,
+        0x10f1d...0x10f26 => true,
+        0x10f51...0x10f54 => true,
+        0x10fc5...0x10fcb => true,
+        0x11052...0x11065 => true,
+        0x111e1...0x111f4 => true,
+        0x1173a...0x1173b => true,
+        0x118ea...0x118f2 => true,
+        0x11c5a...0x11c6c => true,
+        0x11fc0...0x11fd4 => true,
+        0x16b5b...0x16b61 => true,
+        0x16e80...0x16e96 => true,
+        0x1d2e0...0x1d2f3 => true,
+        0x1d360...0x1d378 => true,
+        0x1e8c7...0x1e8cf => true,
+        0x1ec71...0x1ecab => true,
+        0x1ecad...0x1ecaf => true,
+        0x1ecb1...0x1ecb4 => true,
+        0x1ed01...0x1ed2d => true,
+        0x1ed2f...0x1ed3d => true,
+        0x1f100...0x1f10c => true,
+        else => false,
+    };
 }

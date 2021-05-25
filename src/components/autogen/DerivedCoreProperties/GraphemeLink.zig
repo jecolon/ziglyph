@@ -12,61 +12,63 @@ const GraphemeLink = @This();
 
 pub fn isGraphemeLink(self: GraphemeLink, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 2381) return true;
-    if (cp == 2509) return true;
-    if (cp == 2637) return true;
-    if (cp == 2765) return true;
-    if (cp == 2893) return true;
-    if (cp == 3021) return true;
-    if (cp == 3149) return true;
-    if (cp == 3277) return true;
-    if (cp >= 3387 and cp <= 3388) return true;
-    if (cp == 3405) return true;
-    if (cp == 3530) return true;
-    if (cp == 3642) return true;
-    if (cp == 3770) return true;
-    if (cp == 3972) return true;
-    if (cp >= 4153 and cp <= 4154) return true;
-    if (cp == 5908) return true;
-    if (cp == 5940) return true;
-    if (cp == 6098) return true;
-    if (cp == 6752) return true;
-    if (cp == 6980) return true;
-    if (cp == 7082) return true;
-    if (cp == 7083) return true;
-    if (cp >= 7154 and cp <= 7155) return true;
-    if (cp == 11647) return true;
-    if (cp == 43014) return true;
-    if (cp == 43052) return true;
-    if (cp == 43204) return true;
-    if (cp == 43347) return true;
-    if (cp == 43456) return true;
-    if (cp == 43766) return true;
-    if (cp == 44013) return true;
-    if (cp == 68159) return true;
-    if (cp == 69702) return true;
-    if (cp == 69759) return true;
-    if (cp == 69817) return true;
-    if (cp >= 69939 and cp <= 69940) return true;
-    if (cp == 70080) return true;
-    if (cp == 70197) return true;
-    if (cp == 70378) return true;
-    if (cp == 70477) return true;
-    if (cp == 70722) return true;
-    if (cp == 70850) return true;
-    if (cp == 71103) return true;
-    if (cp == 71231) return true;
-    if (cp == 71350) return true;
-    if (cp == 71467) return true;
-    if (cp == 71737) return true;
-    if (cp == 71997) return true;
-    if (cp == 71998) return true;
-    if (cp == 72160) return true;
-    if (cp == 72244) return true;
-    if (cp == 72263) return true;
-    if (cp == 72345) return true;
-    if (cp == 72767) return true;
-    if (cp >= 73028 and cp <= 73029) return true;
-    if (cp == 73111) return true;
-    return false;
+    return switch (cp) {
+        0x94d => true,
+        0x9cd => true,
+        0xa4d => true,
+        0xacd => true,
+        0xb4d => true,
+        0xbcd => true,
+        0xc4d => true,
+        0xccd => true,
+        0xd3b...0xd3c => true,
+        0xd4d => true,
+        0xdca => true,
+        0xe3a => true,
+        0xeba => true,
+        0xf84 => true,
+        0x1039...0x103a => true,
+        0x1714 => true,
+        0x1734 => true,
+        0x17d2 => true,
+        0x1a60 => true,
+        0x1b44 => true,
+        0x1baa => true,
+        0x1bab => true,
+        0x1bf2...0x1bf3 => true,
+        0x2d7f => true,
+        0xa806 => true,
+        0xa82c => true,
+        0xa8c4 => true,
+        0xa953 => true,
+        0xa9c0 => true,
+        0xaaf6 => true,
+        0xabed => true,
+        0x10a3f => true,
+        0x11046 => true,
+        0x1107f => true,
+        0x110b9 => true,
+        0x11133...0x11134 => true,
+        0x111c0 => true,
+        0x11235 => true,
+        0x112ea => true,
+        0x1134d => true,
+        0x11442 => true,
+        0x114c2 => true,
+        0x115bf => true,
+        0x1163f => true,
+        0x116b6 => true,
+        0x1172b => true,
+        0x11839 => true,
+        0x1193d => true,
+        0x1193e => true,
+        0x119e0 => true,
+        0x11a34 => true,
+        0x11a47 => true,
+        0x11a99 => true,
+        0x11c3f => true,
+        0x11d44...0x11d45 => true,
+        0x11d97 => true,
+        else => false,
+    };
 }

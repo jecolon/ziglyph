@@ -12,20 +12,22 @@ const UnifiedIdeograph = @This();
 
 pub fn isUnifiedIdeograph(self: UnifiedIdeograph, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 13312 and cp <= 19903) return true;
-    if (cp >= 19968 and cp <= 40956) return true;
-    if (cp >= 64014 and cp <= 64015) return true;
-    if (cp == 64017) return true;
-    if (cp >= 64019 and cp <= 64020) return true;
-    if (cp == 64031) return true;
-    if (cp == 64033) return true;
-    if (cp >= 64035 and cp <= 64036) return true;
-    if (cp >= 64039 and cp <= 64041) return true;
-    if (cp >= 131072 and cp <= 173789) return true;
-    if (cp >= 173824 and cp <= 177972) return true;
-    if (cp >= 177984 and cp <= 178205) return true;
-    if (cp >= 178208 and cp <= 183969) return true;
-    if (cp >= 183984 and cp <= 191456) return true;
-    if (cp >= 196608 and cp <= 201546) return true;
-    return false;
+    return switch (cp) {
+        0x3400...0x4dbf => true,
+        0x4e00...0x9ffc => true,
+        0xfa0e...0xfa0f => true,
+        0xfa11 => true,
+        0xfa13...0xfa14 => true,
+        0xfa1f => true,
+        0xfa21 => true,
+        0xfa23...0xfa24 => true,
+        0xfa27...0xfa29 => true,
+        0x20000...0x2a6dd => true,
+        0x2a700...0x2b734 => true,
+        0x2b740...0x2b81d => true,
+        0x2b820...0x2cea1 => true,
+        0x2ceb0...0x2ebe0 => true,
+        0x30000...0x3134a => true,
+        else => false,
+    };
 }

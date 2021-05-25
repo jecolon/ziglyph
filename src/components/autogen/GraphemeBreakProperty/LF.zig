@@ -12,6 +12,8 @@ const LF = @This();
 
 pub fn isLF(self: LF, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 10) return true;
-    return false;
+    return switch (cp) {
+        0xa => true,
+        else => false,
+    };
 }

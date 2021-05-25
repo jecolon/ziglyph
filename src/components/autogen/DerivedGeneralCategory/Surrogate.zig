@@ -12,6 +12,8 @@ const Surrogate = @This();
 
 pub fn isSurrogate(self: Surrogate, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 55296 and cp <= 57343) return true;
-    return false;
+    return switch (cp) {
+        0xd800...0xdfff => true,
+        else => false,
+    };
 }

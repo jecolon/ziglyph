@@ -12,8 +12,10 @@ const ASCIIHexDigit = @This();
 
 pub fn isASCIIHexDigit(self: ASCIIHexDigit, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 48 and cp <= 57) return true;
-    if (cp >= 65 and cp <= 70) return true;
-    if (cp >= 97 and cp <= 102) return true;
-    return false;
+    return switch (cp) {
+        0x30...0x39 => true,
+        0x41...0x46 => true,
+        0x61...0x66 => true,
+        else => false,
+    };
 }

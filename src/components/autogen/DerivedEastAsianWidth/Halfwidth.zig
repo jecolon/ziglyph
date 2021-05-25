@@ -12,22 +12,24 @@ const Halfwidth = @This();
 
 pub fn isHalfwidth(self: Halfwidth, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 8361) return true;
-    if (cp == 65377) return true;
-    if (cp == 65378) return true;
-    if (cp == 65379) return true;
-    if (cp >= 65380 and cp <= 65381) return true;
-    if (cp >= 65382 and cp <= 65391) return true;
-    if (cp == 65392) return true;
-    if (cp >= 65393 and cp <= 65437) return true;
-    if (cp >= 65438 and cp <= 65439) return true;
-    if (cp >= 65440 and cp <= 65470) return true;
-    if (cp >= 65474 and cp <= 65479) return true;
-    if (cp >= 65482 and cp <= 65487) return true;
-    if (cp >= 65490 and cp <= 65495) return true;
-    if (cp >= 65498 and cp <= 65500) return true;
-    if (cp == 65512) return true;
-    if (cp >= 65513 and cp <= 65516) return true;
-    if (cp >= 65517 and cp <= 65518) return true;
-    return false;
+    return switch (cp) {
+        0x20a9 => true,
+        0xff61 => true,
+        0xff62 => true,
+        0xff63 => true,
+        0xff64...0xff65 => true,
+        0xff66...0xff6f => true,
+        0xff70 => true,
+        0xff71...0xff9d => true,
+        0xff9e...0xff9f => true,
+        0xffa0...0xffbe => true,
+        0xffc2...0xffc7 => true,
+        0xffca...0xffcf => true,
+        0xffd2...0xffd7 => true,
+        0xffda...0xffdc => true,
+        0xffe8 => true,
+        0xffe9...0xffec => true,
+        0xffed...0xffee => true,
+        else => false,
+    };
 }

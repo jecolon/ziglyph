@@ -12,11 +12,13 @@ const ConnectorPunctuation = @This();
 
 pub fn isConnectorPunctuation(self: ConnectorPunctuation, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 95) return true;
-    if (cp >= 8255 and cp <= 8256) return true;
-    if (cp == 8276) return true;
-    if (cp >= 65075 and cp <= 65076) return true;
-    if (cp >= 65101 and cp <= 65103) return true;
-    if (cp == 65343) return true;
-    return false;
+    return switch (cp) {
+        0x5f => true,
+        0x203f...0x2040 => true,
+        0x2054 => true,
+        0xfe33...0xfe34 => true,
+        0xfe4d...0xfe4f => true,
+        0xff3f => true,
+        else => false,
+    };
 }

@@ -12,23 +12,25 @@ const DashPunctuation = @This();
 
 pub fn isDashPunctuation(self: DashPunctuation, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 45) return true;
-    if (cp == 1418) return true;
-    if (cp == 1470) return true;
-    if (cp == 5120) return true;
-    if (cp == 6150) return true;
-    if (cp >= 8208 and cp <= 8213) return true;
-    if (cp == 11799) return true;
-    if (cp == 11802) return true;
-    if (cp >= 11834 and cp <= 11835) return true;
-    if (cp == 11840) return true;
-    if (cp == 12316) return true;
-    if (cp == 12336) return true;
-    if (cp == 12448) return true;
-    if (cp >= 65073 and cp <= 65074) return true;
-    if (cp == 65112) return true;
-    if (cp == 65123) return true;
-    if (cp == 65293) return true;
-    if (cp == 69293) return true;
-    return false;
+    return switch (cp) {
+        0x2d => true,
+        0x58a => true,
+        0x5be => true,
+        0x1400 => true,
+        0x1806 => true,
+        0x2010...0x2015 => true,
+        0x2e17 => true,
+        0x2e1a => true,
+        0x2e3a...0x2e3b => true,
+        0x2e40 => true,
+        0x301c => true,
+        0x3030 => true,
+        0x30a0 => true,
+        0xfe31...0xfe32 => true,
+        0xfe58 => true,
+        0xfe63 => true,
+        0xff0d => true,
+        0x10ead => true,
+        else => false,
+    };
 }

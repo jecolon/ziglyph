@@ -12,8 +12,10 @@ const Radical = @This();
 
 pub fn isRadical(self: Radical, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 11904 and cp <= 11929) return true;
-    if (cp >= 11931 and cp <= 12019) return true;
-    if (cp >= 12032 and cp <= 12245) return true;
-    return false;
+    return switch (cp) {
+        0x2e80...0x2e99 => true,
+        0x2e9b...0x2ef3 => true,
+        0x2f00...0x2fd5 => true,
+        else => false,
+    };
 }

@@ -12,18 +12,20 @@ const Prepend = @This();
 
 pub fn isPrepend(self: Prepend, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 1536 and cp <= 1541) return true;
-    if (cp == 1757) return true;
-    if (cp == 1807) return true;
-    if (cp == 2274) return true;
-    if (cp == 3406) return true;
-    if (cp == 69821) return true;
-    if (cp == 69837) return true;
-    if (cp >= 70082 and cp <= 70083) return true;
-    if (cp == 71999) return true;
-    if (cp == 72001) return true;
-    if (cp == 72250) return true;
-    if (cp >= 72324 and cp <= 72329) return true;
-    if (cp == 73030) return true;
-    return false;
+    return switch (cp) {
+        0x600...0x605 => true,
+        0x6dd => true,
+        0x70f => true,
+        0x8e2 => true,
+        0xd4e => true,
+        0x110bd => true,
+        0x110cd => true,
+        0x111c2...0x111c3 => true,
+        0x1193f => true,
+        0x11941 => true,
+        0x11a3a => true,
+        0x11a84...0x11a89 => true,
+        0x11d46 => true,
+        else => false,
+    };
 }

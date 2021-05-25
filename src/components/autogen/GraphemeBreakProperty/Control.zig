@@ -12,31 +12,33 @@ const Control = @This();
 
 pub fn isControl(self: Control, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 0 and cp <= 9) return true;
-    if (cp >= 11 and cp <= 12) return true;
-    if (cp >= 14 and cp <= 31) return true;
-    if (cp >= 127 and cp <= 159) return true;
-    if (cp == 173) return true;
-    if (cp == 1564) return true;
-    if (cp == 6158) return true;
-    if (cp == 8203) return true;
-    if (cp >= 8206 and cp <= 8207) return true;
-    if (cp == 8232) return true;
-    if (cp == 8233) return true;
-    if (cp >= 8234 and cp <= 8238) return true;
-    if (cp >= 8288 and cp <= 8292) return true;
-    if (cp == 8293) return true;
-    if (cp >= 8294 and cp <= 8303) return true;
-    if (cp == 65279) return true;
-    if (cp >= 65520 and cp <= 65528) return true;
-    if (cp >= 65529 and cp <= 65531) return true;
-    if (cp >= 78896 and cp <= 78904) return true;
-    if (cp >= 113824 and cp <= 113827) return true;
-    if (cp >= 119155 and cp <= 119162) return true;
-    if (cp == 917504) return true;
-    if (cp == 917505) return true;
-    if (cp >= 917506 and cp <= 917535) return true;
-    if (cp >= 917632 and cp <= 917759) return true;
-    if (cp >= 918000 and cp <= 921599) return true;
-    return false;
+    return switch (cp) {
+        0x0...0x9 => true,
+        0xb...0xc => true,
+        0xe...0x1f => true,
+        0x7f...0x9f => true,
+        0xad => true,
+        0x61c => true,
+        0x180e => true,
+        0x200b => true,
+        0x200e...0x200f => true,
+        0x2028 => true,
+        0x2029 => true,
+        0x202a...0x202e => true,
+        0x2060...0x2064 => true,
+        0x2065 => true,
+        0x2066...0x206f => true,
+        0xfeff => true,
+        0xfff0...0xfff8 => true,
+        0xfff9...0xfffb => true,
+        0x13430...0x13438 => true,
+        0x1bca0...0x1bca3 => true,
+        0x1d173...0x1d17a => true,
+        0xe0000 => true,
+        0xe0001 => true,
+        0xe0002...0xe001f => true,
+        0xe0080...0xe00ff => true,
+        0xe01f0...0xe0fff => true,
+        else => false,
+    };
 }

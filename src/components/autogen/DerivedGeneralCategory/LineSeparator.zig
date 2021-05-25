@@ -12,6 +12,8 @@ const LineSeparator = @This();
 
 pub fn isLineSeparator(self: LineSeparator, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 8232) return true;
-    return false;
+    return switch (cp) {
+        0x2028 => true,
+        else => false,
+    };
 }

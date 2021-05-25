@@ -12,47 +12,49 @@ const Narrow = @This();
 
 pub fn isNarrow(self: Narrow, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 32) return true;
-    if (cp >= 33 and cp <= 35) return true;
-    if (cp == 36) return true;
-    if (cp >= 37 and cp <= 39) return true;
-    if (cp == 40) return true;
-    if (cp == 41) return true;
-    if (cp == 42) return true;
-    if (cp == 43) return true;
-    if (cp == 44) return true;
-    if (cp == 45) return true;
-    if (cp >= 46 and cp <= 47) return true;
-    if (cp >= 48 and cp <= 57) return true;
-    if (cp >= 58 and cp <= 59) return true;
-    if (cp >= 60 and cp <= 62) return true;
-    if (cp >= 63 and cp <= 64) return true;
-    if (cp >= 65 and cp <= 90) return true;
-    if (cp == 91) return true;
-    if (cp == 92) return true;
-    if (cp == 93) return true;
-    if (cp == 94) return true;
-    if (cp == 95) return true;
-    if (cp == 96) return true;
-    if (cp >= 97 and cp <= 122) return true;
-    if (cp == 123) return true;
-    if (cp == 124) return true;
-    if (cp == 125) return true;
-    if (cp == 126) return true;
-    if (cp >= 162 and cp <= 163) return true;
-    if (cp == 165) return true;
-    if (cp == 166) return true;
-    if (cp == 172) return true;
-    if (cp == 175) return true;
-    if (cp == 10214) return true;
-    if (cp == 10215) return true;
-    if (cp == 10216) return true;
-    if (cp == 10217) return true;
-    if (cp == 10218) return true;
-    if (cp == 10219) return true;
-    if (cp == 10220) return true;
-    if (cp == 10221) return true;
-    if (cp == 10629) return true;
-    if (cp == 10630) return true;
-    return false;
+    return switch (cp) {
+        0x20 => true,
+        0x21...0x23 => true,
+        0x24 => true,
+        0x25...0x27 => true,
+        0x28 => true,
+        0x29 => true,
+        0x2a => true,
+        0x2b => true,
+        0x2c => true,
+        0x2d => true,
+        0x2e...0x2f => true,
+        0x30...0x39 => true,
+        0x3a...0x3b => true,
+        0x3c...0x3e => true,
+        0x3f...0x40 => true,
+        0x41...0x5a => true,
+        0x5b => true,
+        0x5c => true,
+        0x5d => true,
+        0x5e => true,
+        0x5f => true,
+        0x60 => true,
+        0x61...0x7a => true,
+        0x7b => true,
+        0x7c => true,
+        0x7d => true,
+        0x7e => true,
+        0xa2...0xa3 => true,
+        0xa5 => true,
+        0xa6 => true,
+        0xac => true,
+        0xaf => true,
+        0x27e6 => true,
+        0x27e7 => true,
+        0x27e8 => true,
+        0x27e9 => true,
+        0x27ea => true,
+        0x27eb => true,
+        0x27ec => true,
+        0x27ed => true,
+        0x2985 => true,
+        0x2986 => true,
+        else => false,
+    };
 }

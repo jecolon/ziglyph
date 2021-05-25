@@ -12,670 +12,672 @@ const Lowercase = @This();
 
 pub fn isLowercase(self: Lowercase, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 97 and cp <= 122) return true;
-    if (cp == 170) return true;
-    if (cp == 181) return true;
-    if (cp == 186) return true;
-    if (cp >= 223 and cp <= 246) return true;
-    if (cp >= 248 and cp <= 255) return true;
-    if (cp == 257) return true;
-    if (cp == 259) return true;
-    if (cp == 261) return true;
-    if (cp == 263) return true;
-    if (cp == 265) return true;
-    if (cp == 267) return true;
-    if (cp == 269) return true;
-    if (cp == 271) return true;
-    if (cp == 273) return true;
-    if (cp == 275) return true;
-    if (cp == 277) return true;
-    if (cp == 279) return true;
-    if (cp == 281) return true;
-    if (cp == 283) return true;
-    if (cp == 285) return true;
-    if (cp == 287) return true;
-    if (cp == 289) return true;
-    if (cp == 291) return true;
-    if (cp == 293) return true;
-    if (cp == 295) return true;
-    if (cp == 297) return true;
-    if (cp == 299) return true;
-    if (cp == 301) return true;
-    if (cp == 303) return true;
-    if (cp == 305) return true;
-    if (cp == 307) return true;
-    if (cp == 309) return true;
-    if (cp >= 311 and cp <= 312) return true;
-    if (cp == 314) return true;
-    if (cp == 316) return true;
-    if (cp == 318) return true;
-    if (cp == 320) return true;
-    if (cp == 322) return true;
-    if (cp == 324) return true;
-    if (cp == 326) return true;
-    if (cp >= 328 and cp <= 329) return true;
-    if (cp == 331) return true;
-    if (cp == 333) return true;
-    if (cp == 335) return true;
-    if (cp == 337) return true;
-    if (cp == 339) return true;
-    if (cp == 341) return true;
-    if (cp == 343) return true;
-    if (cp == 345) return true;
-    if (cp == 347) return true;
-    if (cp == 349) return true;
-    if (cp == 351) return true;
-    if (cp == 353) return true;
-    if (cp == 355) return true;
-    if (cp == 357) return true;
-    if (cp == 359) return true;
-    if (cp == 361) return true;
-    if (cp == 363) return true;
-    if (cp == 365) return true;
-    if (cp == 367) return true;
-    if (cp == 369) return true;
-    if (cp == 371) return true;
-    if (cp == 373) return true;
-    if (cp == 375) return true;
-    if (cp == 378) return true;
-    if (cp == 380) return true;
-    if (cp >= 382 and cp <= 384) return true;
-    if (cp == 387) return true;
-    if (cp == 389) return true;
-    if (cp == 392) return true;
-    if (cp >= 396 and cp <= 397) return true;
-    if (cp == 402) return true;
-    if (cp == 405) return true;
-    if (cp >= 409 and cp <= 411) return true;
-    if (cp == 414) return true;
-    if (cp == 417) return true;
-    if (cp == 419) return true;
-    if (cp == 421) return true;
-    if (cp == 424) return true;
-    if (cp >= 426 and cp <= 427) return true;
-    if (cp == 429) return true;
-    if (cp == 432) return true;
-    if (cp == 436) return true;
-    if (cp == 438) return true;
-    if (cp >= 441 and cp <= 442) return true;
-    if (cp >= 445 and cp <= 447) return true;
-    if (cp == 454) return true;
-    if (cp == 457) return true;
-    if (cp == 460) return true;
-    if (cp == 462) return true;
-    if (cp == 464) return true;
-    if (cp == 466) return true;
-    if (cp == 468) return true;
-    if (cp == 470) return true;
-    if (cp == 472) return true;
-    if (cp == 474) return true;
-    if (cp >= 476 and cp <= 477) return true;
-    if (cp == 479) return true;
-    if (cp == 481) return true;
-    if (cp == 483) return true;
-    if (cp == 485) return true;
-    if (cp == 487) return true;
-    if (cp == 489) return true;
-    if (cp == 491) return true;
-    if (cp == 493) return true;
-    if (cp >= 495 and cp <= 496) return true;
-    if (cp == 499) return true;
-    if (cp == 501) return true;
-    if (cp == 505) return true;
-    if (cp == 507) return true;
-    if (cp == 509) return true;
-    if (cp == 511) return true;
-    if (cp == 513) return true;
-    if (cp == 515) return true;
-    if (cp == 517) return true;
-    if (cp == 519) return true;
-    if (cp == 521) return true;
-    if (cp == 523) return true;
-    if (cp == 525) return true;
-    if (cp == 527) return true;
-    if (cp == 529) return true;
-    if (cp == 531) return true;
-    if (cp == 533) return true;
-    if (cp == 535) return true;
-    if (cp == 537) return true;
-    if (cp == 539) return true;
-    if (cp == 541) return true;
-    if (cp == 543) return true;
-    if (cp == 545) return true;
-    if (cp == 547) return true;
-    if (cp == 549) return true;
-    if (cp == 551) return true;
-    if (cp == 553) return true;
-    if (cp == 555) return true;
-    if (cp == 557) return true;
-    if (cp == 559) return true;
-    if (cp == 561) return true;
-    if (cp >= 563 and cp <= 569) return true;
-    if (cp == 572) return true;
-    if (cp >= 575 and cp <= 576) return true;
-    if (cp == 578) return true;
-    if (cp == 583) return true;
-    if (cp == 585) return true;
-    if (cp == 587) return true;
-    if (cp == 589) return true;
-    if (cp >= 591 and cp <= 659) return true;
-    if (cp >= 661 and cp <= 687) return true;
-    if (cp >= 688 and cp <= 696) return true;
-    if (cp >= 704 and cp <= 705) return true;
-    if (cp >= 736 and cp <= 740) return true;
-    if (cp == 837) return true;
-    if (cp == 881) return true;
-    if (cp == 883) return true;
-    if (cp == 887) return true;
-    if (cp == 890) return true;
-    if (cp >= 891 and cp <= 893) return true;
-    if (cp == 912) return true;
-    if (cp >= 940 and cp <= 974) return true;
-    if (cp >= 976 and cp <= 977) return true;
-    if (cp >= 981 and cp <= 983) return true;
-    if (cp == 985) return true;
-    if (cp == 987) return true;
-    if (cp == 989) return true;
-    if (cp == 991) return true;
-    if (cp == 993) return true;
-    if (cp == 995) return true;
-    if (cp == 997) return true;
-    if (cp == 999) return true;
-    if (cp == 1001) return true;
-    if (cp == 1003) return true;
-    if (cp == 1005) return true;
-    if (cp >= 1007 and cp <= 1011) return true;
-    if (cp == 1013) return true;
-    if (cp == 1016) return true;
-    if (cp >= 1019 and cp <= 1020) return true;
-    if (cp >= 1072 and cp <= 1119) return true;
-    if (cp == 1121) return true;
-    if (cp == 1123) return true;
-    if (cp == 1125) return true;
-    if (cp == 1127) return true;
-    if (cp == 1129) return true;
-    if (cp == 1131) return true;
-    if (cp == 1133) return true;
-    if (cp == 1135) return true;
-    if (cp == 1137) return true;
-    if (cp == 1139) return true;
-    if (cp == 1141) return true;
-    if (cp == 1143) return true;
-    if (cp == 1145) return true;
-    if (cp == 1147) return true;
-    if (cp == 1149) return true;
-    if (cp == 1151) return true;
-    if (cp == 1153) return true;
-    if (cp == 1163) return true;
-    if (cp == 1165) return true;
-    if (cp == 1167) return true;
-    if (cp == 1169) return true;
-    if (cp == 1171) return true;
-    if (cp == 1173) return true;
-    if (cp == 1175) return true;
-    if (cp == 1177) return true;
-    if (cp == 1179) return true;
-    if (cp == 1181) return true;
-    if (cp == 1183) return true;
-    if (cp == 1185) return true;
-    if (cp == 1187) return true;
-    if (cp == 1189) return true;
-    if (cp == 1191) return true;
-    if (cp == 1193) return true;
-    if (cp == 1195) return true;
-    if (cp == 1197) return true;
-    if (cp == 1199) return true;
-    if (cp == 1201) return true;
-    if (cp == 1203) return true;
-    if (cp == 1205) return true;
-    if (cp == 1207) return true;
-    if (cp == 1209) return true;
-    if (cp == 1211) return true;
-    if (cp == 1213) return true;
-    if (cp == 1215) return true;
-    if (cp == 1218) return true;
-    if (cp == 1220) return true;
-    if (cp == 1222) return true;
-    if (cp == 1224) return true;
-    if (cp == 1226) return true;
-    if (cp == 1228) return true;
-    if (cp >= 1230 and cp <= 1231) return true;
-    if (cp == 1233) return true;
-    if (cp == 1235) return true;
-    if (cp == 1237) return true;
-    if (cp == 1239) return true;
-    if (cp == 1241) return true;
-    if (cp == 1243) return true;
-    if (cp == 1245) return true;
-    if (cp == 1247) return true;
-    if (cp == 1249) return true;
-    if (cp == 1251) return true;
-    if (cp == 1253) return true;
-    if (cp == 1255) return true;
-    if (cp == 1257) return true;
-    if (cp == 1259) return true;
-    if (cp == 1261) return true;
-    if (cp == 1263) return true;
-    if (cp == 1265) return true;
-    if (cp == 1267) return true;
-    if (cp == 1269) return true;
-    if (cp == 1271) return true;
-    if (cp == 1273) return true;
-    if (cp == 1275) return true;
-    if (cp == 1277) return true;
-    if (cp == 1279) return true;
-    if (cp == 1281) return true;
-    if (cp == 1283) return true;
-    if (cp == 1285) return true;
-    if (cp == 1287) return true;
-    if (cp == 1289) return true;
-    if (cp == 1291) return true;
-    if (cp == 1293) return true;
-    if (cp == 1295) return true;
-    if (cp == 1297) return true;
-    if (cp == 1299) return true;
-    if (cp == 1301) return true;
-    if (cp == 1303) return true;
-    if (cp == 1305) return true;
-    if (cp == 1307) return true;
-    if (cp == 1309) return true;
-    if (cp == 1311) return true;
-    if (cp == 1313) return true;
-    if (cp == 1315) return true;
-    if (cp == 1317) return true;
-    if (cp == 1319) return true;
-    if (cp == 1321) return true;
-    if (cp == 1323) return true;
-    if (cp == 1325) return true;
-    if (cp == 1327) return true;
-    if (cp >= 1376 and cp <= 1416) return true;
-    if (cp >= 4304 and cp <= 4346) return true;
-    if (cp >= 4349 and cp <= 4351) return true;
-    if (cp >= 5112 and cp <= 5117) return true;
-    if (cp >= 7296 and cp <= 7304) return true;
-    if (cp >= 7424 and cp <= 7467) return true;
-    if (cp >= 7468 and cp <= 7530) return true;
-    if (cp >= 7531 and cp <= 7543) return true;
-    if (cp == 7544) return true;
-    if (cp >= 7545 and cp <= 7578) return true;
-    if (cp >= 7579 and cp <= 7615) return true;
-    if (cp == 7681) return true;
-    if (cp == 7683) return true;
-    if (cp == 7685) return true;
-    if (cp == 7687) return true;
-    if (cp == 7689) return true;
-    if (cp == 7691) return true;
-    if (cp == 7693) return true;
-    if (cp == 7695) return true;
-    if (cp == 7697) return true;
-    if (cp == 7699) return true;
-    if (cp == 7701) return true;
-    if (cp == 7703) return true;
-    if (cp == 7705) return true;
-    if (cp == 7707) return true;
-    if (cp == 7709) return true;
-    if (cp == 7711) return true;
-    if (cp == 7713) return true;
-    if (cp == 7715) return true;
-    if (cp == 7717) return true;
-    if (cp == 7719) return true;
-    if (cp == 7721) return true;
-    if (cp == 7723) return true;
-    if (cp == 7725) return true;
-    if (cp == 7727) return true;
-    if (cp == 7729) return true;
-    if (cp == 7731) return true;
-    if (cp == 7733) return true;
-    if (cp == 7735) return true;
-    if (cp == 7737) return true;
-    if (cp == 7739) return true;
-    if (cp == 7741) return true;
-    if (cp == 7743) return true;
-    if (cp == 7745) return true;
-    if (cp == 7747) return true;
-    if (cp == 7749) return true;
-    if (cp == 7751) return true;
-    if (cp == 7753) return true;
-    if (cp == 7755) return true;
-    if (cp == 7757) return true;
-    if (cp == 7759) return true;
-    if (cp == 7761) return true;
-    if (cp == 7763) return true;
-    if (cp == 7765) return true;
-    if (cp == 7767) return true;
-    if (cp == 7769) return true;
-    if (cp == 7771) return true;
-    if (cp == 7773) return true;
-    if (cp == 7775) return true;
-    if (cp == 7777) return true;
-    if (cp == 7779) return true;
-    if (cp == 7781) return true;
-    if (cp == 7783) return true;
-    if (cp == 7785) return true;
-    if (cp == 7787) return true;
-    if (cp == 7789) return true;
-    if (cp == 7791) return true;
-    if (cp == 7793) return true;
-    if (cp == 7795) return true;
-    if (cp == 7797) return true;
-    if (cp == 7799) return true;
-    if (cp == 7801) return true;
-    if (cp == 7803) return true;
-    if (cp == 7805) return true;
-    if (cp == 7807) return true;
-    if (cp == 7809) return true;
-    if (cp == 7811) return true;
-    if (cp == 7813) return true;
-    if (cp == 7815) return true;
-    if (cp == 7817) return true;
-    if (cp == 7819) return true;
-    if (cp == 7821) return true;
-    if (cp == 7823) return true;
-    if (cp == 7825) return true;
-    if (cp == 7827) return true;
-    if (cp >= 7829 and cp <= 7837) return true;
-    if (cp == 7839) return true;
-    if (cp == 7841) return true;
-    if (cp == 7843) return true;
-    if (cp == 7845) return true;
-    if (cp == 7847) return true;
-    if (cp == 7849) return true;
-    if (cp == 7851) return true;
-    if (cp == 7853) return true;
-    if (cp == 7855) return true;
-    if (cp == 7857) return true;
-    if (cp == 7859) return true;
-    if (cp == 7861) return true;
-    if (cp == 7863) return true;
-    if (cp == 7865) return true;
-    if (cp == 7867) return true;
-    if (cp == 7869) return true;
-    if (cp == 7871) return true;
-    if (cp == 7873) return true;
-    if (cp == 7875) return true;
-    if (cp == 7877) return true;
-    if (cp == 7879) return true;
-    if (cp == 7881) return true;
-    if (cp == 7883) return true;
-    if (cp == 7885) return true;
-    if (cp == 7887) return true;
-    if (cp == 7889) return true;
-    if (cp == 7891) return true;
-    if (cp == 7893) return true;
-    if (cp == 7895) return true;
-    if (cp == 7897) return true;
-    if (cp == 7899) return true;
-    if (cp == 7901) return true;
-    if (cp == 7903) return true;
-    if (cp == 7905) return true;
-    if (cp == 7907) return true;
-    if (cp == 7909) return true;
-    if (cp == 7911) return true;
-    if (cp == 7913) return true;
-    if (cp == 7915) return true;
-    if (cp == 7917) return true;
-    if (cp == 7919) return true;
-    if (cp == 7921) return true;
-    if (cp == 7923) return true;
-    if (cp == 7925) return true;
-    if (cp == 7927) return true;
-    if (cp == 7929) return true;
-    if (cp == 7931) return true;
-    if (cp == 7933) return true;
-    if (cp >= 7935 and cp <= 7943) return true;
-    if (cp >= 7952 and cp <= 7957) return true;
-    if (cp >= 7968 and cp <= 7975) return true;
-    if (cp >= 7984 and cp <= 7991) return true;
-    if (cp >= 8000 and cp <= 8005) return true;
-    if (cp >= 8016 and cp <= 8023) return true;
-    if (cp >= 8032 and cp <= 8039) return true;
-    if (cp >= 8048 and cp <= 8061) return true;
-    if (cp >= 8064 and cp <= 8071) return true;
-    if (cp >= 8080 and cp <= 8087) return true;
-    if (cp >= 8096 and cp <= 8103) return true;
-    if (cp >= 8112 and cp <= 8116) return true;
-    if (cp >= 8118 and cp <= 8119) return true;
-    if (cp == 8126) return true;
-    if (cp >= 8130 and cp <= 8132) return true;
-    if (cp >= 8134 and cp <= 8135) return true;
-    if (cp >= 8144 and cp <= 8147) return true;
-    if (cp >= 8150 and cp <= 8151) return true;
-    if (cp >= 8160 and cp <= 8167) return true;
-    if (cp >= 8178 and cp <= 8180) return true;
-    if (cp >= 8182 and cp <= 8183) return true;
-    if (cp == 8305) return true;
-    if (cp == 8319) return true;
-    if (cp >= 8336 and cp <= 8348) return true;
-    if (cp == 8458) return true;
-    if (cp >= 8462 and cp <= 8463) return true;
-    if (cp == 8467) return true;
-    if (cp == 8495) return true;
-    if (cp == 8500) return true;
-    if (cp == 8505) return true;
-    if (cp >= 8508 and cp <= 8509) return true;
-    if (cp >= 8518 and cp <= 8521) return true;
-    if (cp == 8526) return true;
-    if (cp >= 8560 and cp <= 8575) return true;
-    if (cp == 8580) return true;
-    if (cp >= 9424 and cp <= 9449) return true;
-    if (cp >= 11312 and cp <= 11358) return true;
-    if (cp == 11361) return true;
-    if (cp >= 11365 and cp <= 11366) return true;
-    if (cp == 11368) return true;
-    if (cp == 11370) return true;
-    if (cp == 11372) return true;
-    if (cp == 11377) return true;
-    if (cp >= 11379 and cp <= 11380) return true;
-    if (cp >= 11382 and cp <= 11387) return true;
-    if (cp >= 11388 and cp <= 11389) return true;
-    if (cp == 11393) return true;
-    if (cp == 11395) return true;
-    if (cp == 11397) return true;
-    if (cp == 11399) return true;
-    if (cp == 11401) return true;
-    if (cp == 11403) return true;
-    if (cp == 11405) return true;
-    if (cp == 11407) return true;
-    if (cp == 11409) return true;
-    if (cp == 11411) return true;
-    if (cp == 11413) return true;
-    if (cp == 11415) return true;
-    if (cp == 11417) return true;
-    if (cp == 11419) return true;
-    if (cp == 11421) return true;
-    if (cp == 11423) return true;
-    if (cp == 11425) return true;
-    if (cp == 11427) return true;
-    if (cp == 11429) return true;
-    if (cp == 11431) return true;
-    if (cp == 11433) return true;
-    if (cp == 11435) return true;
-    if (cp == 11437) return true;
-    if (cp == 11439) return true;
-    if (cp == 11441) return true;
-    if (cp == 11443) return true;
-    if (cp == 11445) return true;
-    if (cp == 11447) return true;
-    if (cp == 11449) return true;
-    if (cp == 11451) return true;
-    if (cp == 11453) return true;
-    if (cp == 11455) return true;
-    if (cp == 11457) return true;
-    if (cp == 11459) return true;
-    if (cp == 11461) return true;
-    if (cp == 11463) return true;
-    if (cp == 11465) return true;
-    if (cp == 11467) return true;
-    if (cp == 11469) return true;
-    if (cp == 11471) return true;
-    if (cp == 11473) return true;
-    if (cp == 11475) return true;
-    if (cp == 11477) return true;
-    if (cp == 11479) return true;
-    if (cp == 11481) return true;
-    if (cp == 11483) return true;
-    if (cp == 11485) return true;
-    if (cp == 11487) return true;
-    if (cp == 11489) return true;
-    if (cp >= 11491 and cp <= 11492) return true;
-    if (cp == 11500) return true;
-    if (cp == 11502) return true;
-    if (cp == 11507) return true;
-    if (cp >= 11520 and cp <= 11557) return true;
-    if (cp == 11559) return true;
-    if (cp == 11565) return true;
-    if (cp == 42561) return true;
-    if (cp == 42563) return true;
-    if (cp == 42565) return true;
-    if (cp == 42567) return true;
-    if (cp == 42569) return true;
-    if (cp == 42571) return true;
-    if (cp == 42573) return true;
-    if (cp == 42575) return true;
-    if (cp == 42577) return true;
-    if (cp == 42579) return true;
-    if (cp == 42581) return true;
-    if (cp == 42583) return true;
-    if (cp == 42585) return true;
-    if (cp == 42587) return true;
-    if (cp == 42589) return true;
-    if (cp == 42591) return true;
-    if (cp == 42593) return true;
-    if (cp == 42595) return true;
-    if (cp == 42597) return true;
-    if (cp == 42599) return true;
-    if (cp == 42601) return true;
-    if (cp == 42603) return true;
-    if (cp == 42605) return true;
-    if (cp == 42625) return true;
-    if (cp == 42627) return true;
-    if (cp == 42629) return true;
-    if (cp == 42631) return true;
-    if (cp == 42633) return true;
-    if (cp == 42635) return true;
-    if (cp == 42637) return true;
-    if (cp == 42639) return true;
-    if (cp == 42641) return true;
-    if (cp == 42643) return true;
-    if (cp == 42645) return true;
-    if (cp == 42647) return true;
-    if (cp == 42649) return true;
-    if (cp == 42651) return true;
-    if (cp >= 42652 and cp <= 42653) return true;
-    if (cp == 42787) return true;
-    if (cp == 42789) return true;
-    if (cp == 42791) return true;
-    if (cp == 42793) return true;
-    if (cp == 42795) return true;
-    if (cp == 42797) return true;
-    if (cp >= 42799 and cp <= 42801) return true;
-    if (cp == 42803) return true;
-    if (cp == 42805) return true;
-    if (cp == 42807) return true;
-    if (cp == 42809) return true;
-    if (cp == 42811) return true;
-    if (cp == 42813) return true;
-    if (cp == 42815) return true;
-    if (cp == 42817) return true;
-    if (cp == 42819) return true;
-    if (cp == 42821) return true;
-    if (cp == 42823) return true;
-    if (cp == 42825) return true;
-    if (cp == 42827) return true;
-    if (cp == 42829) return true;
-    if (cp == 42831) return true;
-    if (cp == 42833) return true;
-    if (cp == 42835) return true;
-    if (cp == 42837) return true;
-    if (cp == 42839) return true;
-    if (cp == 42841) return true;
-    if (cp == 42843) return true;
-    if (cp == 42845) return true;
-    if (cp == 42847) return true;
-    if (cp == 42849) return true;
-    if (cp == 42851) return true;
-    if (cp == 42853) return true;
-    if (cp == 42855) return true;
-    if (cp == 42857) return true;
-    if (cp == 42859) return true;
-    if (cp == 42861) return true;
-    if (cp == 42863) return true;
-    if (cp == 42864) return true;
-    if (cp >= 42865 and cp <= 42872) return true;
-    if (cp == 42874) return true;
-    if (cp == 42876) return true;
-    if (cp == 42879) return true;
-    if (cp == 42881) return true;
-    if (cp == 42883) return true;
-    if (cp == 42885) return true;
-    if (cp == 42887) return true;
-    if (cp == 42892) return true;
-    if (cp == 42894) return true;
-    if (cp == 42897) return true;
-    if (cp >= 42899 and cp <= 42901) return true;
-    if (cp == 42903) return true;
-    if (cp == 42905) return true;
-    if (cp == 42907) return true;
-    if (cp == 42909) return true;
-    if (cp == 42911) return true;
-    if (cp == 42913) return true;
-    if (cp == 42915) return true;
-    if (cp == 42917) return true;
-    if (cp == 42919) return true;
-    if (cp == 42921) return true;
-    if (cp == 42927) return true;
-    if (cp == 42933) return true;
-    if (cp == 42935) return true;
-    if (cp == 42937) return true;
-    if (cp == 42939) return true;
-    if (cp == 42941) return true;
-    if (cp == 42943) return true;
-    if (cp == 42947) return true;
-    if (cp == 42952) return true;
-    if (cp == 42954) return true;
-    if (cp == 42998) return true;
-    if (cp >= 43000 and cp <= 43001) return true;
-    if (cp == 43002) return true;
-    if (cp >= 43824 and cp <= 43866) return true;
-    if (cp >= 43868 and cp <= 43871) return true;
-    if (cp >= 43872 and cp <= 43880) return true;
-    if (cp >= 43888 and cp <= 43967) return true;
-    if (cp >= 64256 and cp <= 64262) return true;
-    if (cp >= 64275 and cp <= 64279) return true;
-    if (cp >= 65345 and cp <= 65370) return true;
-    if (cp >= 66600 and cp <= 66639) return true;
-    if (cp >= 66776 and cp <= 66811) return true;
-    if (cp >= 68800 and cp <= 68850) return true;
-    if (cp >= 71872 and cp <= 71903) return true;
-    if (cp >= 93792 and cp <= 93823) return true;
-    if (cp >= 119834 and cp <= 119859) return true;
-    if (cp >= 119886 and cp <= 119892) return true;
-    if (cp >= 119894 and cp <= 119911) return true;
-    if (cp >= 119938 and cp <= 119963) return true;
-    if (cp >= 119990 and cp <= 119993) return true;
-    if (cp == 119995) return true;
-    if (cp >= 119997 and cp <= 120003) return true;
-    if (cp >= 120005 and cp <= 120015) return true;
-    if (cp >= 120042 and cp <= 120067) return true;
-    if (cp >= 120094 and cp <= 120119) return true;
-    if (cp >= 120146 and cp <= 120171) return true;
-    if (cp >= 120198 and cp <= 120223) return true;
-    if (cp >= 120250 and cp <= 120275) return true;
-    if (cp >= 120302 and cp <= 120327) return true;
-    if (cp >= 120354 and cp <= 120379) return true;
-    if (cp >= 120406 and cp <= 120431) return true;
-    if (cp >= 120458 and cp <= 120485) return true;
-    if (cp >= 120514 and cp <= 120538) return true;
-    if (cp >= 120540 and cp <= 120545) return true;
-    if (cp >= 120572 and cp <= 120596) return true;
-    if (cp >= 120598 and cp <= 120603) return true;
-    if (cp >= 120630 and cp <= 120654) return true;
-    if (cp >= 120656 and cp <= 120661) return true;
-    if (cp >= 120688 and cp <= 120712) return true;
-    if (cp >= 120714 and cp <= 120719) return true;
-    if (cp >= 120746 and cp <= 120770) return true;
-    if (cp >= 120772 and cp <= 120777) return true;
-    if (cp == 120779) return true;
-    if (cp >= 125218 and cp <= 125251) return true;
-    return false;
+    return switch (cp) {
+        0x61...0x7a => true,
+        0xaa => true,
+        0xb5 => true,
+        0xba => true,
+        0xdf...0xf6 => true,
+        0xf8...0xff => true,
+        0x101 => true,
+        0x103 => true,
+        0x105 => true,
+        0x107 => true,
+        0x109 => true,
+        0x10b => true,
+        0x10d => true,
+        0x10f => true,
+        0x111 => true,
+        0x113 => true,
+        0x115 => true,
+        0x117 => true,
+        0x119 => true,
+        0x11b => true,
+        0x11d => true,
+        0x11f => true,
+        0x121 => true,
+        0x123 => true,
+        0x125 => true,
+        0x127 => true,
+        0x129 => true,
+        0x12b => true,
+        0x12d => true,
+        0x12f => true,
+        0x131 => true,
+        0x133 => true,
+        0x135 => true,
+        0x137...0x138 => true,
+        0x13a => true,
+        0x13c => true,
+        0x13e => true,
+        0x140 => true,
+        0x142 => true,
+        0x144 => true,
+        0x146 => true,
+        0x148...0x149 => true,
+        0x14b => true,
+        0x14d => true,
+        0x14f => true,
+        0x151 => true,
+        0x153 => true,
+        0x155 => true,
+        0x157 => true,
+        0x159 => true,
+        0x15b => true,
+        0x15d => true,
+        0x15f => true,
+        0x161 => true,
+        0x163 => true,
+        0x165 => true,
+        0x167 => true,
+        0x169 => true,
+        0x16b => true,
+        0x16d => true,
+        0x16f => true,
+        0x171 => true,
+        0x173 => true,
+        0x175 => true,
+        0x177 => true,
+        0x17a => true,
+        0x17c => true,
+        0x17e...0x180 => true,
+        0x183 => true,
+        0x185 => true,
+        0x188 => true,
+        0x18c...0x18d => true,
+        0x192 => true,
+        0x195 => true,
+        0x199...0x19b => true,
+        0x19e => true,
+        0x1a1 => true,
+        0x1a3 => true,
+        0x1a5 => true,
+        0x1a8 => true,
+        0x1aa...0x1ab => true,
+        0x1ad => true,
+        0x1b0 => true,
+        0x1b4 => true,
+        0x1b6 => true,
+        0x1b9...0x1ba => true,
+        0x1bd...0x1bf => true,
+        0x1c6 => true,
+        0x1c9 => true,
+        0x1cc => true,
+        0x1ce => true,
+        0x1d0 => true,
+        0x1d2 => true,
+        0x1d4 => true,
+        0x1d6 => true,
+        0x1d8 => true,
+        0x1da => true,
+        0x1dc...0x1dd => true,
+        0x1df => true,
+        0x1e1 => true,
+        0x1e3 => true,
+        0x1e5 => true,
+        0x1e7 => true,
+        0x1e9 => true,
+        0x1eb => true,
+        0x1ed => true,
+        0x1ef...0x1f0 => true,
+        0x1f3 => true,
+        0x1f5 => true,
+        0x1f9 => true,
+        0x1fb => true,
+        0x1fd => true,
+        0x1ff => true,
+        0x201 => true,
+        0x203 => true,
+        0x205 => true,
+        0x207 => true,
+        0x209 => true,
+        0x20b => true,
+        0x20d => true,
+        0x20f => true,
+        0x211 => true,
+        0x213 => true,
+        0x215 => true,
+        0x217 => true,
+        0x219 => true,
+        0x21b => true,
+        0x21d => true,
+        0x21f => true,
+        0x221 => true,
+        0x223 => true,
+        0x225 => true,
+        0x227 => true,
+        0x229 => true,
+        0x22b => true,
+        0x22d => true,
+        0x22f => true,
+        0x231 => true,
+        0x233...0x239 => true,
+        0x23c => true,
+        0x23f...0x240 => true,
+        0x242 => true,
+        0x247 => true,
+        0x249 => true,
+        0x24b => true,
+        0x24d => true,
+        0x24f...0x293 => true,
+        0x295...0x2af => true,
+        0x2b0...0x2b8 => true,
+        0x2c0...0x2c1 => true,
+        0x2e0...0x2e4 => true,
+        0x345 => true,
+        0x371 => true,
+        0x373 => true,
+        0x377 => true,
+        0x37a => true,
+        0x37b...0x37d => true,
+        0x390 => true,
+        0x3ac...0x3ce => true,
+        0x3d0...0x3d1 => true,
+        0x3d5...0x3d7 => true,
+        0x3d9 => true,
+        0x3db => true,
+        0x3dd => true,
+        0x3df => true,
+        0x3e1 => true,
+        0x3e3 => true,
+        0x3e5 => true,
+        0x3e7 => true,
+        0x3e9 => true,
+        0x3eb => true,
+        0x3ed => true,
+        0x3ef...0x3f3 => true,
+        0x3f5 => true,
+        0x3f8 => true,
+        0x3fb...0x3fc => true,
+        0x430...0x45f => true,
+        0x461 => true,
+        0x463 => true,
+        0x465 => true,
+        0x467 => true,
+        0x469 => true,
+        0x46b => true,
+        0x46d => true,
+        0x46f => true,
+        0x471 => true,
+        0x473 => true,
+        0x475 => true,
+        0x477 => true,
+        0x479 => true,
+        0x47b => true,
+        0x47d => true,
+        0x47f => true,
+        0x481 => true,
+        0x48b => true,
+        0x48d => true,
+        0x48f => true,
+        0x491 => true,
+        0x493 => true,
+        0x495 => true,
+        0x497 => true,
+        0x499 => true,
+        0x49b => true,
+        0x49d => true,
+        0x49f => true,
+        0x4a1 => true,
+        0x4a3 => true,
+        0x4a5 => true,
+        0x4a7 => true,
+        0x4a9 => true,
+        0x4ab => true,
+        0x4ad => true,
+        0x4af => true,
+        0x4b1 => true,
+        0x4b3 => true,
+        0x4b5 => true,
+        0x4b7 => true,
+        0x4b9 => true,
+        0x4bb => true,
+        0x4bd => true,
+        0x4bf => true,
+        0x4c2 => true,
+        0x4c4 => true,
+        0x4c6 => true,
+        0x4c8 => true,
+        0x4ca => true,
+        0x4cc => true,
+        0x4ce...0x4cf => true,
+        0x4d1 => true,
+        0x4d3 => true,
+        0x4d5 => true,
+        0x4d7 => true,
+        0x4d9 => true,
+        0x4db => true,
+        0x4dd => true,
+        0x4df => true,
+        0x4e1 => true,
+        0x4e3 => true,
+        0x4e5 => true,
+        0x4e7 => true,
+        0x4e9 => true,
+        0x4eb => true,
+        0x4ed => true,
+        0x4ef => true,
+        0x4f1 => true,
+        0x4f3 => true,
+        0x4f5 => true,
+        0x4f7 => true,
+        0x4f9 => true,
+        0x4fb => true,
+        0x4fd => true,
+        0x4ff => true,
+        0x501 => true,
+        0x503 => true,
+        0x505 => true,
+        0x507 => true,
+        0x509 => true,
+        0x50b => true,
+        0x50d => true,
+        0x50f => true,
+        0x511 => true,
+        0x513 => true,
+        0x515 => true,
+        0x517 => true,
+        0x519 => true,
+        0x51b => true,
+        0x51d => true,
+        0x51f => true,
+        0x521 => true,
+        0x523 => true,
+        0x525 => true,
+        0x527 => true,
+        0x529 => true,
+        0x52b => true,
+        0x52d => true,
+        0x52f => true,
+        0x560...0x588 => true,
+        0x10d0...0x10fa => true,
+        0x10fd...0x10ff => true,
+        0x13f8...0x13fd => true,
+        0x1c80...0x1c88 => true,
+        0x1d00...0x1d2b => true,
+        0x1d2c...0x1d6a => true,
+        0x1d6b...0x1d77 => true,
+        0x1d78 => true,
+        0x1d79...0x1d9a => true,
+        0x1d9b...0x1dbf => true,
+        0x1e01 => true,
+        0x1e03 => true,
+        0x1e05 => true,
+        0x1e07 => true,
+        0x1e09 => true,
+        0x1e0b => true,
+        0x1e0d => true,
+        0x1e0f => true,
+        0x1e11 => true,
+        0x1e13 => true,
+        0x1e15 => true,
+        0x1e17 => true,
+        0x1e19 => true,
+        0x1e1b => true,
+        0x1e1d => true,
+        0x1e1f => true,
+        0x1e21 => true,
+        0x1e23 => true,
+        0x1e25 => true,
+        0x1e27 => true,
+        0x1e29 => true,
+        0x1e2b => true,
+        0x1e2d => true,
+        0x1e2f => true,
+        0x1e31 => true,
+        0x1e33 => true,
+        0x1e35 => true,
+        0x1e37 => true,
+        0x1e39 => true,
+        0x1e3b => true,
+        0x1e3d => true,
+        0x1e3f => true,
+        0x1e41 => true,
+        0x1e43 => true,
+        0x1e45 => true,
+        0x1e47 => true,
+        0x1e49 => true,
+        0x1e4b => true,
+        0x1e4d => true,
+        0x1e4f => true,
+        0x1e51 => true,
+        0x1e53 => true,
+        0x1e55 => true,
+        0x1e57 => true,
+        0x1e59 => true,
+        0x1e5b => true,
+        0x1e5d => true,
+        0x1e5f => true,
+        0x1e61 => true,
+        0x1e63 => true,
+        0x1e65 => true,
+        0x1e67 => true,
+        0x1e69 => true,
+        0x1e6b => true,
+        0x1e6d => true,
+        0x1e6f => true,
+        0x1e71 => true,
+        0x1e73 => true,
+        0x1e75 => true,
+        0x1e77 => true,
+        0x1e79 => true,
+        0x1e7b => true,
+        0x1e7d => true,
+        0x1e7f => true,
+        0x1e81 => true,
+        0x1e83 => true,
+        0x1e85 => true,
+        0x1e87 => true,
+        0x1e89 => true,
+        0x1e8b => true,
+        0x1e8d => true,
+        0x1e8f => true,
+        0x1e91 => true,
+        0x1e93 => true,
+        0x1e95...0x1e9d => true,
+        0x1e9f => true,
+        0x1ea1 => true,
+        0x1ea3 => true,
+        0x1ea5 => true,
+        0x1ea7 => true,
+        0x1ea9 => true,
+        0x1eab => true,
+        0x1ead => true,
+        0x1eaf => true,
+        0x1eb1 => true,
+        0x1eb3 => true,
+        0x1eb5 => true,
+        0x1eb7 => true,
+        0x1eb9 => true,
+        0x1ebb => true,
+        0x1ebd => true,
+        0x1ebf => true,
+        0x1ec1 => true,
+        0x1ec3 => true,
+        0x1ec5 => true,
+        0x1ec7 => true,
+        0x1ec9 => true,
+        0x1ecb => true,
+        0x1ecd => true,
+        0x1ecf => true,
+        0x1ed1 => true,
+        0x1ed3 => true,
+        0x1ed5 => true,
+        0x1ed7 => true,
+        0x1ed9 => true,
+        0x1edb => true,
+        0x1edd => true,
+        0x1edf => true,
+        0x1ee1 => true,
+        0x1ee3 => true,
+        0x1ee5 => true,
+        0x1ee7 => true,
+        0x1ee9 => true,
+        0x1eeb => true,
+        0x1eed => true,
+        0x1eef => true,
+        0x1ef1 => true,
+        0x1ef3 => true,
+        0x1ef5 => true,
+        0x1ef7 => true,
+        0x1ef9 => true,
+        0x1efb => true,
+        0x1efd => true,
+        0x1eff...0x1f07 => true,
+        0x1f10...0x1f15 => true,
+        0x1f20...0x1f27 => true,
+        0x1f30...0x1f37 => true,
+        0x1f40...0x1f45 => true,
+        0x1f50...0x1f57 => true,
+        0x1f60...0x1f67 => true,
+        0x1f70...0x1f7d => true,
+        0x1f80...0x1f87 => true,
+        0x1f90...0x1f97 => true,
+        0x1fa0...0x1fa7 => true,
+        0x1fb0...0x1fb4 => true,
+        0x1fb6...0x1fb7 => true,
+        0x1fbe => true,
+        0x1fc2...0x1fc4 => true,
+        0x1fc6...0x1fc7 => true,
+        0x1fd0...0x1fd3 => true,
+        0x1fd6...0x1fd7 => true,
+        0x1fe0...0x1fe7 => true,
+        0x1ff2...0x1ff4 => true,
+        0x1ff6...0x1ff7 => true,
+        0x2071 => true,
+        0x207f => true,
+        0x2090...0x209c => true,
+        0x210a => true,
+        0x210e...0x210f => true,
+        0x2113 => true,
+        0x212f => true,
+        0x2134 => true,
+        0x2139 => true,
+        0x213c...0x213d => true,
+        0x2146...0x2149 => true,
+        0x214e => true,
+        0x2170...0x217f => true,
+        0x2184 => true,
+        0x24d0...0x24e9 => true,
+        0x2c30...0x2c5e => true,
+        0x2c61 => true,
+        0x2c65...0x2c66 => true,
+        0x2c68 => true,
+        0x2c6a => true,
+        0x2c6c => true,
+        0x2c71 => true,
+        0x2c73...0x2c74 => true,
+        0x2c76...0x2c7b => true,
+        0x2c7c...0x2c7d => true,
+        0x2c81 => true,
+        0x2c83 => true,
+        0x2c85 => true,
+        0x2c87 => true,
+        0x2c89 => true,
+        0x2c8b => true,
+        0x2c8d => true,
+        0x2c8f => true,
+        0x2c91 => true,
+        0x2c93 => true,
+        0x2c95 => true,
+        0x2c97 => true,
+        0x2c99 => true,
+        0x2c9b => true,
+        0x2c9d => true,
+        0x2c9f => true,
+        0x2ca1 => true,
+        0x2ca3 => true,
+        0x2ca5 => true,
+        0x2ca7 => true,
+        0x2ca9 => true,
+        0x2cab => true,
+        0x2cad => true,
+        0x2caf => true,
+        0x2cb1 => true,
+        0x2cb3 => true,
+        0x2cb5 => true,
+        0x2cb7 => true,
+        0x2cb9 => true,
+        0x2cbb => true,
+        0x2cbd => true,
+        0x2cbf => true,
+        0x2cc1 => true,
+        0x2cc3 => true,
+        0x2cc5 => true,
+        0x2cc7 => true,
+        0x2cc9 => true,
+        0x2ccb => true,
+        0x2ccd => true,
+        0x2ccf => true,
+        0x2cd1 => true,
+        0x2cd3 => true,
+        0x2cd5 => true,
+        0x2cd7 => true,
+        0x2cd9 => true,
+        0x2cdb => true,
+        0x2cdd => true,
+        0x2cdf => true,
+        0x2ce1 => true,
+        0x2ce3...0x2ce4 => true,
+        0x2cec => true,
+        0x2cee => true,
+        0x2cf3 => true,
+        0x2d00...0x2d25 => true,
+        0x2d27 => true,
+        0x2d2d => true,
+        0xa641 => true,
+        0xa643 => true,
+        0xa645 => true,
+        0xa647 => true,
+        0xa649 => true,
+        0xa64b => true,
+        0xa64d => true,
+        0xa64f => true,
+        0xa651 => true,
+        0xa653 => true,
+        0xa655 => true,
+        0xa657 => true,
+        0xa659 => true,
+        0xa65b => true,
+        0xa65d => true,
+        0xa65f => true,
+        0xa661 => true,
+        0xa663 => true,
+        0xa665 => true,
+        0xa667 => true,
+        0xa669 => true,
+        0xa66b => true,
+        0xa66d => true,
+        0xa681 => true,
+        0xa683 => true,
+        0xa685 => true,
+        0xa687 => true,
+        0xa689 => true,
+        0xa68b => true,
+        0xa68d => true,
+        0xa68f => true,
+        0xa691 => true,
+        0xa693 => true,
+        0xa695 => true,
+        0xa697 => true,
+        0xa699 => true,
+        0xa69b => true,
+        0xa69c...0xa69d => true,
+        0xa723 => true,
+        0xa725 => true,
+        0xa727 => true,
+        0xa729 => true,
+        0xa72b => true,
+        0xa72d => true,
+        0xa72f...0xa731 => true,
+        0xa733 => true,
+        0xa735 => true,
+        0xa737 => true,
+        0xa739 => true,
+        0xa73b => true,
+        0xa73d => true,
+        0xa73f => true,
+        0xa741 => true,
+        0xa743 => true,
+        0xa745 => true,
+        0xa747 => true,
+        0xa749 => true,
+        0xa74b => true,
+        0xa74d => true,
+        0xa74f => true,
+        0xa751 => true,
+        0xa753 => true,
+        0xa755 => true,
+        0xa757 => true,
+        0xa759 => true,
+        0xa75b => true,
+        0xa75d => true,
+        0xa75f => true,
+        0xa761 => true,
+        0xa763 => true,
+        0xa765 => true,
+        0xa767 => true,
+        0xa769 => true,
+        0xa76b => true,
+        0xa76d => true,
+        0xa76f => true,
+        0xa770 => true,
+        0xa771...0xa778 => true,
+        0xa77a => true,
+        0xa77c => true,
+        0xa77f => true,
+        0xa781 => true,
+        0xa783 => true,
+        0xa785 => true,
+        0xa787 => true,
+        0xa78c => true,
+        0xa78e => true,
+        0xa791 => true,
+        0xa793...0xa795 => true,
+        0xa797 => true,
+        0xa799 => true,
+        0xa79b => true,
+        0xa79d => true,
+        0xa79f => true,
+        0xa7a1 => true,
+        0xa7a3 => true,
+        0xa7a5 => true,
+        0xa7a7 => true,
+        0xa7a9 => true,
+        0xa7af => true,
+        0xa7b5 => true,
+        0xa7b7 => true,
+        0xa7b9 => true,
+        0xa7bb => true,
+        0xa7bd => true,
+        0xa7bf => true,
+        0xa7c3 => true,
+        0xa7c8 => true,
+        0xa7ca => true,
+        0xa7f6 => true,
+        0xa7f8...0xa7f9 => true,
+        0xa7fa => true,
+        0xab30...0xab5a => true,
+        0xab5c...0xab5f => true,
+        0xab60...0xab68 => true,
+        0xab70...0xabbf => true,
+        0xfb00...0xfb06 => true,
+        0xfb13...0xfb17 => true,
+        0xff41...0xff5a => true,
+        0x10428...0x1044f => true,
+        0x104d8...0x104fb => true,
+        0x10cc0...0x10cf2 => true,
+        0x118c0...0x118df => true,
+        0x16e60...0x16e7f => true,
+        0x1d41a...0x1d433 => true,
+        0x1d44e...0x1d454 => true,
+        0x1d456...0x1d467 => true,
+        0x1d482...0x1d49b => true,
+        0x1d4b6...0x1d4b9 => true,
+        0x1d4bb => true,
+        0x1d4bd...0x1d4c3 => true,
+        0x1d4c5...0x1d4cf => true,
+        0x1d4ea...0x1d503 => true,
+        0x1d51e...0x1d537 => true,
+        0x1d552...0x1d56b => true,
+        0x1d586...0x1d59f => true,
+        0x1d5ba...0x1d5d3 => true,
+        0x1d5ee...0x1d607 => true,
+        0x1d622...0x1d63b => true,
+        0x1d656...0x1d66f => true,
+        0x1d68a...0x1d6a5 => true,
+        0x1d6c2...0x1d6da => true,
+        0x1d6dc...0x1d6e1 => true,
+        0x1d6fc...0x1d714 => true,
+        0x1d716...0x1d71b => true,
+        0x1d736...0x1d74e => true,
+        0x1d750...0x1d755 => true,
+        0x1d770...0x1d788 => true,
+        0x1d78a...0x1d78f => true,
+        0x1d7aa...0x1d7c2 => true,
+        0x1d7c4...0x1d7c9 => true,
+        0x1d7cb => true,
+        0x1e922...0x1e943 => true,
+        else => false,
+    };
 }

@@ -12,14 +12,16 @@ const Deprecated = @This();
 
 pub fn isDeprecated(self: Deprecated, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 329) return true;
-    if (cp == 1651) return true;
-    if (cp == 3959) return true;
-    if (cp == 3961) return true;
-    if (cp >= 6051 and cp <= 6052) return true;
-    if (cp >= 8298 and cp <= 8303) return true;
-    if (cp == 9001) return true;
-    if (cp == 9002) return true;
-    if (cp == 917505) return true;
-    return false;
+    return switch (cp) {
+        0x149 => true,
+        0x673 => true,
+        0xf77 => true,
+        0xf79 => true,
+        0x17a3...0x17a4 => true,
+        0x206a...0x206f => true,
+        0x2329 => true,
+        0x232a => true,
+        0xe0001 => true,
+        else => false,
+    };
 }

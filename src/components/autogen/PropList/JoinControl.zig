@@ -12,6 +12,8 @@ const JoinControl = @This();
 
 pub fn isJoinControl(self: JoinControl, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 8204 and cp <= 8205) return true;
-    return false;
+    return switch (cp) {
+        0x200c...0x200d => true,
+        else => false,
+    };
 }

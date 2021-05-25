@@ -12,36 +12,38 @@ const SoftDotted = @This();
 
 pub fn isSoftDotted(self: SoftDotted, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 105 and cp <= 106) return true;
-    if (cp == 303) return true;
-    if (cp == 585) return true;
-    if (cp == 616) return true;
-    if (cp == 669) return true;
-    if (cp == 690) return true;
-    if (cp == 1011) return true;
-    if (cp == 1110) return true;
-    if (cp == 1112) return true;
-    if (cp == 7522) return true;
-    if (cp == 7574) return true;
-    if (cp == 7588) return true;
-    if (cp == 7592) return true;
-    if (cp == 7725) return true;
-    if (cp == 7883) return true;
-    if (cp == 8305) return true;
-    if (cp >= 8520 and cp <= 8521) return true;
-    if (cp == 11388) return true;
-    if (cp >= 119842 and cp <= 119843) return true;
-    if (cp >= 119894 and cp <= 119895) return true;
-    if (cp >= 119946 and cp <= 119947) return true;
-    if (cp >= 119998 and cp <= 119999) return true;
-    if (cp >= 120050 and cp <= 120051) return true;
-    if (cp >= 120102 and cp <= 120103) return true;
-    if (cp >= 120154 and cp <= 120155) return true;
-    if (cp >= 120206 and cp <= 120207) return true;
-    if (cp >= 120258 and cp <= 120259) return true;
-    if (cp >= 120310 and cp <= 120311) return true;
-    if (cp >= 120362 and cp <= 120363) return true;
-    if (cp >= 120414 and cp <= 120415) return true;
-    if (cp >= 120466 and cp <= 120467) return true;
-    return false;
+    return switch (cp) {
+        0x69...0x6a => true,
+        0x12f => true,
+        0x249 => true,
+        0x268 => true,
+        0x29d => true,
+        0x2b2 => true,
+        0x3f3 => true,
+        0x456 => true,
+        0x458 => true,
+        0x1d62 => true,
+        0x1d96 => true,
+        0x1da4 => true,
+        0x1da8 => true,
+        0x1e2d => true,
+        0x1ecb => true,
+        0x2071 => true,
+        0x2148...0x2149 => true,
+        0x2c7c => true,
+        0x1d422...0x1d423 => true,
+        0x1d456...0x1d457 => true,
+        0x1d48a...0x1d48b => true,
+        0x1d4be...0x1d4bf => true,
+        0x1d4f2...0x1d4f3 => true,
+        0x1d526...0x1d527 => true,
+        0x1d55a...0x1d55b => true,
+        0x1d58e...0x1d58f => true,
+        0x1d5c2...0x1d5c3 => true,
+        0x1d5f6...0x1d5f7 => true,
+        0x1d62a...0x1d62b => true,
+        0x1d65e...0x1d65f => true,
+        0x1d692...0x1d693 => true,
+        else => false,
+    };
 }

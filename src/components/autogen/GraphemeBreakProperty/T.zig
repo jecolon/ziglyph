@@ -12,7 +12,9 @@ const T = @This();
 
 pub fn isT(self: T, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 4520 and cp <= 4607) return true;
-    if (cp >= 55243 and cp <= 55291) return true;
-    return false;
+    return switch (cp) {
+        0x11a8...0x11ff => true,
+        0xd7cb...0xd7fb => true,
+        else => false,
+    };
 }

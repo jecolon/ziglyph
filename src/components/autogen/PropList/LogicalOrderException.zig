@@ -12,12 +12,14 @@ const LogicalOrderException = @This();
 
 pub fn isLogicalOrderException(self: LogicalOrderException, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 3648 and cp <= 3652) return true;
-    if (cp >= 3776 and cp <= 3780) return true;
-    if (cp >= 6581 and cp <= 6583) return true;
-    if (cp == 6586) return true;
-    if (cp >= 43701 and cp <= 43702) return true;
-    if (cp == 43705) return true;
-    if (cp >= 43707 and cp <= 43708) return true;
-    return false;
+    return switch (cp) {
+        0xe40...0xe44 => true,
+        0xec0...0xec4 => true,
+        0x19b5...0x19b7 => true,
+        0x19ba => true,
+        0xaab5...0xaab6 => true,
+        0xaab9 => true,
+        0xaabb...0xaabc => true,
+        else => false,
+    };
 }

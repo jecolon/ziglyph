@@ -12,8 +12,10 @@ const VariationSelector = @This();
 
 pub fn isVariationSelector(self: VariationSelector, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 6155 and cp <= 6157) return true;
-    if (cp >= 65024 and cp <= 65039) return true;
-    if (cp >= 917760 and cp <= 917999) return true;
-    return false;
+    return switch (cp) {
+        0x180b...0x180d => true,
+        0xfe00...0xfe0f => true,
+        0xe0100...0xe01ef => true,
+        else => false,
+    };
 }

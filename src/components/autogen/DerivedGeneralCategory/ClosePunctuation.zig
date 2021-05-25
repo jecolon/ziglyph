@@ -12,77 +12,79 @@ const ClosePunctuation = @This();
 
 pub fn isClosePunctuation(self: ClosePunctuation, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 41) return true;
-    if (cp == 93) return true;
-    if (cp == 125) return true;
-    if (cp == 3899) return true;
-    if (cp == 3901) return true;
-    if (cp == 5788) return true;
-    if (cp == 8262) return true;
-    if (cp == 8318) return true;
-    if (cp == 8334) return true;
-    if (cp == 8969) return true;
-    if (cp == 8971) return true;
-    if (cp == 9002) return true;
-    if (cp == 10089) return true;
-    if (cp == 10091) return true;
-    if (cp == 10093) return true;
-    if (cp == 10095) return true;
-    if (cp == 10097) return true;
-    if (cp == 10099) return true;
-    if (cp == 10101) return true;
-    if (cp == 10182) return true;
-    if (cp == 10215) return true;
-    if (cp == 10217) return true;
-    if (cp == 10219) return true;
-    if (cp == 10221) return true;
-    if (cp == 10223) return true;
-    if (cp == 10628) return true;
-    if (cp == 10630) return true;
-    if (cp == 10632) return true;
-    if (cp == 10634) return true;
-    if (cp == 10636) return true;
-    if (cp == 10638) return true;
-    if (cp == 10640) return true;
-    if (cp == 10642) return true;
-    if (cp == 10644) return true;
-    if (cp == 10646) return true;
-    if (cp == 10648) return true;
-    if (cp == 10713) return true;
-    if (cp == 10715) return true;
-    if (cp == 10749) return true;
-    if (cp == 11811) return true;
-    if (cp == 11813) return true;
-    if (cp == 11815) return true;
-    if (cp == 11817) return true;
-    if (cp == 12297) return true;
-    if (cp == 12299) return true;
-    if (cp == 12301) return true;
-    if (cp == 12303) return true;
-    if (cp == 12305) return true;
-    if (cp == 12309) return true;
-    if (cp == 12311) return true;
-    if (cp == 12313) return true;
-    if (cp == 12315) return true;
-    if (cp >= 12318 and cp <= 12319) return true;
-    if (cp == 64830) return true;
-    if (cp == 65048) return true;
-    if (cp == 65078) return true;
-    if (cp == 65080) return true;
-    if (cp == 65082) return true;
-    if (cp == 65084) return true;
-    if (cp == 65086) return true;
-    if (cp == 65088) return true;
-    if (cp == 65090) return true;
-    if (cp == 65092) return true;
-    if (cp == 65096) return true;
-    if (cp == 65114) return true;
-    if (cp == 65116) return true;
-    if (cp == 65118) return true;
-    if (cp == 65289) return true;
-    if (cp == 65341) return true;
-    if (cp == 65373) return true;
-    if (cp == 65376) return true;
-    if (cp == 65379) return true;
-    return false;
+    return switch (cp) {
+        0x29 => true,
+        0x5d => true,
+        0x7d => true,
+        0xf3b => true,
+        0xf3d => true,
+        0x169c => true,
+        0x2046 => true,
+        0x207e => true,
+        0x208e => true,
+        0x2309 => true,
+        0x230b => true,
+        0x232a => true,
+        0x2769 => true,
+        0x276b => true,
+        0x276d => true,
+        0x276f => true,
+        0x2771 => true,
+        0x2773 => true,
+        0x2775 => true,
+        0x27c6 => true,
+        0x27e7 => true,
+        0x27e9 => true,
+        0x27eb => true,
+        0x27ed => true,
+        0x27ef => true,
+        0x2984 => true,
+        0x2986 => true,
+        0x2988 => true,
+        0x298a => true,
+        0x298c => true,
+        0x298e => true,
+        0x2990 => true,
+        0x2992 => true,
+        0x2994 => true,
+        0x2996 => true,
+        0x2998 => true,
+        0x29d9 => true,
+        0x29db => true,
+        0x29fd => true,
+        0x2e23 => true,
+        0x2e25 => true,
+        0x2e27 => true,
+        0x2e29 => true,
+        0x3009 => true,
+        0x300b => true,
+        0x300d => true,
+        0x300f => true,
+        0x3011 => true,
+        0x3015 => true,
+        0x3017 => true,
+        0x3019 => true,
+        0x301b => true,
+        0x301e...0x301f => true,
+        0xfd3e => true,
+        0xfe18 => true,
+        0xfe36 => true,
+        0xfe38 => true,
+        0xfe3a => true,
+        0xfe3c => true,
+        0xfe3e => true,
+        0xfe40 => true,
+        0xfe42 => true,
+        0xfe44 => true,
+        0xfe48 => true,
+        0xfe5a => true,
+        0xfe5c => true,
+        0xfe5e => true,
+        0xff09 => true,
+        0xff3d => true,
+        0xff5d => true,
+        0xff60 => true,
+        0xff63 => true,
+        else => false,
+    };
 }

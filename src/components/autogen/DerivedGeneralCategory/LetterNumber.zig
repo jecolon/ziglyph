@@ -12,17 +12,19 @@ const LetterNumber = @This();
 
 pub fn isLetterNumber(self: LetterNumber, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 5870 and cp <= 5872) return true;
-    if (cp >= 8544 and cp <= 8578) return true;
-    if (cp >= 8581 and cp <= 8584) return true;
-    if (cp == 12295) return true;
-    if (cp >= 12321 and cp <= 12329) return true;
-    if (cp >= 12344 and cp <= 12346) return true;
-    if (cp >= 42726 and cp <= 42735) return true;
-    if (cp >= 65856 and cp <= 65908) return true;
-    if (cp == 66369) return true;
-    if (cp == 66378) return true;
-    if (cp >= 66513 and cp <= 66517) return true;
-    if (cp >= 74752 and cp <= 74862) return true;
-    return false;
+    return switch (cp) {
+        0x16ee...0x16f0 => true,
+        0x2160...0x2182 => true,
+        0x2185...0x2188 => true,
+        0x3007 => true,
+        0x3021...0x3029 => true,
+        0x3038...0x303a => true,
+        0xa6e6...0xa6ef => true,
+        0x10140...0x10174 => true,
+        0x10341 => true,
+        0x1034a => true,
+        0x103d1...0x103d5 => true,
+        0x12400...0x1246e => true,
+        else => false,
+    };
 }

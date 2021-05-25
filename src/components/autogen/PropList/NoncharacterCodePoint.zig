@@ -12,23 +12,25 @@ const NoncharacterCodePoint = @This();
 
 pub fn isNoncharacterCodePoint(self: NoncharacterCodePoint, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 64976 and cp <= 65007) return true;
-    if (cp >= 65534 and cp <= 65535) return true;
-    if (cp >= 131070 and cp <= 131071) return true;
-    if (cp >= 196606 and cp <= 196607) return true;
-    if (cp >= 262142 and cp <= 262143) return true;
-    if (cp >= 327678 and cp <= 327679) return true;
-    if (cp >= 393214 and cp <= 393215) return true;
-    if (cp >= 458750 and cp <= 458751) return true;
-    if (cp >= 524286 and cp <= 524287) return true;
-    if (cp >= 589822 and cp <= 589823) return true;
-    if (cp >= 655358 and cp <= 655359) return true;
-    if (cp >= 720894 and cp <= 720895) return true;
-    if (cp >= 786430 and cp <= 786431) return true;
-    if (cp >= 851966 and cp <= 851967) return true;
-    if (cp >= 917502 and cp <= 917503) return true;
-    if (cp >= 983038 and cp <= 983039) return true;
-    if (cp >= 1048574 and cp <= 1048575) return true;
-    if (cp >= 1114110 and cp <= 1114111) return true;
-    return false;
+    return switch (cp) {
+        0xfdd0...0xfdef => true,
+        0xfffe...0xffff => true,
+        0x1fffe...0x1ffff => true,
+        0x2fffe...0x2ffff => true,
+        0x3fffe...0x3ffff => true,
+        0x4fffe...0x4ffff => true,
+        0x5fffe...0x5ffff => true,
+        0x6fffe...0x6ffff => true,
+        0x7fffe...0x7ffff => true,
+        0x8fffe...0x8ffff => true,
+        0x9fffe...0x9ffff => true,
+        0xafffe...0xaffff => true,
+        0xbfffe...0xbffff => true,
+        0xcfffe...0xcffff => true,
+        0xdfffe...0xdffff => true,
+        0xefffe...0xeffff => true,
+        0xffffe...0xfffff => true,
+        0x10fffe...0x10ffff => true,
+        else => false,
+    };
 }

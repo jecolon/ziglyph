@@ -12,11 +12,13 @@ const PrependedConcatenationMark = @This();
 
 pub fn isPrependedConcatenationMark(self: PrependedConcatenationMark, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 1536 and cp <= 1541) return true;
-    if (cp == 1757) return true;
-    if (cp == 1807) return true;
-    if (cp == 2274) return true;
-    if (cp == 69821) return true;
-    if (cp == 69837) return true;
-    return false;
+    return switch (cp) {
+        0x600...0x605 => true,
+        0x6dd => true,
+        0x70f => true,
+        0x8e2 => true,
+        0x110bd => true,
+        0x110cd => true,
+        else => false,
+    };
 }

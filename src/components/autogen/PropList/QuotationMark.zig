@@ -12,33 +12,35 @@ const QuotationMark = @This();
 
 pub fn isQuotationMark(self: QuotationMark, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 34) return true;
-    if (cp == 39) return true;
-    if (cp == 171) return true;
-    if (cp == 187) return true;
-    if (cp == 8216) return true;
-    if (cp == 8217) return true;
-    if (cp == 8218) return true;
-    if (cp >= 8219 and cp <= 8220) return true;
-    if (cp == 8221) return true;
-    if (cp == 8222) return true;
-    if (cp == 8223) return true;
-    if (cp == 8249) return true;
-    if (cp == 8250) return true;
-    if (cp == 11842) return true;
-    if (cp == 12300) return true;
-    if (cp == 12301) return true;
-    if (cp == 12302) return true;
-    if (cp == 12303) return true;
-    if (cp == 12317) return true;
-    if (cp >= 12318 and cp <= 12319) return true;
-    if (cp == 65089) return true;
-    if (cp == 65090) return true;
-    if (cp == 65091) return true;
-    if (cp == 65092) return true;
-    if (cp == 65282) return true;
-    if (cp == 65287) return true;
-    if (cp == 65378) return true;
-    if (cp == 65379) return true;
-    return false;
+    return switch (cp) {
+        0x22 => true,
+        0x27 => true,
+        0xab => true,
+        0xbb => true,
+        0x2018 => true,
+        0x2019 => true,
+        0x201a => true,
+        0x201b...0x201c => true,
+        0x201d => true,
+        0x201e => true,
+        0x201f => true,
+        0x2039 => true,
+        0x203a => true,
+        0x2e42 => true,
+        0x300c => true,
+        0x300d => true,
+        0x300e => true,
+        0x300f => true,
+        0x301d => true,
+        0x301e...0x301f => true,
+        0xfe41 => true,
+        0xfe42 => true,
+        0xfe43 => true,
+        0xfe44 => true,
+        0xff02 => true,
+        0xff07 => true,
+        0xff62 => true,
+        0xff63 => true,
+        else => false,
+    };
 }

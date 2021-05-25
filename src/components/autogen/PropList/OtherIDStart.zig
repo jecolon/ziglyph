@@ -12,9 +12,11 @@ const OtherIDStart = @This();
 
 pub fn isOtherIDStart(self: OtherIDStart, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 6277 and cp <= 6278) return true;
-    if (cp == 8472) return true;
-    if (cp == 8494) return true;
-    if (cp >= 12443 and cp <= 12444) return true;
-    return false;
+    return switch (cp) {
+        0x1885...0x1886 => true,
+        0x2118 => true,
+        0x212e => true,
+        0x309b...0x309c => true,
+        else => false,
+    };
 }

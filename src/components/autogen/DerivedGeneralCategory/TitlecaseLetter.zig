@@ -12,15 +12,17 @@ const TitlecaseLetter = @This();
 
 pub fn isTitlecaseLetter(self: TitlecaseLetter, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 453) return true;
-    if (cp == 456) return true;
-    if (cp == 459) return true;
-    if (cp == 498) return true;
-    if (cp >= 8072 and cp <= 8079) return true;
-    if (cp >= 8088 and cp <= 8095) return true;
-    if (cp >= 8104 and cp <= 8111) return true;
-    if (cp == 8124) return true;
-    if (cp == 8140) return true;
-    if (cp == 8188) return true;
-    return false;
+    return switch (cp) {
+        0x1c5 => true,
+        0x1c8 => true,
+        0x1cb => true,
+        0x1f2 => true,
+        0x1f88...0x1f8f => true,
+        0x1f98...0x1f9f => true,
+        0x1fa8...0x1faf => true,
+        0x1fbc => true,
+        0x1fcc => true,
+        0x1ffc => true,
+        else => false,
+    };
 }

@@ -12,9 +12,11 @@ const BidiControl = @This();
 
 pub fn isBidiControl(self: BidiControl, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 1564) return true;
-    if (cp >= 8206 and cp <= 8207) return true;
-    if (cp >= 8234 and cp <= 8238) return true;
-    if (cp >= 8294 and cp <= 8297) return true;
-    return false;
+    return switch (cp) {
+        0x61c => true,
+        0x200e...0x200f => true,
+        0x202a...0x202e => true,
+        0x2066...0x2069 => true,
+        else => false,
+    };
 }

@@ -12,15 +12,17 @@ const EmojiComponent = @This();
 
 pub fn isEmojiComponent(self: EmojiComponent, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 35) return true;
-    if (cp == 42) return true;
-    if (cp >= 48 and cp <= 57) return true;
-    if (cp == 8205) return true;
-    if (cp == 8419) return true;
-    if (cp == 65039) return true;
-    if (cp >= 127462 and cp <= 127487) return true;
-    if (cp >= 127995 and cp <= 127999) return true;
-    if (cp >= 129456 and cp <= 129459) return true;
-    if (cp >= 917536 and cp <= 917631) return true;
-    return false;
+    return switch (cp) {
+        0x23 => true,
+        0x2a => true,
+        0x30...0x39 => true,
+        0x200d => true,
+        0x20e3 => true,
+        0xfe0f => true,
+        0x1f1e6...0x1f1ff => true,
+        0x1f3fb...0x1f3ff => true,
+        0x1f9b0...0x1f9b3 => true,
+        0xe0020...0xe007f => true,
+        else => false,
+    };
 }

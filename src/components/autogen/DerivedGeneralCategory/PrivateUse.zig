@@ -12,8 +12,10 @@ const PrivateUse = @This();
 
 pub fn isPrivateUse(self: PrivateUse, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 57344 and cp <= 63743) return true;
-    if (cp >= 983040 and cp <= 1048573) return true;
-    if (cp >= 1048576 and cp <= 1114109) return true;
-    return false;
+    return switch (cp) {
+        0xe000...0xf8ff => true,
+        0xf0000...0xffffd => true,
+        0x100000...0x10fffd => true,
+        else => false,
+    };
 }

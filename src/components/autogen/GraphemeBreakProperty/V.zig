@@ -12,7 +12,9 @@ const V = @This();
 
 pub fn isV(self: V, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 4448 and cp <= 4519) return true;
-    if (cp >= 55216 and cp <= 55238) return true;
-    return false;
+    return switch (cp) {
+        0x1160...0x11a7 => true,
+        0xd7b0...0xd7c6 => true,
+        else => false,
+    };
 }

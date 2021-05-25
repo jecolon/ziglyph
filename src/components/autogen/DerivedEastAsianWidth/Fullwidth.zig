@@ -12,39 +12,41 @@ const Fullwidth = @This();
 
 pub fn isFullwidth(self: Fullwidth, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 12288) return true;
-    if (cp >= 65281 and cp <= 65283) return true;
-    if (cp == 65284) return true;
-    if (cp >= 65285 and cp <= 65287) return true;
-    if (cp == 65288) return true;
-    if (cp == 65289) return true;
-    if (cp == 65290) return true;
-    if (cp == 65291) return true;
-    if (cp == 65292) return true;
-    if (cp == 65293) return true;
-    if (cp >= 65294 and cp <= 65295) return true;
-    if (cp >= 65296 and cp <= 65305) return true;
-    if (cp >= 65306 and cp <= 65307) return true;
-    if (cp >= 65308 and cp <= 65310) return true;
-    if (cp >= 65311 and cp <= 65312) return true;
-    if (cp >= 65313 and cp <= 65338) return true;
-    if (cp == 65339) return true;
-    if (cp == 65340) return true;
-    if (cp == 65341) return true;
-    if (cp == 65342) return true;
-    if (cp == 65343) return true;
-    if (cp == 65344) return true;
-    if (cp >= 65345 and cp <= 65370) return true;
-    if (cp == 65371) return true;
-    if (cp == 65372) return true;
-    if (cp == 65373) return true;
-    if (cp == 65374) return true;
-    if (cp == 65375) return true;
-    if (cp == 65376) return true;
-    if (cp >= 65504 and cp <= 65505) return true;
-    if (cp == 65506) return true;
-    if (cp == 65507) return true;
-    if (cp == 65508) return true;
-    if (cp >= 65509 and cp <= 65510) return true;
-    return false;
+    return switch (cp) {
+        0x3000 => true,
+        0xff01...0xff03 => true,
+        0xff04 => true,
+        0xff05...0xff07 => true,
+        0xff08 => true,
+        0xff09 => true,
+        0xff0a => true,
+        0xff0b => true,
+        0xff0c => true,
+        0xff0d => true,
+        0xff0e...0xff0f => true,
+        0xff10...0xff19 => true,
+        0xff1a...0xff1b => true,
+        0xff1c...0xff1e => true,
+        0xff1f...0xff20 => true,
+        0xff21...0xff3a => true,
+        0xff3b => true,
+        0xff3c => true,
+        0xff3d => true,
+        0xff3e => true,
+        0xff3f => true,
+        0xff40 => true,
+        0xff41...0xff5a => true,
+        0xff5b => true,
+        0xff5c => true,
+        0xff5d => true,
+        0xff5e => true,
+        0xff5f => true,
+        0xff60 => true,
+        0xffe0...0xffe1 => true,
+        0xffe2 => true,
+        0xffe3 => true,
+        0xffe4 => true,
+        0xffe5...0xffe6 => true,
+        else => false,
+    };
 }

@@ -8,3 +8,4 @@ const {1s} = @This();
 
 /// to{0s} maps the code point to the desired case or returns the same code point if no mapping exists.
 pub fn to{0s}(self: {1s}, cp: u21) u21 {{
+    return switch (cp) {{

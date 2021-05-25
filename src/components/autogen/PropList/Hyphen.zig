@@ -12,15 +12,17 @@ const Hyphen = @This();
 
 pub fn isHyphen(self: Hyphen, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 45) return true;
-    if (cp == 173) return true;
-    if (cp == 1418) return true;
-    if (cp == 6150) return true;
-    if (cp >= 8208 and cp <= 8209) return true;
-    if (cp == 11799) return true;
-    if (cp == 12539) return true;
-    if (cp == 65123) return true;
-    if (cp == 65293) return true;
-    if (cp == 65381) return true;
-    return false;
+    return switch (cp) {
+        0x2d => true,
+        0xad => true,
+        0x58a => true,
+        0x1806 => true,
+        0x2010...0x2011 => true,
+        0x2e17 => true,
+        0x30fb => true,
+        0xfe63 => true,
+        0xff0d => true,
+        0xff65 => true,
+        else => false,
+    };
 }

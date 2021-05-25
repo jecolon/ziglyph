@@ -12,25 +12,27 @@ const OtherLowercase = @This();
 
 pub fn isOtherLowercase(self: OtherLowercase, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 170) return true;
-    if (cp == 186) return true;
-    if (cp >= 688 and cp <= 696) return true;
-    if (cp >= 704 and cp <= 705) return true;
-    if (cp >= 736 and cp <= 740) return true;
-    if (cp == 837) return true;
-    if (cp == 890) return true;
-    if (cp >= 7468 and cp <= 7530) return true;
-    if (cp == 7544) return true;
-    if (cp >= 7579 and cp <= 7615) return true;
-    if (cp == 8305) return true;
-    if (cp == 8319) return true;
-    if (cp >= 8336 and cp <= 8348) return true;
-    if (cp >= 8560 and cp <= 8575) return true;
-    if (cp >= 9424 and cp <= 9449) return true;
-    if (cp >= 11388 and cp <= 11389) return true;
-    if (cp >= 42652 and cp <= 42653) return true;
-    if (cp == 42864) return true;
-    if (cp >= 43000 and cp <= 43001) return true;
-    if (cp >= 43868 and cp <= 43871) return true;
-    return false;
+    return switch (cp) {
+        0xaa => true,
+        0xba => true,
+        0x2b0...0x2b8 => true,
+        0x2c0...0x2c1 => true,
+        0x2e0...0x2e4 => true,
+        0x345 => true,
+        0x37a => true,
+        0x1d2c...0x1d6a => true,
+        0x1d78 => true,
+        0x1d9b...0x1dbf => true,
+        0x2071 => true,
+        0x207f => true,
+        0x2090...0x209c => true,
+        0x2170...0x217f => true,
+        0x24d0...0x24e9 => true,
+        0x2c7c...0x2c7d => true,
+        0xa69c...0xa69d => true,
+        0xa770 => true,
+        0xa7f8...0xa7f9 => true,
+        0xab5c...0xab5f => true,
+        else => false,
+    };
 }

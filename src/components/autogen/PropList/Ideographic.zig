@@ -12,25 +12,27 @@ const Ideographic = @This();
 
 pub fn isIdeographic(self: Ideographic, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 12294) return true;
-    if (cp == 12295) return true;
-    if (cp >= 12321 and cp <= 12329) return true;
-    if (cp >= 12344 and cp <= 12346) return true;
-    if (cp >= 13312 and cp <= 19903) return true;
-    if (cp >= 19968 and cp <= 40956) return true;
-    if (cp >= 63744 and cp <= 64109) return true;
-    if (cp >= 64112 and cp <= 64217) return true;
-    if (cp == 94180) return true;
-    if (cp >= 94208 and cp <= 100343) return true;
-    if (cp >= 100352 and cp <= 101589) return true;
-    if (cp >= 101632 and cp <= 101640) return true;
-    if (cp >= 110960 and cp <= 111355) return true;
-    if (cp >= 131072 and cp <= 173789) return true;
-    if (cp >= 173824 and cp <= 177972) return true;
-    if (cp >= 177984 and cp <= 178205) return true;
-    if (cp >= 178208 and cp <= 183969) return true;
-    if (cp >= 183984 and cp <= 191456) return true;
-    if (cp >= 194560 and cp <= 195101) return true;
-    if (cp >= 196608 and cp <= 201546) return true;
-    return false;
+    return switch (cp) {
+        0x3006 => true,
+        0x3007 => true,
+        0x3021...0x3029 => true,
+        0x3038...0x303a => true,
+        0x3400...0x4dbf => true,
+        0x4e00...0x9ffc => true,
+        0xf900...0xfa6d => true,
+        0xfa70...0xfad9 => true,
+        0x16fe4 => true,
+        0x17000...0x187f7 => true,
+        0x18800...0x18cd5 => true,
+        0x18d00...0x18d08 => true,
+        0x1b170...0x1b2fb => true,
+        0x20000...0x2a6dd => true,
+        0x2a700...0x2b734 => true,
+        0x2b740...0x2b81d => true,
+        0x2b820...0x2cea1 => true,
+        0x2ceb0...0x2ebe0 => true,
+        0x2f800...0x2fa1d => true,
+        0x30000...0x3134a => true,
+        else => false,
+    };
 }

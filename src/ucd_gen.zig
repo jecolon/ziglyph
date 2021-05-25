@@ -529,13 +529,13 @@ const UcdGenerator = struct {
                     try pf_records.append(.{ .single = cp });
                 } else if (field_index == 12 and raw.len != 0) {
                     // Uppercase mapping.
-                    _ = try u_writer.print("    if (cp == 0x{s}) return 0x{s};\n", .{ code_point, raw });
+                    _ = try u_writer.print("        0x{s} => 0x{s},\n", .{ code_point, raw });
                 } else if (field_index == 13 and raw.len != 0) {
                     // Lowercase mapping.
-                    _ = try l_writer.print("    if (cp == 0x{s}) return 0x{s};\n", .{ code_point, raw });
+                    _ = try l_writer.print("        0x{s} => 0x{s},\n", .{ code_point, raw });
                 } else if (field_index == 14 and raw.len != 0) {
                     // Titlecase mapping.
-                    _ = try t_writer.print("    if (cp == 0x{s}) return 0x{s};\n", .{ code_point, raw });
+                    _ = try t_writer.print("        0x{s} => 0x{s},\n", .{ code_point, raw });
                 } else {
                     continue;
                 }
@@ -543,9 +543,9 @@ const UcdGenerator = struct {
         }
 
         // Finish writing.
-        _ = try l_writer.write("    return cp;\n}");
-        _ = try t_writer.write("    return cp;\n}");
-        _ = try u_writer.write("    return cp;\n}");
+        _ = try l_writer.write("        else => cp,\n    };\n}");
+        _ = try t_writer.write("        else => cp,\n    };\n}");
+        _ = try u_writer.write("        else => cp,\n    };\n}");
         try l_buf.flush();
         try t_buf.flush();
         try u_buf.flush();

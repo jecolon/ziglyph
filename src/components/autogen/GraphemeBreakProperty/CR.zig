@@ -12,6 +12,8 @@ const CR = @This();
 
 pub fn isCR(self: CR, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 13) return true;
-    return false;
+    return switch (cp) {
+        0xd => true,
+        else => false,
+    };
 }

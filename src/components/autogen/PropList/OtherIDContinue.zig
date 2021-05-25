@@ -12,9 +12,11 @@ const OtherIDContinue = @This();
 
 pub fn isOtherIDContinue(self: OtherIDContinue, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 183) return true;
-    if (cp == 903) return true;
-    if (cp >= 4969 and cp <= 4977) return true;
-    if (cp == 6618) return true;
-    return false;
+    return switch (cp) {
+        0xb7 => true,
+        0x387 => true,
+        0x1369...0x1371 => true,
+        0x19da => true,
+        else => false,
+    };
 }

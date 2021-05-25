@@ -12,26 +12,28 @@ const CurrencySymbol = @This();
 
 pub fn isCurrencySymbol(self: CurrencySymbol, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 36) return true;
-    if (cp >= 162 and cp <= 165) return true;
-    if (cp == 1423) return true;
-    if (cp == 1547) return true;
-    if (cp >= 2046 and cp <= 2047) return true;
-    if (cp >= 2546 and cp <= 2547) return true;
-    if (cp == 2555) return true;
-    if (cp == 2801) return true;
-    if (cp == 3065) return true;
-    if (cp == 3647) return true;
-    if (cp == 6107) return true;
-    if (cp >= 8352 and cp <= 8383) return true;
-    if (cp == 43064) return true;
-    if (cp == 65020) return true;
-    if (cp == 65129) return true;
-    if (cp == 65284) return true;
-    if (cp >= 65504 and cp <= 65505) return true;
-    if (cp >= 65509 and cp <= 65510) return true;
-    if (cp >= 73693 and cp <= 73696) return true;
-    if (cp == 123647) return true;
-    if (cp == 126128) return true;
-    return false;
+    return switch (cp) {
+        0x24 => true,
+        0xa2...0xa5 => true,
+        0x58f => true,
+        0x60b => true,
+        0x7fe...0x7ff => true,
+        0x9f2...0x9f3 => true,
+        0x9fb => true,
+        0xaf1 => true,
+        0xbf9 => true,
+        0xe3f => true,
+        0x17db => true,
+        0x20a0...0x20bf => true,
+        0xa838 => true,
+        0xfdfc => true,
+        0xfe69 => true,
+        0xff04 => true,
+        0xffe0...0xffe1 => true,
+        0xffe5...0xffe6 => true,
+        0x11fdd...0x11fe0 => true,
+        0x1e2ff => true,
+        0x1ecb0 => true,
+        else => false,
+    };
 }

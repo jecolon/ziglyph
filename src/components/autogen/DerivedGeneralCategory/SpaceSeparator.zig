@@ -12,12 +12,14 @@ const SpaceSeparator = @This();
 
 pub fn isSpaceSeparator(self: SpaceSeparator, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 32) return true;
-    if (cp == 160) return true;
-    if (cp == 5760) return true;
-    if (cp >= 8192 and cp <= 8202) return true;
-    if (cp == 8239) return true;
-    if (cp == 8287) return true;
-    if (cp == 12288) return true;
-    return false;
+    return switch (cp) {
+        0x20 => true,
+        0xa0 => true,
+        0x1680 => true,
+        0x2000...0x200a => true,
+        0x202f => true,
+        0x205f => true,
+        0x3000 => true,
+        else => false,
+    };
 }

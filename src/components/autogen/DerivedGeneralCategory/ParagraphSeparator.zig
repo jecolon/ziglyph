@@ -12,6 +12,8 @@ const ParagraphSeparator = @This();
 
 pub fn isParagraphSeparator(self: ParagraphSeparator, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 8233) return true;
-    return false;
+    return switch (cp) {
+        0x2029 => true,
+        else => false,
+    };
 }

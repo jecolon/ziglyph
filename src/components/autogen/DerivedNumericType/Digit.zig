@@ -12,25 +12,27 @@ const Digit = @This();
 
 pub fn isDigit(self: Digit, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 178 and cp <= 179) return true;
-    if (cp == 185) return true;
-    if (cp >= 4969 and cp <= 4977) return true;
-    if (cp == 6618) return true;
-    if (cp == 8304) return true;
-    if (cp >= 8308 and cp <= 8313) return true;
-    if (cp >= 8320 and cp <= 8329) return true;
-    if (cp >= 9312 and cp <= 9320) return true;
-    if (cp >= 9332 and cp <= 9340) return true;
-    if (cp >= 9352 and cp <= 9360) return true;
-    if (cp == 9450) return true;
-    if (cp >= 9461 and cp <= 9469) return true;
-    if (cp == 9471) return true;
-    if (cp >= 10102 and cp <= 10110) return true;
-    if (cp >= 10112 and cp <= 10120) return true;
-    if (cp >= 10122 and cp <= 10130) return true;
-    if (cp >= 68160 and cp <= 68163) return true;
-    if (cp >= 69216 and cp <= 69224) return true;
-    if (cp >= 69714 and cp <= 69722) return true;
-    if (cp >= 127232 and cp <= 127242) return true;
-    return false;
+    return switch (cp) {
+        0xb2...0xb3 => true,
+        0xb9 => true,
+        0x1369...0x1371 => true,
+        0x19da => true,
+        0x2070 => true,
+        0x2074...0x2079 => true,
+        0x2080...0x2089 => true,
+        0x2460...0x2468 => true,
+        0x2474...0x247c => true,
+        0x2488...0x2490 => true,
+        0x24ea => true,
+        0x24f5...0x24fd => true,
+        0x24ff => true,
+        0x2776...0x277e => true,
+        0x2780...0x2788 => true,
+        0x278a...0x2792 => true,
+        0x10a40...0x10a43 => true,
+        0x10e60...0x10e68 => true,
+        0x11052...0x1105a => true,
+        0x1f100...0x1f10a => true,
+        else => false,
+    };
 }

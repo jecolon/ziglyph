@@ -12,31 +12,33 @@ const DefaultIgnorableCodePoint = @This();
 
 pub fn isDefaultIgnorableCodePoint(self: DefaultIgnorableCodePoint, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 173) return true;
-    if (cp == 847) return true;
-    if (cp == 1564) return true;
-    if (cp >= 4447 and cp <= 4448) return true;
-    if (cp >= 6068 and cp <= 6069) return true;
-    if (cp >= 6155 and cp <= 6157) return true;
-    if (cp == 6158) return true;
-    if (cp >= 8203 and cp <= 8207) return true;
-    if (cp >= 8234 and cp <= 8238) return true;
-    if (cp >= 8288 and cp <= 8292) return true;
-    if (cp == 8293) return true;
-    if (cp >= 8294 and cp <= 8303) return true;
-    if (cp == 12644) return true;
-    if (cp >= 65024 and cp <= 65039) return true;
-    if (cp == 65279) return true;
-    if (cp == 65440) return true;
-    if (cp >= 65520 and cp <= 65528) return true;
-    if (cp >= 113824 and cp <= 113827) return true;
-    if (cp >= 119155 and cp <= 119162) return true;
-    if (cp == 917504) return true;
-    if (cp == 917505) return true;
-    if (cp >= 917506 and cp <= 917535) return true;
-    if (cp >= 917536 and cp <= 917631) return true;
-    if (cp >= 917632 and cp <= 917759) return true;
-    if (cp >= 917760 and cp <= 917999) return true;
-    if (cp >= 918000 and cp <= 921599) return true;
-    return false;
+    return switch (cp) {
+        0xad => true,
+        0x34f => true,
+        0x61c => true,
+        0x115f...0x1160 => true,
+        0x17b4...0x17b5 => true,
+        0x180b...0x180d => true,
+        0x180e => true,
+        0x200b...0x200f => true,
+        0x202a...0x202e => true,
+        0x2060...0x2064 => true,
+        0x2065 => true,
+        0x2066...0x206f => true,
+        0x3164 => true,
+        0xfe00...0xfe0f => true,
+        0xfeff => true,
+        0xffa0 => true,
+        0xfff0...0xfff8 => true,
+        0x1bca0...0x1bca3 => true,
+        0x1d173...0x1d17a => true,
+        0xe0000 => true,
+        0xe0001 => true,
+        0xe0002...0xe001f => true,
+        0xe0020...0xe007f => true,
+        0xe0080...0xe00ff => true,
+        0xe0100...0xe01ef => true,
+        0xe01f0...0xe0fff => true,
+        else => false,
+    };
 }

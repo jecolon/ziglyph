@@ -63,15 +63,15 @@ pub fn writeFile(self: *Collection, dir: []const u8) !void {
     for (self.records) |record| {
         switch (record) {
             .single => |cp| {
-                _ = try writer.print("    if (cp == {d}) return true;\n", .{cp});
+                _ = try writer.print("        0x{x} => true,\n", .{cp});
             },
             .range => |range| {
-                _ = try writer.print("    if (cp >= {d} and cp <= {d}) return true;\n", .{ range.lo, range.hi });
+                _ = try writer.print("        0x{x}...0x{x} => true,\n", .{ range.lo, range.hi });
             },
         }
     }
 
-    _ = try writer.write("    return false;\n}");
+    _ = try writer.write("        else => false,\n    };\n}");
     try buf_writer.flush();
 }
 

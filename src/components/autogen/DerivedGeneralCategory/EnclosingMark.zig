@@ -12,10 +12,12 @@ const EnclosingMark = @This();
 
 pub fn isEnclosingMark(self: EnclosingMark, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 1160 and cp <= 1161) return true;
-    if (cp == 6846) return true;
-    if (cp >= 8413 and cp <= 8416) return true;
-    if (cp >= 8418 and cp <= 8420) return true;
-    if (cp >= 42608 and cp <= 42610) return true;
-    return false;
+    return switch (cp) {
+        0x488...0x489 => true,
+        0x1abe => true,
+        0x20dd...0x20e0 => true,
+        0x20e2...0x20e4 => true,
+        0xa670...0xa672 => true,
+        else => false,
+    };
 }

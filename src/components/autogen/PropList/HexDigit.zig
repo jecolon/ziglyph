@@ -12,11 +12,13 @@ const HexDigit = @This();
 
 pub fn isHexDigit(self: HexDigit, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 48 and cp <= 57) return true;
-    if (cp >= 65 and cp <= 70) return true;
-    if (cp >= 97 and cp <= 102) return true;
-    if (cp >= 65296 and cp <= 65305) return true;
-    if (cp >= 65313 and cp <= 65318) return true;
-    if (cp >= 65345 and cp <= 65350) return true;
-    return false;
+    return switch (cp) {
+        0x30...0x39 => true,
+        0x41...0x46 => true,
+        0x61...0x66 => true,
+        0xff10...0xff19 => true,
+        0xff21...0xff26 => true,
+        0xff41...0xff46 => true,
+        else => false,
+    };
 }

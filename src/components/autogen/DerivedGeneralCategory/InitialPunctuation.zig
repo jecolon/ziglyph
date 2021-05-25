@@ -12,16 +12,18 @@ const InitialPunctuation = @This();
 
 pub fn isInitialPunctuation(self: InitialPunctuation, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 171) return true;
-    if (cp == 8216) return true;
-    if (cp >= 8219 and cp <= 8220) return true;
-    if (cp == 8223) return true;
-    if (cp == 8249) return true;
-    if (cp == 11778) return true;
-    if (cp == 11780) return true;
-    if (cp == 11785) return true;
-    if (cp == 11788) return true;
-    if (cp == 11804) return true;
-    if (cp == 11808) return true;
-    return false;
+    return switch (cp) {
+        0xab => true,
+        0x2018 => true,
+        0x201b...0x201c => true,
+        0x201f => true,
+        0x2039 => true,
+        0x2e02 => true,
+        0x2e04 => true,
+        0x2e09 => true,
+        0x2e0c => true,
+        0x2e1c => true,
+        0x2e20 => true,
+        else => false,
+    };
 }

@@ -12,6 +12,8 @@ const RegionalIndicator = @This();
 
 pub fn isRegionalIndicator(self: RegionalIndicator, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp >= 127462 and cp <= 127487) return true;
-    return false;
+    return switch (cp) {
+        0x1f1e6...0x1f1ff => true,
+        else => false,
+    };
 }

@@ -12,15 +12,17 @@ const FinalPunctuation = @This();
 
 pub fn isFinalPunctuation(self: FinalPunctuation, cp: u21) bool {
     if (cp < self.lo or cp > self.hi) return false;
-    if (cp == 187) return true;
-    if (cp == 8217) return true;
-    if (cp == 8221) return true;
-    if (cp == 8250) return true;
-    if (cp == 11779) return true;
-    if (cp == 11781) return true;
-    if (cp == 11786) return true;
-    if (cp == 11789) return true;
-    if (cp == 11805) return true;
-    if (cp == 11809) return true;
-    return false;
+    return switch (cp) {
+        0xbb => true,
+        0x2019 => true,
+        0x201d => true,
+        0x203a => true,
+        0x2e03 => true,
+        0x2e05 => true,
+        0x2e0a => true,
+        0x2e0d => true,
+        0x2e1d => true,
+        0x2e21 => true,
+        else => false,
+    };
 }
