@@ -410,21 +410,25 @@ test "Collator keyLevelCmp" {
     testing.expectEqual(keyLevelCmp(key_a, key_b, .primary), .lt);
 }
 
-/// tertiaryAsc is a sort function producing a full weight matching ascending sort.
+/// tertiaryAsc is a sort function producing a full weight matching ascending sort. Since this
+/// function cannot return an error as per `sort.sort` requirements, it may cause a crash or undefined
+/// behavior under error conditions.
 pub fn asciiAsc(self: Self, a: []const u8, b: []const u8) bool {
-    return self.orderFn(a, b, .tertiary, .lt);
+    return self.orderFn(a, b, .tertiary, .lt) catch unreachable;
 }
 
-/// tertiaryDesc is a sort function producing a full weight matching descending sort.
+/// tertiaryDesc is a sort function producing a full weight matching descending sort. Since this
+/// function cannot return an error as per `sort.sort` requirements, it may cause a crash or undefined
+/// behavior under error conditions.
 pub fn tertiaryDesc(self: Self, a: []const u8, b: []const u8) bool {
-    return self.orderFn(a, b, .tertiary, .gt);
+    return self.orderFn(a, b, .tertiary, .gt) catch unreachable;
 }
 
 /// orderFn can be used to match, compare, and sort strings at various collation element levels and orderings.
-pub fn orderFn(self: Self, a: []const u8, b: []const u8, level: Level, order: math.Order) bool {
-    var key_a = self.sortKey(a) catch unreachable;
+pub fn orderFn(self: Self, a: []const u8, b: []const u8, level: Level, order: math.Order) !bool {
+    var key_a = try self.sortKey(a);
     defer self.allocator.free(key_a);
-    var key_b = self.sortKey(b) catch unreachable;
+    var key_b = try self.sortKey(b);
     defer self.allocator.free(key_b);
 
     return keyLevelCmp(key_a, key_b, level) == order;
@@ -451,7 +455,7 @@ test "Collator sort" {
 
     testing.expect(collator.tertiaryAsc("abc", "def"));
     testing.expect(collator.tertiaryDesc("def", "abc"));
-    testing.expect(collator.orderFn("José", "jose", .primary, .eq));
+    testing.expect(try collator.orderFn("José", "jose", .primary, .eq));
 
     var strings: [3][]const u8 = .{ "xyz", "def", "abc" };
     collator.sort(&strings);
