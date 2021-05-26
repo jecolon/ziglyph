@@ -2,7 +2,7 @@ test "Ziglyph" {
     _ = @import("ziglyph.zig");
 }
 
-test "Normalization" {
+test "Normalizer" {
     _ = @import("components.zig").Normalizer;
 }
 
