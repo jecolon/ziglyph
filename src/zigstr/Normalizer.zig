@@ -154,28 +154,30 @@ pub const Form = enum {
 /// codePointTo takes a code point and returns a sequence of code points that represent its conversion 
 /// to the specified Form. Caller must free returned bytes.
 pub fn codePointTo(self: Self, allocator: *mem.Allocator, form: Form, cp: u21) anyerror![]u21 {
-    if (form == .D or form == .KD) {
-        // Decomposition.
-        if (self.isHangulPrecomposed(cp)) {
-            // Hangul precomposed syllable full decomposition.
-            const dcs = self.decomposeHangul(cp);
-            const len: usize = if (dcs[2] == 0) 2 else 3;
-            var result = try allocator.alloc(u21, len);
-            mem.copy(u21, result, dcs[0..len]);
-            return result;
-        } else {
-            // Non-Hangul code points.
-            const src = [1]Decomposed{.{ .src = cp }};
-            const dcs = try self.decomposeTo(allocator, form, &src);
-            defer allocator.free(dcs);
-            var result = try allocator.alloc(u21, dcs.len);
-            for (dcs) |dc, index| {
-                result[index] = dc.same;
-            }
-            return result;
-        }
+    if (form == .D and self.nfd_check.isNFD(cp)) {
+        var dcp = try allocator.alloc(u21, 1);
+        dcp[0] = cp;
+        return dcp;
+    }
+
+    // Decomposition.
+    if (self.isHangulPrecomposed(cp)) {
+        // Hangul precomposed syllable full decomposition.
+        const dcs = self.decomposeHangul(cp);
+        const len: usize = if (dcs[2] == 0) 2 else 3;
+        var result = try allocator.alloc(u21, len);
+        mem.copy(u21, result, dcs[0..len]);
+        return result;
     } else {
-        return error.FormUnimplemented;
+        // Non-Hangul code points.
+        const src = [1]Decomposed{.{ .src = cp }};
+        const dcs = try self.decomposeTo(allocator, form, &src);
+        defer allocator.free(dcs);
+        var result = try allocator.alloc(u21, dcs.len);
+        for (dcs) |dc, index| {
+            result[index] = dc.same;
+        }
+        return result;
     }
 }
 
@@ -194,9 +196,7 @@ pub fn decomposeTo(self: Self, allocator: *mem.Allocator, form: Form, dcs: []con
 
     // Freed by caller.
     var result = try allocator.alloc(Decomposed, rdcs.len);
-    for (rdcs) |dc, i| {
-        result[i] = dc;
-    }
+    mem.copy(Decomposed, result, rdcs);
 
     return result;
 }
@@ -211,36 +211,37 @@ fn decompD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anyer
     for (dcs) |dc| {
         switch (dc) {
             .src => |cp| {
-                const next_map = try self.mapping(cp);
-                if (next_map == .same) {
-                    try rdcs.append(next_map);
-                    return rdcs.toOwnedSlice();
-                } else if (next_map == .compat) {
-                    try rdcs.append(.{ .same = cp });
-                    return rdcs.toOwnedSlice();
-                } else {
-                    const m = [1]Decomposed{try self.mapping(cp)};
-                    try rdcs.appendSlice(try self.decomposeTo(allocator, .D, &m));
+                const m = try self.mapping(cp);
+                switch (m) {
+                    .same, .compat => {
+                        try rdcs.append(.{ .same = cp });
+                        return rdcs.toOwnedSlice();
+                    },
+                    else => {
+                        try rdcs.appendSlice(try self.decomposeTo(allocator, .D, &[_]Decomposed{m}));
+                    },
                 }
             },
             .same => try rdcs.append(dc),
-            .single => |cp| {
-                const next_map = try self.mapping(cp);
-                if (next_map == .same or next_map == .compat) {
-                    try rdcs.append(.{ .same = cp });
-                } else {
-                    const m = [1]Decomposed{try self.mapping(cp)};
-                    try rdcs.appendSlice(try self.decomposeTo(allocator, .D, &m));
+            .single => |cp| if (self.nfd_check.isNFD(cp)) {
+                try rdcs.append(.{ .same = cp });
+            } else {
+                const m = try self.mapping(cp);
+                switch (m) {
+                    .same, .compat => try rdcs.append(.{ .same = cp }),
+                    else => try rdcs.appendSlice(try self.decomposeTo(allocator, .D, &[_]Decomposed{m})),
                 }
             },
             .canon => |seq| {
                 for (seq) |cp| {
-                    const next_map = try self.mapping(cp);
-                    if (next_map == .same or next_map == .compat) {
+                    if (self.nfd_check.isNFD(cp)) {
                         try rdcs.append(.{ .same = cp });
                     } else {
-                        const m = [1]Decomposed{next_map};
-                        try rdcs.appendSlice(try self.decomposeTo(allocator, .D, &m));
+                        const m = try self.mapping(cp);
+                        switch (m) {
+                            .same, .compat => try rdcs.append(.{ .same = cp }),
+                            else => try rdcs.appendSlice(try self.decomposeTo(allocator, .D, &[_]Decomposed{m})),
+                        }
                     }
                 }
             },
@@ -307,8 +308,6 @@ fn finalizeAndEncode(self: Self, allocator: *mem.Allocator, code_points: []u21) 
 /// normalizeTo will normalize the code points in str, producing a slice of u8 with the new bytes
 /// corresponding to the specified Normalization Form. Caller must free returned bytes.
 pub fn normalizeTo(self: Self, allocator: *mem.Allocator, form: Form, str: []const u8) anyerror![]u8 {
-    if (form != .D and form != .KD) return error.FormUnimplemented;
-
     // Gather source code points.
     var code_points = std.ArrayList(u21).init(allocator);
     defer code_points.deinit();
@@ -347,8 +346,6 @@ pub fn normalizeTo(self: Self, allocator: *mem.Allocator, form: Form, str: []con
 /// normalizeCodePointsTo will normalize the code points in str, producing a new slice of code points
 /// corresponding to the specified Normalization Form. Caller must free returned bytes.
 pub fn normalizeCodePointsTo(self: Self, allocator: *mem.Allocator, form: Form, str: []const u8) anyerror![]u21 {
-    if (form != .D and form != .KD) return error.FormUnimplemented;
-
     // Gather source code points.
     var code_points = std.ArrayList(u21).init(allocator);
     defer code_points.deinit();
