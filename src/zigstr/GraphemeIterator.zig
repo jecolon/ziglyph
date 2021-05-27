@@ -249,10 +249,10 @@ fn fullAdvance(self: *Self) void {
 test "Grapheme ASCII" {
     var iter = try newAscii("Hi!");
 
-    std.testing.expectEqualStrings(iter.next().?.bytes, "H");
-    std.testing.expectEqualStrings(iter.next().?.bytes, "i");
-    std.testing.expectEqualStrings(iter.next().?.bytes, "!");
-    std.testing.expect(iter.next() == null);
+    try std.testing.expectEqualStrings(iter.next().?.bytes, "H");
+    try std.testing.expectEqualStrings(iter.next().?.bytes, "i");
+    try std.testing.expectEqualStrings(iter.next().?.bytes, "!");
+    try std.testing.expect(iter.next() == null);
 }
 
 test "Grapheme iterator" {
@@ -320,8 +320,8 @@ test "Grapheme iterator" {
         for (want.items) |w| {
             const g = (giter.next()).?;
             //std.debug.print("line {d}: w:({s}), g:({s})\n", .{ line_no, w.bytes, g.bytes });
-            std.testing.expect(w.eql(g.bytes));
-            std.testing.expectEqual(w.offset, g.offset);
+            try std.testing.expect(w.eql(g.bytes));
+            try std.testing.expectEqual(w.offset, g.offset);
         }
     }
 }

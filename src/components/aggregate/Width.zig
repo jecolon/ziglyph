@@ -239,44 +239,44 @@ const expectEqualSlices = std.testing.expectEqualSlices;
 test "Width Width" {
     var width = new();
 
-    expectEqual(@as(i8, -1), width.codePointWidth(0x0008, .half)); // \b
-    expectEqual(@as(i8, 0), width.codePointWidth(0x0000, .half)); // null
-    expectEqual(@as(i8, 0), width.codePointWidth(0x0005, .half)); // Cf
-    expectEqual(@as(i8, 0), width.codePointWidth(0x0007, .half)); // \a BEL
-    expectEqual(@as(i8, 0), width.codePointWidth(0x000A, .half)); // \n LF
-    expectEqual(@as(i8, 0), width.codePointWidth(0x000B, .half)); // \v VT
-    expectEqual(@as(i8, 0), width.codePointWidth(0x000C, .half)); // \f FF
-    expectEqual(@as(i8, 0), width.codePointWidth(0x000D, .half)); // \r CR
-    expectEqual(@as(i8, 0), width.codePointWidth(0x000E, .half)); // SQ
-    expectEqual(@as(i8, 0), width.codePointWidth(0x000F, .half)); // SI
+    try expectEqual(@as(i8, -1), width.codePointWidth(0x0008, .half)); // \b
+    try expectEqual(@as(i8, 0), width.codePointWidth(0x0000, .half)); // null
+    try expectEqual(@as(i8, 0), width.codePointWidth(0x0005, .half)); // Cf
+    try expectEqual(@as(i8, 0), width.codePointWidth(0x0007, .half)); // \a BEL
+    try expectEqual(@as(i8, 0), width.codePointWidth(0x000A, .half)); // \n LF
+    try expectEqual(@as(i8, 0), width.codePointWidth(0x000B, .half)); // \v VT
+    try expectEqual(@as(i8, 0), width.codePointWidth(0x000C, .half)); // \f FF
+    try expectEqual(@as(i8, 0), width.codePointWidth(0x000D, .half)); // \r CR
+    try expectEqual(@as(i8, 0), width.codePointWidth(0x000E, .half)); // SQ
+    try expectEqual(@as(i8, 0), width.codePointWidth(0x000F, .half)); // SI
 
-    expectEqual(@as(i8, 0), width.codePointWidth(0x070F, .half)); // Cf
-    expectEqual(@as(i8, 1), width.codePointWidth(0x0603, .half)); // Cf Arabic
+    try expectEqual(@as(i8, 0), width.codePointWidth(0x070F, .half)); // Cf
+    try expectEqual(@as(i8, 1), width.codePointWidth(0x0603, .half)); // Cf Arabic
 
-    expectEqual(@as(i8, 1), width.codePointWidth(0x00AD, .half)); // soft-hyphen
-    expectEqual(@as(i8, 2), width.codePointWidth(0x2E3A, .half)); // two-em dash
-    expectEqual(@as(i8, 3), width.codePointWidth(0x2E3B, .half)); // three-em dash
+    try expectEqual(@as(i8, 1), width.codePointWidth(0x00AD, .half)); // soft-hyphen
+    try expectEqual(@as(i8, 2), width.codePointWidth(0x2E3A, .half)); // two-em dash
+    try expectEqual(@as(i8, 3), width.codePointWidth(0x2E3B, .half)); // three-em dash
 
-    expectEqual(@as(i8, 1), width.codePointWidth(0x00BD, .half)); // ambiguous halfwidth
-    expectEqual(@as(i8, 2), width.codePointWidth(0x00BD, .full)); // ambiguous fullwidth
+    try expectEqual(@as(i8, 1), width.codePointWidth(0x00BD, .half)); // ambiguous halfwidth
+    try expectEqual(@as(i8, 2), width.codePointWidth(0x00BD, .full)); // ambiguous fullwidth
 
-    expectEqual(@as(i8, 1), width.codePointWidth('é', .half));
-    expectEqual(@as(i8, 2), width.codePointWidth('😊', .half));
-    expectEqual(@as(i8, 2), width.codePointWidth('统', .half));
+    try expectEqual(@as(i8, 1), width.codePointWidth('é', .half));
+    try expectEqual(@as(i8, 2), width.codePointWidth('😊', .half));
+    try expectEqual(@as(i8, 2), width.codePointWidth('统', .half));
 
-    expectEqual(@as(usize, 5), try width.strWidth("Hello\r\n", .half));
-    expectEqual(@as(usize, 1), try width.strWidth("\u{0065}\u{0301}", .half));
-    expectEqual(@as(usize, 2), try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half));
-    expectEqual(@as(usize, 8), try width.strWidth("Hello 😊", .half));
-    expectEqual(@as(usize, 8), try width.strWidth("Héllo 😊", .half));
-    expectEqual(@as(usize, 8), try width.strWidth("Héllo :)", .half));
-    expectEqual(@as(usize, 8), try width.strWidth("Héllo 🇪🇸", .half));
-    expectEqual(@as(usize, 2), try width.strWidth("\u{26A1}", .half)); // Lone emoji
-    expectEqual(@as(usize, 1), try width.strWidth("\u{26A1}\u{FE0E}", .half)); // Text sequence
-    expectEqual(@as(usize, 2), try width.strWidth("\u{26A1}\u{FE0F}", .half)); // Presentation sequence
-    expectEqual(@as(usize, 0), try width.strWidth("A\x08", .half)); // Backspace
-    expectEqual(@as(usize, 0), try width.strWidth("\x7FA", .half)); // DEL
-    expectEqual(@as(usize, 0), try width.strWidth("\x7FA\x08\x08", .half)); // never less than o
+    try expectEqual(@as(usize, 5), try width.strWidth("Hello\r\n", .half));
+    try expectEqual(@as(usize, 1), try width.strWidth("\u{0065}\u{0301}", .half));
+    try expectEqual(@as(usize, 2), try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half));
+    try expectEqual(@as(usize, 8), try width.strWidth("Hello 😊", .half));
+    try expectEqual(@as(usize, 8), try width.strWidth("Héllo 😊", .half));
+    try expectEqual(@as(usize, 8), try width.strWidth("Héllo :)", .half));
+    try expectEqual(@as(usize, 8), try width.strWidth("Héllo 🇪🇸", .half));
+    try expectEqual(@as(usize, 2), try width.strWidth("\u{26A1}", .half)); // Lone emoji
+    try expectEqual(@as(usize, 1), try width.strWidth("\u{26A1}\u{FE0E}", .half)); // Text sequence
+    try expectEqual(@as(usize, 2), try width.strWidth("\u{26A1}\u{FE0F}", .half)); // Presentation sequence
+    try expectEqual(@as(usize, 0), try width.strWidth("A\x08", .half)); // Backspace
+    try expectEqual(@as(usize, 0), try width.strWidth("\x7FA", .half)); // DEL
+    try expectEqual(@as(usize, 0), try width.strWidth("\x7FA\x08\x08", .half)); // never less than o
 }
 
 test "Width center" {
@@ -285,11 +285,11 @@ test "Width center" {
 
     var centered = try width.center(allocator, "abc", 9, "*");
     defer allocator.free(centered);
-    expectEqualSlices(u8, "***abc***", centered);
+    try expectEqualSlices(u8, "***abc***", centered);
 
     allocator.free(centered);
     centered = try width.center(allocator, "w😊w", 10, "-");
-    expectEqualSlices(u8, "---w😊w---", centered);
+    try expectEqualSlices(u8, "---w😊w---", centered);
 }
 
 test "Width padLeft" {
@@ -298,11 +298,11 @@ test "Width padLeft" {
 
     var right_aligned = try width.padLeft(allocator, "abc", 9, "*");
     defer allocator.free(right_aligned);
-    expectEqualSlices(u8, "******abc", right_aligned);
+    try expectEqualSlices(u8, "******abc", right_aligned);
 
     allocator.free(right_aligned);
     right_aligned = try width.padLeft(allocator, "w😊w", 10, "-");
-    expectEqualSlices(u8, "------w😊w", right_aligned);
+    try expectEqualSlices(u8, "------w😊w", right_aligned);
 }
 
 test "Width padRight" {
@@ -311,9 +311,9 @@ test "Width padRight" {
 
     var left_aligned = try width.padRight(allocator, "abc", 9, "*");
     defer allocator.free(left_aligned);
-    expectEqualSlices(u8, "abc******", left_aligned);
+    try expectEqualSlices(u8, "abc******", left_aligned);
 
     allocator.free(left_aligned);
     left_aligned = try width.padRight(allocator, "w😊w", 10, "-");
-    expectEqualSlices(u8, "w😊w------", left_aligned);
+    try expectEqualSlices(u8, "w😊w------", left_aligned);
 }

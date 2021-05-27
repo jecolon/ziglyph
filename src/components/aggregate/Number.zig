@@ -75,11 +75,11 @@ test "Component isDecimal" {
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        expect(number.isDecimal(cp));
+        try expect(number.isDecimal(cp));
     }
 
-    expect(!number.isDecimal('\u{0003}'));
-    expect(!number.isDecimal('A'));
+    try expect(!number.isDecimal('\u{0003}'));
+    try expect(!number.isDecimal('A'));
 }
 
 test "Component isHexDigit" {
@@ -87,11 +87,11 @@ test "Component isHexDigit" {
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        expect(number.isHexDigit(cp));
+        try expect(number.isHexDigit(cp));
     }
 
-    expect(!number.isHexDigit('\u{0003}'));
-    expect(!number.isHexDigit('Z'));
+    try expect(!number.isHexDigit('\u{0003}'));
+    try expect(!number.isHexDigit('Z'));
 }
 
 test "Component isNumber" {
@@ -99,9 +99,9 @@ test "Component isNumber" {
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        expect(number.isNumber(cp));
+        try expect(number.isNumber(cp));
     }
 
-    expect(!number.isNumber('\u{0003}'));
-    expect(!number.isNumber('A'));
+    try expect(!number.isNumber('\u{0003}'));
+    try expect(!number.isNumber('A'));
 }

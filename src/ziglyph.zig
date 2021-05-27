@@ -269,62 +269,62 @@ const expectEqual = std.testing.expectEqual;
 
 test "Ziglyph ASCII methods" {
     const z = 'F';
-    expect(Ziglyph.isAsciiAlphabetic(z));
-    expect(Ziglyph.isAsciiAlphaNum(z));
-    expect(Ziglyph.isAsciiHexDigit(z));
-    expect(Ziglyph.isAsciiGraphic(z));
-    expect(Ziglyph.isAsciiPrint(z));
-    expect(Ziglyph.isAsciiUpper(z));
-    expect(!Ziglyph.isAsciiControl(z));
-    expect(!Ziglyph.isAsciiDigit(z));
-    expect(!Ziglyph.isAsciiNumber(z));
-    expect(!Ziglyph.isAsciiLower(z));
-    expectEqual(Ziglyph.toAsciiLower(z), 'f');
-    expectEqual(Ziglyph.toAsciiUpper('a'), 'A');
-    expect(Ziglyph.isAsciiLower(Ziglyph.toAsciiLower(z)));
+    try expect(Ziglyph.isAsciiAlphabetic(z));
+    try expect(Ziglyph.isAsciiAlphaNum(z));
+    try expect(Ziglyph.isAsciiHexDigit(z));
+    try expect(Ziglyph.isAsciiGraphic(z));
+    try expect(Ziglyph.isAsciiPrint(z));
+    try expect(Ziglyph.isAsciiUpper(z));
+    try expect(!Ziglyph.isAsciiControl(z));
+    try expect(!Ziglyph.isAsciiDigit(z));
+    try expect(!Ziglyph.isAsciiNumber(z));
+    try expect(!Ziglyph.isAsciiLower(z));
+    try expectEqual(Ziglyph.toAsciiLower(z), 'f');
+    try expectEqual(Ziglyph.toAsciiUpper('a'), 'A');
+    try expect(Ziglyph.isAsciiLower(Ziglyph.toAsciiLower(z)));
 }
 
 test "Ziglyph struct" {
     var ziglyph = Ziglyph.new();
 
     const z = 'z';
-    expect(ziglyph.isAlphaNum(z));
-    expect(!ziglyph.isControl(z));
-    expect(!ziglyph.isDecimal(z));
-    expect(!ziglyph.isDigit(z));
-    expect(!ziglyph.isHexDigit(z));
-    expect(ziglyph.isGraphic(z));
-    expect(ziglyph.isLetter(z));
-    expect(ziglyph.isLower(z));
-    expect(!ziglyph.isMark(z));
-    expect(!ziglyph.isNumber(z));
-    expect(ziglyph.isPrint(z));
-    expect(!ziglyph.isPunct(z));
-    expect(!ziglyph.isWhiteSpace(z));
-    expect(!ziglyph.isSymbol(z));
-    expect(!ziglyph.isTitle(z));
-    expect(!ziglyph.isUpper(z));
+    try expect(ziglyph.isAlphaNum(z));
+    try expect(!ziglyph.isControl(z));
+    try expect(!ziglyph.isDecimal(z));
+    try expect(!ziglyph.isDigit(z));
+    try expect(!ziglyph.isHexDigit(z));
+    try expect(ziglyph.isGraphic(z));
+    try expect(ziglyph.isLetter(z));
+    try expect(ziglyph.isLower(z));
+    try expect(!ziglyph.isMark(z));
+    try expect(!ziglyph.isNumber(z));
+    try expect(ziglyph.isPrint(z));
+    try expect(!ziglyph.isPunct(z));
+    try expect(!ziglyph.isWhiteSpace(z));
+    try expect(!ziglyph.isSymbol(z));
+    try expect(!ziglyph.isTitle(z));
+    try expect(!ziglyph.isUpper(z));
     const uz = ziglyph.toUpper(z);
-    expect(ziglyph.isUpper(uz));
-    expectEqual(uz, 'Z');
+    try expect(ziglyph.isUpper(uz));
+    try expectEqual(uz, 'Z');
     const lz = ziglyph.toLower(uz);
-    expect(ziglyph.isLower(lz));
-    expectEqual(lz, 'z');
+    try expect(ziglyph.isLower(lz));
+    try expectEqual(lz, 'z');
     const tz = ziglyph.toTitle(lz);
-    expect(ziglyph.isUpper(tz));
-    expectEqual(tz, 'Z');
+    try expect(ziglyph.isUpper(tz));
+    try expectEqual(tz, 'Z');
 }
 
 test "Ziglyph isGraphic" {
     var ziglyph = Ziglyph.new();
 
-    expect(ziglyph.isGraphic('A'));
-    expect(ziglyph.isGraphic('\u{20E4}'));
-    expect(ziglyph.isGraphic('1'));
-    expect(ziglyph.isGraphic('?'));
-    expect(ziglyph.isGraphic(' '));
-    expect(ziglyph.isGraphic('='));
-    expect(!ziglyph.isGraphic('\u{0003}'));
+    try expect(ziglyph.isGraphic('A'));
+    try expect(ziglyph.isGraphic('\u{20E4}'));
+    try expect(ziglyph.isGraphic('1'));
+    try expect(ziglyph.isGraphic('?'));
+    try expect(ziglyph.isGraphic(' '));
+    try expect(ziglyph.isGraphic('='));
+    try expect(!ziglyph.isGraphic('\u{0003}'));
 }
 
 test "Ziglyph isHexDigit" {
@@ -332,34 +332,34 @@ test "Ziglyph isHexDigit" {
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        expect(ziglyph.isHexDigit(cp));
+        try expect(ziglyph.isHexDigit(cp));
     }
 
     cp = 'A';
     while (cp <= 'F') : (cp += 1) {
-        expect(ziglyph.isHexDigit(cp));
+        try expect(ziglyph.isHexDigit(cp));
     }
 
     cp = 'a';
     while (cp <= 'f') : (cp += 1) {
-        expect(ziglyph.isHexDigit(cp));
+        try expect(ziglyph.isHexDigit(cp));
     }
 
-    expect(!ziglyph.isHexDigit('\u{0003}'));
-    expect(!ziglyph.isHexDigit('Z'));
+    try expect(!ziglyph.isHexDigit('\u{0003}'));
+    try expect(!ziglyph.isHexDigit('Z'));
 }
 
 test "Ziglyph isPrint" {
     var ziglyph = Ziglyph.new();
 
-    expect(ziglyph.isPrint('A'));
-    expect(ziglyph.isPrint('\u{20E4}'));
-    expect(ziglyph.isPrint('1'));
-    expect(ziglyph.isPrint('?'));
-    expect(ziglyph.isPrint('='));
-    expect(ziglyph.isPrint(' '));
-    expect(ziglyph.isPrint('\t'));
-    expect(!ziglyph.isPrint('\u{0003}'));
+    try expect(ziglyph.isPrint('A'));
+    try expect(ziglyph.isPrint('\u{20E4}'));
+    try expect(ziglyph.isPrint('1'));
+    try expect(ziglyph.isPrint('?'));
+    try expect(ziglyph.isPrint('='));
+    try expect(ziglyph.isPrint(' '));
+    try expect(ziglyph.isPrint('\t'));
+    try expect(!ziglyph.isPrint('\u{0003}'));
 }
 
 test "Ziglyph isAlphaNum" {
@@ -367,29 +367,29 @@ test "Ziglyph isAlphaNum" {
 
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        expect(ziglyph.isAlphaNum(cp));
+        try expect(ziglyph.isAlphaNum(cp));
     }
 
     cp = 'a';
     while (cp <= 'z') : (cp += 1) {
-        expect(ziglyph.isAlphaNum(cp));
+        try expect(ziglyph.isAlphaNum(cp));
     }
 
     cp = 'A';
     while (cp <= 'Z') : (cp += 1) {
-        expect(ziglyph.isAlphaNum(cp));
+        try expect(ziglyph.isAlphaNum(cp));
     }
 
-    expect(!ziglyph.isAlphaNum('='));
+    try expect(!ziglyph.isAlphaNum('='));
 }
 
 test "Ziglyph isControl" {
     var ziglyph = Ziglyph.new();
 
-    expect(ziglyph.isControl('\n'));
-    expect(ziglyph.isControl('\r'));
-    expect(ziglyph.isControl('\t'));
-    expect(ziglyph.isControl('\u{0003}'));
-    expect(ziglyph.isControl('\u{0012}'));
-    expect(!ziglyph.isControl('A'));
+    try expect(ziglyph.isControl('\n'));
+    try expect(ziglyph.isControl('\r'));
+    try expect(ziglyph.isControl('\t'));
+    try expect(ziglyph.isControl('\u{0003}'));
+    try expect(ziglyph.isControl('\u{0012}'));
+    try expect(!ziglyph.isControl('A'));
 }

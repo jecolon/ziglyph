@@ -104,12 +104,12 @@ test "Collator Trie" {
     try trie.add(&[_]u21{ 1, 2, 3 }, a2);
 
     var lookup = trie.find(&[_]u21{ 1, 2 });
-    testing.expectEqual(@as(usize, 1), lookup.index);
-    testing.expectEqualSlices(?Element, &a1, &lookup.value.?);
+    try testing.expectEqual(@as(usize, 1), lookup.index);
+    try testing.expectEqualSlices(?Element, &a1, &lookup.value.?);
     lookup = trie.find(&[_]u21{ 1, 2, 3 });
-    testing.expectEqual(@as(usize, 2), lookup.index);
-    testing.expectEqualSlices(?Element, &a2, &lookup.value.?);
+    try testing.expectEqual(@as(usize, 2), lookup.index);
+    try testing.expectEqualSlices(?Element, &a2, &lookup.value.?);
     lookup = trie.find(&[_]u21{1});
-    testing.expectEqual(@as(usize, 0), lookup.index);
-    testing.expect(lookup.value == null);
+    try testing.expectEqual(@as(usize, 0), lookup.index);
+    try testing.expect(lookup.value == null);
 }

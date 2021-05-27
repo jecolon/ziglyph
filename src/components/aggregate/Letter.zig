@@ -141,32 +141,32 @@ test "Component struct" {
     var letter = new();
 
     const z = 'z';
-    expect(letter.isLetter(z));
-    expect(!letter.isUpper(z));
+    try expect(letter.isLetter(z));
+    try expect(!letter.isUpper(z));
     const uz = letter.toUpper(z);
-    expect(letter.isUpper(uz));
-    expectEqual(uz, 'Z');
+    try expect(letter.isUpper(uz));
+    try expectEqual(uz, 'Z');
 }
 
 test "Component isCased" {
     var letter = new();
 
-    expect(letter.isCased('a'));
-    expect(letter.isCased('A'));
-    expect(!letter.isCased('1'));
+    try expect(letter.isCased('a'));
+    try expect(letter.isCased('A'));
+    try expect(!letter.isCased('1'));
 }
 
 test "Component isLower" {
     var letter = new();
 
-    expect(letter.isLower('a'));
-    expect(letter.isLower('é'));
-    expect(letter.isLower('i'));
-    expect(!letter.isLower('A'));
-    expect(!letter.isLower('É'));
-    expect(!letter.isLower('İ'));
+    try expect(letter.isLower('a'));
+    try expect(letter.isLower('é'));
+    try expect(letter.isLower('i'));
+    try expect(!letter.isLower('A'));
+    try expect(!letter.isLower('É'));
+    try expect(!letter.isLower('İ'));
     // Numbers are lower, upper, and title all at once.
-    expect(letter.isLower('1'));
+    try expect(letter.isLower('1'));
 }
 
 const expectEqualSlices = std.testing.expectEqualSlices;
@@ -175,83 +175,83 @@ test "Component toCaseFold" {
     var letter = new();
 
     var result = letter.toCaseFold('A');
-    expectEqualSlices(u21, &[_]u21{ 'a', 0, 0 }, &result);
+    try expectEqualSlices(u21, &[_]u21{ 'a', 0, 0 }, &result);
 
     result = letter.toCaseFold('a');
-    expectEqualSlices(u21, &[_]u21{ 'a', 0, 0 }, &result);
+    try expectEqualSlices(u21, &[_]u21{ 'a', 0, 0 }, &result);
 
     result = letter.toCaseFold('1');
-    expectEqualSlices(u21, &[_]u21{ '1', 0, 0 }, &result);
+    try expectEqualSlices(u21, &[_]u21{ '1', 0, 0 }, &result);
 
     result = letter.toCaseFold('\u{00DF}');
-    expectEqualSlices(u21, &[_]u21{ 0x0073, 0x0073, 0 }, &result);
+    try expectEqualSlices(u21, &[_]u21{ 0x0073, 0x0073, 0 }, &result);
 
     result = letter.toCaseFold('\u{0390}');
-    expectEqualSlices(u21, &[_]u21{ 0x03B9, 0x0308, 0x0301 }, &result);
+    try expectEqualSlices(u21, &[_]u21{ 0x03B9, 0x0308, 0x0301 }, &result);
 }
 
 test "Component toLower" {
     var letter = new();
 
-    expectEqual(letter.toLower('a'), 'a');
-    expectEqual(letter.toLower('A'), 'a');
-    expectEqual(letter.toLower('İ'), 'i');
-    expectEqual(letter.toLower('É'), 'é');
-    expectEqual(letter.toLower(0x80), 0x80);
-    expectEqual(letter.toLower(0x80), 0x80);
-    expectEqual(letter.toLower('Å'), 'å');
-    expectEqual(letter.toLower('å'), 'å');
-    expectEqual(letter.toLower('\u{212A}'), 'k');
-    expectEqual(letter.toLower('1'), '1');
+    try expectEqual(letter.toLower('a'), 'a');
+    try expectEqual(letter.toLower('A'), 'a');
+    try expectEqual(letter.toLower('İ'), 'i');
+    try expectEqual(letter.toLower('É'), 'é');
+    try expectEqual(letter.toLower(0x80), 0x80);
+    try expectEqual(letter.toLower(0x80), 0x80);
+    try expectEqual(letter.toLower('Å'), 'å');
+    try expectEqual(letter.toLower('å'), 'å');
+    try expectEqual(letter.toLower('\u{212A}'), 'k');
+    try expectEqual(letter.toLower('1'), '1');
 }
 
 test "Component isUpper" {
     var letter = new();
 
-    expect(!letter.isUpper('a'));
-    expect(!letter.isUpper('é'));
-    expect(!letter.isUpper('i'));
-    expect(letter.isUpper('A'));
-    expect(letter.isUpper('É'));
-    expect(letter.isUpper('İ'));
+    try expect(!letter.isUpper('a'));
+    try expect(!letter.isUpper('é'));
+    try expect(!letter.isUpper('i'));
+    try expect(letter.isUpper('A'));
+    try expect(letter.isUpper('É'));
+    try expect(letter.isUpper('İ'));
     // Numbers are lower, upper, and title all at once.
-    expect(letter.isUpper('1'));
+    try expect(letter.isUpper('1'));
 }
 
 test "Component toUpper" {
     var letter = new();
 
-    expectEqual(letter.toUpper('a'), 'A');
-    expectEqual(letter.toUpper('A'), 'A');
-    expectEqual(letter.toUpper('i'), 'I');
-    expectEqual(letter.toUpper('é'), 'É');
-    expectEqual(letter.toUpper(0x80), 0x80);
-    expectEqual(letter.toUpper('Å'), 'Å');
-    expectEqual(letter.toUpper('å'), 'Å');
-    expectEqual(letter.toUpper('1'), '1');
+    try expectEqual(letter.toUpper('a'), 'A');
+    try expectEqual(letter.toUpper('A'), 'A');
+    try expectEqual(letter.toUpper('i'), 'I');
+    try expectEqual(letter.toUpper('é'), 'É');
+    try expectEqual(letter.toUpper(0x80), 0x80);
+    try expectEqual(letter.toUpper('Å'), 'Å');
+    try expectEqual(letter.toUpper('å'), 'Å');
+    try expectEqual(letter.toUpper('1'), '1');
 }
 
 test "Component isTitle" {
     var letter = new();
 
-    expect(!letter.isTitle('a'));
-    expect(!letter.isTitle('é'));
-    expect(!letter.isTitle('i'));
-    expect(letter.isTitle('\u{1FBC}'));
-    expect(letter.isTitle('\u{1FCC}'));
-    expect(letter.isTitle('ǈ'));
+    try expect(!letter.isTitle('a'));
+    try expect(!letter.isTitle('é'));
+    try expect(!letter.isTitle('i'));
+    try expect(letter.isTitle('\u{1FBC}'));
+    try expect(letter.isTitle('\u{1FCC}'));
+    try expect(letter.isTitle('ǈ'));
     // Numbers are lower, upper, and title all at once.
-    expect(letter.isTitle('1'));
+    try expect(letter.isTitle('1'));
 }
 
 test "Component toTitle" {
     var letter = new();
 
-    expectEqual(letter.toTitle('a'), 'A');
-    expectEqual(letter.toTitle('A'), 'A');
-    expectEqual(letter.toTitle('i'), 'I');
-    expectEqual(letter.toTitle('é'), 'É');
-    expectEqual(letter.toTitle('1'), '1');
+    try expectEqual(letter.toTitle('a'), 'A');
+    try expectEqual(letter.toTitle('A'), 'A');
+    try expectEqual(letter.toTitle('i'), 'I');
+    try expectEqual(letter.toTitle('é'), 'É');
+    try expectEqual(letter.toTitle('1'), '1');
 }
 
 test "Component isLetter" {
@@ -259,15 +259,15 @@ test "Component isLetter" {
 
     var cp: u21 = 'a';
     while (cp <= 'z') : (cp += 1) {
-        expect(letter.isLetter(cp));
+        try expect(letter.isLetter(cp));
     }
 
     cp = 'A';
     while (cp <= 'Z') : (cp += 1) {
-        expect(letter.isLetter(cp));
+        try expect(letter.isLetter(cp));
     }
 
-    expect(letter.isLetter('É'));
-    expect(letter.isLetter('\u{2CEB3}'));
-    expect(!letter.isLetter('\u{0003}'));
+    try expect(letter.isLetter('É'));
+    try expect(letter.isLetter('\u{2CEB3}'));
+    try expect(!letter.isLetter('\u{0003}'));
 }

@@ -28,6 +28,6 @@ const expect = std.testing.expect;
 test "Component isMark" {
     var mark = new();
 
-    expect(mark.isMark('\u{20E4}'));
-    expect(!mark.isMark('='));
+    try expect(mark.isMark('\u{20E4}'));
+    try expect(!mark.isMark('='));
 }

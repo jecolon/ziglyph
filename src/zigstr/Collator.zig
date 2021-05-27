@@ -298,18 +298,23 @@ pub fn asciiCmp(a: []const u8, b: []const u8) math.Order {
 }
 
 test "Collator ASCII compare" {
-    testing.expectEqual(asciiCmp("abc", "def"), .lt);
-    testing.expectEqual(asciiCmp("Abc", "abc"), .lt);
-    testing.expectEqual(asciiCmp("abc", "abcd"), .lt);
-    testing.expectEqual(asciiCmp("abc", "abc"), .eq);
-    testing.expectEqual(asciiCmp("dbc", "abc"), .gt);
-    testing.expectEqual(asciiCmp("adc", "abc"), .gt);
-    testing.expectEqual(asciiCmp("abd", "abc"), .gt);
+    try testing.expectEqual(asciiCmp("abc", "def"), .lt);
+    try testing.expectEqual(asciiCmp("Abc", "abc"), .lt);
+    try testing.expectEqual(asciiCmp("abc", "abcd"), .lt);
+    try testing.expectEqual(asciiCmp("abc", "abc"), .eq);
+    try testing.expectEqual(asciiCmp("dbc", "abc"), .gt);
+    try testing.expectEqual(asciiCmp("adc", "abc"), .gt);
+    try testing.expectEqual(asciiCmp("abd", "abc"), .gt);
 }
 
 /// asciiAsc is a sort function producing ascending binary order of ASCII strings.
-pub fn tertiaryAsc(self: Self, a: []const u8, b: []const u8) bool {
+pub fn asciiAsc(self: Self, a: []const u8, b: []const u8) bool {
     return asciiCmp(a, b) == .lt;
+}
+
+/// asciiDesc is a sort function producing descending binary order of ASCII strings.
+pub fn asciiDesc(self: Self, a: []const u8, b: []const u8) bool {
+    return asciiCmp(a, b) == .gt;
 }
 
 pub const Level = enum {
@@ -387,33 +392,33 @@ test "Collator keyLevelCmp" {
     var key_b = try collator.sortKey("Cab");
     defer allocator.free(key_b);
 
-    testing.expectEqual(keyLevelCmp(key_a, key_b, .tertiary), .lt);
-    testing.expectEqual(keyLevelCmp(key_a, key_b, .secondary), .eq);
-    testing.expectEqual(keyLevelCmp(key_a, key_b, .primary), .eq);
+    try testing.expectEqual(keyLevelCmp(key_a, key_b, .tertiary), .lt);
+    try testing.expectEqual(keyLevelCmp(key_a, key_b, .secondary), .eq);
+    try testing.expectEqual(keyLevelCmp(key_a, key_b, .primary), .eq);
 
     allocator.free(key_a);
     key_a = try collator.sortKey("Cab");
     allocator.free(key_b);
     key_b = try collator.sortKey("cáb");
 
-    testing.expectEqual(keyLevelCmp(key_a, key_b, .tertiary), .lt);
-    testing.expectEqual(keyLevelCmp(key_a, key_b, .secondary), .lt);
-    testing.expectEqual(keyLevelCmp(key_a, key_b, .primary), .eq);
+    try testing.expectEqual(keyLevelCmp(key_a, key_b, .tertiary), .lt);
+    try testing.expectEqual(keyLevelCmp(key_a, key_b, .secondary), .lt);
+    try testing.expectEqual(keyLevelCmp(key_a, key_b, .primary), .eq);
 
     allocator.free(key_a);
     key_a = try collator.sortKey("cáb");
     allocator.free(key_b);
     key_b = try collator.sortKey("dab");
 
-    testing.expectEqual(keyLevelCmp(key_a, key_b, .tertiary), .lt);
-    testing.expectEqual(keyLevelCmp(key_a, key_b, .secondary), .lt);
-    testing.expectEqual(keyLevelCmp(key_a, key_b, .primary), .lt);
+    try testing.expectEqual(keyLevelCmp(key_a, key_b, .tertiary), .lt);
+    try testing.expectEqual(keyLevelCmp(key_a, key_b, .secondary), .lt);
+    try testing.expectEqual(keyLevelCmp(key_a, key_b, .primary), .lt);
 }
 
 /// tertiaryAsc is a sort function producing a full weight matching ascending sort. Since this
 /// function cannot return an error as per `sort.sort` requirements, it may cause a crash or undefined
 /// behavior under error conditions.
-pub fn asciiAsc(self: Self, a: []const u8, b: []const u8) bool {
+pub fn tertiaryAsc(self: Self, a: []const u8, b: []const u8) bool {
     return self.orderFn(a, b, .tertiary, .lt) catch unreachable;
 }
 
@@ -434,14 +439,24 @@ pub fn orderFn(self: Self, a: []const u8, b: []const u8, level: Level, order: ma
     return keyLevelCmp(key_a, key_b, level) == order;
 }
 
-/// sort orders the strings in `strings` in ascending full tertiary level order.
-pub fn sort(self: Self, strings: [][]const u8) void {
+/// sortAsc orders the strings in `strings` in ascending full tertiary level order.
+pub fn sortAsc(self: Self, strings: [][]const u8) void {
     zort([]const u8, strings, self, tertiaryAsc);
 }
 
-/// sort orders the strings in `strings` in ascending full tertiary level order.
-pub fn sortAscii(self: Self, strings: [][]const u8) void {
+/// sortDesc orders the strings in `strings` in ascending full tertiary level order.
+pub fn sortDesc(self: Self, strings: [][]const u8) void {
+    zort([]const u8, strings, self, tertiaryDesc);
+}
+
+/// sortAsciiAsc orders the strings in `strings` in ASCII ascending order.
+pub fn sortAsciiAsc(self: Self, strings: [][]const u8) void {
     zort([]const u8, strings, self, asciiAsc);
+}
+
+/// sortAsciiDesc orders the strings in `strings` in ASCII ascending order.
+pub fn sortAsciiDesc(self: Self, strings: [][]const u8) void {
+    zort([]const u8, strings, self, asciiDesc);
 }
 
 const testing = std.testing;
@@ -453,21 +468,31 @@ test "Collator sort" {
     var collator = try init(allocator, "src/data/uca/allkeys.txt", &normalizer);
     defer collator.deinit();
 
-    testing.expect(collator.tertiaryAsc("abc", "def"));
-    testing.expect(collator.tertiaryDesc("def", "abc"));
-    testing.expect(try collator.orderFn("José", "jose", .primary, .eq));
+    try testing.expect(collator.tertiaryAsc("abc", "def"));
+    try testing.expect(collator.tertiaryDesc("def", "abc"));
+    try testing.expect(collator.asciiAsc("abc", "def"));
+    try testing.expect(collator.asciiDesc("def", "abc"));
+    try testing.expect(try collator.orderFn("José", "jose", .primary, .eq));
 
     var strings: [3][]const u8 = .{ "xyz", "def", "abc" };
-    collator.sort(&strings);
-    testing.expectEqual(strings[0], "abc");
-    testing.expectEqual(strings[1], "def");
-    testing.expectEqual(strings[2], "xyz");
+    collator.sortAsc(&strings);
+    try testing.expectEqual(strings[0], "abc");
+    try testing.expectEqual(strings[1], "def");
+    try testing.expectEqual(strings[2], "xyz");
+    collator.sortDesc(&strings);
+    try testing.expectEqual(strings[0], "xyz");
+    try testing.expectEqual(strings[1], "def");
+    try testing.expectEqual(strings[2], "abc");
 
     strings = .{ "xyz", "def", "abc" };
-    collator.sortAscii(&strings);
-    testing.expectEqual(strings[0], "abc");
-    testing.expectEqual(strings[1], "def");
-    testing.expectEqual(strings[2], "xyz");
+    collator.sortAsciiAsc(&strings);
+    try testing.expectEqual(strings[0], "abc");
+    try testing.expectEqual(strings[1], "def");
+    try testing.expectEqual(strings[2], "xyz");
+    collator.sortAsciiDesc(&strings);
+    try testing.expectEqual(strings[0], "xyz");
+    try testing.expectEqual(strings[1], "def");
+    try testing.expectEqual(strings[2], "abc");
 }
 
 test "Collator UCA" {
@@ -519,7 +544,7 @@ test "Collator UCA" {
             continue;
         }
 
-        testing.expect((keyLevelCmp(prev_key, current_key, .tertiary) == .eq) or
+        try testing.expect((keyLevelCmp(prev_key, current_key, .tertiary) == .eq) or
             (keyLevelCmp(prev_key, current_key, .tertiary) == .lt));
 
         allocator.free(prev_key);

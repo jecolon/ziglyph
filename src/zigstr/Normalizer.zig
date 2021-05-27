@@ -568,11 +568,11 @@ test "Normalizer codePointTo D" {
 
     var result = try normalizer.codePointTo(allocator, .D, '\u{00E9}');
     defer allocator.free(result);
-    std.testing.expectEqualSlices(u21, result, &[2]u21{ 0x0065, 0x0301 });
+    try std.testing.expectEqualSlices(u21, result, &[2]u21{ 0x0065, 0x0301 });
     allocator.free(result);
 
     result = try normalizer.codePointTo(allocator, .D, '\u{03D3}');
-    std.testing.expectEqualSlices(u21, result, &[2]u21{ 0x03D2, 0x0301 });
+    try std.testing.expectEqualSlices(u21, result, &[2]u21{ 0x03D2, 0x0301 });
 }
 
 test "Normalizer codePointTo KD" {
@@ -582,11 +582,11 @@ test "Normalizer codePointTo KD" {
 
     var result = try normalizer.codePointTo(allocator, .KD, '\u{00E9}');
     defer allocator.free(result);
-    std.testing.expectEqualSlices(u21, result, &[2]u21{ 0x0065, 0x0301 });
+    try std.testing.expectEqualSlices(u21, result, &[2]u21{ 0x0065, 0x0301 });
     allocator.free(result);
 
     result = try normalizer.codePointTo(allocator, .KD, '\u{03D3}');
-    std.testing.expectEqualSlices(u21, result, &[2]u21{ 0x03A5, 0x0301 });
+    try std.testing.expectEqualSlices(u21, result, &[2]u21{ 0x03A5, 0x0301 });
 }
 
 test "Normalizer normalizeTo" {
@@ -632,7 +632,7 @@ test "Normalizer normalizeTo" {
                 defer allocator.free(want);
                 const got = try normalizer.normalizeTo(allocator, .D, input);
                 defer allocator.free(got);
-                std.testing.expectEqualSlices(u8, want, got);
+                try std.testing.expectEqualSlices(u8, want, got);
                 continue;
             } else if (field_index == 4) {
                 // NFKD, time to test.
@@ -648,7 +648,7 @@ test "Normalizer normalizeTo" {
                 defer allocator.free(want);
                 const got = try normalizer.normalizeTo(allocator, .KD, input);
                 defer allocator.free(got);
-                std.testing.expectEqualSlices(u8, want, got);
+                try std.testing.expectEqualSlices(u8, want, got);
                 continue;
             } else {
                 continue;
@@ -662,8 +662,8 @@ test "Normalizer eqlBy" {
     var normalizer = try init(allocator, "src/data/ucd/UnicodeData.txt");
     defer normalizer.deinit();
 
-    std.testing.expect(try normalizer.eqlBy("foé", "foe\u{0301}", .normalize));
-    std.testing.expect(try normalizer.eqlBy("foϓ", "fo\u{03D2}\u{0301}", .normalize));
-    std.testing.expect(try normalizer.eqlBy("Foϓ", "fo\u{03D2}\u{0301}", .norm_ignore));
-    std.testing.expect(try normalizer.eqlBy("FOÉ", "foe\u{0301}", .norm_ignore)); // foÉ == foé
+    try std.testing.expect(try normalizer.eqlBy("foé", "foe\u{0301}", .normalize));
+    try std.testing.expect(try normalizer.eqlBy("foϓ", "fo\u{03D2}\u{0301}", .normalize));
+    try std.testing.expect(try normalizer.eqlBy("Foϓ", "fo\u{03D2}\u{0301}", .norm_ignore));
+    try std.testing.expect(try normalizer.eqlBy("FOÉ", "foe\u{0301}", .norm_ignore)); // foÉ == foé
 }

@@ -39,13 +39,13 @@ const expect = std.testing.expect;
 test "Component isSymbol" {
     var symbol = new();
 
-    expect(symbol.isSymbol('<'));
-    expect(symbol.isSymbol('>'));
-    expect(symbol.isSymbol('='));
-    expect(symbol.isSymbol('$'));
-    expect(symbol.isSymbol('^'));
-    expect(symbol.isSymbol('+'));
-    expect(symbol.isSymbol('|'));
-    expect(!symbol.isSymbol('A'));
-    expect(!symbol.isSymbol('?'));
+    try expect(symbol.isSymbol('<'));
+    try expect(symbol.isSymbol('>'));
+    try expect(symbol.isSymbol('='));
+    try expect(symbol.isSymbol('$'));
+    try expect(symbol.isSymbol('^'));
+    try expect(symbol.isSymbol('+'));
+    try expect(symbol.isSymbol('|'));
+    try expect(!symbol.isSymbol('A'));
+    try expect(!symbol.isSymbol('?'));
 }
