@@ -8,8 +8,8 @@ const zort = std.sort.sort;
 const unicode = std.unicode;
 
 const CccMap = @import("../components.zig").CccMap;
-const isAsciiStr = @import("Zigstr.zig").isAsciiStr;
 const Normalizer = @import("../components.zig").Normalizer;
+const NFDCheck = @import("../components/autogen/DerivedNormalizationProps/NFDCheck.zig");
 const Trie = @import("CollatorTrie.zig");
 const UnifiedIdeo = @import("../components/autogen/PropList/UnifiedIdeograph.zig");
 
@@ -57,7 +57,7 @@ pub fn load(self: *Self, filename: []const u8) !void {
     var uca_stream = uca_reader.reader();
     var buf: [1024]u8 = undefined;
 
-    while (try uca_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+    lines: while (try uca_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
         // Skip empty or comment.
         if (line.len == 0 or line[0] == '#' or mem.startsWith(u8, line, "@version")) continue;
 
@@ -90,9 +90,12 @@ pub fn load(self: *Self, filename: []const u8) !void {
         var cp_list = std.ArrayList(u21).init(self.allocator);
         defer cp_list.deinit();
         var cp_strs_iter = mem.split(cp_strs, " ");
+        const nfd_check = NFDCheck{};
 
         while (cp_strs_iter.next()) |cp_str| {
-            try cp_list.append(try fmt.parseInt(u21, cp_str, 16));
+            const cp = try fmt.parseInt(u21, cp_str, 16);
+            if (!nfd_check.isNFD(cp)) continue :lines; // Skip non-NFD.
+            try cp_list.append(cp);
         }
 
         var coll_elements = std.ArrayList(Trie.Element).init(self.allocator);
