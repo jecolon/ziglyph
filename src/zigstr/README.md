@@ -97,6 +97,14 @@ test "Zigstr README tests" {
     // Grapheme count.
     try expectEqual(@as(usize, 5), try str.graphemeCount());
 
+    // Indexing (with negative indexes too.)
+    try expectEqual(try str.byteAt(0), 72); // H
+    try expectEqual(try str.byteAt(-2), 108); // l
+    try expectEqual(try str.codePointAt(0), 'H');
+    try expectEqual(try str.codePointAt(-2), 'l');
+    try expect((try str.graphemeAt(0)).eql("H"));
+    try expect((try str.graphemeAt(-4)).eql("é"));
+
     // Copy
     var str2 = try str.copy();
     defer str2.deinit();
@@ -289,11 +297,31 @@ test "Zigstr README tests" {
     try expect(!try str.isLower());
 
     // Letter case conversion.
-    try str.reset("Héllo! 123");
+    try str.reset("Héllo! 123\n");
     try str.toLower();
-    try expect(str.eql("héllo! 123"));
+    try expect(str.eql("héllo! 123\n"));
     try str.toUpper();
-    try expect(str.eql("HÉLLO! 123"));
+    try expect(str.eql("HÉLLO! 123\n"));
+
+    // Parsing content.
+    try str.reset("123");
+    try expectEqual(try str.parseInt(u8, 10), 123);
+    try str.reset("123.456");
+    try expectEqual(try str.parseFloat(f32), 123.456);
+    try str.reset("true");
+    try expect(try str.parseBool());
+
+    // Truthy == True, T, Yes, Y, On in any letter case.
+    // Not Truthy == False, F, No, N, Off in any letter case.
+    try expect(try str.parseTruthy());
+    try str.reset("TRUE");
+    try expect(try str.parseTruthy());
+    try str.reset("T");
+    try expect(try str.parseTruthy());
+    try str.reset("No");
+    try expect(!try str.parseTruthy());
+    try str.reset("off");
+    try expect(!try str.parseTruthy());
 
     // Zigstr implements the std.fmt.format interface.
     std.debug.print("Zigstr: {}\n", .{str});
