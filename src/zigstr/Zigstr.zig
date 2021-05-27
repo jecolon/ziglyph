@@ -140,6 +140,18 @@ test "Zigstr from code points" {
     try expectEqual(str.ascii_only, true);
 }
 
+/// fromJoined returns a new Zigstr from the concatenation of strings in `slice` with `sep` separator.
+pub fn fromJoined(allocator: *mem.Allocator, slice: []const []const u8, sep: []const u8) !Self {
+    return fromOwnedBytes(allocator, try mem.join(allocator, sep, slice));
+}
+
+test "Zigstr fromJoined" {
+    var str = try fromJoined(std.testing.allocator, &[_][]const u8{ "Hello", "World" }, " ");
+    defer str.deinit();
+
+    try expect(str.eql("Hello World"));
+}
+
 pub fn deinit(self: *Self) void {
     self.bytes.deinit();
     if (self.owned_cp) {
@@ -517,9 +529,6 @@ pub fn startsWith(self: Self, str: []const u8) bool {
 pub fn endsWith(self: Self, str: []const u8) bool {
     return mem.endsWith(u8, self.bytes.items, str);
 }
-
-/// Refer to the docs for `std.mem.join`.
-pub const join = mem.join;
 
 /// concatAll appends each string in `others` to this Zigstr, mutating it.
 pub fn concatAll(self: *Self, others: []const []const u8) !void {
@@ -1098,13 +1107,6 @@ test "Zigstr endsWith" {
 
     try expect(str.endsWith("World"));
     try expect(!str.endsWith("Zig"));
-}
-
-test "Zigstr join" {
-    var allocator = std.testing.allocator;
-    const result = try join(allocator, "/", &[_][]const u8{ "this", "is", "a", "path" });
-    defer allocator.free(result);
-    try expectEqualSlices(u8, "this/is/a/path", result);
 }
 
 test "Zigstr concat" {

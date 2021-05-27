@@ -260,6 +260,11 @@ test "Zigstr README tests" {
     try expect(str.eql("hello"));
     try expectEqual(str.codePointCount(), 5);
 
+    // Also create a Zigstr from a slice of strings.
+    str.deinit();
+    str = try Zigstr.fromJoined(std.testing.allocator, &[_][]const u8{ "Hello", "World" }, " ");
+    try expect(str.eql("Hello World"));
+
     // Chomp line breaks.
     try str.reset("Hello\n");
     try str.chomp();
