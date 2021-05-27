@@ -54,13 +54,13 @@ test "Ziglyph struct" {
     var ziglyph = Ziglyph.new();
 
     const z = 'z';
-    expect(ziglyph.isLetter(z));
-    expect(ziglyph.isAlphaNum(z));
-    expect(ziglyph.isPrint(z));
-    expect(!ziglyph.isUpper(z));
+    try expect(ziglyph.isLetter(z));
+    try expect(ziglyph.isAlphaNum(z));
+    try expect(ziglyph.isPrint(z));
+    try expect(!ziglyph.isUpper(z));
     const uz = ziglyph.toUpper(z);
-    expect(ziglyph.isUpper(uz));
-    expectEqual(uz, 'Z');
+    try expect(ziglyph.isUpper(uz));
+    try expectEqual(uz, 'Z');
 }
 ```
 
@@ -78,13 +78,13 @@ test "Aggregate struct" {
     var punct = Punct.new();
 
     const z = 'z';
-    expect(letter.isLetter(z));
-    expect(!letter.isUpper(z));
-    expect(!punct.isPunct(z));
-    expect(punct.isPunct('!'));
+    try expect(letter.isLetter(z));
+    try expect(!letter.isUpper(z));
+    try expect(!punct.isPunct(z));
+    try expect(punct.isPunct('!'));
     const uz = letter.toUpper(z);
-    expect(letter.isUpper(uz));
-    expectEqual(uz, 'Z');
+    try expect(letter.isUpper(uz));
+    try expectEqual(uz, 'Z');
 }
 ```
 
@@ -109,20 +109,20 @@ test "normalizeTo" {
     var want = "Complex char: \u{03D2}\u{0301}";
     var got = try normalizer.normalizeTo(allocator, .D, input);
     defer allocator.free(got);
-    expectEqualSlices(u8, want, got);
+    try expectEqualSlices(u8, want, got);
     allocator.free(got);
 
     // Compatibility (NFKD)
     input = "Complex char: \u{03D3}";
     want = "Complex char: \u{03A5}\u{0301}";
     got = try normalizer.normalizeTo(allocator, .KD, input);
-    expectEqualSlices(u8, want, got);
+    try expectEqualSlices(u8, want, got);
 
     // String comparisons.
-    expect(try normalizer.eqlBy("foé", "foe\u{0301}", .normalize));
-    expect(try normalizer.eqlBy("foϓ", "fo\u{03D2}\u{0301}", .normalize));
-    expect(try normalizer.eqlBy("Foϓ", "fo\u{03D2}\u{0301}", .norm_ignore));
-    expect(try normalizer.eqlBy("FOÉ", "foe\u{0301}", .norm_ignore)); // foÉ == foé
+    try expect(try normalizer.eqlBy("foé", "foe\u{0301}", .normalize));
+    try expect(try normalizer.eqlBy("foϓ", "fo\u{03D2}\u{0301}", .normalize));
+    try expect(try normalizer.eqlBy("Foϓ", "fo\u{03D2}\u{0301}", .norm_ignore));
+    try expect(try normalizer.eqlBy("FOÉ", "foe\u{0301}", .norm_ignore)); // foÉ == foé
 }
 ```
 
@@ -147,7 +147,7 @@ test "GraphemeIterator" {
 
     var i: usize = 0;
     while (giter.next()) |gc| : (i += 1) {
-        expect(gc.eql(want[i]));
+        try expect(gc.eql(want[i]));
     }
 }
 ```
@@ -167,31 +167,31 @@ test "Code point / string widths" {
     // ambiguous code points as per the Unicode standard. .half is the most common case.
 
     // Note that codePointWidth returns an i3 because code points like backspace have width -1.
-    expectEqual(width.codePointWidth('é', .half), 1);
-    expectEqual(width.codePointWidth('😊', .half), 2);
-    expectEqual(width.codePointWidth('统', .half), 2);
+    try expectEqual(width.codePointWidth('é', .half), 1);
+    try expectEqual(width.codePointWidth('😊', .half), 2);
+    try expectEqual(width.codePointWidth('统', .half), 2);
 
     // strWidth returns usize because it can never be negative, regardless of the code points it contains.
-    expectEqual(try width.strWidth("Hello\r\n", .half), 5);
-    expectEqual(try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
-    expectEqual(try width.strWidth("Héllo 🇪🇸", .half), 8);
-    expectEqual(try width.strWidth("\u{26A1}\u{FE0E}", .half), 1); // Text sequence
-    expectEqual(try width.strWidth("\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
+    try expectEqual(try width.strWidth("Hello\r\n", .half), 5);
+    try expectEqual(try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
+    try expectEqual(try width.strWidth("Héllo 🇪🇸", .half), 8);
+    try expectEqual(try width.strWidth("\u{26A1}\u{FE0E}", .half), 1); // Text sequence
+    try expectEqual(try width.strWidth("\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
 
     var allocator = std.testing.allocator;
 
     // padLeft, center, padRight
     const right_aligned = try width.padLeft(allocator, "w😊w", 10, "-");
     defer allocator.free(right_aligned);
-    expectEqualSlices(u8, "------w😊w", right_aligned);
+    try expectEqualSlices(u8, "------w😊w", right_aligned);
 
     const centered = try width.center(allocator, "w😊w", 10, "-");
     defer allocator.free(centered);
-    expectEqualSlices(u8, "---w😊w---", centered);
+    try expectEqualSlices(u8, "---w😊w---", centered);
 
     const left_aligned = try width.padRight(allocator, "w😊w", 10, "-");
     defer allocator.free(left_aligned);
-    expectEqualSlices(u8, "w😊w------", left_aligned);
+    try expectEqualSlices(u8, "w😊w------", left_aligned);
 }
 ```
 
@@ -224,18 +224,18 @@ test "Collation" {
 
     // At only primary level, José and jose are equal because base letters are the same, only marks 
     // and case differ, which are .secondary and .tertiary respectively.
-    testing.expect(collator.orderFn("José", "jose", .primary, .eq));
+    testing.expect(try collator.orderFn("José", "jose", .primary, .eq));
 
     // Full Unicode sort.
     var strings: [3][]const u8 = .{ "xyz", "def", "abc" };
-    collator.sort(&strings);
+    collator.sortAsc(&strings);
     testing.expectEqual(strings[0], "abc");
     testing.expectEqual(strings[1], "def");
     testing.expectEqual(strings[2], "xyz");
 
     // ASCII only binary sort. If you know the strings are ASCII only, this is much faster.
     strings = .{ "xyz", "def", "abc" };
-    collator.sortAscii(&strings);
+    collator.sortAsciiAsc(&strings);
     testing.expectEqual(strings[0], "abc");
     testing.expectEqual(strings[1], "def");
     testing.expectEqual(strings[2], "xyz");

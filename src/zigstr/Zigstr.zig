@@ -18,21 +18,10 @@ bytes: std.ArrayList(u8),
 code_points: ?[]const u21,
 cp_count: usize,
 grapheme_clusters: ?[]const Grapheme,
-owned: bool,
 owned_cp: bool = true,
 
 /// fromBytes returns a new Zigstr from the byte slice `str`, which will *not* be freed on `deinit`.
 pub fn fromBytes(allocator: *mem.Allocator, str: []const u8) !Self {
-    return initWith(allocator, str, false);
-}
-
-/// fromOwnedBytes returns a new Zigstr from the owned byte slice `str`, which will be freed on `deinit`.
-pub fn fromOwnedBytes(allocator: *mem.Allocator, str: []const u8) !Self {
-    return initWith(allocator, str, true);
-}
-
-/// initWith creates a new Zigstr instance. `owned` determines if the bytes need to be freed on `deinit`.
-fn initWith(allocator: *mem.Allocator, str: []const u8, owned: bool) !Self {
     var self = Self{
         .allocator = allocator,
         .ascii_only = try isAsciiStr(str),
@@ -44,7 +33,22 @@ fn initWith(allocator: *mem.Allocator, str: []const u8, owned: bool) !Self {
         .code_points = null,
         .cp_count = 0,
         .grapheme_clusters = null,
-        .owned = owned,
+    };
+
+    try self.processCodePoints();
+
+    return self;
+}
+
+/// fromOwnedBytes returns a new Zigstr from the owned byte slice `str`, which will be freed on `deinit`.
+pub fn fromOwnedBytes(allocator: *mem.Allocator, str: []u8) !Self {
+    var self = Self{
+        .allocator = allocator,
+        .ascii_only = try isAsciiStr(str),
+        .bytes = std.ArrayList(u8).fromOwnedSlice(allocator, str),
+        .code_points = null,
+        .cp_count = 0,
+        .grapheme_clusters = null,
     };
 
     try self.processCodePoints();
@@ -58,7 +62,7 @@ pub fn fromCodePoints(allocator: *mem.Allocator, code_points: []const u21) !Self
 }
 
 /// fromOwnedCodePoints returns a new Zigstr from the owned `code_points`, which will be freed on `deinit`.
-pub fn fromOwnedCodePoints(allocator: *mem.Allocator, code_points: []const u21) !Self {
+pub fn fromOwnedCodePoints(allocator: *mem.Allocator, code_points: []u21) !Self {
     return initCodePoints(allocator, code_points, true);
 }
 
@@ -91,7 +95,6 @@ fn initCodePoints(allocator: *mem.Allocator, code_points: []const u21, owned: bo
                 }
                 break :blk_gc buf;
             },
-            .owned = true,
             .owned_cp = owned,
         };
     } else {
@@ -110,7 +113,6 @@ fn initCodePoints(allocator: *mem.Allocator, code_points: []const u21, owned: bo
             .code_points = code_points,
             .cp_count = code_points.len,
             .grapheme_clusters = null,
-            .owned = true,
             .owned_cp = owned,
         };
     }
@@ -173,22 +175,12 @@ fn resetState(self: *Self) void {
     }
 }
 
-/// reset reinitializes this Zigstr from the byte slice `str`, which is owned elsewhere. It will *not* be 
-/// freed on `deinit`.
+/// reset reinitializes this Zigstr from the byte slice `str`.
 pub fn reset(self: *Self, str: []const u8) !void {
-    return self.resetWith(str, false);
-}
-
-/// resetOwned returns a new Zigstr from the owned byte slice `str`. It will be freed on `deinit`.
-pub fn resetOwned(self: *Self, str: []const u8) !void {
-    return self.resetWith(str, true);
-}
-
-/// resetWith resets this Zigstr with `str` as its new content, which will be freed on `deinit` if `owned`.
-fn resetWith(self: *Self, str: []const u8, owned: bool) !void {
     self.resetState();
     self.ascii_only = try isAsciiStr(str);
     try self.bytes.replaceRange(0, self.bytes.items.len, str);
+    try self.processCodePoints();
 }
 
 /// byteCount returns the number of bytes, which can be different from the number of code points and the 
@@ -294,7 +286,6 @@ pub fn copy(self: Self) !Self {
                 break :gc_blk null;
             }
         },
-        .owned = self.owned,
     };
 
     try other.processCodePoints();
@@ -376,7 +367,7 @@ pub fn dropLeft(self: *Self, n: usize) !void {
     const offset = gcs[n].offset;
 
     mem.rotate(u8, self.bytes.items, offset);
-    self.bytes.shrinkAndFree(self.bytes.items.len - offset);
+    self.bytes.shrinkRetainingCapacity(self.bytes.items.len - offset);
     self.resetState();
     try self.processCodePoints();
 }
@@ -393,10 +384,10 @@ test "Zigstr dropLeft" {
 pub fn dropRight(self: *Self, n: usize) !void {
     const gcs = try self.graphemes();
     if (n > gcs.len) return error.IndexOutOfBounds;
-    if (n == gcs.len) try self.resetWith("", false);
+    if (n == gcs.len) try self.reset("");
 
     const offset = gcs[gcs.len - n].offset;
-    self.bytes.shrinkAndFree(offset);
+    self.bytes.shrinkRetainingCapacity(offset);
     self.resetState();
     try self.processCodePoints();
 }
@@ -495,20 +486,17 @@ test "Zigstr lines" {
 /// reverses the grapheme clusters in this Zigstr, mutating it.
 pub fn reverse(self: *Self) !void {
     var gcs = try self.graphemes();
-    var bytes = try self.allocator.alloc(u8, self.bytes.items.len);
-    defer self.allocator.free(bytes);
-    var bytes_index: usize = 0;
-    var gc_index: usize = gcs.len - 1;
+    var new_al = try std.ArrayList(u8).initCapacity(self.allocator, self.bytes.items.len);
+    var gc_index: isize = @intCast(isize, gcs.len) - 1;
 
-    while (gc_index >= 0) {
-        mem.copy(u8, bytes[bytes_index..], gcs[gc_index].bytes);
-        if (gc_index == 0) break;
-        bytes_index += gcs[gc_index].bytes.len;
-        gc_index -= 1;
+    while (gc_index >= 0) : (gc_index -= 1) {
+        new_al.appendSliceAssumeCapacity(gcs[@intCast(usize, gc_index)].bytes);
     }
 
-    try self.bytes.replaceRange(0, self.bytes.items.len, bytes);
+    self.bytes.deinit();
+    self.bytes = new_al;
     self.resetState();
+    self.ascii_only = try isAsciiStr(self.bytes.items);
     try self.processCodePoints();
 }
 
@@ -539,6 +527,7 @@ pub fn concatAll(self: *Self, others: []const []const u8) !void {
         try self.bytes.appendSlice(o);
     }
     self.resetState();
+    self.ascii_only = try isAsciiStr(self.bytes.items);
     try self.processCodePoints();
 }
 
@@ -556,6 +545,7 @@ pub fn replace(self: *Self, needle: []const u8, replacement: []const u8) !usize 
     const replacements = mem.replace(u8, self.bytes.items, needle, replacement, buf);
     try self.bytes.replaceRange(0, self.bytes.items.len, buf);
     self.resetState();
+    self.ascii_only = try isAsciiStr(self.bytes.items);
     try self.processCodePoints();
 
     return replacements;
@@ -614,8 +604,9 @@ pub fn chomp(self: *Self) !void {
         // CR
         var chomp_size: usize = 1;
         if (len > 1 and last == '\n' and self.bytes.items[self.bytes.items.len - 2] == '\r') chomp_size = 2; // CR+LF
-        self.bytes.shrinkAndFree(len - chomp_size);
+        self.bytes.shrinkRetainingCapacity(len - chomp_size);
         self.resetState();
+        self.ascii_only = try isAsciiStr(self.bytes.items);
         try self.processCodePoints();
     }
 }
@@ -765,19 +756,20 @@ pub fn isLower(self: *Self) !bool {
 
 /// toLower converts this Zigstr to lowercase, mutating it.
 pub fn toLower(self: *Self) !void {
-    var bytes = std.ArrayList(u8).init(self.allocator);
-    defer bytes.deinit();
+    var new_al = try std.ArrayList(u8).initCapacity(self.allocator, self.bytes.items.len);
 
     const letter = Letter.new();
     var buf: [4]u8 = undefined;
     for (try self.codePoints()) |cp| {
         const lcp = letter.toLower(cp);
         const len = try unicode.utf8Encode(lcp, &buf);
-        try bytes.appendSlice(buf[0..len]);
+        new_al.appendSliceAssumeCapacity(buf[0..len]);
     }
 
-    try self.bytes.replaceRange(0, self.bytes.items.len, bytes.items);
+    self.bytes.deinit();
+    self.bytes = new_al;
     self.resetState();
+    self.ascii_only = try isAsciiStr(self.bytes.items);
     try self.processCodePoints();
 }
 
@@ -793,19 +785,20 @@ pub fn isUpper(self: *Self) !bool {
 
 /// toUpper converts this Zigstr to uppercase, mutating it.
 pub fn toUpper(self: *Self) !void {
-    var bytes = std.ArrayList(u8).init(self.allocator);
-    defer bytes.deinit();
+    var new_al = try std.ArrayList(u8).initCapacity(self.allocator, self.bytes.items.len);
 
     const letter = Letter.new();
     var buf: [4]u8 = undefined;
     for (try self.codePoints()) |cp| {
-        const lcp = letter.toUpper(cp);
-        const len = try unicode.utf8Encode(lcp, &buf);
-        try bytes.appendSlice(buf[0..len]);
+        const ucp = letter.toUpper(cp);
+        const len = try unicode.utf8Encode(ucp, &buf);
+        new_al.appendSliceAssumeCapacity(buf[0..len]);
     }
 
-    try self.bytes.replaceRange(0, self.bytes.items.len, bytes.items);
+    self.bytes.deinit();
+    self.bytes = new_al;
     self.resetState();
+    self.ascii_only = try isAsciiStr(self.bytes.items);
     try self.processCodePoints();
 }
 
@@ -837,16 +830,17 @@ test "Zigstr parse numbers" {
 pub fn repeat(self: *Self, n: usize) !void {
     if (n == 1) return;
 
-    var bytes = try self.allocator.alloc(u8, self.bytes.items.len * n);
-    defer self.allocator.free(bytes);
-    var bytes_index: usize = 0;
+    var new_al = try std.ArrayList(u8).initCapacity(self.allocator, self.bytes.items.len * n);
 
-    while (bytes_index < n) : (bytes_index += self.bytes.items.len) {
-        mem.copy(u8, bytes[bytes_index..], self.bytes.items);
+    var i: usize = 0;
+    while (i < n) : (i += 1) {
+        new_al.appendSliceAssumeCapacity(self.bytes.items);
     }
 
-    try self.bytes.replaceRange(0, self.bytes.items.len, bytes);
+    self.bytes.deinit();
+    self.bytes = new_al;
     self.resetState();
+    self.ascii_only = try isAsciiStr(self.bytes.items);
     try self.processCodePoints();
 }
 
@@ -1157,12 +1151,12 @@ test "Zigstr chomp" {
     try expectEqual(@as(usize, 5), str.bytes.items.len);
     try expect(str.eql("Hello"));
 
-    try str.resetWith("Hello\r", false);
+    try str.reset("Hello\r");
     try str.chomp();
     try expectEqual(@as(usize, 5), str.bytes.items.len);
     try expect(str.eql("Hello"));
 
-    try str.resetWith("Hello\r\n", false);
+    try str.reset("Hello\r\n");
     try str.chomp();
     try expectEqual(@as(usize, 5), str.bytes.items.len);
     try expect(str.eql("Hello"));
