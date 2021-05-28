@@ -1,13 +1,13 @@
 const std = @import("std");
 const ascii = @import("../../ascii.zig");
 
-pub const Close = @import("../../components.zig").Close;
-pub const Connector = @import("../../components.zig").Connector;
-pub const Dash = @import("../../components.zig").Dash;
-pub const Final = @import("../../components.zig").Final;
-pub const Initial = @import("../../components.zig").Initial;
-pub const Open = @import("../../components.zig").Open;
-pub const OtherPunct = @import("../../components.zig").OtherPunct;
+pub const Close = @import("../../components.zig").ClosePunctuation;
+pub const Connector = @import("../../components.zig").ConnectorPunctuation;
+pub const Dash = @import("../../components.zig").DashPunctuation;
+pub const Final = @import("../../components.zig").FinalPunctuation;
+pub const Initial = @import("../../components.zig").InitialPunctuation;
+pub const Open = @import("../../components.zig").OpenPunctuation;
+pub const OtherPunct = @import("../../components.zig").OtherPunctuation;
 
 /// isPunct detects punctuation characters. Note some punctuation maybe considered symbols by Unicode.
 pub fn isPunct(cp: u21) bool {

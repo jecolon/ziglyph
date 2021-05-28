@@ -2,7 +2,7 @@ const std = @import("std");
 
 pub const Decimal = @import("../../components.zig").Decimal;
 pub const Digit = @import("../../components.zig").Digit;
-pub const Hex = @import("../../components.zig").Hex;
+pub const Hex = @import("../../components.zig").HexDigit;
 pub const LetterNumber = @import("../../components.zig").LetterNumber;
 pub const OtherNumber = @import("../../components.zig").OtherNumber;
 
@@ -10,7 +10,7 @@ pub const OtherNumber = @import("../../components.zig").OtherNumber;
 pub fn isDecimal(cp: u21) bool {
     // ASCII optimization.
     if (cp < 128 and (cp >= '0' and cp <= '9')) return true;
-    return Decimal.isDecimalNumber(cp);
+    return Decimal.isDecimal(cp);
 }
 
 // isDigit detects all Unicode digits, which don't include the ASCII digits..
@@ -41,7 +41,7 @@ pub fn isAsciiHexDigit(cp: u21) bool {
 pub fn isNumber(cp: u21) bool {
     // ASCII optimization.
     if (cp < 128 and (cp >= '0' and cp <= '9')) return true;
-    return Decimal.isDecimalNumber(cp) or LetterNumber.isLetterNumber(cp) or
+    return Decimal.isDecimal(cp) or LetterNumber.isLetterNumber(cp) or
         OtherNumber.isOtherNumber(cp);
 }
 

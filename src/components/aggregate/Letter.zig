@@ -2,13 +2,13 @@ const std = @import("std");
 
 pub const CaseFoldMap = @import("../../components.zig").CaseFoldMap;
 pub const Cased = @import("../../components.zig").Cased;
-pub const Lower = @import("../../components.zig").Lower;
+pub const Lower = @import("../../components.zig").LowercaseLetter;
 pub const LowerMap = @import("../../components.zig").LowerMap;
 pub const ModifierLetter = @import("../../components.zig").ModifierLetter;
 pub const OtherLetter = @import("../../components.zig").OtherLetter;
-pub const Title = @import("../../components.zig").Title;
+pub const Title = @import("../../components.zig").TitlecaseLetter;
 pub const TitleMap = @import("../../components.zig").TitleMap;
-pub const Upper = @import("../../components.zig").Upper;
+pub const Upper = @import("../../components.zig").UppercaseLetter;
 pub const UpperMap = @import("../../components.zig").UpperMap;
 
 const Self = @This();

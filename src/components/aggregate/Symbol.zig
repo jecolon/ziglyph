@@ -1,8 +1,8 @@
 const std = @import("std");
 const ascii = @import("../../ascii.zig");
 
-pub const Currency = @import("../../components.zig").Currency;
-pub const Math = @import("../../components.zig").Math;
+pub const Currency = @import("../../components.zig").CurrencySymbol;
+pub const Math = @import("../../components.zig").MathSymbol;
 pub const ModifierSymbol = @import("../../components.zig").ModifierSymbol;
 pub const OtherSymbol = @import("../../components.zig").OtherSymbol;
 

@@ -36,7 +36,7 @@ pub fn deinit(self: *Collection) void {
 pub fn writeFile(self: *Collection, dir: []const u8) !void {
     const header_tpl = @embedFile("parts/collection_header_tpl.txt");
 
-    // Prepare output files.
+    // Prepare output dir.
     const name = try self.clean_name();
     defer self.allocator.free(name);
     var dir_name = try mem.concat(self.allocator, u8, &[_][]const u8{
@@ -50,6 +50,8 @@ pub fn writeFile(self: *Collection, dir: []const u8) !void {
         error.PathAlreadyExists => {},
         else => return err,
     };
+
+    // Prepare output file.
     var file_name = try mem.concat(self.allocator, u8, &[_][]const u8{ dir_name, "/", name, ".zig" });
     defer self.allocator.free(file_name);
     var file = try cwd.createFile(file_name, .{});

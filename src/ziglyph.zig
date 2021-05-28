@@ -5,69 +5,7 @@ const mem = std.mem;
 const unicode = std.unicode;
 const ascii = @import("ascii.zig");
 
-/// Library Components
-pub const Alphabetic = @import("components.zig").Alphabetic;
-pub const CccMap = @import("components.zig").CccMap;
-pub const Collator = @import("components.zig").Collator;
-pub const Control = @import("components.zig").Control;
-pub const Normalizer = @import("components.zig").Normalizer;
-pub const GraphemeIterator = @import("components.zig").GraphemeIterator;
-pub const Extend = @import("components.zig").Extend;
-pub const ExtPic = @import("components.zig").ExtPic;
-pub const Format = @import("components.zig").Format;
-pub const HangulMap = @import("components.zig").HangulMap;
-pub const Prepend = @import("components.zig").Prepend;
-pub const Regional = @import("components.zig").Regional;
-pub const Width = @import("components.zig").Width;
-// Letter
-pub const CaseFoldMap = @import("components.zig").CaseFoldMap;
-pub const CaseFold = CaseFoldMap.CaseFold;
-pub const Cased = @import("components.zig").Cased;
-pub const Lower = @import("components.zig").Lower;
-pub const LowerMap = @import("components.zig").LowerMap;
-pub const ModifierLetter = @import("components.zig").ModifierLetter;
-pub const OtherLetter = @import("components.zig").OtherLetter;
-pub const Title = @import("components.zig").Title;
-pub const TitleMap = @import("components.zig").TitleMap;
-pub const Upper = @import("components.zig").Upper;
-pub const UpperMap = @import("components.zig").UpperMap;
-// Aggregates
-pub const Letter = @import("components.zig").Letter;
-pub const Mark = @import("components.zig").Mark;
-pub const Number = @import("components.zig").Number;
-pub const Punct = @import("components.zig").Punct;
-pub const Symbol = @import("components.zig").Symbol;
-// Mark
-pub const Enclosing = @import("components.zig").Enclosing;
-pub const Nonspacing = @import("components.zig").Nonspacing;
-pub const Spacing = @import("components.zig").Spacing;
-// Number
-pub const Decimal = @import("components.zig").Decimal;
-pub const Digit = @import("components.zig").Digit;
-pub const Hex = @import("components.zig").Hex;
-pub const LetterNumber = @import("components.zig").LetterNumber;
-pub const OtherNumber = @import("components.zig").OtherNumber;
-// Punct
-pub const Close = @import("components.zig").Close;
-pub const Connector = @import("components.zig").Connector;
-pub const Dash = @import("components.zig").Dash;
-pub const Final = @import("components.zig").Final;
-pub const Initial = @import("components.zig").Initial;
-pub const Open = @import("components.zig").Open;
-pub const OtherPunct = @import("components.zig").OtherPunct;
-// Space
-pub const WhiteSpace = @import("components.zig").WhiteSpace;
-// Symbol
-pub const Currency = @import("components.zig").Currency;
-pub const Math = @import("components.zig").Math;
-pub const ModifierSymbol = @import("components.zig").ModifierSymbol;
-pub const OtherSymbol = @import("components.zig").OtherSymbol;
-// Width
-pub const Ambiguous = @import("components.zig").Ambiguous;
-pub const Fullwidth = @import("components.zig").Fullwidth;
-pub const Wide = @import("components.zig").Wide;
-// UTF-8 string struct
-pub const Zigstr = @import("components.zig").Zigstr;
+pub usingnamespace @import("components.zig");
 
 /// Ziglyph consolidates frequently-used Unicode utility functions in one place.
 pub const Ziglyph = struct {
@@ -350,10 +288,10 @@ test "Ziglyph isAlphaNum" {
 }
 
 test "Ziglyph isControl" {
-    try expect(Ziglyph.isControl('\n'));
-    try expect(Ziglyph.isControl('\r'));
     try expect(Ziglyph.isControl('\t'));
-    try expect(Ziglyph.isControl('\u{0003}'));
+    try expect(Ziglyph.isControl('\u{0008}'));
     try expect(Ziglyph.isControl('\u{0012}'));
+    try expect(!Ziglyph.isControl('\n'));
+    try expect(!Ziglyph.isControl('\r'));
     try expect(!Ziglyph.isControl('A'));
 }

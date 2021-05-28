@@ -8,12 +8,12 @@ const unicode = std.unicode;
 const CodePointIterator = @import("CodePointIterator.zig");
 const Control = @import("../components.zig").Control;
 const Extend = @import("../components.zig").Extend;
-const ExtPic = @import("../components.zig").ExtPic;
+const ExtPic = @import("../components.zig").ExtendedPictographic;
 pub const Grapheme = @import("Grapheme.zig");
 const HangulMap = @import("../components.zig").HangulMap;
 const Prepend = @import("../components.zig").Prepend;
-const Regional = @import("../components.zig").Regional;
-const Spacing = @import("../components.zig").Spacing;
+const Regional = @import("../components.zig").RegionalIndicator;
+const Spacing = @import("../components.zig").SpacingMark;
 
 ascii_only: bool = false,
 cp_iter: CodePointIterator,

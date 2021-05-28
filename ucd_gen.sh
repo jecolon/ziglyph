@@ -14,5 +14,7 @@ cd - > /dev/null
 cd ./src
 echo "Generating Zig code..."
 ./ucd_gen
+echo "Adding exports to src/components.zig..."
+./comp_gen.sh
 cd - > /dev/null
 echo "Done!"

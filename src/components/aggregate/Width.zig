@@ -3,14 +3,14 @@ const mem = std.mem;
 const unicode = std.unicode;
 
 const Ambiguous = @import("../../components.zig").Ambiguous;
-const Enclosing = @import("../../components.zig").Enclosing;
-const ExtPic = @import("../../components.zig").ExtPic;
+const Enclosing = @import("../../components.zig").EnclosingMark;
+const ExtPic = @import("../../components.zig").ExtendedPictographic;
 const Format = @import("../../components.zig").Format;
 const Fullwidth = @import("../../components.zig").Fullwidth;
 const GraphemeIterator = @import("../../zigstr/GraphemeIterator.zig");
 const isAsciiStr = @import("../../zigstr/Zigstr.zig").isAsciiStr;
-const Nonspacing = @import("../../components.zig").Nonspacing;
-const Regional = @import("../../components.zig").Regional;
+const Nonspacing = @import("../../components.zig").NonspacingMark;
+const Regional = @import("../../components.zig").RegionalIndicator;
 const Wide = @import("../../components.zig").Wide;
 
 /// AmbiguousWidth determines the width of ambiguous characters according to the context. In an 

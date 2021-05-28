@@ -1,8 +1,8 @@
 const std = @import("std");
 
-pub const Enclosing = @import("../../components.zig").Enclosing;
-pub const Nonspacing = @import("../../components.zig").Nonspacing;
-pub const Spacing = @import("../../components.zig").Spacing;
+pub const Enclosing = @import("../../components.zig").EnclosingMark;
+pub const Nonspacing = @import("../../components.zig").NonspacingMark;
+pub const Spacing = @import("../../components.zig").SpacingMark;
 
 /// isMark detects special code points that serve as marks in different alphabets.
 pub fn isMark(cp: u21) bool {
