@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode QuotationMark code points.
 
-lo: u21 = 34,
-hi: u21 = 65379,
+const lo: u21 = 34;
+const hi: u21 = 65379;
 
-const QuotationMark = @This();
-
-pub fn isQuotationMark(self: QuotationMark, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isQuotationMark(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x22 => true,
         0x27 => true,

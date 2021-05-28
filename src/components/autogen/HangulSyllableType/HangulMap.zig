@@ -9,10 +9,8 @@ pub const Kind = enum {
     LVT,
 };
 
-const HangulMap = @This();
-
 /// syllableType maps the code point to its Hangul Syllable Type.
-pub fn syllableType(self: HangulMap, cp: u21) ?Kind {
+pub fn syllableType(cp: u21) ?Kind {
     return switch (cp) {
         0x1100...0x115F => .L,
         0xA960...0xA97C => .L,

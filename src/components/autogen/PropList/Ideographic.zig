@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Ideographic code points.
 
-lo: u21 = 12294,
-hi: u21 = 201546,
+const lo: u21 = 12294;
+const hi: u21 = 201546;
 
-const Ideographic = @This();
-
-pub fn isIdeographic(self: Ideographic, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isIdeographic(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x3006 => true,
         0x3007 => true,

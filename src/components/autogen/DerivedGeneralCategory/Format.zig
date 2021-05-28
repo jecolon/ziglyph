@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Format code points.
 
-lo: u21 = 173,
-hi: u21 = 917631,
+const lo: u21 = 173;
+const hi: u21 = 917631;
 
-const Format = @This();
-
-pub fn isFormat(self: Format, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isFormat(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xad => true,
         0x600...0x605 => true,

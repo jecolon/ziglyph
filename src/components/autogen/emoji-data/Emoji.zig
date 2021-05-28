@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Emoji code points.
 
-lo: u21 = 35,
-hi: u21 = 129750,
+const lo: u21 = 35;
+const hi: u21 = 129750;
 
-const Emoji = @This();
-
-pub fn isEmoji(self: Emoji, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isEmoji(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x23 => true,
         0x2a => true,

@@ -18,11 +18,7 @@ const Lookup = DecompTrie.Lookup;
 
 allocator: *mem.Allocator,
 arena: std.heap.ArenaAllocator,
-ccc_map: CccMap,
 decomp_trie: DecompTrie,
-fold_map: CaseFoldMap,
-hangul_map: HangulMap,
-nfd_check: NFDCheck,
 
 const Self = @This();
 
@@ -44,11 +40,7 @@ pub fn init(allocator: *mem.Allocator, filename: []const u8) !Self {
     var self = Self{
         .allocator = allocator,
         .arena = std.heap.ArenaAllocator.init(allocator),
-        .ccc_map = CccMap{},
         .decomp_trie = undefined,
-        .fold_map = CaseFoldMap{},
-        .hangul_map = HangulMap{},
-        .nfd_check = NFDCheck{},
     };
 
     self.decomp_trie = DecompTrie.init(&self.arena.allocator);
@@ -154,7 +146,7 @@ pub const Form = enum {
 /// codePointTo takes a code point and returns a sequence of code points that represent its conversion 
 /// to the specified Form. Caller must free returned bytes.
 pub fn codePointTo(self: Self, allocator: *mem.Allocator, form: Form, cp: u21) anyerror![]u21 {
-    if (form == .D and self.nfd_check.isNFD(cp)) {
+    if (form == .D and NFDCheck.isNFD(cp)) {
         var dcp = try allocator.alloc(u21, 1);
         dcp[0] = cp;
         return dcp;
@@ -218,29 +210,29 @@ fn decompD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anyer
                         return rdcs.toOwnedSlice();
                     },
                     else => {
-                        try rdcs.appendSlice(try self.decomposeTo(allocator, .D, &[_]Decomposed{m}));
+                        try rdcs.appendSlice(try self.decompD(allocator, &[_]Decomposed{m}));
                     },
                 }
             },
             .same => try rdcs.append(dc),
-            .single => |cp| if (self.nfd_check.isNFD(cp)) {
+            .single => |cp| if (NFDCheck.isNFD(cp)) {
                 try rdcs.append(.{ .same = cp });
             } else {
                 const m = try self.mapping(cp);
                 switch (m) {
                     .same, .compat => try rdcs.append(.{ .same = cp }),
-                    else => try rdcs.appendSlice(try self.decomposeTo(allocator, .D, &[_]Decomposed{m})),
+                    else => try rdcs.appendSlice(try self.decompD(allocator, &[_]Decomposed{m})),
                 }
             },
             .canon => |seq| {
                 for (seq) |cp| {
-                    if (self.nfd_check.isNFD(cp)) {
+                    if (NFDCheck.isNFD(cp)) {
                         try rdcs.append(.{ .same = cp });
                     } else {
                         const m = try self.mapping(cp);
                         switch (m) {
                             .same, .compat => try rdcs.append(.{ .same = cp }),
-                            else => try rdcs.appendSlice(try self.decomposeTo(allocator, .D, &[_]Decomposed{m})),
+                            else => try rdcs.appendSlice(try self.decompD(allocator, &[_]Decomposed{m})),
                         }
                     }
                 }
@@ -263,23 +255,23 @@ fn decompKD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anye
         switch (dc) {
             .src => |cp| {
                 const m = [1]Decomposed{try self.mapping(cp)};
-                try rdcs.appendSlice(try self.decomposeTo(allocator, .KD, &m));
+                try rdcs.appendSlice(try self.decompKD(allocator, &m));
             },
             .same => try rdcs.append(dc),
             .single => |cp| {
                 const m = [1]Decomposed{try self.mapping(cp)};
-                try rdcs.appendSlice(try self.decomposeTo(allocator, .KD, &m));
+                try rdcs.appendSlice(try self.decompKD(allocator, &m));
             },
             .canon => |seq| {
                 for (seq) |cp| {
                     const m = [1]Decomposed{try self.mapping(cp)};
-                    try rdcs.appendSlice(try self.decomposeTo(allocator, .KD, &m));
+                    try rdcs.appendSlice(try self.decompKD(allocator, &m));
                 }
             },
             .compat => |seq| {
                 for (seq) |cp| {
                     const m = [1]Decomposed{try self.mapping(cp)};
-                    try rdcs.appendSlice(try self.decomposeTo(allocator, .KD, &m));
+                    try rdcs.appendSlice(try self.decompKD(allocator, &m));
                 }
             },
         }
@@ -323,7 +315,7 @@ pub fn normalizeTo(self: Self, allocator: *mem.Allocator, form: Form, str: []con
         var already_nfd = true;
 
         for (code_points.items) |cp| {
-            if (!self.nfd_check.isNFD(cp)) already_nfd = false;
+            if (!NFDCheck.isNFD(cp)) already_nfd = false;
         }
 
         // Already NFD, nothing more to do.
@@ -361,7 +353,7 @@ pub fn normalizeCodePointsTo(self: Self, allocator: *mem.Allocator, form: Form, 
         var already_nfd = true;
 
         for (code_points.items) |cp| {
-            if (!self.nfd_check.isNFD(cp)) already_nfd = false;
+            if (!NFDCheck.isNFD(cp)) already_nfd = false;
         }
 
         // Already NFD, nothing more to do.
@@ -388,7 +380,7 @@ pub fn normalizeCodePointsTo(self: Self, allocator: *mem.Allocator, form: Form, 
 }
 
 fn cccLess(self: Self, lhs: u21, rhs: u21) bool {
-    return self.ccc_map.combiningClass(lhs) < self.ccc_map.combiningClass(rhs);
+    return CccMap.combiningClass(lhs) < CccMap.combiningClass(rhs);
 }
 
 fn canonicalSort(self: Self, cp_list: []u21) void {
@@ -396,7 +388,7 @@ fn canonicalSort(self: Self, cp_list: []u21) void {
     while (true) {
         if (i >= cp_list.len) break;
         var start: usize = i;
-        while (i < cp_list.len and self.ccc_map.combiningClass(cp_list[i]) != 0) : (i += 1) {}
+        while (i < cp_list.len and CccMap.combiningClass(cp_list[i]) != 0) : (i += 1) {}
         sort(u21, cp_list[start..i], self, cccLess);
         i += 1;
     }
@@ -426,7 +418,7 @@ fn decomposeHangul(self: Self, cp: u21) [3]u21 {
 }
 
 fn isHangulPrecomposed(self: Self, cp: u21) bool {
-    if (self.hangul_map.syllableType(cp)) |kind| {
+    if (HangulMap.syllableType(cp)) |kind| {
         return switch (kind) {
             .LV, .LVT => true,
             else => false,
@@ -492,9 +484,9 @@ pub fn eqlBy(self: Self, a: []const u8, b: []const u8, mode: CmpMode) !bool {
 }
 
 fn eqlIgnoreCase(self: Self, a: []const u8, b: []const u8) !bool {
-    const cf_a = try self.fold_map.caseFoldStr(self.allocator, a);
+    const cf_a = try CaseFoldMap.caseFoldStr(self.allocator, a);
     defer self.allocator.free(cf_a);
-    const cf_b = try self.fold_map.caseFoldStr(self.allocator, b);
+    const cf_b = try CaseFoldMap.caseFoldStr(self.allocator, b);
     defer self.allocator.free(cf_b);
 
     return mem.eql(u8, cf_a, cf_b);
@@ -517,10 +509,10 @@ fn eqlNormIgnore(self: Self, a: []const u8, b: []const u8) !bool {
     // The long winding road of normalized caseless matching...
     // NFD(CaseFold(NFD(str)))
     var norm_a = try self.normalizeTo(&arena.allocator, .D, a);
-    var cf_a = try self.fold_map.caseFoldStr(&arena.allocator, norm_a);
+    var cf_a = try CaseFoldMap.caseFoldStr(&arena.allocator, norm_a);
     norm_a = try self.normalizeTo(&arena.allocator, .D, cf_a);
     var norm_b = try self.normalizeTo(&arena.allocator, .D, b);
-    var cf_b = try self.fold_map.caseFoldStr(&arena.allocator, norm_b);
+    var cf_b = try CaseFoldMap.caseFoldStr(&arena.allocator, norm_b);
     norm_b = try self.normalizeTo(&arena.allocator, .D, cf_b);
 
     return mem.eql(u8, norm_a, norm_b);

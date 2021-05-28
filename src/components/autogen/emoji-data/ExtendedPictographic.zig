@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode ExtendedPictographic code points.
 
-lo: u21 = 169,
-hi: u21 = 131069,
+const lo: u21 = 169;
+const hi: u21 = 131069;
 
-const ExtendedPictographic = @This();
-
-pub fn isExtendedPictographic(self: ExtendedPictographic, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isExtendedPictographic(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xa9 => true,
         0xae => true,

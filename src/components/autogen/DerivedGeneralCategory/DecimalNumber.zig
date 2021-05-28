@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode DecimalNumber code points.
 
-lo: u21 = 48,
-hi: u21 = 130041,
+const lo: u21 = 48;
+const hi: u21 = 130041;
 
-const DecimalNumber = @This();
-
-pub fn isDecimalNumber(self: DecimalNumber, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isDecimalNumber(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x30...0x39 => true,
         0x660...0x669 => true,

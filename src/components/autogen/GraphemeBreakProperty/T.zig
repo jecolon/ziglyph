@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode T code points.
 
-lo: u21 = 4520,
-hi: u21 = 55291,
+const lo: u21 = 4520;
+const hi: u21 = 55291;
 
-const T = @This();
-
-pub fn isT(self: T, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isT(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x11a8...0x11ff => true,
         0xd7cb...0xd7fb => true,

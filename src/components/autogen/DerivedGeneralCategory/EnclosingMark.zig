@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode EnclosingMark code points.
 
-lo: u21 = 1160,
-hi: u21 = 42610,
+const lo: u21 = 1160;
+const hi: u21 = 42610;
 
-const EnclosingMark = @This();
-
-pub fn isEnclosingMark(self: EnclosingMark, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isEnclosingMark(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x488...0x489 => true,
         0x1abe => true,

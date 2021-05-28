@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode InitialPunctuation code points.
 
-lo: u21 = 171,
-hi: u21 = 11808,
+const lo: u21 = 171;
+const hi: u21 = 11808;
 
-const InitialPunctuation = @This();
-
-pub fn isInitialPunctuation(self: InitialPunctuation, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isInitialPunctuation(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xab => true,
         0x2018 => true,

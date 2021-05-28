@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Fullwidth code points.
 
-lo: u21 = 12288,
-hi: u21 = 65510,
+const lo: u21 = 12288;
+const hi: u21 = 65510;
 
-const Fullwidth = @This();
-
-pub fn isFullwidth(self: Fullwidth, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isFullwidth(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x3000 => true,
         0xff01...0xff03 => true,

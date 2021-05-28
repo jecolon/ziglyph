@@ -71,40 +71,16 @@ pub const Zigstr = @import("components.zig").Zigstr;
 
 /// Ziglyph consolidates frequently-used Unicode utility functions in one place.
 pub const Ziglyph = struct {
-    alphabetic: Alphabetic,
-    control: Control,
-    letter: Letter,
-    mark: Mark,
-    number: Number,
-    punct: Punct,
-    space: WhiteSpace,
-    symbol: Symbol,
-
-    const Self = @This();
-
-    pub fn new() Self {
-        return Self{
-            .alphabetic = Alphabetic{},
-            .control = Control{},
-            .letter = Letter.new(),
-            .mark = Mark.new(),
-            .number = Number.new(),
-            .punct = Punct.new(),
-            .space = WhiteSpace{},
-            .symbol = Symbol.new(),
-        };
-    }
-
-    pub fn isAlphabetic(self: Self, cp: u21) bool {
-        return self.alphabetic.isAlphabetic(cp);
+    pub fn isAlphabetic(cp: u21) bool {
+        return Alphabetic.isAlphabetic(cp);
     }
 
     pub fn isAsciiAlphabetic(cp: u21) bool {
         return (cp >= 'A' and cp <= 'Z') or (cp >= 'a' and cp <= 'z');
     }
 
-    pub fn isAlphaNum(self: Self, cp: u21) bool {
-        return self.isAlphabetic(cp) or self.isNumber(cp);
+    pub fn isAlphaNum(cp: u21) bool {
+        return isAlphabetic(cp) or isNumber(cp);
     }
 
     pub fn isAsciiAlphaNum(cp: u21) bool {
@@ -112,18 +88,18 @@ pub const Ziglyph = struct {
     }
 
     /// isCased detects cased code points, usually letters.
-    pub fn isCased(self: Self, cp: u21) bool {
-        return self.letter.isCased(cp);
+    pub fn isCased(cp: u21) bool {
+        return Letter.isCased(cp);
     }
 
     /// isDecimal detects all Unicode decimal numbers.
-    pub fn isDecimal(self: Self, cp: u21) bool {
-        return self.number.isDecimal(cp);
+    pub fn isDecimal(cp: u21) bool {
+        return Number.isDecimal(cp);
     }
 
     /// isDigit detects all Unicode digits, which curiosly don't include the ASCII digits.
-    pub fn isDigit(self: Self, cp: u21) bool {
-        return self.number.isDigit(cp);
+    pub fn isDigit(cp: u21) bool {
+        return Number.isDigit(cp);
     }
 
     pub fn isAsciiDigit(cp: u21) bool {
@@ -131,8 +107,8 @@ pub const Ziglyph = struct {
     }
 
     /// isGraphic detects any code point that can be represented graphically, including spaces.
-    pub fn isGraphic(self: Self, cp: u21) bool {
-        return self.isPrint(cp) or self.isWhiteSpace(cp);
+    pub fn isGraphic(cp: u21) bool {
+        return isPrint(cp) or isWhiteSpace(cp);
     }
 
     pub fn isAsciiGraphic(cp: u21) bool {
@@ -140,8 +116,8 @@ pub const Ziglyph = struct {
     }
 
     // isHex detects hexadecimal code points.
-    pub fn isHexDigit(self: Self, cp: u21) bool {
-        return self.number.isHexDigit(cp);
+    pub fn isHexDigit(cp: u21) bool {
+        return Number.isHexDigit(cp);
     }
 
     pub fn isAsciiHexDigit(cp: u21) bool {
@@ -149,25 +125,25 @@ pub const Ziglyph = struct {
     }
 
     /// isPrint detects any code point that can be printed, excluding spaces.
-    pub fn isPrint(self: Self, cp: u21) bool {
-        return self.isAlphaNum(cp) or self.isMark(cp) or self.isPunct(cp) or
-            self.isSymbol(cp) or self.isWhiteSpace(cp);
+    pub fn isPrint(cp: u21) bool {
+        return isAlphaNum(cp) or isMark(cp) or isPunct(cp) or
+            isSymbol(cp) or isWhiteSpace(cp);
     }
 
     pub fn isAsciiPrint(cp: u21) bool {
         return if (cp < 128) ascii.isPrint(@intCast(u8, cp)) else false;
     }
 
-    pub fn isControl(self: Self, cp: u21) bool {
-        return self.control.isControl(cp);
+    pub fn isControl(cp: u21) bool {
+        return Control.isControl(cp);
     }
 
     pub fn isAsciiControl(cp: u21) bool {
         return if (cp < 128) ascii.isCntrl(@intCast(u8, cp)) else false;
     }
 
-    pub fn isLetter(self: Self, cp: u21) bool {
-        return self.letter.isLetter(cp);
+    pub fn isLetter(cp: u21) bool {
+        return Letter.isLetter(cp);
     }
 
     pub fn isAsciiLetter(cp: u21) bool {
@@ -175,8 +151,8 @@ pub const Ziglyph = struct {
     }
 
     /// isLower detects code points that are lowercase.
-    pub fn isLower(self: Self, cp: u21) bool {
-        return self.letter.isLower(cp);
+    pub fn isLower(cp: u21) bool {
+        return Letter.isLower(cp);
     }
 
     pub fn isAsciiLower(cp: u21) bool {
@@ -184,12 +160,12 @@ pub const Ziglyph = struct {
     }
 
     /// isMark detects special code points that serve as marks in different alphabets.
-    pub fn isMark(self: Self, cp: u21) bool {
-        return self.mark.isMark(cp);
+    pub fn isMark(cp: u21) bool {
+        return Mark.isMark(cp);
     }
 
-    pub fn isNumber(self: Self, cp: u21) bool {
-        return self.number.isNumber(cp);
+    pub fn isNumber(cp: u21) bool {
+        return Number.isNumber(cp);
     }
 
     pub fn isAsciiNumber(cp: u21) bool {
@@ -197,8 +173,8 @@ pub const Ziglyph = struct {
     }
 
     /// isPunct detects punctuation characters. Note some punctuation may be considered as symbols by Unicode.
-    pub fn isPunct(self: Self, cp: u21) bool {
-        return self.punct.isPunct(cp);
+    pub fn isPunct(cp: u21) bool {
+        return Punct.isPunct(cp);
     }
 
     pub fn isAsciiPunct(cp: u21) bool {
@@ -206,8 +182,8 @@ pub const Ziglyph = struct {
     }
 
     /// isWhiteSpace detects code points that have the Unicode *WhiteSpace* property.
-    pub fn isWhiteSpace(self: Self, cp: u21) bool {
-        return self.space.isWhiteSpace(cp);
+    pub fn isWhiteSpace(cp: u21) bool {
+        return WhiteSpace.isWhiteSpace(cp);
     }
 
     pub fn isAsciiWhiteSpace(cp: u21) bool {
@@ -215,8 +191,8 @@ pub const Ziglyph = struct {
     }
 
     // isSymbol detects symbols which may include code points commonly considered punctuation.
-    pub fn isSymbol(self: Self, cp: u21) bool {
-        return self.symbol.isSymbol(cp);
+    pub fn isSymbol(cp: u21) bool {
+        return Symbol.isSymbol(cp);
     }
 
     pub fn isAsciiSymbol(cp: u21) bool {
@@ -224,13 +200,13 @@ pub const Ziglyph = struct {
     }
 
     /// isTitle detects code points in titlecase.
-    pub fn isTitle(self: Self, cp: u21) bool {
-        return self.letter.isTitle(cp);
+    pub fn isTitle(cp: u21) bool {
+        return Letter.isTitle(cp);
     }
 
     /// isUpper detects code points in uppercase.
-    pub fn isUpper(self: Self, cp: u21) bool {
-        return self.letter.isUpper(cp);
+    pub fn isUpper(cp: u21) bool {
+        return Letter.isUpper(cp);
     }
 
     pub fn isAsciiUpper(cp: u21) bool {
@@ -239,8 +215,8 @@ pub const Ziglyph = struct {
 
     /// toLower returns the lowercase code point for the given code point. It returns the same 
     /// code point given if no mapping exists.
-    pub fn toLower(self: Self, cp: u21) u21 {
-        return self.letter.toLower(cp);
+    pub fn toLower(cp: u21) u21 {
+        return Letter.toLower(cp);
     }
 
     pub fn toAsciiLower(cp: u21) u21 {
@@ -249,14 +225,14 @@ pub const Ziglyph = struct {
 
     /// toTitle returns the titlecase code point for the given code point. It returns the same 
     /// code point given if no mapping exists.
-    pub fn toTitle(self: Self, cp: u21) u21 {
-        return self.letter.toTitle(cp);
+    pub fn toTitle(cp: u21) u21 {
+        return Letter.toTitle(cp);
     }
 
     /// toUpper returns the uppercase code point for the given code point. It returns the same 
     /// code point given if no mapping exists.
-    pub fn toUpper(self: Self, cp: u21) u21 {
-        return self.letter.toUpper(cp);
+    pub fn toUpper(cp: u21) u21 {
+        return Letter.toUpper(cp);
     }
 
     pub fn toAsciiUpper(cp: u21) u21 {
@@ -285,111 +261,99 @@ test "Ziglyph ASCII methods" {
 }
 
 test "Ziglyph struct" {
-    var ziglyph = Ziglyph.new();
-
     const z = 'z';
-    try expect(ziglyph.isAlphaNum(z));
-    try expect(!ziglyph.isControl(z));
-    try expect(!ziglyph.isDecimal(z));
-    try expect(!ziglyph.isDigit(z));
-    try expect(!ziglyph.isHexDigit(z));
-    try expect(ziglyph.isGraphic(z));
-    try expect(ziglyph.isLetter(z));
-    try expect(ziglyph.isLower(z));
-    try expect(!ziglyph.isMark(z));
-    try expect(!ziglyph.isNumber(z));
-    try expect(ziglyph.isPrint(z));
-    try expect(!ziglyph.isPunct(z));
-    try expect(!ziglyph.isWhiteSpace(z));
-    try expect(!ziglyph.isSymbol(z));
-    try expect(!ziglyph.isTitle(z));
-    try expect(!ziglyph.isUpper(z));
-    const uz = ziglyph.toUpper(z);
-    try expect(ziglyph.isUpper(uz));
+    try expect(Ziglyph.isAlphaNum(z));
+    try expect(!Ziglyph.isControl(z));
+    try expect(!Ziglyph.isDecimal(z));
+    try expect(!Ziglyph.isDigit(z));
+    try expect(!Ziglyph.isHexDigit(z));
+    try expect(Ziglyph.isGraphic(z));
+    try expect(Ziglyph.isLetter(z));
+    try expect(Ziglyph.isLower(z));
+    try expect(!Ziglyph.isMark(z));
+    try expect(!Ziglyph.isNumber(z));
+    try expect(Ziglyph.isPrint(z));
+    try expect(!Ziglyph.isPunct(z));
+    try expect(!Ziglyph.isWhiteSpace(z));
+    try expect(!Ziglyph.isSymbol(z));
+    try expect(!Ziglyph.isTitle(z));
+    try expect(!Ziglyph.isUpper(z));
+    const uz = Ziglyph.toUpper(z);
+    try expect(Ziglyph.isUpper(uz));
     try expectEqual(uz, 'Z');
-    const lz = ziglyph.toLower(uz);
-    try expect(ziglyph.isLower(lz));
+    const lz = Ziglyph.toLower(uz);
+    try expect(Ziglyph.isLower(lz));
     try expectEqual(lz, 'z');
-    const tz = ziglyph.toTitle(lz);
-    try expect(ziglyph.isUpper(tz));
+    const tz = Ziglyph.toTitle(lz);
+    try expect(Ziglyph.isUpper(tz));
     try expectEqual(tz, 'Z');
 }
 
 test "Ziglyph isGraphic" {
-    var ziglyph = Ziglyph.new();
-
-    try expect(ziglyph.isGraphic('A'));
-    try expect(ziglyph.isGraphic('\u{20E4}'));
-    try expect(ziglyph.isGraphic('1'));
-    try expect(ziglyph.isGraphic('?'));
-    try expect(ziglyph.isGraphic(' '));
-    try expect(ziglyph.isGraphic('='));
-    try expect(!ziglyph.isGraphic('\u{0003}'));
+    try expect(Ziglyph.isGraphic('A'));
+    try expect(Ziglyph.isGraphic('\u{20E4}'));
+    try expect(Ziglyph.isGraphic('1'));
+    try expect(Ziglyph.isGraphic('?'));
+    try expect(Ziglyph.isGraphic(' '));
+    try expect(Ziglyph.isGraphic('='));
+    try expect(!Ziglyph.isGraphic('\u{0003}'));
 }
 
 test "Ziglyph isHexDigit" {
-    var ziglyph = Ziglyph.new();
-
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        try expect(ziglyph.isHexDigit(cp));
+        try expect(Ziglyph.isHexDigit(cp));
     }
 
     cp = 'A';
     while (cp <= 'F') : (cp += 1) {
-        try expect(ziglyph.isHexDigit(cp));
+        try expect(Ziglyph.isHexDigit(cp));
     }
 
     cp = 'a';
     while (cp <= 'f') : (cp += 1) {
-        try expect(ziglyph.isHexDigit(cp));
+        try expect(Ziglyph.isHexDigit(cp));
     }
 
-    try expect(!ziglyph.isHexDigit('\u{0003}'));
-    try expect(!ziglyph.isHexDigit('Z'));
+    try expect(!Ziglyph.isHexDigit('\u{0003}'));
+    try expect(!Ziglyph.isHexDigit('Z'));
 }
 
 test "Ziglyph isPrint" {
-    var ziglyph = Ziglyph.new();
-
-    try expect(ziglyph.isPrint('A'));
-    try expect(ziglyph.isPrint('\u{20E4}'));
-    try expect(ziglyph.isPrint('1'));
-    try expect(ziglyph.isPrint('?'));
-    try expect(ziglyph.isPrint('='));
-    try expect(ziglyph.isPrint(' '));
-    try expect(ziglyph.isPrint('\t'));
-    try expect(!ziglyph.isPrint('\u{0003}'));
+    try expect(Ziglyph.isPrint('A'));
+    try expect(Ziglyph.isPrint('\u{20E4}'));
+    try expect(Ziglyph.isPrint('1'));
+    try expect(Ziglyph.isPrint('?'));
+    try expect(Ziglyph.isPrint('='));
+    try expect(Ziglyph.isPrint(' '));
+    try expect(Ziglyph.isPrint('\t'));
+    try expect(!Ziglyph.isPrint('\u{0003}'));
 }
 
 test "Ziglyph isAlphaNum" {
-    var ziglyph = Ziglyph.new();
-
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        try expect(ziglyph.isAlphaNum(cp));
+        try expect(Ziglyph.isAlphaNum(cp));
     }
 
     cp = 'a';
     while (cp <= 'z') : (cp += 1) {
-        try expect(ziglyph.isAlphaNum(cp));
+        try expect(Ziglyph.isAlphaNum(cp));
     }
 
     cp = 'A';
     while (cp <= 'Z') : (cp += 1) {
-        try expect(ziglyph.isAlphaNum(cp));
+        try expect(Ziglyph.isAlphaNum(cp));
     }
 
-    try expect(!ziglyph.isAlphaNum('='));
+    try expect(!Ziglyph.isAlphaNum('='));
 }
 
 test "Ziglyph isControl" {
-    var ziglyph = Ziglyph.new();
-
-    try expect(ziglyph.isControl('\n'));
-    try expect(ziglyph.isControl('\r'));
-    try expect(ziglyph.isControl('\t'));
-    try expect(ziglyph.isControl('\u{0003}'));
-    try expect(ziglyph.isControl('\u{0012}'));
-    try expect(!ziglyph.isControl('A'));
+    try expect(Ziglyph.isControl('\n'));
+    try expect(Ziglyph.isControl('\r'));
+    try expect(Ziglyph.isControl('\t'));
+    try expect(Ziglyph.isControl('\u{0003}'));
+    try expect(Ziglyph.isControl('\u{0012}'));
+    try expect(!Ziglyph.isControl('A'));
 }

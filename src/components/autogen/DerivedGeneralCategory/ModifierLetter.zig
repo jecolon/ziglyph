@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode ModifierLetter code points.
 
-lo: u21 = 688,
-hi: u21 = 125259,
+const lo: u21 = 688;
+const hi: u21 = 125259;
 
-const ModifierLetter = @This();
-
-pub fn isModifierLetter(self: ModifierLetter, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isModifierLetter(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x2b0...0x2c1 => true,
         0x2c6...0x2d1 => true,

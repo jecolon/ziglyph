@@ -588,9 +588,8 @@ pub fn isEmpty(self: Self) bool {
 
 /// isBlank returns true if this Zigstr consits of whitespace only .
 pub fn isBlank(self: *Self) !bool {
-    const whitespace = WhiteSpace{};
     return for (try self.codePoints()) |cp| {
-        if (!whitespace.isWhiteSpace(cp)) break false;
+        if (!WhiteSpace.isWhiteSpace(cp)) break false;
     } else true;
 }
 
@@ -755,9 +754,8 @@ pub fn processCodePoints(self: *Self) !void {
 
 /// isLower detects if all the code points in this Zigstr are lowercase.
 pub fn isLower(self: *Self) !bool {
-    const letter = Letter.new();
     for (try self.codePoints()) |cp| {
-        if (!letter.isLower(cp)) return false;
+        if (!Letter.isLower(cp)) return false;
     }
 
     return true;
@@ -767,10 +765,9 @@ pub fn isLower(self: *Self) !bool {
 pub fn toLower(self: *Self) !void {
     var new_al = try std.ArrayList(u8).initCapacity(self.allocator, self.bytes.items.len);
 
-    const letter = Letter.new();
     var buf: [4]u8 = undefined;
     for (try self.codePoints()) |cp| {
-        const lcp = letter.toLower(cp);
+        const lcp = Letter.toLower(cp);
         const len = try unicode.utf8Encode(lcp, &buf);
         new_al.appendSliceAssumeCapacity(buf[0..len]);
     }
@@ -784,9 +781,8 @@ pub fn toLower(self: *Self) !void {
 
 /// isUpper detects if all the code points in this Zigstr are uppercase.
 pub fn isUpper(self: *Self) !bool {
-    const letter = Letter.new();
     for (try self.codePoints()) |cp| {
-        if (!letter.isUpper(cp)) return false;
+        if (!Letter.isUpper(cp)) return false;
     }
 
     return true;
@@ -796,10 +792,9 @@ pub fn isUpper(self: *Self) !bool {
 pub fn toUpper(self: *Self) !void {
     var new_al = try std.ArrayList(u8).initCapacity(self.allocator, self.bytes.items.len);
 
-    const letter = Letter.new();
     var buf: [4]u8 = undefined;
     for (try self.codePoints()) |cp| {
-        const ucp = letter.toUpper(cp);
+        const ucp = Letter.toUpper(cp);
         const len = try unicode.utf8Encode(ucp, &buf);
         new_al.appendSliceAssumeCapacity(buf[0..len]);
     }

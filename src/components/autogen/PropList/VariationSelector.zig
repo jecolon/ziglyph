@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode VariationSelector code points.
 
-lo: u21 = 6155,
-hi: u21 = 917999,
+const lo: u21 = 6155;
+const hi: u21 = 917999;
 
-const VariationSelector = @This();
-
-pub fn isVariationSelector(self: VariationSelector, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isVariationSelector(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x180b...0x180d => true,
         0xfe00...0xfe0f => true,

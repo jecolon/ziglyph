@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode MathSymbol code points.
 
-lo: u21 = 43,
-hi: u21 = 126705,
+const lo: u21 = 43;
+const hi: u21 = 126705;
 
-const MathSymbol = @This();
-
-pub fn isMathSymbol(self: MathSymbol, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isMathSymbol(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x2b => true,
         0x3c...0x3e => true,

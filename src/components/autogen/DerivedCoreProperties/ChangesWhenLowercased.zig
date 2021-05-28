@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode ChangesWhenLowercased code points.
 
-lo: u21 = 65,
-hi: u21 = 125217,
+const lo: u21 = 65;
+const hi: u21 = 125217;
 
-const ChangesWhenLowercased = @This();
-
-pub fn isChangesWhenLowercased(self: ChangesWhenLowercased, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isChangesWhenLowercased(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x41...0x5a => true,
         0xc0...0xd6 => true,

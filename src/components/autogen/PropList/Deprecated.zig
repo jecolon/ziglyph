@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Deprecated code points.
 
-lo: u21 = 329,
-hi: u21 = 917505,
+const lo: u21 = 329;
+const hi: u21 = 917505;
 
-const Deprecated = @This();
-
-pub fn isDeprecated(self: Deprecated, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isDeprecated(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x149 => true,
         0x673 => true,

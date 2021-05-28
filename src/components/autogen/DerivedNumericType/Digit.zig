@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Digit code points.
 
-lo: u21 = 178,
-hi: u21 = 127242,
+const lo: u21 = 178;
+const hi: u21 = 127242;
 
-const Digit = @This();
-
-pub fn isDigit(self: Digit, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isDigit(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xb2...0xb3 => true,
         0xb9 => true,

@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode OtherGraphemeExtend code points.
 
-lo: u21 = 2494,
-hi: u21 = 917631,
+const lo: u21 = 2494;
+const hi: u21 = 917631;
 
-const OtherGraphemeExtend = @This();
-
-pub fn isOtherGraphemeExtend(self: OtherGraphemeExtend, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isOtherGraphemeExtend(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x9be => true,
         0x9d7 => true,

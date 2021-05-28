@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Uppercase code points.
 
-lo: u21 = 65,
-hi: u21 = 127369,
+const lo: u21 = 65;
+const hi: u21 = 127369;
 
-const Uppercase = @This();
-
-pub fn isUppercase(self: Uppercase, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isUppercase(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x41...0x5a => true,
         0xc0...0xd6 => true,

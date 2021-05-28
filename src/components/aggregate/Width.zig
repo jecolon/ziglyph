@@ -13,30 +13,6 @@ const Nonspacing = @import("../../components.zig").Nonspacing;
 const Regional = @import("../../components.zig").Regional;
 const Wide = @import("../../components.zig").Wide;
 
-const Self = @This();
-
-ambiguous: Ambiguous,
-enclosing: Enclosing,
-extpic: ExtPic,
-format: Format,
-fullwidth: Fullwidth,
-nonspacing: Nonspacing,
-regional: Regional,
-wide: Wide,
-
-pub fn new() Self {
-    return Self{
-        .ambiguous = Ambiguous{},
-        .enclosing = Enclosing{},
-        .extpic = ExtPic{},
-        .format = Format{},
-        .fullwidth = Fullwidth{},
-        .nonspacing = Nonspacing{},
-        .regional = Regional{},
-        .wide = Wide{},
-    };
-}
-
 /// AmbiguousWidth determines the width of ambiguous characters according to the context. In an 
 /// East Asian context, the width of ambiguous code points should be 2 (full), and 1 (half) 
 /// in non-East Asian contexts. The most common use case is `half`.
@@ -47,7 +23,7 @@ pub const AmbiguousWidth = enum(u2) {
 
 /// codePointWidth returns how many cells (or columns) wide `cp` should be when rendered in a
 /// fixed-width font.
-pub fn codePointWidth(self: Self, cp: u21, am_width: AmbiguousWidth) i3 {
+pub fn codePointWidth(cp: u21, am_width: AmbiguousWidth) i3 {
     if (cp == 0x000 or cp == 0x0005 or cp == 0x0007 or (cp >= 0x000A and cp <= 0x000F)) {
         // Control.
         return 0;
@@ -63,10 +39,10 @@ pub fn codePointWidth(self: Self, cp: u21, am_width: AmbiguousWidth) i3 {
     } else if (cp == 0x2E3B) {
         // three-em dash
         return 3;
-    } else if (self.enclosing.isEnclosingMark(cp) or self.nonspacing.isNonspacingMark(cp)) {
+    } else if (Enclosing.isEnclosingMark(cp) or Nonspacing.isNonspacingMark(cp)) {
         // Combining Marks.
         return 0;
-    } else if (self.format.isFormat(cp) and (!(cp >= 0x0600 and cp <= 0x0605) and cp != 0x061C and
+    } else if (Format.isFormat(cp) and (!(cp >= 0x0600 and cp <= 0x0605) and cp != 0x061C and
         cp != 0x06DD and cp != 0x08E2))
     {
         // Format except Arabic.
@@ -81,11 +57,11 @@ pub fn codePointWidth(self: Self, cp: u21, am_width: AmbiguousWidth) i3 {
         (cp >= 0x30000 and cp <= 0x3FFFD))
     {
         return 2;
-    } else if (self.wide.isWide(cp) or self.fullwidth.isFullwidth(cp)) {
+    } else if (Wide.isWide(cp) or Fullwidth.isFullwidth(cp)) {
         return 2;
-    } else if (self.regional.isRegionalIndicator(cp)) {
+    } else if (Regional.isRegionalIndicator(cp)) {
         return 2;
-    } else if (self.ambiguous.isAmbiguous(cp)) {
+    } else if (Ambiguous.isAmbiguous(cp)) {
         return @enumToInt(am_width);
     } else {
         return 1;
@@ -94,7 +70,7 @@ pub fn codePointWidth(self: Self, cp: u21, am_width: AmbiguousWidth) i3 {
 
 /// strWidth returns how many cells (or columns) wide `str` should be when rendered in a
 /// fixed-width font.
-pub fn strWidth(self: Self, str: []const u8, am_width: AmbiguousWidth) !usize {
+pub fn strWidth(str: []const u8, am_width: AmbiguousWidth) !usize {
     var total: isize = 0;
 
     // ASCII bytes are all width == 1.
@@ -122,11 +98,11 @@ pub fn strWidth(self: Self, str: []const u8, am_width: AmbiguousWidth) !usize {
         var cp_iter = (try unicode.Utf8View.init(gc.bytes)).iterator();
 
         while (cp_iter.nextCodepoint()) |cp| {
-            var w = self.codePointWidth(cp, am_width);
+            var w = codePointWidth(cp, am_width);
 
             if (w != 0) {
                 // Only adding width of first non-zero-width code point.
-                if (self.extpic.isExtendedPictographic(cp)) {
+                if (ExtPic.isExtendedPictographic(cp)) {
                     if (cp_iter.nextCodepoint()) |ncp| {
                         // Emoji text sequence.
                         if (ncp == 0xFE0E) w = 1;
@@ -143,11 +119,11 @@ pub fn strWidth(self: Self, str: []const u8, am_width: AmbiguousWidth) !usize {
 
 /// centers `str` in a new string of width `total_width` (in display cells) using `pad` as padding.
 /// Caller must free returned bytes.
-pub fn center(self: Self, allocator: *mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
-    var str_width = try self.strWidth(str, .half);
+pub fn center(allocator: *mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
+    var str_width = try strWidth(str, .half);
     if (str_width > total_width) return error.StrTooLong;
 
-    var pad_width = try self.strWidth(pad, .half);
+    var pad_width = try strWidth(pad, .half);
     if (pad_width > total_width or str_width + pad_width > total_width) return error.PadTooLong;
 
     const margin_width = @divFloor((total_width - str_width), 2);
@@ -178,11 +154,11 @@ pub fn center(self: Self, allocator: *mem.Allocator, str: []const u8, total_widt
 
 /// padLeft returns a new string of width `total_width` (in display cells) using `pad` as padding
 /// on the left side.  Caller must free returned bytes.
-pub fn padLeft(self: Self, allocator: *mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
-    var str_width = try self.strWidth(str, .half);
+pub fn padLeft(allocator: *mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
+    var str_width = try strWidth(str, .half);
     if (str_width > total_width) return error.StrTooLong;
 
-    var pad_width = try self.strWidth(pad, .half);
+    var pad_width = try strWidth(pad, .half);
     if (pad_width > total_width or str_width + pad_width > total_width) return error.PadTooLong;
 
     const margin_width = total_width - str_width;
@@ -206,11 +182,11 @@ pub fn padLeft(self: Self, allocator: *mem.Allocator, str: []const u8, total_wid
 
 /// padRight returns a new string of width `total_width` (in display cells) using `pad` as padding
 /// on the right side.  Caller must free returned bytes.
-pub fn padRight(self: Self, allocator: *mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
-    var str_width = try self.strWidth(str, .half);
+pub fn padRight(allocator: *mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
+    var str_width = try strWidth(str, .half);
     if (str_width > total_width) return error.StrTooLong;
 
-    var pad_width = try self.strWidth(pad, .half);
+    var pad_width = try strWidth(pad, .half);
     if (pad_width > total_width or str_width + pad_width > total_width) return error.PadTooLong;
 
     const margin_width = total_width - str_width;
@@ -237,83 +213,78 @@ const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
 test "Width Width" {
-    var width = new();
+    try expectEqual(@as(i8, -1), codePointWidth(0x0008, .half)); // \b
+    try expectEqual(@as(i8, 0), codePointWidth(0x0000, .half)); // null
+    try expectEqual(@as(i8, 0), codePointWidth(0x0005, .half)); // Cf
+    try expectEqual(@as(i8, 0), codePointWidth(0x0007, .half)); // \a BEL
+    try expectEqual(@as(i8, 0), codePointWidth(0x000A, .half)); // \n LF
+    try expectEqual(@as(i8, 0), codePointWidth(0x000B, .half)); // \v VT
+    try expectEqual(@as(i8, 0), codePointWidth(0x000C, .half)); // \f FF
+    try expectEqual(@as(i8, 0), codePointWidth(0x000D, .half)); // \r CR
+    try expectEqual(@as(i8, 0), codePointWidth(0x000E, .half)); // SQ
+    try expectEqual(@as(i8, 0), codePointWidth(0x000F, .half)); // SI
 
-    try expectEqual(@as(i8, -1), width.codePointWidth(0x0008, .half)); // \b
-    try expectEqual(@as(i8, 0), width.codePointWidth(0x0000, .half)); // null
-    try expectEqual(@as(i8, 0), width.codePointWidth(0x0005, .half)); // Cf
-    try expectEqual(@as(i8, 0), width.codePointWidth(0x0007, .half)); // \a BEL
-    try expectEqual(@as(i8, 0), width.codePointWidth(0x000A, .half)); // \n LF
-    try expectEqual(@as(i8, 0), width.codePointWidth(0x000B, .half)); // \v VT
-    try expectEqual(@as(i8, 0), width.codePointWidth(0x000C, .half)); // \f FF
-    try expectEqual(@as(i8, 0), width.codePointWidth(0x000D, .half)); // \r CR
-    try expectEqual(@as(i8, 0), width.codePointWidth(0x000E, .half)); // SQ
-    try expectEqual(@as(i8, 0), width.codePointWidth(0x000F, .half)); // SI
+    try expectEqual(@as(i8, 0), codePointWidth(0x070F, .half)); // Cf
+    try expectEqual(@as(i8, 1), codePointWidth(0x0603, .half)); // Cf Arabic
 
-    try expectEqual(@as(i8, 0), width.codePointWidth(0x070F, .half)); // Cf
-    try expectEqual(@as(i8, 1), width.codePointWidth(0x0603, .half)); // Cf Arabic
+    try expectEqual(@as(i8, 1), codePointWidth(0x00AD, .half)); // soft-hyphen
+    try expectEqual(@as(i8, 2), codePointWidth(0x2E3A, .half)); // two-em dash
+    try expectEqual(@as(i8, 3), codePointWidth(0x2E3B, .half)); // three-em dash
 
-    try expectEqual(@as(i8, 1), width.codePointWidth(0x00AD, .half)); // soft-hyphen
-    try expectEqual(@as(i8, 2), width.codePointWidth(0x2E3A, .half)); // two-em dash
-    try expectEqual(@as(i8, 3), width.codePointWidth(0x2E3B, .half)); // three-em dash
+    try expectEqual(@as(i8, 1), codePointWidth(0x00BD, .half)); // ambiguous halfwidth
+    try expectEqual(@as(i8, 2), codePointWidth(0x00BD, .full)); // ambiguous fullwidth
 
-    try expectEqual(@as(i8, 1), width.codePointWidth(0x00BD, .half)); // ambiguous halfwidth
-    try expectEqual(@as(i8, 2), width.codePointWidth(0x00BD, .full)); // ambiguous fullwidth
+    try expectEqual(@as(i8, 1), codePointWidth('é', .half));
+    try expectEqual(@as(i8, 2), codePointWidth('😊', .half));
+    try expectEqual(@as(i8, 2), codePointWidth('统', .half));
 
-    try expectEqual(@as(i8, 1), width.codePointWidth('é', .half));
-    try expectEqual(@as(i8, 2), width.codePointWidth('😊', .half));
-    try expectEqual(@as(i8, 2), width.codePointWidth('统', .half));
-
-    try expectEqual(@as(usize, 5), try width.strWidth("Hello\r\n", .half));
-    try expectEqual(@as(usize, 1), try width.strWidth("\u{0065}\u{0301}", .half));
-    try expectEqual(@as(usize, 2), try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half));
-    try expectEqual(@as(usize, 8), try width.strWidth("Hello 😊", .half));
-    try expectEqual(@as(usize, 8), try width.strWidth("Héllo 😊", .half));
-    try expectEqual(@as(usize, 8), try width.strWidth("Héllo :)", .half));
-    try expectEqual(@as(usize, 8), try width.strWidth("Héllo 🇪🇸", .half));
-    try expectEqual(@as(usize, 2), try width.strWidth("\u{26A1}", .half)); // Lone emoji
-    try expectEqual(@as(usize, 1), try width.strWidth("\u{26A1}\u{FE0E}", .half)); // Text sequence
-    try expectEqual(@as(usize, 2), try width.strWidth("\u{26A1}\u{FE0F}", .half)); // Presentation sequence
-    try expectEqual(@as(usize, 0), try width.strWidth("A\x08", .half)); // Backspace
-    try expectEqual(@as(usize, 0), try width.strWidth("\x7FA", .half)); // DEL
-    try expectEqual(@as(usize, 0), try width.strWidth("\x7FA\x08\x08", .half)); // never less than o
+    try expectEqual(@as(usize, 5), try strWidth("Hello\r\n", .half));
+    try expectEqual(@as(usize, 1), try strWidth("\u{0065}\u{0301}", .half));
+    try expectEqual(@as(usize, 2), try strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half));
+    try expectEqual(@as(usize, 8), try strWidth("Hello 😊", .half));
+    try expectEqual(@as(usize, 8), try strWidth("Héllo 😊", .half));
+    try expectEqual(@as(usize, 8), try strWidth("Héllo :)", .half));
+    try expectEqual(@as(usize, 8), try strWidth("Héllo 🇪🇸", .half));
+    try expectEqual(@as(usize, 2), try strWidth("\u{26A1}", .half)); // Lone emoji
+    try expectEqual(@as(usize, 1), try strWidth("\u{26A1}\u{FE0E}", .half)); // Text sequence
+    try expectEqual(@as(usize, 2), try strWidth("\u{26A1}\u{FE0F}", .half)); // Presentation sequence
+    try expectEqual(@as(usize, 0), try strWidth("A\x08", .half)); // Backspace
+    try expectEqual(@as(usize, 0), try strWidth("\x7FA", .half)); // DEL
+    try expectEqual(@as(usize, 0), try strWidth("\x7FA\x08\x08", .half)); // never less than o
 }
 
 test "Width center" {
     var allocator = std.testing.allocator;
-    var width = new();
 
-    var centered = try width.center(allocator, "abc", 9, "*");
+    var centered = try center(allocator, "abc", 9, "*");
     defer allocator.free(centered);
     try expectEqualSlices(u8, "***abc***", centered);
 
     allocator.free(centered);
-    centered = try width.center(allocator, "w😊w", 10, "-");
+    centered = try center(allocator, "w😊w", 10, "-");
     try expectEqualSlices(u8, "---w😊w---", centered);
 }
 
 test "Width padLeft" {
     var allocator = std.testing.allocator;
-    var width = new();
 
-    var right_aligned = try width.padLeft(allocator, "abc", 9, "*");
+    var right_aligned = try padLeft(allocator, "abc", 9, "*");
     defer allocator.free(right_aligned);
     try expectEqualSlices(u8, "******abc", right_aligned);
 
     allocator.free(right_aligned);
-    right_aligned = try width.padLeft(allocator, "w😊w", 10, "-");
+    right_aligned = try padLeft(allocator, "w😊w", 10, "-");
     try expectEqualSlices(u8, "------w😊w", right_aligned);
 }
 
 test "Width padRight" {
     var allocator = std.testing.allocator;
-    var width = new();
 
-    var left_aligned = try width.padRight(allocator, "abc", 9, "*");
+    var left_aligned = try padRight(allocator, "abc", 9, "*");
     defer allocator.free(left_aligned);
     try expectEqualSlices(u8, "abc******", left_aligned);
 
     allocator.free(left_aligned);
-    left_aligned = try width.padRight(allocator, "w😊w", 10, "-");
+    left_aligned = try padRight(allocator, "w😊w", 10, "-");
     try expectEqualSlices(u8, "w😊w------", left_aligned);
 }

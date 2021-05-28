@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode DefaultIgnorableCodePoint code points.
 
-lo: u21 = 173,
-hi: u21 = 921599,
+const lo: u21 = 173;
+const hi: u21 = 921599;
 
-const DefaultIgnorableCodePoint = @This();
-
-pub fn isDefaultIgnorableCodePoint(self: DefaultIgnorableCodePoint, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isDefaultIgnorableCodePoint(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xad => true,
         0x34f => true,

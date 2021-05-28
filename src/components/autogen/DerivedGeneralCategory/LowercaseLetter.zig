@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode LowercaseLetter code points.
 
-lo: u21 = 97,
-hi: u21 = 125251,
+const lo: u21 = 97;
+const hi: u21 = 125251;
 
-const LowercaseLetter = @This();
-
-pub fn isLowercaseLetter(self: LowercaseLetter, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isLowercaseLetter(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x61...0x7a => true,
         0xb5 => true,

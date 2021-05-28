@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode GraphemeLink code points.
 
-lo: u21 = 2381,
-hi: u21 = 73111,
+const lo: u21 = 2381;
+const hi: u21 = 73111;
 
-const GraphemeLink = @This();
-
-pub fn isGraphemeLink(self: GraphemeLink, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isGraphemeLink(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x94d => true,
         0x9cd => true,

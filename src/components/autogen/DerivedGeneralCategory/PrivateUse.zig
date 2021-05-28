@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode PrivateUse code points.
 
-lo: u21 = 57344,
-hi: u21 = 1114109,
+const lo: u21 = 57344;
+const hi: u21 = 1114109;
 
-const PrivateUse = @This();
-
-pub fn isPrivateUse(self: PrivateUse, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isPrivateUse(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xe000...0xf8ff => true,
         0xf0000...0xffffd => true,

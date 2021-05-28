@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Hyphen code points.
 
-lo: u21 = 45,
-hi: u21 = 65381,
+const lo: u21 = 45;
+const hi: u21 = 65381;
 
-const Hyphen = @This();
-
-pub fn isHyphen(self: Hyphen, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isHyphen(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x2d => true,
         0xad => true,

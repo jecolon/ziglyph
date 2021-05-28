@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode V code points.
 
-lo: u21 = 4448,
-hi: u21 = 55238,
+const lo: u21 = 4448;
+const hi: u21 = 55238;
 
-const V = @This();
-
-pub fn isV(self: V, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isV(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x1160...0x11a7 => true,
         0xd7b0...0xd7c6 => true,

@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode SpaceSeparator code points.
 
-lo: u21 = 32,
-hi: u21 = 12288,
+const lo: u21 = 32;
+const hi: u21 = 12288;
 
-const SpaceSeparator = @This();
-
-pub fn isSpaceSeparator(self: SpaceSeparator, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isSpaceSeparator(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x20 => true,
         0xa0 => true,

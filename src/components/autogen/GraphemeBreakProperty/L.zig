@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode L code points.
 
-lo: u21 = 4352,
-hi: u21 = 43388,
+const lo: u21 = 4352;
+const hi: u21 = 43388;
 
-const L = @This();
-
-pub fn isL(self: L, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isL(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x1100...0x115f => true,
         0xa960...0xa97c => true,

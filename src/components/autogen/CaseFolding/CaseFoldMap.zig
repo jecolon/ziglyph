@@ -5,11 +5,9 @@ const std = @import("std");
 const mem = std.mem;
 const unicode = std.unicode;
 
-const CaseFoldMap = @This();
-
 /// caseFoldStr will caseFold the code points in str, producing a slice of u8 with the new bytes.
 /// Caller must free returned bytes.
-pub fn caseFoldStr(self: CaseFoldMap, allocator: *mem.Allocator, str: []const u8) ![]u8 {
+pub fn caseFoldStr(allocator: *mem.Allocator, str: []const u8) ![]u8 {
     var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
     var code_points = std.ArrayList(u21).init(allocator);
@@ -18,7 +16,7 @@ pub fn caseFoldStr(self: CaseFoldMap, allocator: *mem.Allocator, str: []const u8
     // Gather decomposed code points.
     var iter = (try unicode.Utf8View.init(str)).iterator();
     while (iter.nextCodepoint()) |cp| {
-        for (self.toCaseFold(cp)) |fcp| {
+        for (toCaseFold(cp)) |fcp| {
             if (fcp == 0) break;
             try code_points.append(fcp);
         }
@@ -36,7 +34,7 @@ pub fn caseFoldStr(self: CaseFoldMap, allocator: *mem.Allocator, str: []const u8
 
 /// toCaseFold will convert a code point into its case folded equivalent. Note that this can result
 /// in a mapping to more than one code point, known as the full case fold.
-pub fn toCaseFold(self: CaseFoldMap, cp: u21) [3]u21 {
+pub fn toCaseFold(cp: u21) [3]u21 {
     return switch (cp) {
         0x0041 => [3]u21{ 0x0061, 0, 0 },
         0x0042 => [3]u21{ 0x0062, 0, 0 },

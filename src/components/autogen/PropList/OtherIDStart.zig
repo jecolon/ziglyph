@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode OtherIDStart code points.
 
-lo: u21 = 6277,
-hi: u21 = 12444,
+const lo: u21 = 6277;
+const hi: u21 = 12444;
 
-const OtherIDStart = @This();
-
-pub fn isOtherIDStart(self: OtherIDStart, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isOtherIDStart(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x1885...0x1886 => true,
         0x2118 => true,

@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode LF code points.
 
-lo: u21 = 10,
-hi: u21 = 10,
+const lo: u21 = 10;
+const hi: u21 = 10;
 
-const LF = @This();
-
-pub fn isLF(self: LF, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isLF(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xa => true,
         else => false,

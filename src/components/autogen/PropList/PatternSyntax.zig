@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode PatternSyntax code points.
 
-lo: u21 = 33,
-hi: u21 = 65094,
+const lo: u21 = 33;
+const hi: u21 = 65094;
 
-const PatternSyntax = @This();
-
-pub fn isPatternSyntax(self: PatternSyntax, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isPatternSyntax(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x21...0x23 => true,
         0x24 => true,

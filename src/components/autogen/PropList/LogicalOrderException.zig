@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode LogicalOrderException code points.
 
-lo: u21 = 3648,
-hi: u21 = 43708,
+const lo: u21 = 3648;
+const hi: u21 = 43708;
 
-const LogicalOrderException = @This();
-
-pub fn isLogicalOrderException(self: LogicalOrderException, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isLogicalOrderException(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xe40...0xe44 => true,
         0xec0...0xec4 => true,

@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode ParagraphSeparator code points.
 
-lo: u21 = 8233,
-hi: u21 = 8233,
+const lo: u21 = 8233;
+const hi: u21 = 8233;
 
-const ParagraphSeparator = @This();
-
-pub fn isParagraphSeparator(self: ParagraphSeparator, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isParagraphSeparator(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x2029 => true,
         else => false,

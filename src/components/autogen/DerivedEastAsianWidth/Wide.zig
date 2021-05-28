@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Wide code points.
 
-lo: u21 = 4352,
-hi: u21 = 262141,
+const lo: u21 = 4352;
+const hi: u21 = 262141;
 
-const Wide = @This();
-
-pub fn isWide(self: Wide, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isWide(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x1100...0x115f => true,
         0x231a...0x231b => true,

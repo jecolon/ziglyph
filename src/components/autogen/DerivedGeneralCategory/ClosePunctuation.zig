@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode ClosePunctuation code points.
 
-lo: u21 = 41,
-hi: u21 = 65379,
+const lo: u21 = 41;
+const hi: u21 = 65379;
 
-const ClosePunctuation = @This();
-
-pub fn isClosePunctuation(self: ClosePunctuation, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isClosePunctuation(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x29 => true,
         0x5d => true,

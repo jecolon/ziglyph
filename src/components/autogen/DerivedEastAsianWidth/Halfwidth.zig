@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Halfwidth code points.
 
-lo: u21 = 8361,
-hi: u21 = 65518,
+const lo: u21 = 8361;
+const hi: u21 = 65518;
 
-const Halfwidth = @This();
-
-pub fn isHalfwidth(self: Halfwidth, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isHalfwidth(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x20a9 => true,
         0xff61 => true,

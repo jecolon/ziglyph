@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode PatternWhiteSpace code points.
 
-lo: u21 = 9,
-hi: u21 = 8233,
+const lo: u21 = 9;
+const hi: u21 = 8233;
 
-const PatternWhiteSpace = @This();
-
-pub fn isPatternWhiteSpace(self: PatternWhiteSpace, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isPatternWhiteSpace(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x9...0xd => true,
         0x20 => true,

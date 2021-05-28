@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode UnifiedIdeograph code points.
 
-lo: u21 = 13312,
-hi: u21 = 201546,
+const lo: u21 = 13312;
+const hi: u21 = 201546;
 
-const UnifiedIdeograph = @This();
-
-pub fn isUnifiedIdeograph(self: UnifiedIdeograph, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isUnifiedIdeograph(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x3400...0x4dbf => true,
         0x4e00...0x9ffc => true,

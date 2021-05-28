@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode HexDigit code points.
 
-lo: u21 = 48,
-hi: u21 = 65350,
+const lo: u21 = 48;
+const hi: u21 = 65350;
 
-const HexDigit = @This();
-
-pub fn isHexDigit(self: HexDigit, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isHexDigit(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x30...0x39 => true,
         0x41...0x46 => true,

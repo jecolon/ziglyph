@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Control code points.
 
-lo: u21 = 0,
-hi: u21 = 921599,
+const lo: u21 = 0;
+const hi: u21 = 921599;
 
-const Control = @This();
-
-pub fn isControl(self: Control, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isControl(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x0...0x9 => true,
         0xb...0xc => true,

@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode OtherLetter code points.
 
-lo: u21 = 170,
-hi: u21 = 201546,
+const lo: u21 = 170;
+const hi: u21 = 201546;
 
-const OtherLetter = @This();
-
-pub fn isOtherLetter(self: OtherLetter, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isOtherLetter(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xaa => true,
         0xba => true,

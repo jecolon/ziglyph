@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode IDStart code points.
 
-lo: u21 = 65,
-hi: u21 = 201546,
+const lo: u21 = 65;
+const hi: u21 = 201546;
 
-const IDStart = @This();
-
-pub fn isIDStart(self: IDStart, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isIDStart(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x41...0x5a => true,
         0x61...0x7a => true,

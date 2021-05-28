@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Prepend code points.
 
-lo: u21 = 1536,
-hi: u21 = 73030,
+const lo: u21 = 1536;
+const hi: u21 = 73030;
 
-const Prepend = @This();
-
-pub fn isPrepend(self: Prepend, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isPrepend(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x600...0x605 => true,
         0x6dd => true,

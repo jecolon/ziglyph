@@ -16,14 +16,7 @@ const Regional = @import("../components.zig").Regional;
 const Spacing = @import("../components.zig").Spacing;
 
 ascii_only: bool = false,
-control: Control,
 cp_iter: CodePointIterator,
-extend: Extend,
-extpic: ExtPic,
-hangul_map: HangulMap,
-prepend: Prepend,
-regional: Regional,
-spacing: Spacing,
 
 const Self = @This();
 
@@ -38,14 +31,7 @@ pub fn newAscii(str: []const u8) !Self {
 fn newOpt(str: []const u8, ascii_only: bool) !Self {
     return Self{
         .ascii_only = ascii_only,
-        .control = Control{},
         .cp_iter = try CodePointIterator.init(str),
-        .extend = Extend{},
-        .extpic = ExtPic{},
-        .hangul_map = HangulMap{},
-        .prepend = Prepend{},
-        .regional = Regional{},
-        .spacing = Spacing{},
     };
 }
 
@@ -86,9 +72,9 @@ pub fn next(self: *Self) ?Grapheme {
     const next_cp = self.cp_iter.peek();
 
     // GB9.2
-    if (self.prepend.isPrepend(cp)) {
+    if (Prepend.isPrepend(cp)) {
         if (next_cp) |ncp| {
-            if (ncp == CR or ncp == LF or (self.control.isControl(ncp))) {
+            if (ncp == CR or ncp == LF or (Control.isControl(ncp))) {
                 return Grapheme{
                     .bytes = self.cp_iter.bytes[cp_start..cp_end],
                     .offset = cp_start,
@@ -141,14 +127,14 @@ fn processNonPrepend(
         return Slice{ .start = cp_start, .end = cp_end };
     }
 
-    if (self.control.isControl(cp)) {
+    if (Control.isControl(cp)) {
         return Slice{ .start = cp_start, .end = cp_end };
     }
 
     // GB6, GB7, GB8
-    if (self.hangul_map.syllableType(cp)) |hst| {
+    if (HangulMap.syllableType(cp)) |hst| {
         if (next_cp) |ncp| {
-            const ncp_hst = self.hangul_map.syllableType(ncp);
+            const ncp_hst = HangulMap.syllableType(ncp);
 
             if (ncp_hst) |nhst| {
                 switch (hst) {
@@ -177,12 +163,12 @@ fn processNonPrepend(
     }
 
     // GB11
-    if (self.extpic.isExtendedPictographic(cp)) {
+    if (ExtPic.isExtendedPictographic(cp)) {
         self.fullAdvance();
         if (self.cp_iter.prev) |pcp| {
             if (pcp == ZWJ) {
                 if (self.cp_iter.peek()) |ncp| {
-                    if (self.extpic.isExtendedPictographic(ncp)) {
+                    if (ExtPic.isExtendedPictographic(ncp)) {
                         _ = self.cp_iter.next(); // Advance past end emoji.
                         // GB9
                         self.fullAdvance();
@@ -195,9 +181,9 @@ fn processNonPrepend(
     }
 
     // GB12
-    if (self.regional.isRegionalIndicator(cp)) {
+    if (Regional.isRegionalIndicator(cp)) {
         if (next_cp) |ncp| {
-            if (self.regional.isRegionalIndicator(ncp)) {
+            if (Regional.isRegionalIndicator(ncp)) {
                 _ = self.cp_iter.next(); // Advance past 2nd RI.
             }
         }
@@ -213,11 +199,10 @@ fn processNonPrepend(
 
 fn lexRun(
     self: *Self,
-    ctx: anytype,
-    comptime predicate: fn (ctx: @TypeOf(ctx), cp: u21) bool,
+    comptime predicate: fn (cp: u21) bool,
 ) void {
     while (self.cp_iter.peek()) |ncp| {
-        if (!predicate(ctx, ncp)) break;
+        if (!predicate(ncp)) break;
         _ = self.cp_iter.next();
     }
 }
@@ -226,7 +211,7 @@ fn fullAdvance(self: *Self) void {
     const next_cp = self.cp_iter.peek();
     // Base case.
     if (next_cp) |ncp| {
-        if (ncp != ZWJ and !self.extend.isExtend(ncp) and !self.spacing.isSpacingMark(ncp)) return;
+        if (ncp != ZWJ and !Extend.isExtend(ncp) and !Spacing.isSpacingMark(ncp)) return;
     } else {
         return;
     }
@@ -237,11 +222,11 @@ fn fullAdvance(self: *Self) void {
     if (ncp == ZWJ) {
         _ = self.cp_iter.next();
         self.fullAdvance();
-    } else if (self.extend.isExtend(ncp)) {
-        self.lexRun(self.extend, Extend.isExtend);
+    } else if (Extend.isExtend(ncp)) {
+        self.lexRun(Extend.isExtend);
         self.fullAdvance();
-    } else if (self.spacing.isSpacingMark(ncp)) {
-        self.lexRun(self.spacing, Spacing.isSpacingMark);
+    } else if (Spacing.isSpacingMark(ncp)) {
+        self.lexRun(Spacing.isSpacingMark);
         self.fullAdvance();
     }
 }

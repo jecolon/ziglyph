@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode LVT code points.
 
-lo: u21 = 44033,
-hi: u21 = 55203,
+const lo: u21 = 44033;
+const hi: u21 = 55203;
 
-const LVT = @This();
-
-pub fn isLVT(self: LVT, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isLVT(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xac01...0xac1b => true,
         0xac1d...0xac37 => true,

@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode OtherIDContinue code points.
 
-lo: u21 = 183,
-hi: u21 = 6618,
+const lo: u21 = 183;
+const hi: u21 = 6618;
 
-const OtherIDContinue = @This();
-
-pub fn isOtherIDContinue(self: OtherIDContinue, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isOtherIDContinue(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xb7 => true,
         0x387 => true,

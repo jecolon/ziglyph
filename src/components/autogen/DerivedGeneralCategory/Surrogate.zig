@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Surrogate code points.
 
-lo: u21 = 55296,
-hi: u21 = 57343,
+const lo: u21 = 55296;
+const hi: u21 = 57343;
 
-const Surrogate = @This();
-
-pub fn isSurrogate(self: Surrogate, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isSurrogate(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xd800...0xdfff => true,
         else => false,

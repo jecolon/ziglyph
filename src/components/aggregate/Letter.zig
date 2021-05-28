@@ -13,46 +13,20 @@ pub const UpperMap = @import("../../components.zig").UpperMap;
 
 const Self = @This();
 
-fold_map: CaseFoldMap,
-cased: Cased,
-lower: Lower,
-lower_map: LowerMap,
-modifier_letter: ModifierLetter,
-other_letter: OtherLetter,
-title: Title,
-title_map: TitleMap,
-upper: Upper,
-upper_map: UpperMap,
-
-pub fn new() Self {
-    return Self{
-        .fold_map = CaseFoldMap{},
-        .cased = Cased{},
-        .lower = Lower{},
-        .lower_map = LowerMap{},
-        .modifier_letter = ModifierLetter{},
-        .other_letter = OtherLetter{},
-        .title = Title{},
-        .title_map = TitleMap{},
-        .upper = Upper{},
-        .upper_map = UpperMap{},
-    };
-}
-
 /// isCased detects cased letters.
-pub fn isCased(self: Self, cp: u21) bool {
+pub fn isCased(cp: u21) bool {
     // ASCII optimization.
     if ((cp >= 'A' and cp <= 'Z') or (cp >= 'a' and cp <= 'z')) return true;
-    return self.cased.isCased(cp);
+    return Cased.isCased(cp);
 }
 
 /// isLetter covers all letters in Unicode, not just ASCII.
-pub fn isLetter(self: Self, cp: u21) bool {
+pub fn isLetter(cp: u21) bool {
     // ASCII optimization.
     if ((cp >= 'A' and cp <= 'Z') or (cp >= 'a' and cp <= 'z')) return true;
-    return self.lower.isLowercaseLetter(cp) or self.modifier_letter.isModifierLetter(cp) or
-        self.other_letter.isOtherLetter(cp) or self.title.isTitlecaseLetter(cp) or
-        self.upper.isUppercaseLetter(cp);
+    return Lower.isLowercaseLetter(cp) or ModifierLetter.isModifierLetter(cp) or
+        OtherLetter.isOtherLetter(cp) or Title.isTitlecaseLetter(cp) or
+        Upper.isUppercaseLetter(cp);
 }
 
 /// isAscii detects ASCII only letters.
@@ -61,10 +35,10 @@ pub fn isAsciiLetter(cp: u21) bool {
 }
 
 /// isLower detects code points that are lowercase.
-pub fn isLower(self: Self, cp: u21) bool {
+pub fn isLower(cp: u21) bool {
     // ASCII optimization.
     if (cp >= 'a' and cp <= 'z') return true;
-    return self.lower.isLowercaseLetter(cp) or !self.isCased(cp);
+    return Lower.isLowercaseLetter(cp) or !isCased(cp);
 }
 
 /// isAsciiLower detects ASCII only lowercase letters.
@@ -73,15 +47,15 @@ pub fn isAsciiLower(cp: u21) bool {
 }
 
 /// isTitle detects code points in titlecase.
-pub fn isTitle(self: Self, cp: u21) bool {
-    return self.title.isTitlecaseLetter(cp) or !self.isCased(cp);
+pub fn isTitle(cp: u21) bool {
+    return Title.isTitlecaseLetter(cp) or !isCased(cp);
 }
 
 /// isUpper detects code points in uppercase.
-pub fn isUpper(self: Self, cp: u21) bool {
+pub fn isUpper(cp: u21) bool {
     // ASCII optimization.
     if (cp >= 'A' and cp <= 'Z') return true;
-    return self.upper.isUppercaseLetter(cp) or !self.isCased(cp);
+    return Upper.isUppercaseLetter(cp) or !isCased(cp);
 }
 
 /// isAsciiUpper detects ASCII only uppercase letters.
@@ -91,12 +65,12 @@ pub fn isAsciiUpper(cp: u21) bool {
 
 /// toLower returns the lowercase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
-pub fn toLower(self: Self, cp: u21) u21 {
+pub fn toLower(cp: u21) u21 {
     // ASCII optimization.
     if (cp >= 'A' and cp <= 'Z') return cp ^ 32;
     // Only cased letters.
-    if (!self.isCased(cp)) return cp;
-    return self.lower_map.toLower(cp);
+    if (!isCased(cp)) return cp;
+    return LowerMap.toLower(cp);
 }
 
 /// toAsciiLower converts an ASCII letter to lowercase.
@@ -106,20 +80,20 @@ pub fn toAsciiLower(self: Self, cp: u21) u21 {
 
 /// toTitle returns the titlecase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
-pub fn toTitle(self: Self, cp: u21) u21 {
+pub fn toTitle(cp: u21) u21 {
     // Only cased letters.
-    if (!self.isCased(cp)) return cp;
-    return self.title_map.toTitle(cp);
+    if (!isCased(cp)) return cp;
+    return TitleMap.toTitle(cp);
 }
 
 /// toUpper returns the uppercase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
-pub fn toUpper(self: Self, cp: u21) u21 {
+pub fn toUpper(cp: u21) u21 {
     // ASCII optimization.
     if (cp >= 'a' and cp <= 'z') return cp ^ 32;
     // Only cased letters.
-    if (!self.isCased(cp)) return cp;
-    return self.upper_map.toUpper(cp);
+    if (!isCased(cp)) return cp;
+    return UpperMap.toUpper(cp);
 }
 
 /// toAsciiUpper converts an ASCII letter to uppercase.
@@ -130,144 +104,124 @@ pub fn toAsciiUpper(self: Self, cp: u21) u21 {
 /// toCaseFold will convert a code point into its case folded equivalent. Note that this can result
 /// in a mapping to more than one code point, known as the full case fold. The returned array has 3
 /// elements and the code points span until the first element equal to 0 or the end, whichever is first.
-pub fn toCaseFold(self: Self, cp: u21) [3]u21 {
-    return self.fold_map.toCaseFold(cp);
+pub fn toCaseFold(cp: u21) [3]u21 {
+    return CaseFoldMap.toCaseFold(cp);
 }
 
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 
 test "Component struct" {
-    var letter = new();
-
     const z = 'z';
-    try expect(letter.isLetter(z));
-    try expect(!letter.isUpper(z));
-    const uz = letter.toUpper(z);
-    try expect(letter.isUpper(uz));
+    try expect(isLetter(z));
+    try expect(!isUpper(z));
+    const uz = toUpper(z);
+    try expect(isUpper(uz));
     try expectEqual(uz, 'Z');
 }
 
 test "Component isCased" {
-    var letter = new();
-
-    try expect(letter.isCased('a'));
-    try expect(letter.isCased('A'));
-    try expect(!letter.isCased('1'));
+    try expect(isCased('a'));
+    try expect(isCased('A'));
+    try expect(!isCased('1'));
 }
 
 test "Component isLower" {
-    var letter = new();
-
-    try expect(letter.isLower('a'));
-    try expect(letter.isLower('é'));
-    try expect(letter.isLower('i'));
-    try expect(!letter.isLower('A'));
-    try expect(!letter.isLower('É'));
-    try expect(!letter.isLower('İ'));
+    try expect(isLower('a'));
+    try expect(isLower('é'));
+    try expect(isLower('i'));
+    try expect(!isLower('A'));
+    try expect(!isLower('É'));
+    try expect(!isLower('İ'));
     // Numbers are lower, upper, and title all at once.
-    try expect(letter.isLower('1'));
+    try expect(isLower('1'));
 }
 
 const expectEqualSlices = std.testing.expectEqualSlices;
 
 test "Component toCaseFold" {
-    var letter = new();
-
-    var result = letter.toCaseFold('A');
+    var result = toCaseFold('A');
     try expectEqualSlices(u21, &[_]u21{ 'a', 0, 0 }, &result);
 
-    result = letter.toCaseFold('a');
+    result = toCaseFold('a');
     try expectEqualSlices(u21, &[_]u21{ 'a', 0, 0 }, &result);
 
-    result = letter.toCaseFold('1');
+    result = toCaseFold('1');
     try expectEqualSlices(u21, &[_]u21{ '1', 0, 0 }, &result);
 
-    result = letter.toCaseFold('\u{00DF}');
+    result = toCaseFold('\u{00DF}');
     try expectEqualSlices(u21, &[_]u21{ 0x0073, 0x0073, 0 }, &result);
 
-    result = letter.toCaseFold('\u{0390}');
+    result = toCaseFold('\u{0390}');
     try expectEqualSlices(u21, &[_]u21{ 0x03B9, 0x0308, 0x0301 }, &result);
 }
 
 test "Component toLower" {
-    var letter = new();
-
-    try expectEqual(letter.toLower('a'), 'a');
-    try expectEqual(letter.toLower('A'), 'a');
-    try expectEqual(letter.toLower('İ'), 'i');
-    try expectEqual(letter.toLower('É'), 'é');
-    try expectEqual(letter.toLower(0x80), 0x80);
-    try expectEqual(letter.toLower(0x80), 0x80);
-    try expectEqual(letter.toLower('Å'), 'å');
-    try expectEqual(letter.toLower('å'), 'å');
-    try expectEqual(letter.toLower('\u{212A}'), 'k');
-    try expectEqual(letter.toLower('1'), '1');
+    try expectEqual(toLower('a'), 'a');
+    try expectEqual(toLower('A'), 'a');
+    try expectEqual(toLower('İ'), 'i');
+    try expectEqual(toLower('É'), 'é');
+    try expectEqual(toLower(0x80), 0x80);
+    try expectEqual(toLower(0x80), 0x80);
+    try expectEqual(toLower('Å'), 'å');
+    try expectEqual(toLower('å'), 'å');
+    try expectEqual(toLower('\u{212A}'), 'k');
+    try expectEqual(toLower('1'), '1');
 }
 
 test "Component isUpper" {
-    var letter = new();
-
-    try expect(!letter.isUpper('a'));
-    try expect(!letter.isUpper('é'));
-    try expect(!letter.isUpper('i'));
-    try expect(letter.isUpper('A'));
-    try expect(letter.isUpper('É'));
-    try expect(letter.isUpper('İ'));
+    try expect(!isUpper('a'));
+    try expect(!isUpper('é'));
+    try expect(!isUpper('i'));
+    try expect(isUpper('A'));
+    try expect(isUpper('É'));
+    try expect(isUpper('İ'));
     // Numbers are lower, upper, and title all at once.
-    try expect(letter.isUpper('1'));
+    try expect(isUpper('1'));
 }
 
 test "Component toUpper" {
-    var letter = new();
-
-    try expectEqual(letter.toUpper('a'), 'A');
-    try expectEqual(letter.toUpper('A'), 'A');
-    try expectEqual(letter.toUpper('i'), 'I');
-    try expectEqual(letter.toUpper('é'), 'É');
-    try expectEqual(letter.toUpper(0x80), 0x80);
-    try expectEqual(letter.toUpper('Å'), 'Å');
-    try expectEqual(letter.toUpper('å'), 'Å');
-    try expectEqual(letter.toUpper('1'), '1');
+    try expectEqual(toUpper('a'), 'A');
+    try expectEqual(toUpper('A'), 'A');
+    try expectEqual(toUpper('i'), 'I');
+    try expectEqual(toUpper('é'), 'É');
+    try expectEqual(toUpper(0x80), 0x80);
+    try expectEqual(toUpper('Å'), 'Å');
+    try expectEqual(toUpper('å'), 'Å');
+    try expectEqual(toUpper('1'), '1');
 }
 
 test "Component isTitle" {
-    var letter = new();
-
-    try expect(!letter.isTitle('a'));
-    try expect(!letter.isTitle('é'));
-    try expect(!letter.isTitle('i'));
-    try expect(letter.isTitle('\u{1FBC}'));
-    try expect(letter.isTitle('\u{1FCC}'));
-    try expect(letter.isTitle('ǈ'));
+    try expect(!isTitle('a'));
+    try expect(!isTitle('é'));
+    try expect(!isTitle('i'));
+    try expect(isTitle('\u{1FBC}'));
+    try expect(isTitle('\u{1FCC}'));
+    try expect(isTitle('ǈ'));
     // Numbers are lower, upper, and title all at once.
-    try expect(letter.isTitle('1'));
+    try expect(isTitle('1'));
 }
 
 test "Component toTitle" {
-    var letter = new();
-
-    try expectEqual(letter.toTitle('a'), 'A');
-    try expectEqual(letter.toTitle('A'), 'A');
-    try expectEqual(letter.toTitle('i'), 'I');
-    try expectEqual(letter.toTitle('é'), 'É');
-    try expectEqual(letter.toTitle('1'), '1');
+    try expectEqual(toTitle('a'), 'A');
+    try expectEqual(toTitle('A'), 'A');
+    try expectEqual(toTitle('i'), 'I');
+    try expectEqual(toTitle('é'), 'É');
+    try expectEqual(toTitle('1'), '1');
 }
 
 test "Component isLetter" {
-    var letter = new();
-
     var cp: u21 = 'a';
     while (cp <= 'z') : (cp += 1) {
-        try expect(letter.isLetter(cp));
+        try expect(isLetter(cp));
     }
 
     cp = 'A';
     while (cp <= 'Z') : (cp += 1) {
-        try expect(letter.isLetter(cp));
+        try expect(isLetter(cp));
     }
 
-    try expect(letter.isLetter('É'));
-    try expect(letter.isLetter('\u{2CEB3}'));
-    try expect(!letter.isLetter('\u{0003}'));
+    try expect(isLetter('É'));
+    try expect(isLetter('\u{2CEB3}'));
+    try expect(!isLetter('\u{0003}'));
 }

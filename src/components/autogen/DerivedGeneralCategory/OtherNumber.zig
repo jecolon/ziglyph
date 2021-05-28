@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode OtherNumber code points.
 
-lo: u21 = 178,
-hi: u21 = 127244,
+const lo: u21 = 178;
+const hi: u21 = 127244;
 
-const OtherNumber = @This();
-
-pub fn isOtherNumber(self: OtherNumber, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isOtherNumber(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xb2...0xb3 => true,
         0xb9 => true,

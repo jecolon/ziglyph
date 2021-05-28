@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode IDSBinaryOperator code points.
 
-lo: u21 = 12272,
-hi: u21 = 12283,
+const lo: u21 = 12272;
+const hi: u21 = 12283;
 
-const IDSBinaryOperator = @This();
-
-pub fn isIDSBinaryOperator(self: IDSBinaryOperator, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isIDSBinaryOperator(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x2ff0...0x2ff1 => true,
         0x2ff4...0x2ffb => true,

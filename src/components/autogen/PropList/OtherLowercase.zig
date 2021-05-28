@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode OtherLowercase code points.
 
-lo: u21 = 170,
-hi: u21 = 43871,
+const lo: u21 = 170;
+const hi: u21 = 43871;
 
-const OtherLowercase = @This();
-
-pub fn isOtherLowercase(self: OtherLowercase, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isOtherLowercase(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xaa => true,
         0xba => true,

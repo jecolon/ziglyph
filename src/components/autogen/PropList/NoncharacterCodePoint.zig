@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode NoncharacterCodePoint code points.
 
-lo: u21 = 64976,
-hi: u21 = 1114111,
+const lo: u21 = 64976;
+const hi: u21 = 1114111;
 
-const NoncharacterCodePoint = @This();
-
-pub fn isNoncharacterCodePoint(self: NoncharacterCodePoint, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isNoncharacterCodePoint(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xfdd0...0xfdef => true,
         0xfffe...0xffff => true,

@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode EmojiModifierBase code points.
 
-lo: u21 = 9757,
-hi: u21 = 129501,
+const lo: u21 = 9757;
+const hi: u21 = 129501;
 
-const EmojiModifierBase = @This();
-
-pub fn isEmojiModifierBase(self: EmojiModifierBase, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isEmojiModifierBase(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x261d => true,
         0x26f9 => true,

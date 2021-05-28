@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Extender code points.
 
-lo: u21 = 183,
-hi: u21 = 125254,
+const lo: u21 = 183;
+const hi: u21 = 125254;
 
-const Extender = @This();
-
-pub fn isExtender(self: Extender, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isExtender(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xb7 => true,
         0x2d0...0x2d1 => true,

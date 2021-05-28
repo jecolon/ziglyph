@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Narrow code points.
 
-lo: u21 = 32,
-hi: u21 = 10630,
+const lo: u21 = 32;
+const hi: u21 = 10630;
 
-const Narrow = @This();
-
-pub fn isNarrow(self: Narrow, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isNarrow(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x20 => true,
         0x21...0x23 => true,

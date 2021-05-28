@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode CurrencySymbol code points.
 
-lo: u21 = 36,
-hi: u21 = 126128,
+const lo: u21 = 36;
+const hi: u21 = 126128;
 
-const CurrencySymbol = @This();
-
-pub fn isCurrencySymbol(self: CurrencySymbol, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isCurrencySymbol(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x24 => true,
         0xa2...0xa5 => true,

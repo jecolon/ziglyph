@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode RegionalIndicator code points.
 
-lo: u21 = 127462,
-hi: u21 = 127487,
+const lo: u21 = 127462;
+const hi: u21 = 127487;
 
-const RegionalIndicator = @This();
-
-pub fn isRegionalIndicator(self: RegionalIndicator, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isRegionalIndicator(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x1f1e6...0x1f1ff => true,
         else => false,

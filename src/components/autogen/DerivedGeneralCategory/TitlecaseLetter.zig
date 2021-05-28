@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode TitlecaseLetter code points.
 
-lo: u21 = 453,
-hi: u21 = 8188,
+const lo: u21 = 453;
+const hi: u21 = 8188;
 
-const TitlecaseLetter = @This();
-
-pub fn isTitlecaseLetter(self: TitlecaseLetter, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isTitlecaseLetter(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x1c5 => true,
         0x1c8 => true,

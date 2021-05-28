@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Dash code points.
 
-lo: u21 = 45,
-hi: u21 = 69293,
+const lo: u21 = 45;
+const hi: u21 = 69293;
 
-const Dash = @This();
-
-pub fn isDash(self: Dash, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isDash(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x2d => true,
         0x58a => true,

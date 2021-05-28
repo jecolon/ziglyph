@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode BidiControl code points.
 
-lo: u21 = 1564,
-hi: u21 = 8297,
+const lo: u21 = 1564;
+const hi: u21 = 8297;
 
-const BidiControl = @This();
-
-pub fn isBidiControl(self: BidiControl, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isBidiControl(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x61c => true,
         0x200e...0x200f => true,

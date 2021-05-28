@@ -504,9 +504,9 @@ const UcdGenerator = struct {
         const u_writer = u_buf.writer();
 
         // Headers.
-        _ = try l_writer.print(map_header_tpl, .{ "Lower", "LowerMap" });
-        _ = try t_writer.print(map_header_tpl, .{ "Title", "TitleMap" });
-        _ = try u_writer.print(map_header_tpl, .{ "Upper", "UpperMap" });
+        _ = try l_writer.print(map_header_tpl, .{"Lower"});
+        _ = try t_writer.print(map_header_tpl, .{"Title"});
+        _ = try u_writer.print(map_header_tpl, .{"Upper"});
 
         // Iterate over lines.
         // pf == Final_Punctuation

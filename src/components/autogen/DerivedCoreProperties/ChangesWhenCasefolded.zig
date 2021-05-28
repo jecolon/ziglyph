@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode ChangesWhenCasefolded code points.
 
-lo: u21 = 65,
-hi: u21 = 125217,
+const lo: u21 = 65;
+const hi: u21 = 125217;
 
-const ChangesWhenCasefolded = @This();
-
-pub fn isChangesWhenCasefolded(self: ChangesWhenCasefolded, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isChangesWhenCasefolded(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x41...0x5a => true,
         0xb5 => true,

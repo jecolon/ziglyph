@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Radical code points.
 
-lo: u21 = 11904,
-hi: u21 = 12245,
+const lo: u21 = 11904;
+const hi: u21 = 12245;
 
-const Radical = @This();
-
-pub fn isRadical(self: Radical, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isRadical(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x2e80...0x2e99 => true,
         0x2e9b...0x2ef3 => true,

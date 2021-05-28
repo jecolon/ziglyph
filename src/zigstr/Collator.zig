@@ -22,9 +22,7 @@ const Implicit = struct {
 const ImplicitList = std.ArrayList(Implicit);
 
 allocator: *mem.Allocator,
-ccc_map: CccMap,
 normalizer: *Normalizer,
-ideographs: UnifiedIdeo,
 implicits: ImplicitList,
 table: Trie,
 
@@ -33,9 +31,7 @@ const Self = @This();
 pub fn init(allocator: *mem.Allocator, allkeys: []const u8, normalizer: *Normalizer) !Self {
     var self = Self{
         .allocator = allocator,
-        .ccc_map = CccMap{},
         .normalizer = normalizer,
-        .ideographs = UnifiedIdeo{},
         .implicits = ImplicitList.init(allocator),
         .table = Trie.init(allocator),
     };
@@ -90,11 +86,10 @@ pub fn load(self: *Self, filename: []const u8) !void {
         var cp_list = std.ArrayList(u21).init(self.allocator);
         defer cp_list.deinit();
         var cp_strs_iter = mem.split(cp_strs, " ");
-        const nfd_check = NFDCheck{};
 
         while (cp_strs_iter.next()) |cp_str| {
             const cp = try fmt.parseInt(u21, cp_str, 16);
-            if (!nfd_check.isNFD(cp)) continue :lines; // Skip non-NFD.
+            if (!NFDCheck.isNFD(cp)) continue :lines; // Skip non-NFD.
             try cp_list.append(cp);
         }
 
@@ -144,7 +139,7 @@ pub fn collationElements(self: Self, normalized: []const u21) ![]Trie.Element {
 
         // Advance to last combining C.
         while (tail_index < code_points_len) : (tail_index += 1) {
-            const combining_class = self.ccc_map.combiningClass(code_points[tail_index]);
+            const combining_class = CccMap.combiningClass(code_points[tail_index]);
             if (combining_class == 0) {
                 if (tail_index != tail_start) tail_index -= 1;
                 break;
@@ -242,13 +237,13 @@ pub fn implicitWeight(self: Self, cp: u21) Trie.Elements {
     var aaaa: ?u21 = null;
     var bbbb: u21 = 0;
 
-    if (self.ideographs.isUnifiedIdeograph(cp) and ((cp >= 0x4E00 and cp <= 0x9FFF) or
+    if (UnifiedIdeo.isUnifiedIdeograph(cp) and ((cp >= 0x4E00 and cp <= 0x9FFF) or
         (cp >= 0xF900 and cp <= 0xFAFF)))
     {
         base = 0xFB40;
         aaaa = base + (cp >> 15);
         bbbb = (cp & 0x7FFF) | 0x8000;
-    } else if (self.ideographs.isUnifiedIdeograph(cp) and !((cp >= 0x4E00 and cp <= 0x9FFF) or
+    } else if (UnifiedIdeo.isUnifiedIdeograph(cp) and !((cp >= 0x4E00 and cp <= 0x9FFF) or
         (cp >= 0xF900 and cp <= 0xFAFF)))
     {
         base = 0xFB80;

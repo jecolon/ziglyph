@@ -9,34 +9,12 @@ pub const Initial = @import("../../components.zig").Initial;
 pub const Open = @import("../../components.zig").Open;
 pub const OtherPunct = @import("../../components.zig").OtherPunct;
 
-const Self = @This();
-
-close: Close,
-connector: Connector,
-dash: Dash,
-final: Final,
-initial: Initial,
-open: Open,
-other_punct: OtherPunct,
-
-pub fn new() Self {
-    return Self{
-        .close = Close{},
-        .connector = Connector{},
-        .dash = Dash{},
-        .final = Final{},
-        .initial = Initial{},
-        .open = Open{},
-        .other_punct = OtherPunct{},
-    };
-}
-
 /// isPunct detects punctuation characters. Note some punctuation maybe considered symbols by Unicode.
-pub fn isPunct(self: Self, cp: u21) bool {
-    return self.close.isClosePunctuation(cp) or self.connector.isConnectorPunctuation(cp) or
-        self.dash.isDashPunctuation(cp) or self.final.isFinalPunctuation(cp) or
-        self.initial.isInitialPunctuation(cp) or self.open.isOpenPunctuation(cp) or
-        self.other_punct.isOtherPunctuation(cp);
+pub fn isPunct(cp: u21) bool {
+    return Close.isClosePunctuation(cp) or Connector.isConnectorPunctuation(cp) or
+        Dash.isDashPunctuation(cp) or Final.isFinalPunctuation(cp) or
+        Initial.isInitialPunctuation(cp) or Open.isOpenPunctuation(cp) or
+        OtherPunct.isOtherPunctuation(cp);
 }
 
 /// isAsciiPunct detects ASCII only punctuation.
@@ -47,32 +25,30 @@ pub fn isAsciiPunct(cp: u21) bool {
 const expect = std.testing.expect;
 
 test "Component isPunct" {
-    var punct = new();
-
-    try expect(punct.isPunct('!'));
-    try expect(punct.isPunct('?'));
-    try expect(punct.isPunct(','));
-    try expect(punct.isPunct('.'));
-    try expect(punct.isPunct(':'));
-    try expect(punct.isPunct(';'));
-    try expect(punct.isPunct('\''));
-    try expect(punct.isPunct('"'));
-    try expect(punct.isPunct('¿'));
-    try expect(punct.isPunct('¡'));
-    try expect(punct.isPunct('-'));
-    try expect(punct.isPunct('('));
-    try expect(punct.isPunct(')'));
-    try expect(punct.isPunct('{'));
-    try expect(punct.isPunct('}'));
-    try expect(punct.isPunct('–'));
+    try expect(isPunct('!'));
+    try expect(isPunct('?'));
+    try expect(isPunct(','));
+    try expect(isPunct('.'));
+    try expect(isPunct(':'));
+    try expect(isPunct(';'));
+    try expect(isPunct('\''));
+    try expect(isPunct('"'));
+    try expect(isPunct('¿'));
+    try expect(isPunct('¡'));
+    try expect(isPunct('-'));
+    try expect(isPunct('('));
+    try expect(isPunct(')'));
+    try expect(isPunct('{'));
+    try expect(isPunct('}'));
+    try expect(isPunct('–'));
     // Punct? in Unicode.
-    try expect(punct.isPunct('@'));
-    try expect(punct.isPunct('#'));
-    try expect(punct.isPunct('%'));
-    try expect(punct.isPunct('&'));
-    try expect(punct.isPunct('*'));
-    try expect(punct.isPunct('_'));
-    try expect(punct.isPunct('/'));
-    try expect(punct.isPunct('\\'));
-    try expect(!punct.isPunct('\u{0003}'));
+    try expect(isPunct('@'));
+    try expect(isPunct('#'));
+    try expect(isPunct('%'));
+    try expect(isPunct('&'));
+    try expect(isPunct('*'));
+    try expect(isPunct('_'));
+    try expect(isPunct('/'));
+    try expect(isPunct('\\'));
+    try expect(!isPunct('\u{0003}'));
 }

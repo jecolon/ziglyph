@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode LetterNumber code points.
 
-lo: u21 = 5870,
-hi: u21 = 74862,
+const lo: u21 = 5870;
+const hi: u21 = 74862;
 
-const LetterNumber = @This();
-
-pub fn isLetterNumber(self: LetterNumber, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isLetterNumber(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x16ee...0x16f0 => true,
         0x2160...0x2182 => true,

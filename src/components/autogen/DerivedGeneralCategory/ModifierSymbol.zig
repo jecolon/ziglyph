@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode ModifierSymbol code points.
 
-lo: u21 = 94,
-hi: u21 = 127999,
+const lo: u21 = 94;
+const hi: u21 = 127999;
 
-const ModifierSymbol = @This();
-
-pub fn isModifierSymbol(self: ModifierSymbol, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isModifierSymbol(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x5e => true,
         0x60 => true,

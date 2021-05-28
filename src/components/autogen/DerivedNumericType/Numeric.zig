@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode Numeric code points.
 
-lo: u21 = 188,
-hi: u21 = 194704,
+const lo: u21 = 188;
+const hi: u21 = 194704;
 
-const Numeric = @This();
-
-pub fn isNumeric(self: Numeric, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isNumeric(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0xbc...0xbe => true,
         0x9f4...0x9f9 => true,

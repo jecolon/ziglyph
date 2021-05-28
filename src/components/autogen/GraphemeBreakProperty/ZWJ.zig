@@ -5,13 +5,11 @@
 //    2. Highest code point
 //! Unicode ZWJ code points.
 
-lo: u21 = 8205,
-hi: u21 = 8205,
+const lo: u21 = 8205;
+const hi: u21 = 8205;
 
-const ZWJ = @This();
-
-pub fn isZWJ(self: ZWJ, cp: u21) bool {
-    if (cp < self.lo or cp > self.hi) return false;
+pub fn isZWJ(cp: u21) bool {
+    if (cp < lo or cp > hi) return false;
     return switch (cp) {
         0x200d => true,
         else => false,
