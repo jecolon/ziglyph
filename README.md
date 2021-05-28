@@ -51,15 +51,13 @@ The `Ziglyph` struct provides convenient acces to the most frequently-used funct
 const Ziglyph = @import("Ziglyph").Ziglyph;
 
 test "Ziglyph struct" {
-    var ziglyph = Ziglyph.new();
-
     const z = 'z';
-    try expect(ziglyph.isLetter(z));
-    try expect(ziglyph.isAlphaNum(z));
-    try expect(ziglyph.isPrint(z));
-    try expect(!ziglyph.isUpper(z));
-    const uz = ziglyph.toUpper(z);
-    try expect(ziglyph.isUpper(uz));
+    try expect(Ziglyph.isLetter(z));
+    try expect(Ziglyph.isAlphaNum(z));
+    try expect(Ziglyph.isPrint(z));
+    try expect(!Ziglyph.isUpper(z));
+    const uz = Ziglyph.toUpper(z);
+    try expect(Ziglyph.isUpper(uz));
     try expectEqual(uz, 'Z');
 }
 ```
@@ -74,16 +72,13 @@ const Letter = @import("Ziglyph").Letter;
 const Punct = @import("Ziglyph").Punct;
 
 test "Aggregate struct" {
-    var letter = Letter.new();
-    var punct = Punct.new();
-
     const z = 'z';
-    try expect(letter.isLetter(z));
-    try expect(!letter.isUpper(z));
-    try expect(!punct.isPunct(z));
-    try expect(punct.isPunct('!'));
-    const uz = letter.toUpper(z);
-    try expect(letter.isUpper(uz));
+    try expect(Letter.isLetter(z));
+    try expect(!Letter.isUpper(z));
+    try expect(!Punct.isPunct(z));
+    try expect(Punct.isPunct('!'));
+    const uz = Letter.toUpper(z);
+    try expect(Letter.isUpper(uz));
     try expectEqual(uz, 'Z');
 }
 ```
@@ -161,35 +156,33 @@ occupy. The `Width` component struct provides methods to do just that.
 const Width = @import("Ziglyph").Width;
 
 test "Code point / string widths" {
-    var width = Width.new();
-
     // The width methods take a second parameter of value .half or .full to determine the width of 
     // ambiguous code points as per the Unicode standard. .half is the most common case.
 
     // Note that codePointWidth returns an i3 because code points like backspace have width -1.
-    try expectEqual(width.codePointWidth('é', .half), 1);
-    try expectEqual(width.codePointWidth('😊', .half), 2);
-    try expectEqual(width.codePointWidth('统', .half), 2);
+    try expectEqual(Width.codePointWidth('é', .half), 1);
+    try expectEqual(Width.codePointWidth('😊', .half), 2);
+    try expectEqual(Width.codePointWidth('统', .half), 2);
 
     // strWidth returns usize because it can never be negative, regardless of the code points it contains.
-    try expectEqual(try width.strWidth("Hello\r\n", .half), 5);
-    try expectEqual(try width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
-    try expectEqual(try width.strWidth("Héllo 🇪🇸", .half), 8);
-    try expectEqual(try width.strWidth("\u{26A1}\u{FE0E}", .half), 1); // Text sequence
-    try expectEqual(try width.strWidth("\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
+    try expectEqual(try Width.strWidth("Hello\r\n", .half), 5);
+    try expectEqual(try Width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
+    try expectEqual(try Width.strWidth("Héllo 🇪🇸", .half), 8);
+    try expectEqual(try Width.strWidth("\u{26A1}\u{FE0E}", .half), 1); // Text sequence
+    try expectEqual(try Width.strWidth("\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
 
     var allocator = std.testing.allocator;
 
     // padLeft, center, padRight
-    const right_aligned = try width.padLeft(allocator, "w😊w", 10, "-");
+    const right_aligned = try Width.padLeft(allocator, "w😊w", 10, "-");
     defer allocator.free(right_aligned);
     try expectEqualSlices(u8, "------w😊w", right_aligned);
 
-    const centered = try width.center(allocator, "w😊w", 10, "-");
+    const centered = try Width.center(allocator, "w😊w", 10, "-");
     defer allocator.free(centered);
     try expectEqualSlices(u8, "---w😊w---", centered);
 
-    const left_aligned = try width.padRight(allocator, "w😊w", 10, "-");
+    const left_aligned = try Width.padRight(allocator, "w😊w", 10, "-");
     defer allocator.free(left_aligned);
     try expectEqualSlices(u8, "w😊w------", left_aligned);
 }
