@@ -112,9 +112,16 @@ test "Zigstr README tests" {
     try expect(str2.eql("Héllo"));
     try expect(str.sameAs(str2));
 
-    // Equality
-    try str.reset("foo"); // re-initialize a Zigstr.
+    // Empty and obtain owned slice of bytes.
+    const bytes = try str2.toOwnedSlice();
+    defer allocator.free(bytes);
+    try expect(str2.eql(""));
+    try expectEqualStrings(bytes, "Héllo");
 
+    // Re-initialize a Zigstr.
+    try str.reset("foo");
+
+    // Equality (for normalized and case ignorable equality see the Normalizer struct.)
     try expect(str.eql("foo")); // exact
     try expect(!str.eql("fooo")); // lengths
     try expect(!str.eql("foó")); // combining marks

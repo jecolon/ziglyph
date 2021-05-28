@@ -167,6 +167,25 @@ pub fn deinit(self: *Self) void {
     }
 }
 
+/// toOwnedSlice returns the bytes of this Zigstr to be freed by caller. This Zigstr is reset to empty.
+pub fn toOwnedSlice(self: *Self) ![]u8 {
+    self.resetState();
+    self.ascii_only = false;
+    return self.bytes.toOwnedSlice();
+}
+
+test "Zigstr toOwnedSlice" {
+    var allocator = std.testing.allocator;
+    var str = try fromBytes(allocator, "Hello");
+    defer str.deinit();
+
+    try expect(str.eql("Hello"));
+    const bytes = try str.toOwnedSlice();
+    defer allocator.free(bytes);
+    try expectEqualStrings(bytes, "Hello");
+    try expect(str.eql(""));
+}
+
 fn resetState(self: *Self) void {
     // Free and reset old content.
     if (self.owned_cp) {
