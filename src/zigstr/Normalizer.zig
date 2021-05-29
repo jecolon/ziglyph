@@ -215,9 +215,7 @@ fn decompD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anyer
                 }
             },
             .same => try rdcs.append(dc),
-            .single => |cp| if (NFDCheck.isNFD(cp)) {
-                try rdcs.append(.{ .same = cp });
-            } else {
+            .single => |cp| {
                 const m = try self.mapping(cp);
                 switch (m) {
                     .same, .compat => try rdcs.append(.{ .same = cp }),
@@ -226,18 +224,22 @@ fn decompD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anyer
             },
             .canon => |seq| {
                 for (seq) |cp| {
-                    if (NFDCheck.isNFD(cp)) {
-                        try rdcs.append(.{ .same = cp });
-                    } else {
-                        const m = try self.mapping(cp);
-                        switch (m) {
-                            .same, .compat => try rdcs.append(.{ .same = cp }),
-                            else => try rdcs.appendSlice(try self.decompD(allocator, &[_]Decomposed{m})),
-                        }
+                    const m = try self.mapping(cp);
+                    switch (m) {
+                        .same, .compat => try rdcs.append(.{ .same = cp }),
+                        else => try rdcs.appendSlice(try self.decompD(allocator, &[_]Decomposed{m})),
                     }
                 }
             },
-            .compat => {},
+            .compat => |seq| {
+                for (seq) |cp| {
+                    const m = try self.mapping(cp);
+                    switch (m) {
+                        .same, .compat => try rdcs.append(.{ .same = cp }),
+                        else => try rdcs.appendSlice(try self.decompD(allocator, &[_]Decomposed{m})),
+                    }
+                }
+            },
         }
     }
 
@@ -447,6 +449,11 @@ pub const CmpMode = enum {
 
 /// eqlBy compares for equality between `a` and `b` according to the specified comparison mode.
 pub fn eqlBy(self: Self, a: []const u8, b: []const u8, mode: CmpMode) !bool {
+    // Empty string quick check.
+    if (a.len == 0 and b.len == 0) return true;
+    if (a.len == 0 and b.len != 0) return false;
+    if (b.len == 0 and a.len != 0) return false;
+
     // Check for ASCII only comparison.
     var ascii_only = try isAsciiStr(a);
 
