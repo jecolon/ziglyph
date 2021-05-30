@@ -246,6 +246,16 @@ test "Zigstr README tests" {
     try str.dropRight(6);
     try expect(str.eql("Hello"));
 
+    // Insert at a grapheme index.
+    try str.insert("Hi", 0);
+    try expect(str.eql("HiHello"));
+
+    // Remove a sub-string.
+    try str.remove("Hi");
+    try expect(str.eql("Hello"));
+    try str.remove("Hello");
+    try expect(str.eql(""));
+
     // Repeat a string's content.
     try str.reset("*");
     try str.repeat(10);

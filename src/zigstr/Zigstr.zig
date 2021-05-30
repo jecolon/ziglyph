@@ -208,9 +208,13 @@ fn resetState(self: *Self) void {
 
 /// reset reinitializes this Zigstr from the byte slice `str`.
 pub fn reset(self: *Self, str: []const u8) !void {
-    self.resetState();
-    self.ascii_only = try isAsciiStr(str);
     try self.bytes.replaceRange(0, self.bytes.items.len, str);
+    try self.updateState();
+}
+
+fn updateState(self: *Self) !void {
+    self.resetState();
+    self.ascii_only = try isAsciiStr(self.bytes.items);
     try self.processCodePoints();
 }
 
@@ -431,6 +435,29 @@ test "Zigstr dropRight" {
     try expect(str.eql("H"));
 }
 
+/// inserts `str` at grapheme index `n`. This operation is O(n).
+pub fn insert(self: *Self, str: []const u8, n: usize) !void {
+    const gcs = try self.graphemes();
+    if (n < gcs.len) {
+        try self.bytes.insertSlice(gcs[n].offset, str);
+    } else {
+        try self.bytes.insertSlice(gcs[n - 1].offset + gcs[n - 1].bytes.len, str);
+    }
+    try self.updateState();
+}
+
+test "Zigstr insertions" {
+    var str = try fromBytes(std.testing.allocator, "Hélo");
+    defer str.deinit();
+
+    try str.insert("l", 3);
+    try expect(str.eql("Héllo"));
+    try str.insert("Hey ", 0);
+    try expect(str.eql("Hey Héllo"));
+    try str.insert("!", try str.graphemeCount());
+    try expect(str.eql("Hey Héllo!"));
+}
+
 /// indexOf returns the index of `needle` in this Zigstr or null if not found.
 pub fn indexOf(self: Self, needle: []const u8) ?usize {
     return mem.indexOf(u8, self.bytes.items, needle);
@@ -526,9 +553,7 @@ pub fn reverse(self: *Self) !void {
 
     self.bytes.deinit();
     self.bytes = new_al;
-    self.resetState();
-    self.ascii_only = try isAsciiStr(self.bytes.items);
-    try self.processCodePoints();
+    try self.updateState();
 }
 
 test "Zigstr reverse" {
@@ -554,9 +579,7 @@ pub fn concatAll(self: *Self, others: []const []const u8) !void {
     for (others) |o| {
         try self.bytes.appendSlice(o);
     }
-    self.resetState();
-    self.ascii_only = try isAsciiStr(self.bytes.items);
-    try self.processCodePoints();
+    try self.updateState();
 }
 
 /// concat appends `other` to this Zigstr, mutating it.
@@ -572,11 +595,25 @@ pub fn replace(self: *Self, needle: []const u8, replacement: []const u8) !usize 
     defer self.allocator.free(buf);
     const replacements = mem.replace(u8, self.bytes.items, needle, replacement, buf);
     try self.bytes.replaceRange(0, self.bytes.items.len, buf);
-    self.resetState();
-    self.ascii_only = try isAsciiStr(self.bytes.items);
-    try self.processCodePoints();
+    try self.updateState();
 
     return replacements;
+}
+
+/// remove `str` from this Zigstr, mutating it.
+pub fn remove(self: *Self, str: []const u8) !void {
+    _ = try self.replace(str, "");
+    try self.updateState();
+}
+
+test "Zigstr remove" {
+    var str = try fromBytes(std.testing.allocator, "HiHello");
+    defer str.deinit();
+
+    try str.remove("Hi");
+    try expect(str.eql("Hello"));
+    try str.remove("Hello");
+    try expect(str.eql(""));
 }
 
 /// append adds `cp` to the end of this Zigstr, mutating it.
@@ -632,9 +669,7 @@ pub fn chomp(self: *Self) !void {
         var chomp_size: usize = 1;
         if (len > 1 and last == '\n' and self.bytes.items[self.bytes.items.len - 2] == '\r') chomp_size = 2; // CR+LF
         self.bytes.shrinkRetainingCapacity(len - chomp_size);
-        self.resetState();
-        self.ascii_only = try isAsciiStr(self.bytes.items);
-        try self.processCodePoints();
+        try self.updateState();
     }
 }
 
@@ -793,9 +828,7 @@ pub fn toLower(self: *Self) !void {
 
     self.bytes.deinit();
     self.bytes = new_al;
-    self.resetState();
-    self.ascii_only = try isAsciiStr(self.bytes.items);
-    try self.processCodePoints();
+    try self.updateState();
 }
 
 /// isUpper detects if all the code points in this Zigstr are uppercase.
@@ -820,9 +853,7 @@ pub fn toUpper(self: *Self) !void {
 
     self.bytes.deinit();
     self.bytes = new_al;
-    self.resetState();
-    self.ascii_only = try isAsciiStr(self.bytes.items);
-    try self.processCodePoints();
+    try self.updateState();
 }
 
 /// format implements the `std.fmt` format interface for printing types.
@@ -862,9 +893,7 @@ pub fn repeat(self: *Self, n: usize) !void {
 
     self.bytes.deinit();
     self.bytes = new_al;
-    self.resetState();
-    self.ascii_only = try isAsciiStr(self.bytes.items);
-    try self.processCodePoints();
+    try self.updateState();
 }
 
 test "Zigstr repeat" {
