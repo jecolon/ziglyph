@@ -30,9 +30,10 @@ to the `exe` section for the executable where you wish to have Ziglyph available
 can import components like this:
 
 ```zig
-const Ziglyph = @import("Ziglyph").Ziglyph;
-const Letter = @import("Ziglyph").Letter;
-const Number = @import("Ziglyph").Number;
+const Ziglyph = @import("Ziglyph");
+const Letter = @import("Ziglyph").Letter; // or const Letter = Ziglyph.Letter;
+const Number = @import("Ziglyph").Number; // or const Number = Ziglyph.Number;
+
 ```
 
 Finally, you can build the project with:
@@ -48,7 +49,7 @@ via the `-Drelease-fast=true`, `-Drelease-small=true`, `-Drelease-safe=true` opt
 The `Ziglyph` struct provides convenient acces to the most frequently-used functions related to Unicode.
 
 ```zig
-const Ziglyph = @import("Ziglyph").Ziglyph;
+const Ziglyph = @import("Ziglyph");
 
 test "Ziglyph struct" {
     const z = 'z';

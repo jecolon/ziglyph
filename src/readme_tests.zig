@@ -4,16 +4,16 @@ const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
 // Import structs.
-const Collator = @import("zigstr/Collator.zig");
-const GraphemeIterator = @import("ziglyph.zig").GraphemeIterator;
-const Letter = @import("components/aggregate/Letter.zig");
-const Lower = @import("components/autogen/DerivedCoreProperties/Lowercase.zig");
-const Normalizer = @import("components.zig").Normalizer;
-const Punct = @import("components/aggregate/Punct.zig");
-const Upper = @import("components/autogen/DerivedCoreProperties/Uppercase.zig");
-const UpperMap = @import("components/autogen/UnicodeData/UpperMap.zig");
-const Width = @import("components/aggregate/Width.zig");
-const Ziglyph = @import("ziglyph.zig").Ziglyph;
+const Ziglyph = @import("ziglyph.zig");
+const Collator = Ziglyph.Collator;
+const GraphemeIterator = Ziglyph.GraphemeIterator;
+const Letter = Ziglyph.Letter;
+const Lower = Ziglyph.Lowercase;
+const Normalizer = Ziglyph.Normalizer;
+const Punct = Ziglyph.Punct;
+const Upper = Ziglyph.Uppercase;
+const UpperMap = Ziglyph.UpperMap;
+const Width = Ziglyph.Width;
 
 test "Ziglyph struct" {
     const z = 'z';
