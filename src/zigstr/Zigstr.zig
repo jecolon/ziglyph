@@ -677,7 +677,7 @@ pub fn chomp(self: *Self) !void {
 pub fn byteAt(self: Self, i: isize) !u8 {
     if (i >= self.bytes.items.len) return error.IndexOutOfBounds;
     if (i < 0) {
-        if (-i > self.bytes.items.len) return error.IndexOutOfBounds;
+        if (-%i > self.bytes.items.len) return error.IndexOutOfBounds;
         return self.bytes.items[self.bytes.items.len - @intCast(usize, -i)];
     }
 
@@ -688,7 +688,7 @@ pub fn byteAt(self: Self, i: isize) !u8 {
 pub fn codePointAt(self: *Self, i: isize) !u21 {
     if (i >= self.cp_count) return error.IndexOutOfBounds;
     if (i < 0) {
-        if (-i > self.cp_count) return error.IndexOutOfBounds;
+        if (-%i > self.cp_count) return error.IndexOutOfBounds;
         return (try self.codePoints())[self.cp_count - @intCast(usize, -i)];
     }
 
@@ -700,7 +700,7 @@ pub fn graphemeAt(self: *Self, i: isize) !Grapheme {
     const gcs = try self.graphemes();
     if (i >= gcs.len) return error.IndexOutOfBounds;
     if (i < 0) {
-        if (-i > gcs.len) return error.IndexOutOfBounds;
+        if (-%i > gcs.len) return error.IndexOutOfBounds;
         return gcs[gcs.len - @intCast(usize, -i)];
     }
 
