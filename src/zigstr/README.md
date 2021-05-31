@@ -10,33 +10,21 @@ a human-perceivable *character in Unicode* is the Grapheme Cluster, represented 
 type returned from each call to the `next` method on a `GraphemeIterator` (see sample code below).
 
 ## Ownership
-There are two possibilities when creating a new Zigstr, either with bytes or code points:
+There are two possibilities when creating a new Zigstr:
 
-* You own the bytes or code points, requiring the `deinit` method to free them.
-* You don't own the bytes or code points, so `deinit` will not free them.
+* You own the bytes, requiring the `deinit` method to free them.
+* You don't own the bytes, so `deinit` will not free them.
 
-To create a Zigstr with bytes or code points that you don't own:
+To create a Zigstr in each of these circumstances:
 
 ```zig
-// For bytes.
+// Here the slice is []const u8.
 var str = try Zigstr.fromBytes(allocator, "Hello");
 defer str.deinit(); // still need `deinit` to free other resources, but not the passed-in bytes.
 
-// For code points.
-var str = try Zigstr.fromCodePoints(allocator, &[_]u21{ 0x68, 0x65, 0x6C, 0x6C, 0x6F });
-defer str.deinit(); // still need `deinit` to free other resources, but not the passed-in code points.
-```
-
-To create a Zigstr from bytes or code points you own:
-
-```zig
-// For bytes.
+// Here the slice is []u8.
 var str = try Zigstr.fromOwnedBytes(allocator, slice);
 defer str.deinit(); // owned bytes will be freed.
-
-// For code points.
-var str = try Zigstr.fromOwnedCodePoints(allocator, slice);
-defer str.deinit(); // owned code points will be freed.
 ```
 
 ## Comparison and Sorting (Collation)
