@@ -242,7 +242,7 @@ test "Grapheme ASCII" {
 
 test "Grapheme iterator" {
     var allocator = std.testing.allocator;
-    var file = try std.fs.cwd().openFile("src/data/ucd/auxiliary/GraphemeBreakTest.txt", .{});
+    var file = try std.fs.cwd().openFile("src/data/ucd/GraphemeBreakTest.txt", .{});
     defer file.close();
     var buf_reader = std.io.bufferedReader(file.reader());
     var input_stream = buf_reader.reader();

@@ -494,7 +494,7 @@ test "Collator sort" {
 }
 
 test "Collator UCA" {
-    const uca_tests = "/home/jecolon/dev/zig/corpus_tests/src/CollationTest/CollationTest_NON_IGNORABLE_SHORT.txt";
+    const uca_tests = "src/data/uca/CollationTest_NON_IGNORABLE_SHORT.txt";
     var file = try std.fs.cwd().openFile(uca_tests, .{});
     defer file.close();
     var buf_reader = std.io.bufferedReader(file.reader()).reader();

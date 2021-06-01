@@ -156,7 +156,7 @@ const UcdGenerator = struct {
     // data/ucd/extracted/DerivedEastAsianWidth.txt
     fn processAsianWidth(self: *Self) !void {
         // Setup input.
-        var file = try std.fs.cwd().openFile("../data/ucd/extracted/DerivedEastAsianWidth.txt", .{});
+        var file = try std.fs.cwd().openFile("data/ucd/extracted/DerivedEastAsianWidth.txt", .{});
         defer file.close();
         var buf_reader = io.bufferedReader(file.reader());
         var input_stream = buf_reader.reader();
@@ -283,7 +283,7 @@ const UcdGenerator = struct {
     // data/ucd/extracted/DerivedGeneralCategory.txt
     fn processGenCat(self: *Self) !void {
         // Setup input.
-        var file = try std.fs.cwd().openFile("../data/ucd/extracted/DerivedGeneralCategory.txt", .{});
+        var file = try std.fs.cwd().openFile("data/ucd/extracted/DerivedGeneralCategory.txt", .{});
         defer file.close();
         var buf_reader = io.bufferedReader(file.reader());
         var input_stream = buf_reader.reader();
@@ -410,7 +410,7 @@ const UcdGenerator = struct {
     // data/ucd/CaseFolding.txt
     fn processCaseFold(self: *Self) !void {
         // Setup input.
-        var in_file = try std.fs.cwd().openFile("../data/ucd/CaseFolding.txt", .{});
+        var in_file = try std.fs.cwd().openFile("data/ucd/CaseFolding.txt", .{});
         defer in_file.close();
         var buf_reader = io.bufferedReader(in_file.reader());
         var input_stream = buf_reader.reader();
@@ -477,7 +477,7 @@ const UcdGenerator = struct {
     // data/ucd/UnicodeData.txt
     fn processUcd(self: *Self) !void {
         // Setup input.
-        var in_file = try std.fs.cwd().openFile("../data/ucd/UnicodeData.txt", .{});
+        var in_file = try std.fs.cwd().openFile("data/ucd/UnicodeData.txt", .{});
         defer in_file.close();
         var buf_reader = io.bufferedReader(in_file.reader());
         var input_stream = buf_reader.reader();
@@ -547,7 +547,7 @@ const UcdGenerator = struct {
     // data/ucd/SpecialCassing.txt
     fn processSpecialCasing(self: *Self) !void {
         // Setup input.
-        var in_file = try std.fs.cwd().openFile("../data/ucd/SpecialCasing.txt", .{});
+        var in_file = try std.fs.cwd().openFile("data/ucd/SpecialCasing.txt", .{});
         defer in_file.close();
         var buf_reader = io.bufferedReader(in_file.reader());
         var input_stream = buf_reader.reader();
@@ -676,7 +676,7 @@ const UcdGenerator = struct {
     // data/ucd/extracted/DerivedCombiningClass.txt
     fn processCccMap(self: *Self) !void {
         // Setup input.
-        var file = try std.fs.cwd().openFile("../data/ucd/extracted/DerivedCombiningClass.txt", .{});
+        var file = try std.fs.cwd().openFile("data/ucd/extracted/DerivedCombiningClass.txt", .{});
         defer file.close();
         var buf_reader = io.bufferedReader(file.reader());
         var input_stream = buf_reader.reader();
@@ -753,7 +753,7 @@ const UcdGenerator = struct {
     // data/ucd/HangulSyllableType.txt
     fn processHangul(self: *Self) !void {
         // Setup input.
-        var file = try std.fs.cwd().openFile("../data/ucd/HangulSyllableType.txt", .{});
+        var file = try std.fs.cwd().openFile("data/ucd/HangulSyllableType.txt", .{});
         defer file.close();
         var buf_reader = io.bufferedReader(file.reader());
         var input_stream = buf_reader.reader();
@@ -823,7 +823,7 @@ const UcdGenerator = struct {
     // data/ucd/DerivedNormalizationProps.txt
     fn processNFDQC(self: *Self) !void {
         // Setup input.
-        var file = try std.fs.cwd().openFile("../data/ucd/DerivedNormalizationProps.txt", .{});
+        var file = try std.fs.cwd().openFile("data/ucd/DerivedNormalizationProps.txt", .{});
         defer file.close();
         var buf_reader = io.bufferedReader(file.reader());
         var input_stream = buf_reader.reader();
@@ -898,12 +898,12 @@ pub fn main() !void {
     var allocator = &arena.allocator;
     //var allocator = std.testing.allocator;
     var ugen = UcdGenerator.new(allocator);
-    //try ugen.processF1("../data/ucd/Blocks.txt");
-    try ugen.processF1("../data/ucd/PropList.txt");
-    try ugen.processF1("../data/ucd/auxiliary/GraphemeBreakProperty.txt");
-    try ugen.processF1("../data/ucd/DerivedCoreProperties.txt");
-    try ugen.processF1("../data/ucd/extracted/DerivedNumericType.txt");
-    try ugen.processF1("../data/ucd/emoji/emoji-data.txt");
+    //try ugen.processF1("data/ucd/Blocks.txt");
+    try ugen.processF1("data/ucd/PropList.txt");
+    try ugen.processF1("data/ucd/auxiliary/GraphemeBreakProperty.txt");
+    try ugen.processF1("data/ucd/DerivedCoreProperties.txt");
+    try ugen.processF1("data/ucd/extracted/DerivedNumericType.txt");
+    try ugen.processF1("data/ucd/emoji/emoji-data.txt");
     try ugen.processGenCat();
     try ugen.processCaseFold();
     try ugen.processUcd();

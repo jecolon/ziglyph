@@ -230,6 +230,3 @@ test "Collation" {
     testing.expectEqual(strings[2], "xyz");
 }
 ```
-
-## Unicode Data
-The Unicode data is the latest available on the Unicode website. [LICENSE](src/data/ucd/LICENSE-UNICODE)
