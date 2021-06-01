@@ -8,9 +8,10 @@ pub const Width = @import("components/aggregate/Width.zig");
 
 // UTF-8 string struct
 pub const Zigstr = @import("zigstr/Zigstr.zig");
-pub const Collator = @import("zigstr/Collator.zig");
-pub const GraphemeIterator = @import("zigstr/GraphemeIterator.zig");
-pub const Normalizer = @import("zigstr/Normalizer.zig");
+pub const CodePointIterator = @import("grapheme/CodePointIterator.zig");
+pub const Collator = @import("collator/Collator.zig");
+pub const GraphemeIterator = @import("grapheme/GraphemeIterator.zig");
+pub const Normalizer = @import("normalizer/Normalizer.zig");
 
 // Auto-Generated
 pub const Alphabetic = @import("components/autogen/DerivedCoreProperties/Alphabetic.zig");

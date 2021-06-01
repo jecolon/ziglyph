@@ -7,25 +7,25 @@ test "Normalizer" {
 }
 
 test "Grapheme" {
-    _ = @import("Ziglyph.zig").GraphemeIterator;
+    _ = @import("components.zig").GraphemeIterator;
 }
 
 test "Components" {
-    _ = @import("Ziglyph.zig").Letter;
-    _ = @import("Ziglyph.zig").Mark;
-    _ = @import("Ziglyph.zig").Number;
-    _ = @import("Ziglyph.zig").Punct;
-    _ = @import("Ziglyph.zig").Symbol;
+    _ = @import("components.zig").Letter;
+    _ = @import("components.zig").Mark;
+    _ = @import("components.zig").Number;
+    _ = @import("components.zig").Punct;
+    _ = @import("components.zig").Symbol;
 }
 
 test "Zigstr" {
-    _ = @import("Ziglyph.zig").Zigstr;
+    _ = @import("components.zig").Zigstr;
 }
 
 test "Collator" {
-    _ = @import("zigstr/Collator.zig");
+    _ = @import("components.zig").Collator;
 }
 
 test "Width" {
-    _ = @import("components/aggregate/Width.zig");
+    _ = @import("components.zig").Width;
 }

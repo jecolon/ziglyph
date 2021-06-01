@@ -5,9 +5,9 @@ const unicode = std.unicode;
 const ascii = @import("../ascii.zig");
 const Letter = @import("../components.zig").Letter;
 
-const CodePointIterator = @import("CodePointIterator.zig");
+const CodePointIterator = @import("../components.zig").CodePointIterator;
+const GraphemeIterator = @import("../components.zig").GraphemeIterator;
 const Grapheme = GraphemeIterator.Grapheme;
-const GraphemeIterator = @import("GraphemeIterator.zig");
 const WhiteSpace = @import("../components.zig").WhiteSpace;
 
 const Self = @This();
