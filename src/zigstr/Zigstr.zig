@@ -3,7 +3,7 @@ const mem = std.mem;
 const unicode = std.unicode;
 
 const ascii = @import("../ascii.zig");
-const Letter = @import("../ziglyph.zig").Letter;
+const Letter = @import("../components.zig").Letter;
 
 const CodePointIterator = @import("CodePointIterator.zig");
 const Grapheme = GraphemeIterator.Grapheme;

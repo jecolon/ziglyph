@@ -23,7 +23,7 @@ $  git clone https://github.com/jecolon/ziglyph.git
 Now in your build.zig, you can add:
 
 ```zig
-exe.addPackagePath("Ziglyph", "libs/ziglyph/src/ziglyph.zig");
+exe.addPackagePath("Ziglyph", "libs/ziglyph/src/Ziglyph.zig");
 ```
 
 to the `exe` section for the executable where you wish to have Ziglyph available. Now in the code, you
