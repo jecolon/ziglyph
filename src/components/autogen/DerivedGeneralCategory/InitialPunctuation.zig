@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode InitialPunctuation code points.
 
-const lo: u21 = 171;
-const hi: u21 = 11808;
+const lo: u21 = 0xab;
+const hi: u21 = 0x2e20;
 
 pub fn isInitialPunctuation(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

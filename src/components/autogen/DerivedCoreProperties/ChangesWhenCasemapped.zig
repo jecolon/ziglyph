@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode ChangesWhenCasemapped code points.
 
-const lo: u21 = 65;
-const hi: u21 = 125251;
+const lo: u21 = 0x41;
+const hi: u21 = 0x1e943;
 
 pub fn isChangesWhenCasemapped(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

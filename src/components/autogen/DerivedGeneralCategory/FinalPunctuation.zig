@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode FinalPunctuation code points.
 
-const lo: u21 = 187;
-const hi: u21 = 11809;
+const lo: u21 = 0xbb;
+const hi: u21 = 0x2e21;
 
 pub fn isFinalPunctuation(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

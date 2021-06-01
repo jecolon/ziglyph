@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode OtherNumber code points.
 
-const lo: u21 = 178;
-const hi: u21 = 127244;
+const lo: u21 = 0xb2;
+const hi: u21 = 0x1f10c;
 
 pub fn isOtherNumber(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

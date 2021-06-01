@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode WhiteSpace code points.
 
-const lo: u21 = 9;
-const hi: u21 = 12288;
+const lo: u21 = 0x9;
+const hi: u21 = 0x3000;
 
 pub fn isWhiteSpace(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

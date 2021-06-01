@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode ZWJ code points.
 
-const lo: u21 = 8205;
-const hi: u21 = 8205;
+const lo: u21 = 0x200d;
+const hi: u21 = 0x200d;
 
 pub fn isZWJ(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

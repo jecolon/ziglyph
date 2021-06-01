@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode DashPunctuation code points.
 
-const lo: u21 = 45;
-const hi: u21 = 69293;
+const lo: u21 = 0x2d;
+const hi: u21 = 0x10ead;
 
 pub fn isDashPunctuation(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

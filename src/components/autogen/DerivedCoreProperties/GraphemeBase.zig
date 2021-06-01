@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode GraphemeBase code points.
 
-const lo: u21 = 32;
-const hi: u21 = 201546;
+const lo: u21 = 0x20;
+const hi: u21 = 0x3134a;
 
 pub fn isGraphemeBase(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

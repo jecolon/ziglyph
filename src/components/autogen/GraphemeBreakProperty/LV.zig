@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode LV code points.
 
-const lo: u21 = 44032;
-const hi: u21 = 55176;
+const lo: u21 = 0xac00;
+const hi: u21 = 0xd788;
 
 pub fn isLV(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

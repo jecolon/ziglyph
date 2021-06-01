@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Ambiguous code points.
 
-const lo: u21 = 161;
-const hi: u21 = 1114109;
+const lo: u21 = 0xa1;
+const hi: u21 = 0x10fffd;
 
 pub fn isAmbiguous(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

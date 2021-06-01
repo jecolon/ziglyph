@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Lowercase code points.
 
-const lo: u21 = 97;
-const hi: u21 = 125251;
+const lo: u21 = 0x61;
+const hi: u21 = 0x1e943;
 
 pub fn isLowercase(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

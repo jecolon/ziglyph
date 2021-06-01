@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Digit code points.
 
-const lo: u21 = 178;
-const hi: u21 = 127242;
+const lo: u21 = 0xb2;
+const hi: u21 = 0x1f10a;
 
 pub fn isDigit(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

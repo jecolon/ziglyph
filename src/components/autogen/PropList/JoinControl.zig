@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode JoinControl code points.
 
-const lo: u21 = 8204;
-const hi: u21 = 8205;
+const lo: u21 = 0x200c;
+const hi: u21 = 0x200d;
 
 pub fn isJoinControl(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

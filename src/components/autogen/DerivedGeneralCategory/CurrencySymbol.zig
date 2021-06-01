@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode CurrencySymbol code points.
 
-const lo: u21 = 36;
-const hi: u21 = 126128;
+const lo: u21 = 0x24;
+const hi: u21 = 0x1ecb0;
 
 pub fn isCurrencySymbol(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode OtherGraphemeExtend code points.
 
-const lo: u21 = 2494;
-const hi: u21 = 917631;
+const lo: u21 = 0x9be;
+const hi: u21 = 0xe007f;
 
 pub fn isOtherGraphemeExtend(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

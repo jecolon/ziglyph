@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Narrow code points.
 
-const lo: u21 = 32;
-const hi: u21 = 10630;
+const lo: u21 = 0x20;
+const hi: u21 = 0x2986;
 
 pub fn isNarrow(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode LetterNumber code points.
 
-const lo: u21 = 5870;
-const hi: u21 = 74862;
+const lo: u21 = 0x16ee;
+const hi: u21 = 0x1246e;
 
 pub fn isLetterNumber(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

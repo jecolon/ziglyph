@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode PrependedConcatenationMark code points.
 
-const lo: u21 = 1536;
-const hi: u21 = 69837;
+const lo: u21 = 0x600;
+const hi: u21 = 0x110cd;
 
 pub fn isPrependedConcatenationMark(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

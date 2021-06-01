@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Format code points.
 
-const lo: u21 = 173;
-const hi: u21 = 917631;
+const lo: u21 = 0xad;
+const hi: u21 = 0xe007f;
 
 pub fn isFormat(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

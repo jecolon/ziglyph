@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode IDSTrinaryOperator code points.
 
-const lo: u21 = 12274;
-const hi: u21 = 12275;
+const lo: u21 = 0x2ff2;
+const hi: u21 = 0x2ff3;
 
 pub fn isIDSTrinaryOperator(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

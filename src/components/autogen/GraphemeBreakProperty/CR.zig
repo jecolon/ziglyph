@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode CR code points.
 
-const lo: u21 = 13;
-const hi: u21 = 13;
+const lo: u21 = 0xd;
+const hi: u21 = 0xd;
 
 pub fn isCR(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

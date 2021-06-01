@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Deprecated code points.
 
-const lo: u21 = 329;
-const hi: u21 = 917505;
+const lo: u21 = 0x149;
+const hi: u21 = 0xe0001;
 
 pub fn isDeprecated(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode LF code points.
 
-const lo: u21 = 10;
-const hi: u21 = 10;
+const lo: u21 = 0xa;
+const hi: u21 = 0xa;
 
 pub fn isLF(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode OtherSymbol code points.
 
-const lo: u21 = 166;
-const hi: u21 = 129994;
+const lo: u21 = 0xa6;
+const hi: u21 = 0x1fbca;
 
 pub fn isOtherSymbol(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

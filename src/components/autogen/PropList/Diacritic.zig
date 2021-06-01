@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Diacritic code points.
 
-const lo: u21 = 94;
-const hi: u21 = 125258;
+const lo: u21 = 0x5e;
+const hi: u21 = 0x1e94a;
 
 pub fn isDiacritic(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

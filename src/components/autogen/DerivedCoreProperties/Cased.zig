@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Cased code points.
 
-const lo: u21 = 65;
-const hi: u21 = 127369;
+const lo: u21 = 0x41;
+const hi: u21 = 0x1f189;
 
 pub fn isCased(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

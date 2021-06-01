@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode SentenceTerminal code points.
 
-const lo: u21 = 33;
-const hi: u21 = 121480;
+const lo: u21 = 0x21;
+const hi: u21 = 0x1da88;
 
 pub fn isSentenceTerminal(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

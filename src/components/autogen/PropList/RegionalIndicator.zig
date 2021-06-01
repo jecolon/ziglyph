@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode RegionalIndicator code points.
 
-const lo: u21 = 127462;
-const hi: u21 = 127487;
+const lo: u21 = 0x1f1e6;
+const hi: u21 = 0x1f1ff;
 
 pub fn isRegionalIndicator(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

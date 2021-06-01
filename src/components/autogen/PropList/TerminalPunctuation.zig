@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode TerminalPunctuation code points.
 
-const lo: u21 = 33;
-const hi: u21 = 121482;
+const lo: u21 = 0x21;
+const hi: u21 = 0x1da8a;
 
 pub fn isTerminalPunctuation(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

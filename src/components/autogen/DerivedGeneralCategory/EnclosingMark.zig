@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode EnclosingMark code points.
 
-const lo: u21 = 1160;
-const hi: u21 = 42610;
+const lo: u21 = 0x488;
+const hi: u21 = 0xa672;
 
 pub fn isEnclosingMark(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

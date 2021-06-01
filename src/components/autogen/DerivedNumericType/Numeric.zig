@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Numeric code points.
 
-const lo: u21 = 188;
-const hi: u21 = 194704;
+const lo: u21 = 0xbc;
+const hi: u21 = 0x2f890;
 
 pub fn isNumeric(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

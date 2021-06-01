@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode EmojiComponent code points.
 
-const lo: u21 = 35;
-const hi: u21 = 917631;
+const lo: u21 = 0x23;
+const hi: u21 = 0xe007f;
 
 pub fn isEmojiComponent(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

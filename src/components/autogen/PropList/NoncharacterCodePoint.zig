@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode NoncharacterCodePoint code points.
 
-const lo: u21 = 64976;
-const hi: u21 = 1114111;
+const lo: u21 = 0xfdd0;
+const hi: u21 = 0x10ffff;
 
 pub fn isNoncharacterCodePoint(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

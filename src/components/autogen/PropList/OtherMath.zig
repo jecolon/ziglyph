@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode OtherMath code points.
 
-const lo: u21 = 94;
-const hi: u21 = 126651;
+const lo: u21 = 0x5e;
+const hi: u21 = 0x1eebb;
 
 pub fn isOtherMath(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

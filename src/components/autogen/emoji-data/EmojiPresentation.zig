@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode EmojiPresentation code points.
 
-const lo: u21 = 8986;
-const hi: u21 = 129750;
+const lo: u21 = 0x231a;
+const hi: u21 = 0x1fad6;
 
 pub fn isEmojiPresentation(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

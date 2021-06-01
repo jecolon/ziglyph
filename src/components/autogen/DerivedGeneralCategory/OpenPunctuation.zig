@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode OpenPunctuation code points.
 
-const lo: u21 = 40;
-const hi: u21 = 65378;
+const lo: u21 = 0x28;
+const hi: u21 = 0xff62;
 
 pub fn isOpenPunctuation(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

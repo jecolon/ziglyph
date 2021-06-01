@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Halfwidth code points.
 
-const lo: u21 = 8361;
-const hi: u21 = 65518;
+const lo: u21 = 0x20a9;
+const hi: u21 = 0xffee;
 
 pub fn isHalfwidth(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode ConnectorPunctuation code points.
 
-const lo: u21 = 95;
-const hi: u21 = 65343;
+const lo: u21 = 0x5f;
+const hi: u21 = 0xff3f;
 
 pub fn isConnectorPunctuation(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode ModifierSymbol code points.
 
-const lo: u21 = 94;
-const hi: u21 = 127999;
+const lo: u21 = 0x5e;
+const hi: u21 = 0x1f3ff;
 
 pub fn isModifierSymbol(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

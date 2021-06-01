@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode ModifierLetter code points.
 
-const lo: u21 = 688;
-const hi: u21 = 125259;
+const lo: u21 = 0x2b0;
+const hi: u21 = 0x1e94b;
 
 pub fn isModifierLetter(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

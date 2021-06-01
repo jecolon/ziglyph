@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode EmojiModifier code points.
 
-const lo: u21 = 127995;
-const hi: u21 = 127999;
+const lo: u21 = 0x1f3fb;
+const hi: u21 = 0x1f3ff;
 
 pub fn isEmojiModifier(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

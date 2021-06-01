@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode IDContinue code points.
 
-const lo: u21 = 48;
-const hi: u21 = 917999;
+const lo: u21 = 0x30;
+const hi: u21 = 0xe01ef;
 
 pub fn isIDContinue(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode OtherDefaultIgnorableCodePoint code points.
 
-const lo: u21 = 847;
-const hi: u21 = 921599;
+const lo: u21 = 0x34f;
+const hi: u21 = 0xe0fff;
 
 pub fn isOtherDefaultIgnorableCodePoint(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

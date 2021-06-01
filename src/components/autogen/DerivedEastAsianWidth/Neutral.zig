@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Neutral code points.
 
-const lo: u21 = 0;
-const hi: u21 = 917631;
+const lo: u21 = 0x0;
+const hi: u21 = 0xe007f;
 
 pub fn isNeutral(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode SoftDotted code points.
 
-const lo: u21 = 105;
-const hi: u21 = 120467;
+const lo: u21 = 0x69;
+const hi: u21 = 0x1d693;
 
 pub fn isSoftDotted(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

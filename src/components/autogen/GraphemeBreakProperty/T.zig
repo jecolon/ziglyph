@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode T code points.
 
-const lo: u21 = 4520;
-const hi: u21 = 55291;
+const lo: u21 = 0x11a8;
+const hi: u21 = 0xd7fb;
 
 pub fn isT(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Fullwidth code points.
 
-const lo: u21 = 12288;
-const hi: u21 = 65510;
+const lo: u21 = 0x3000;
+const hi: u21 = 0xffe6;
 
 pub fn isFullwidth(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

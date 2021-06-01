@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode UppercaseLetter code points.
 
-const lo: u21 = 65;
-const hi: u21 = 125217;
+const lo: u21 = 0x41;
+const hi: u21 = 0x1e921;
 
 pub fn isUppercaseLetter(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

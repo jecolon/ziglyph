@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Hyphen code points.
 
-const lo: u21 = 45;
-const hi: u21 = 65381;
+const lo: u21 = 0x2d;
+const hi: u21 = 0xff65;
 
 pub fn isHyphen(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

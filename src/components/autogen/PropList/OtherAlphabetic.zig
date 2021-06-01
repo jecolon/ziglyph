@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode OtherAlphabetic code points.
 
-const lo: u21 = 837;
-const hi: u21 = 127369;
+const lo: u21 = 0x345;
+const hi: u21 = 0x1f189;
 
 pub fn isOtherAlphabetic(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

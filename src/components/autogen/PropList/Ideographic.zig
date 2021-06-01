@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Ideographic code points.
 
-const lo: u21 = 12294;
-const hi: u21 = 201546;
+const lo: u21 = 0x3006;
+const hi: u21 = 0x3134a;
 
 pub fn isIdeographic(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode CaseIgnorable code points.
 
-const lo: u21 = 39;
-const hi: u21 = 917999;
+const lo: u21 = 0x27;
+const hi: u21 = 0xe01ef;
 
 pub fn isCaseIgnorable(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

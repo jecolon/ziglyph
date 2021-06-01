@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Extender code points.
 
-const lo: u21 = 183;
-const hi: u21 = 125254;
+const lo: u21 = 0xb7;
+const hi: u21 = 0x1e946;
 
 pub fn isExtender(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

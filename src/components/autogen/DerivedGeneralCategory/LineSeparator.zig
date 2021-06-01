@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode LineSeparator code points.
 
-const lo: u21 = 8232;
-const hi: u21 = 8232;
+const lo: u21 = 0x2028;
+const hi: u21 = 0x2028;
 
 pub fn isLineSeparator(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

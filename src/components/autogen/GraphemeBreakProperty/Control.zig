@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Control code points.
 
-const lo: u21 = 0;
-const hi: u21 = 921599;
+const lo: u21 = 0x0;
+const hi: u21 = 0xe0fff;
 
 pub fn isControl(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

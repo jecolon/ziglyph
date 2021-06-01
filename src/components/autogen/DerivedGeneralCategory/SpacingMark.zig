@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode SpacingMark code points.
 
-const lo: u21 = 2307;
-const hi: u21 = 119154;
+const lo: u21 = 0x903;
+const hi: u21 = 0x1d172;
 
 pub fn isSpacingMark(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

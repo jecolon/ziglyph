@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode OtherLetter code points.
 
-const lo: u21 = 170;
-const hi: u21 = 201546;
+const lo: u21 = 0xaa;
+const hi: u21 = 0x3134a;
 
 pub fn isOtherLetter(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

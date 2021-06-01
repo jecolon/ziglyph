@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode Unassigned code points.
 
-const lo: u21 = 888;
-const hi: u21 = 1114111;
+const lo: u21 = 0x378;
+const hi: u21 = 0x10ffff;
 
 pub fn isUnassigned(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

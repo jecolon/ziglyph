@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode ASCIIHexDigit code points.
 
-const lo: u21 = 48;
-const hi: u21 = 102;
+const lo: u21 = 0x30;
+const hi: u21 = 0x66;
 
 pub fn isASCIIHexDigit(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

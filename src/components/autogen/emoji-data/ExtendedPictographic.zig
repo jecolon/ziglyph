@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode ExtendedPictographic code points.
 
-const lo: u21 = 169;
-const hi: u21 = 131069;
+const lo: u21 = 0xa9;
+const hi: u21 = 0x1fffd;
 
 pub fn isExtendedPictographic(cp: u21) bool {
     if (cp < lo or cp > hi) return false;

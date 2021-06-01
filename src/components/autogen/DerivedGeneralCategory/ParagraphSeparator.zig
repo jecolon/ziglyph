@@ -5,8 +5,8 @@
 //    2. Highest code point
 //! Unicode ParagraphSeparator code points.
 
-const lo: u21 = 8233;
-const hi: u21 = 8233;
+const lo: u21 = 0x2029;
+const hi: u21 = 0x2029;
 
 pub fn isParagraphSeparator(cp: u21) bool {
     if (cp < lo or cp > hi) return false;
