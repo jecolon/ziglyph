@@ -10,7 +10,7 @@ test "Grapheme" {
     _ = @import("components.zig").GraphemeIterator;
 }
 
-test "Components" {
+test "components" {
     _ = @import("components.zig").Letter;
     _ = @import("components.zig").Mark;
     _ = @import("components.zig").Number;
@@ -28,4 +28,9 @@ test "Collator" {
 
 test "Width" {
     _ = @import("components.zig").Width;
+}
+
+test "READMEs" {
+    _ = @import("tests/readme_tests.zig");
+    _ = @import("tests/zigstr_readme_tests.zig");
 }

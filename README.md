@@ -1,17 +1,13 @@
 # ziglyph
 Unicode processing with Zig, and a UTF-8 string type: [Zigstr](src/zigstr).
 
+### Looking for an UTF-8 String Type?
+`Zigstr` is a UTF-8 string type that incorporates many of Ziglyph's Unicode processing tools. You can
+learn more in the [Zigstr subdirectory](src/zigstr).
+
 ## Status
 This is pre-1.0 software. Althogh breaking changes are less frequent with each minor version release,
 they still will occur until we reach 1.0.
-
-## Background
-This library has been built from scratch in Zig. Although initially inspired by the Go `unicode`
-package, Ziglyph is now completely independent and unique in and of itself.
-
-### The Zigstr String Type
-`Zigstr` is a UTF-8 string type that incorporates many of Ziglyph's Unicode processing tools. You can
-learn more in the [Zigstr subdirectory](src/zigstr).
 
 ## Integrating Ziglyph in your Project
 In a `libs` subdirectory under the root of your project, clone this repository via
@@ -63,10 +59,9 @@ test "Ziglyph struct" {
 }
 ```
 
-### Using the aggregate Structs
-The `Ziglyph` struct is convenient, but requires a large memory and binary footprint to provide its 
-varied functionality. For more control over memory and binary size, smaller aggregate structs are 
-privided.
+### Using Component Structs
+Smaller aggregate structs are privided for specific areas of functionality.
+See [components.zig](src/components.zig) for a full list of all components.
 
 ```zig
 const Letter = @import("Ziglyph").Letter;
@@ -237,6 +232,4 @@ test "Collation" {
 ```
 
 ## Unicode Data
-The Unicode data is the latest available on the Unicode website, and can be refreshed via the 
-`ucd_gen.sh` script in the root directory (must be run in the root directory to generate files in the 
-proper locations.) [LICENSE](src/data/ucd/LICENSE-UNICODE)
+The Unicode data is the latest available on the Unicode website. [LICENSE](src/data/ucd/LICENSE-UNICODE)

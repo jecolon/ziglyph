@@ -4,7 +4,7 @@ const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
 // Import structs.
-const Ziglyph = @import("Ziglyph.zig");
+const Ziglyph = @import("../Ziglyph.zig");
 const Collator = Ziglyph.Collator;
 const GraphemeIterator = Ziglyph.GraphemeIterator;
 const Letter = Ziglyph.Letter;

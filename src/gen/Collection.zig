@@ -2,20 +2,38 @@ const std = @import("std");
 const io = std.io;
 const mem = std.mem;
 
-const Range = @import("record.zig").Range;
-const Record = @import("record.zig").Record;
-const Collection = @This();
+const Self = @This();
 
-const comp_path = "components/autogen";
+const comp_path = "../components/autogen";
 
+pub const Record = union(enum) {
+    single: u21,
+    range: Range,
+
+    pub fn match(self: Record, cp: u21) bool {
+        return switch (self) {
+            .single => |rcp| cp == rcp,
+            .range => |r| r.match(cp),
+        };
+    }
+};
+
+pub const Range = struct {
+    lo: u21,
+    hi: u21,
+
+    pub fn match(self: Range, cp: u21) bool {
+        return cp >= self.lo and cp <= self.hi;
+    }
+};
 allocator: *mem.Allocator,
 kind: []const u8,
 lo: u21,
 hi: u21,
 records: []Record,
 
-pub fn init(allocator: *mem.Allocator, kind: []const u8, lo: u21, hi: u21, records: []Record) !Collection {
-    return Collection{
+pub fn init(allocator: *mem.Allocator, kind: []const u8, lo: u21, hi: u21, records: []Record) !Self {
+    return Self{
         .allocator = allocator,
         .kind = blk: {
             var b = try allocator.alloc(u8, kind.len);
@@ -28,13 +46,13 @@ pub fn init(allocator: *mem.Allocator, kind: []const u8, lo: u21, hi: u21, recor
     };
 }
 
-pub fn deinit(self: *Collection) void {
+pub fn deinit(self: *Self) void {
     self.allocator.free(self.kind);
     self.allocator.free(self.records);
 }
 
-pub fn writeFile(self: *Collection, dir: []const u8) !void {
-    const header_tpl = @embedFile("parts/collection_header_tpl.txt");
+pub fn writeFile(self: *Self, dir: []const u8) !void {
+    const header_tpl = @embedFile("tpl/collection_header_tpl.txt");
 
     // Prepare output dir.
     const name = try self.clean_name();
@@ -77,7 +95,7 @@ pub fn writeFile(self: *Collection, dir: []const u8) !void {
     try buf_writer.flush();
 }
 
-fn clean_name(self: *Collection) ![]u8 {
+fn clean_name(self: *Self) ![]u8 {
     var name1 = try self.allocator.alloc(u8, mem.replacementSize(u8, self.kind, "_", ""));
     defer self.allocator.free(name1);
     _ = mem.replace(u8, self.kind, "_", "", name1);

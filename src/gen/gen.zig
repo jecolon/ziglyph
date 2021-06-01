@@ -7,8 +7,8 @@ const mem = std.mem;
 const unicode = std.unicode;
 
 const Collection = @import("Collection.zig");
-const Record = @import("record.zig").Record;
-const ascii = @import("ascii.zig");
+const Record = Collection.Record;
+const ascii = @import("../ascii.zig");
 
 const UcdGenerator = struct {
     allocator: *mem.Allocator,
@@ -156,7 +156,7 @@ const UcdGenerator = struct {
     // data/ucd/extracted/DerivedEastAsianWidth.txt
     fn processAsianWidth(self: *Self) !void {
         // Setup input.
-        var file = try std.fs.cwd().openFile("data/ucd/extracted/DerivedEastAsianWidth.txt", .{});
+        var file = try std.fs.cwd().openFile("../data/ucd/extracted/DerivedEastAsianWidth.txt", .{});
         defer file.close();
         var buf_reader = io.bufferedReader(file.reader());
         var input_stream = buf_reader.reader();
@@ -283,7 +283,7 @@ const UcdGenerator = struct {
     // data/ucd/extracted/DerivedGeneralCategory.txt
     fn processGenCat(self: *Self) !void {
         // Setup input.
-        var file = try std.fs.cwd().openFile("data/ucd/extracted/DerivedGeneralCategory.txt", .{});
+        var file = try std.fs.cwd().openFile("../data/ucd/extracted/DerivedGeneralCategory.txt", .{});
         defer file.close();
         var buf_reader = io.bufferedReader(file.reader());
         var input_stream = buf_reader.reader();
@@ -410,18 +410,18 @@ const UcdGenerator = struct {
     // data/ucd/CaseFolding.txt
     fn processCaseFold(self: *Self) !void {
         // Setup input.
-        var in_file = try std.fs.cwd().openFile("data/ucd/CaseFolding.txt", .{});
+        var in_file = try std.fs.cwd().openFile("../data/ucd/CaseFolding.txt", .{});
         defer in_file.close();
         var buf_reader = io.bufferedReader(in_file.reader());
         var input_stream = buf_reader.reader();
         // Setup output.
-        const header_tpl = @embedFile("parts/fold_map_header_tpl.txt");
+        const header_tpl = @embedFile("tpl/fold_map_header_tpl.txt");
         var cwd = std.fs.cwd();
-        cwd.makeDir("components/autogen/CaseFolding") catch |err| switch (err) {
+        cwd.makeDir("../components/autogen/CaseFolding") catch |err| switch (err) {
             error.PathAlreadyExists => {},
             else => return err,
         };
-        var out_file = try cwd.createFile("components/autogen/CaseFolding/CaseFoldMap.zig", .{});
+        var out_file = try cwd.createFile("../components/autogen/CaseFolding/CaseFoldMap.zig", .{});
         defer out_file.close();
         var buf_writer = io.bufferedWriter(out_file.writer());
         const writer = buf_writer.writer();
@@ -477,28 +477,28 @@ const UcdGenerator = struct {
     // data/ucd/UnicodeData.txt
     fn processUcd(self: *Self) !void {
         // Setup input.
-        var in_file = try std.fs.cwd().openFile("data/ucd/UnicodeData.txt", .{});
+        var in_file = try std.fs.cwd().openFile("../data/ucd/UnicodeData.txt", .{});
         defer in_file.close();
         var buf_reader = io.bufferedReader(in_file.reader());
         var input_stream = buf_reader.reader();
         // Output directory.
         var cwd = std.fs.cwd();
-        cwd.makeDir("components/autogen/UnicodeData") catch |err| switch (err) {
+        cwd.makeDir("../components/autogen/UnicodeData") catch |err| switch (err) {
             error.PathAlreadyExists => {},
             else => return err,
         };
         // Templates.
-        const map_header_tpl = @embedFile("parts/map_header_tpl.txt");
+        const map_header_tpl = @embedFile("tpl/map_header_tpl.txt");
         // Setup output.
-        var l_file = try cwd.createFile("components/autogen/UnicodeData/LowerMap.zig", .{});
+        var l_file = try cwd.createFile("../components/autogen/UnicodeData/LowerMap.zig", .{});
         defer l_file.close();
         var l_buf = io.bufferedWriter(l_file.writer());
         const l_writer = l_buf.writer();
-        var t_file = try cwd.createFile("components/autogen/UnicodeData/TitleMap.zig", .{});
+        var t_file = try cwd.createFile("../components/autogen/UnicodeData/TitleMap.zig", .{});
         defer t_file.close();
         var t_buf = io.bufferedWriter(t_file.writer());
         const t_writer = t_buf.writer();
-        var u_file = try cwd.createFile("components/autogen/UnicodeData/UpperMap.zig", .{});
+        var u_file = try cwd.createFile("../components/autogen/UnicodeData/UpperMap.zig", .{});
         defer u_file.close();
         var u_buf = io.bufferedWriter(u_file.writer());
         const u_writer = u_buf.writer();
@@ -547,19 +547,19 @@ const UcdGenerator = struct {
     // data/ucd/SpecialCassing.txt
     fn processSpecialCasing(self: *Self) !void {
         // Setup input.
-        var in_file = try std.fs.cwd().openFile("data/ucd/SpecialCasing.txt", .{});
+        var in_file = try std.fs.cwd().openFile("../data/ucd/SpecialCasing.txt", .{});
         defer in_file.close();
         var buf_reader = io.bufferedReader(in_file.reader());
         var input_stream = buf_reader.reader();
         // Setup output.
-        const header_tpl = @embedFile("parts/special_case_header_tpl.txt");
-        const trailer_tpl = @embedFile("parts/special_case_trailer_tpl.txt");
+        const header_tpl = @embedFile("tpl/special_case_header_tpl.txt");
+        const trailer_tpl = @embedFile("tpl/special_case_trailer_tpl.txt");
         var cwd = std.fs.cwd();
-        cwd.makeDir("components/autogen/SpecialCasing") catch |err| switch (err) {
+        cwd.makeDir("../components/autogen/SpecialCasing") catch |err| switch (err) {
             error.PathAlreadyExists => {},
             else => return err,
         };
-        var out_file = try cwd.createFile("components/autogen/SpecialCasing/SpecialCaseMap.zig", .{});
+        var out_file = try cwd.createFile("../components/autogen/SpecialCasing/SpecialCaseMap.zig", .{});
         defer out_file.close();
         var buf_writer = io.bufferedWriter(out_file.writer());
         const writer = buf_writer.writer();
@@ -676,18 +676,18 @@ const UcdGenerator = struct {
     // data/ucd/extracted/DerivedCombiningClass.txt
     fn processCccMap(self: *Self) !void {
         // Setup input.
-        var file = try std.fs.cwd().openFile("data/ucd/extracted/DerivedCombiningClass.txt", .{});
+        var file = try std.fs.cwd().openFile("../data/ucd/extracted/DerivedCombiningClass.txt", .{});
         defer file.close();
         var buf_reader = io.bufferedReader(file.reader());
         var input_stream = buf_reader.reader();
         // Setup output.
-        const header_tpl = @embedFile("parts/ccc_header_tpl.txt");
+        const header_tpl = @embedFile("tpl/ccc_header_tpl.txt");
         var cwd = std.fs.cwd();
-        cwd.makeDir("components/autogen/DerivedCombiningClass") catch |err| switch (err) {
+        cwd.makeDir("../components/autogen/DerivedCombiningClass") catch |err| switch (err) {
             error.PathAlreadyExists => {},
             else => return err,
         };
-        var out_file = try cwd.createFile("components/autogen/DerivedCombiningClass/CccMap.zig", .{});
+        var out_file = try cwd.createFile("../components/autogen/DerivedCombiningClass/CccMap.zig", .{});
         defer out_file.close();
         var buf_writer = io.bufferedWriter(out_file.writer());
         const writer = buf_writer.writer();
@@ -753,18 +753,18 @@ const UcdGenerator = struct {
     // data/ucd/HangulSyllableType.txt
     fn processHangul(self: *Self) !void {
         // Setup input.
-        var file = try std.fs.cwd().openFile("data/ucd/HangulSyllableType.txt", .{});
+        var file = try std.fs.cwd().openFile("../data/ucd/HangulSyllableType.txt", .{});
         defer file.close();
         var buf_reader = io.bufferedReader(file.reader());
         var input_stream = buf_reader.reader();
         // Setup output.
-        const header_tpl = @embedFile("parts/hangul_header_tpl.txt");
+        const header_tpl = @embedFile("tpl/hangul_header_tpl.txt");
         var cwd = std.fs.cwd();
-        cwd.makeDir("components/autogen/HangulSyllableType") catch |err| switch (err) {
+        cwd.makeDir("../components/autogen/HangulSyllableType") catch |err| switch (err) {
             error.PathAlreadyExists => {},
             else => return err,
         };
-        var out_file = try cwd.createFile("components/autogen/HangulSyllableType/HangulMap.zig", .{});
+        var out_file = try cwd.createFile("../components/autogen/HangulSyllableType/HangulMap.zig", .{});
         defer out_file.close();
         var buf_writer = io.bufferedWriter(out_file.writer());
         const writer = buf_writer.writer();
@@ -823,18 +823,18 @@ const UcdGenerator = struct {
     // data/ucd/DerivedNormalizationProps.txt
     fn processNFDQC(self: *Self) !void {
         // Setup input.
-        var file = try std.fs.cwd().openFile("data/ucd/DerivedNormalizationProps.txt", .{});
+        var file = try std.fs.cwd().openFile("../data/ucd/DerivedNormalizationProps.txt", .{});
         defer file.close();
         var buf_reader = io.bufferedReader(file.reader());
         var input_stream = buf_reader.reader();
         // Setup output.
-        const header_tpl = @embedFile("parts/nfd_qc_header_tpl.txt");
+        const header_tpl = @embedFile("tpl/nfd_qc_header_tpl.txt");
         var cwd = std.fs.cwd();
-        cwd.makeDir("components/autogen/DerivedNormalizationProps") catch |err| switch (err) {
+        cwd.makeDir("../components/autogen/DerivedNormalizationProps") catch |err| switch (err) {
             error.PathAlreadyExists => {},
             else => return err,
         };
-        var out_file = try cwd.createFile("components/autogen/DerivedNormalizationProps/NFDCheck.zig", .{});
+        var out_file = try cwd.createFile("../components/autogen/DerivedNormalizationProps/NFDCheck.zig", .{});
         defer out_file.close();
         var buf_writer = io.bufferedWriter(out_file.writer());
         const writer = buf_writer.writer();
@@ -898,12 +898,12 @@ pub fn main() !void {
     var allocator = &arena.allocator;
     //var allocator = std.testing.allocator;
     var ugen = UcdGenerator.new(allocator);
-    //try ugen.processF1("data/ucd/Blocks.txt");
-    try ugen.processF1("data/ucd/PropList.txt");
-    try ugen.processF1("data/ucd/auxiliary/GraphemeBreakProperty.txt");
-    try ugen.processF1("data/ucd/DerivedCoreProperties.txt");
-    try ugen.processF1("data/ucd/extracted/DerivedNumericType.txt");
-    try ugen.processF1("data/ucd/emoji/emoji-data.txt");
+    //try ugen.processF1("../data/ucd/Blocks.txt");
+    try ugen.processF1("../data/ucd/PropList.txt");
+    try ugen.processF1("../data/ucd/auxiliary/GraphemeBreakProperty.txt");
+    try ugen.processF1("../data/ucd/DerivedCoreProperties.txt");
+    try ugen.processF1("../data/ucd/extracted/DerivedNumericType.txt");
+    try ugen.processF1("../data/ucd/emoji/emoji-data.txt");
     try ugen.processGenCat();
     try ugen.processCaseFold();
     try ugen.processUcd();

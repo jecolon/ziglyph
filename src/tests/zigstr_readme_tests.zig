@@ -4,7 +4,7 @@ const expectEqual = std.testing.expectEqual;
 const expectEqualStrings = std.testing.expectEqualStrings;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
-const Zigstr = @import("zigstr/Zigstr.zig");
+const Zigstr = @import("../zigstr/Zigstr.zig");
 
 test "Zigstr README tests" {
     var allocator = std.testing.allocator;
