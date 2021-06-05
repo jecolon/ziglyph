@@ -2,16 +2,12 @@ const std = @import("std");
 const mem = std.mem;
 const unicode = std.unicode;
 
-const Ambiguous = @import("../../components.zig").Ambiguous;
-const Enclosing = @import("../../components.zig").EnclosingMark;
-const ExtPic = @import("../../components.zig").ExtendedPictographic;
-const Format = @import("../../components.zig").Format;
-const Fullwidth = @import("../../components.zig").Fullwidth;
+const Cats = @import("../../components.zig").DerivedGeneralCategory;
+const EAW = @import("../../components.zig").DerivedEastAsianWidth;
+const Emoji = @import("../../components.zig").EmojiData;
+const GBP = @import("../../components.zig").GraphemeBreakProperty;
 const GraphemeIterator = @import("../../components.zig").GraphemeIterator;
 const isAsciiStr = @import("../../zigstr/Zigstr.zig").isAsciiStr;
-const Nonspacing = @import("../../components.zig").NonspacingMark;
-const Regional = @import("../../components.zig").RegionalIndicator;
-const Wide = @import("../../components.zig").Wide;
 
 /// AmbiguousWidth determines the width of ambiguous characters according to the context. In an 
 /// East Asian context, the width of ambiguous code points should be 2 (full), and 1 (half) 
@@ -39,10 +35,10 @@ pub fn codePointWidth(cp: u21, am_width: AmbiguousWidth) i3 {
     } else if (cp == 0x2E3B) {
         // three-em dash
         return 3;
-    } else if (Enclosing.isEnclosingMark(cp) or Nonspacing.isNonspacingMark(cp)) {
+    } else if (Cats.isEnclosingMark(cp) or Cats.isNonspacingMark(cp)) {
         // Combining Marks.
         return 0;
-    } else if (Format.isFormat(cp) and (!(cp >= 0x0600 and cp <= 0x0605) and cp != 0x061C and
+    } else if (Cats.isFormat(cp) and (!(cp >= 0x0600 and cp <= 0x0605) and cp != 0x061C and
         cp != 0x06DD and cp != 0x08E2))
     {
         // Format except Arabic.
@@ -57,11 +53,11 @@ pub fn codePointWidth(cp: u21, am_width: AmbiguousWidth) i3 {
         (cp >= 0x30000 and cp <= 0x3FFFD))
     {
         return 2;
-    } else if (Wide.isWide(cp) or Fullwidth.isFullwidth(cp)) {
+    } else if (EAW.isWide(cp) or EAW.isFullwidth(cp)) {
         return 2;
-    } else if (Regional.isRegionalIndicator(cp)) {
+    } else if (GBP.isRegionalIndicator(cp)) {
         return 2;
-    } else if (Ambiguous.isAmbiguous(cp)) {
+    } else if (EAW.isAmbiguous(cp)) {
         return @enumToInt(am_width);
     } else {
         return 1;
@@ -102,7 +98,7 @@ pub fn strWidth(str: []const u8, am_width: AmbiguousWidth) !usize {
 
             if (w != 0) {
                 // Only adding width of first non-zero-width code point.
-                if (ExtPic.isExtendedPictographic(cp)) {
+                if (Emoji.isExtendedPictographic(cp)) {
                     if (cp_iter.nextCodepoint()) |ncp| {
                         // Emoji text sequence.
                         if (ncp == 0xFE0E) w = 1;

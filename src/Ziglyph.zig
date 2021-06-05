@@ -8,7 +8,7 @@ const ascii = @import("ascii.zig");
 pub usingnamespace @import("components.zig");
 
 pub fn isAlphabetic(cp: u21) bool {
-    return Alphabetic.isAlphabetic(cp);
+    return DerivedCoreProperties.isAlphabetic(cp);
 }
 
 pub fn isAsciiAlphabetic(cp: u21) bool {
@@ -71,7 +71,7 @@ pub fn isAsciiPrint(cp: u21) bool {
 }
 
 pub fn isControl(cp: u21) bool {
-    return Control.isControl(cp);
+    return DerivedGeneralCategory.isControl(cp);
 }
 
 pub fn isAsciiControl(cp: u21) bool {
@@ -119,7 +119,7 @@ pub fn isAsciiPunct(cp: u21) bool {
 
 /// isWhiteSpace detects code points that have the Unicode *WhiteSpace* property.
 pub fn isWhiteSpace(cp: u21) bool {
-    return WhiteSpace.isWhiteSpace(cp);
+    return PropList.isWhiteSpace(cp);
 }
 
 pub fn isAsciiWhiteSpace(cp: u21) bool {
@@ -288,7 +288,7 @@ test "Ziglyph isControl" {
     try expect(isControl('\t'));
     try expect(isControl('\u{0008}'));
     try expect(isControl('\u{0012}'));
-    try expect(!isControl('\n'));
-    try expect(!isControl('\r'));
+    try expect(isControl('\n'));
+    try expect(isControl('\r'));
     try expect(!isControl('A'));
 }

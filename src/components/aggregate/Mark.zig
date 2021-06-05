@@ -1,12 +1,10 @@
 const std = @import("std");
 
-pub const Enclosing = @import("../../components.zig").EnclosingMark;
-pub const Nonspacing = @import("../../components.zig").NonspacingMark;
-pub const Spacing = @import("../../components.zig").SpacingMark;
+pub const Cats = @import("../../components.zig").DerivedGeneralCategory;
 
 /// isMark detects special code points that serve as marks in different alphabets.
 pub fn isMark(cp: u21) bool {
-    return Spacing.isSpacingMark(cp) or Nonspacing.isNonspacingMark(cp) or Enclosing.isEnclosingMark(cp);
+    return Cats.isSpacingMark(cp) or Cats.isNonspacingMark(cp) or Cats.isEnclosingMark(cp);
 }
 
 const expect = std.testing.expect;

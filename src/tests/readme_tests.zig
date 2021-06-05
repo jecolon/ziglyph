@@ -8,10 +8,8 @@ const Ziglyph = @import("../Ziglyph.zig");
 const Collator = Ziglyph.Collator;
 const GraphemeIterator = Ziglyph.GraphemeIterator;
 const Letter = Ziglyph.Letter;
-const Lower = Ziglyph.Lowercase;
 const Normalizer = Ziglyph.Normalizer;
 const Punct = Ziglyph.Punct;
-const Upper = Ziglyph.Uppercase;
 const UpperMap = Ziglyph.UpperMap;
 const Width = Ziglyph.Width;
 
@@ -39,10 +37,10 @@ test "Aggregate struct" {
 
 test "Component structs" {
     const z = 'z';
-    try expect(Lower.isLowercase(z));
-    try expect(!Upper.isUppercase(z));
+    try expect(Letter.isLower(z));
+    try expect(!Letter.isUpper(z));
     const uz = UpperMap.toUpper(z);
-    try expect(Upper.isUppercase(uz));
+    try expect(Letter.isUpper(uz));
     try expectEqual(uz, 'Z');
 }
 

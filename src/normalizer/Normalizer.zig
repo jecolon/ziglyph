@@ -7,10 +7,10 @@ const mem = std.mem;
 const sort = std.sort.sort;
 const unicode = std.unicode;
 
-const CaseFoldMap = @import("../components/autogen/CaseFolding/CaseFoldMap.zig");
-const CccMap = @import("../components/autogen/DerivedCombiningClass/CccMap.zig");
-const HangulMap = @import("../components/autogen/HangulSyllableType/HangulMap.zig");
-const NFDCheck = @import("../components/autogen/DerivedNormalizationProps/NFDCheck.zig");
+const CaseFoldMap = @import("../components.zig").CaseFoldMap;
+const CccMap = @import("../components.zig").CombiningMap;
+const HangulMap = @import("../components.zig").HangulMap;
+const NFDCheck = @import("../components.zig").NFDCheck;
 const Trieton = @import("../trieton/src/trieton.zig").Trieton;
 
 const DecompTrie = Trieton(u8, Decomposed);

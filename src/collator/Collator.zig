@@ -7,11 +7,11 @@ const mem = std.mem;
 const zort = std.sort.sort;
 const unicode = std.unicode;
 
-const CccMap = @import("../components.zig").CccMap;
+const CccMap = @import("../components.zig").CombiningMap;
 const Normalizer = @import("../components.zig").Normalizer;
-const NFDCheck = @import("../components/autogen/DerivedNormalizationProps/NFDCheck.zig");
+const NFDCheck = @import("../components.zig").NFDCheck;
 const Trie = @import("CollatorTrie.zig");
-const UnifiedIdeo = @import("../components/autogen/PropList/UnifiedIdeograph.zig");
+const Props = @import("../components.zig").PropList;
 
 const Implicit = struct {
     base: u21,
@@ -237,13 +237,13 @@ pub fn implicitWeight(self: Self, cp: u21) Trie.Elements {
     var aaaa: ?u21 = null;
     var bbbb: u21 = 0;
 
-    if (UnifiedIdeo.isUnifiedIdeograph(cp) and ((cp >= 0x4E00 and cp <= 0x9FFF) or
+    if (Props.isUnifiedIdeograph(cp) and ((cp >= 0x4E00 and cp <= 0x9FFF) or
         (cp >= 0xF900 and cp <= 0xFAFF)))
     {
         base = 0xFB40;
         aaaa = base + (cp >> 15);
         bbbb = (cp & 0x7FFF) | 0x8000;
-    } else if (UnifiedIdeo.isUnifiedIdeograph(cp) and !((cp >= 0x4E00 and cp <= 0x9FFF) or
+    } else if (Props.isUnifiedIdeograph(cp) and !((cp >= 0x4E00 and cp <= 0x9FFF) or
         (cp >= 0xF900 and cp <= 0xFAFF)))
     {
         base = 0xFB80;

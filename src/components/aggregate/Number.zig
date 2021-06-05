@@ -1,23 +1,21 @@
 const std = @import("std");
 
-pub const Decimal = @import("../../components.zig").Decimal;
-pub const Digit = @import("../../components.zig").Digit;
-pub const Hex = @import("../../components.zig").HexDigit;
-pub const LetterNumber = @import("../../components.zig").LetterNumber;
-pub const OtherNumber = @import("../../components.zig").OtherNumber;
+pub const Cats = @import("../../components.zig").DerivedGeneralCategory;
+pub const Numeric = @import("../../components.zig").DerivedNumericType;
+pub const Props = @import("../../components.zig").PropList;
 
 // isDecimal detects all Unicode digits.
 pub fn isDecimal(cp: u21) bool {
     // ASCII optimization.
     if (cp < 128 and (cp >= '0' and cp <= '9')) return true;
-    return Decimal.isDecimal(cp);
+    return Numeric.isDecimal(cp);
 }
 
 // isDigit detects all Unicode digits, which don't include the ASCII digits..
 pub fn isDigit(cp: u21) bool {
     // ASCII optimization.
     if (cp < 128 and (cp >= '0' and cp <= '9')) return true;
-    return Digit.isDigit(cp) or isDecimal(cp);
+    return Numeric.isDigit(cp) or isDecimal(cp);
 }
 
 /// isAsciiAlphabetic detects ASCII only letters.
@@ -29,7 +27,7 @@ pub fn isAsciiDigit(cp: u21) bool {
 pub fn isHexDigit(cp: u21) bool {
     // ASCII optimization.
     if (cp < 128 and ((cp >= 'a' and cp <= 'f') or (cp >= 'A' and cp <= 'F') or (cp >= '0' and cp <= '9'))) return true;
-    return Hex.isHexDigit(cp);
+    return Props.isHexDigit(cp);
 }
 
 /// isAsciiHexDigit detects ASCII only hexadecimal digits.
@@ -41,8 +39,7 @@ pub fn isAsciiHexDigit(cp: u21) bool {
 pub fn isNumber(cp: u21) bool {
     // ASCII optimization.
     if (cp < 128 and (cp >= '0' and cp <= '9')) return true;
-    return Decimal.isDecimal(cp) or LetterNumber.isLetterNumber(cp) or
-        OtherNumber.isOtherNumber(cp);
+    return Numeric.isDecimal(cp) or Cats.isLetterNumber(cp) or Cats.isOtherNumber(cp);
 }
 
 /// isAsciiNumber detects ASCII only numbers.

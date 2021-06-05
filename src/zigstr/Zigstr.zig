@@ -8,7 +8,7 @@ const Letter = @import("../components.zig").Letter;
 const CodePointIterator = @import("../components.zig").CodePointIterator;
 const GraphemeIterator = @import("../components.zig").GraphemeIterator;
 const Grapheme = GraphemeIterator.Grapheme;
-const WhiteSpace = @import("../components.zig").WhiteSpace;
+const Props = @import("../components.zig").PropList;
 
 const Self = @This();
 
@@ -509,7 +509,7 @@ pub fn isBlank(self: *Self) !bool {
     defer self.allocator.free(cps);
 
     return for (cps) |cp| {
-        if (!WhiteSpace.isWhiteSpace(cp)) break false;
+        if (!Props.isWhiteSpace(cp)) break false;
     } else true;
 }
 

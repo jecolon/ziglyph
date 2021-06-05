@@ -1,14 +1,10 @@
 const std = @import("std");
 
 pub const CaseFoldMap = @import("../../components.zig").CaseFoldMap;
-pub const Cased = @import("../../components.zig").Cased;
-pub const Lower = @import("../../components.zig").LowercaseLetter;
+pub const Props = @import("../../components.zig").DerivedCoreProperties;
+pub const Cats = @import("../../components.zig").DerivedGeneralCategory;
 pub const LowerMap = @import("../../components.zig").LowerMap;
-pub const ModifierLetter = @import("../../components.zig").ModifierLetter;
-pub const OtherLetter = @import("../../components.zig").OtherLetter;
-pub const Title = @import("../../components.zig").TitlecaseLetter;
 pub const TitleMap = @import("../../components.zig").TitleMap;
-pub const Upper = @import("../../components.zig").UppercaseLetter;
 pub const UpperMap = @import("../../components.zig").UpperMap;
 
 const Self = @This();
@@ -17,16 +13,15 @@ const Self = @This();
 pub fn isCased(cp: u21) bool {
     // ASCII optimization.
     if ((cp >= 'A' and cp <= 'Z') or (cp >= 'a' and cp <= 'z')) return true;
-    return Cased.isCased(cp);
+    return Props.isCased(cp);
 }
 
 /// isLetter covers all letters in Unicode, not just ASCII.
 pub fn isLetter(cp: u21) bool {
     // ASCII optimization.
     if ((cp >= 'A' and cp <= 'Z') or (cp >= 'a' and cp <= 'z')) return true;
-    return Lower.isLowercaseLetter(cp) or ModifierLetter.isModifierLetter(cp) or
-        OtherLetter.isOtherLetter(cp) or Title.isTitlecaseLetter(cp) or
-        Upper.isUppercaseLetter(cp);
+    return Cats.isLowercaseLetter(cp) or Cats.isModifierLetter(cp) or Cats.isOtherLetter(cp) or
+        Cats.isTitlecaseLetter(cp) or Cats.isUppercaseLetter(cp);
 }
 
 /// isAscii detects ASCII only letters.
@@ -38,7 +33,7 @@ pub fn isAsciiLetter(cp: u21) bool {
 pub fn isLower(cp: u21) bool {
     // ASCII optimization.
     if (cp >= 'a' and cp <= 'z') return true;
-    return Lower.isLowercaseLetter(cp) or !isCased(cp);
+    return Cats.isLowercaseLetter(cp) or !isCased(cp);
 }
 
 /// isAsciiLower detects ASCII only lowercase letters.
@@ -48,14 +43,14 @@ pub fn isAsciiLower(cp: u21) bool {
 
 /// isTitle detects code points in titlecase.
 pub fn isTitle(cp: u21) bool {
-    return Title.isTitlecaseLetter(cp) or !isCased(cp);
+    return Cats.isTitlecaseLetter(cp) or !isCased(cp);
 }
 
 /// isUpper detects code points in uppercase.
 pub fn isUpper(cp: u21) bool {
     // ASCII optimization.
     if (cp >= 'A' and cp <= 'Z') return true;
-    return Upper.isUppercaseLetter(cp) or !isCased(cp);
+    return Cats.isUppercaseLetter(cp) or !isCased(cp);
 }
 
 /// isAsciiUpper detects ASCII only uppercase letters.

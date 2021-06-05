@@ -6,14 +6,11 @@ const mem = std.mem;
 const unicode = std.unicode;
 
 const CodePointIterator = @import("CodePointIterator.zig");
-const Control = @import("../components.zig").Control;
-const Extend = @import("../components.zig").Extend;
-const ExtPic = @import("../components.zig").ExtendedPictographic;
+const Cats = @import("../components.zig").DerivedGeneralCategory;
+const GBP = @import("../components.zig").GraphemeBreakProperty;
+const Emoji = @import("../components.zig").EmojiData;
 pub const Grapheme = @import("Grapheme.zig");
 const HangulMap = @import("../components.zig").HangulMap;
-const Prepend = @import("../components.zig").Prepend;
-const Regional = @import("../components.zig").RegionalIndicator;
-const Spacing = @import("../components.zig").SpacingMark;
 
 ascii_only: bool = false,
 cp_iter: CodePointIterator,
@@ -72,9 +69,9 @@ pub fn next(self: *Self) ?Grapheme {
     const next_cp = self.cp_iter.peek();
 
     // GB9.2
-    if (Prepend.isPrepend(cp)) {
+    if (GBP.isPrepend(cp)) {
         if (next_cp) |ncp| {
-            if (ncp == CR or ncp == LF or (Control.isControl(ncp))) {
+            if (ncp == CR or ncp == LF or (Cats.isControl(ncp))) {
                 return Grapheme{
                     .bytes = self.cp_iter.bytes[cp_start..cp_end],
                     .offset = cp_start,
@@ -127,7 +124,7 @@ fn processNonPrepend(
         return Slice{ .start = cp_start, .end = cp_end };
     }
 
-    if (Control.isControl(cp)) {
+    if (Cats.isControl(cp)) {
         return Slice{ .start = cp_start, .end = cp_end };
     }
 
@@ -163,12 +160,12 @@ fn processNonPrepend(
     }
 
     // GB11
-    if (ExtPic.isExtendedPictographic(cp)) {
+    if (Emoji.isExtendedPictographic(cp)) {
         self.fullAdvance();
         if (self.cp_iter.prev) |pcp| {
             if (pcp == ZWJ) {
                 if (self.cp_iter.peek()) |ncp| {
-                    if (ExtPic.isExtendedPictographic(ncp)) {
+                    if (Emoji.isExtendedPictographic(ncp)) {
                         _ = self.cp_iter.next(); // Advance past end emoji.
                         // GB9
                         self.fullAdvance();
@@ -181,9 +178,9 @@ fn processNonPrepend(
     }
 
     // GB12
-    if (Regional.isRegionalIndicator(cp)) {
+    if (GBP.isRegionalIndicator(cp)) {
         if (next_cp) |ncp| {
-            if (Regional.isRegionalIndicator(ncp)) {
+            if (GBP.isRegionalIndicator(ncp)) {
                 _ = self.cp_iter.next(); // Advance past 2nd RI.
             }
         }
@@ -211,7 +208,7 @@ fn fullAdvance(self: *Self) void {
     const next_cp = self.cp_iter.peek();
     // Base case.
     if (next_cp) |ncp| {
-        if (ncp != ZWJ and !Extend.isExtend(ncp) and !Spacing.isSpacingMark(ncp)) return;
+        if (ncp != ZWJ and !GBP.isExtend(ncp) and !Cats.isSpacingMark(ncp)) return;
     } else {
         return;
     }
@@ -222,11 +219,11 @@ fn fullAdvance(self: *Self) void {
     if (ncp == ZWJ) {
         _ = self.cp_iter.next();
         self.fullAdvance();
-    } else if (Extend.isExtend(ncp)) {
-        self.lexRun(Extend.isExtend);
+    } else if (GBP.isExtend(ncp)) {
+        self.lexRun(GBP.isExtend);
         self.fullAdvance();
-    } else if (Spacing.isSpacingMark(ncp)) {
-        self.lexRun(Spacing.isSpacingMark);
+    } else if (Cats.isSpacingMark(ncp)) {
+        self.lexRun(Cats.isSpacingMark);
         self.fullAdvance();
     }
 }

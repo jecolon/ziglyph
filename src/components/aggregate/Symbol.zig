@@ -1,16 +1,12 @@
 const std = @import("std");
 const ascii = @import("../../ascii.zig");
 
-pub const Currency = @import("../../components.zig").CurrencySymbol;
-pub const Math = @import("../../components.zig").MathSymbol;
-pub const ModifierSymbol = @import("../../components.zig").ModifierSymbol;
-pub const OtherSymbol = @import("../../components.zig").OtherSymbol;
+pub const Cats = @import("../../components.zig").DerivedGeneralCategory;
 
 // isSymbol detects symbols which curiosly may include some code points commonly thought of as
 // punctuation.
 pub fn isSymbol(cp: u21) bool {
-    return Math.isMathSymbol(cp) or ModifierSymbol.isModifierSymbol(cp) or
-        Currency.isCurrencySymbol(cp) or OtherSymbol.isOtherSymbol(cp);
+    return Cats.isMathSymbol(cp) or Cats.isModifierSymbol(cp) or Cats.isCurrencySymbol(cp) or Cats.isOtherSymbol(cp);
 }
 
 /// isAsciiSymbol detects ASCII only symbols.
