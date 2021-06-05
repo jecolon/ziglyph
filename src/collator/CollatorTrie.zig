@@ -26,7 +26,7 @@ const Node = struct {
         if (self.children) |*children| {
             var iter = children.iterator();
             while (iter.next()) |entry| {
-                entry.value.deinit();
+                entry.value_ptr.deinit();
             }
             children.deinit();
         }
@@ -61,9 +61,9 @@ pub fn add(self: *Self, key: []const u21, value: Elements) !void {
         if (current_node.children == null) current_node.children = NodeMap.init(self.allocator);
         var result = try current_node.children.?.getOrPut(cp);
         if (!result.found_existing) {
-            result.entry.value = Node.init();
+            result.value_ptr.* = Node.init();
         }
-        current_node = &result.entry.value;
+        current_node = result.value_ptr;
     }
 
     current_node.value = value;
