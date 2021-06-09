@@ -11,14 +11,12 @@ const CaseFoldMap = @import("../components.zig").CaseFoldMap;
 const CccMap = @import("../components.zig").CombiningMap;
 const HangulMap = @import("../components.zig").HangulMap;
 const NFDCheck = @import("../components.zig").NFDCheck;
-const Trieton = @import("../trieton/src/trieton.zig").Trieton;
+const Trieton = @import("Trieton.zig");
 
-const DecompTrie = Trieton(u8, Decomposed);
-const Lookup = DecompTrie.Lookup;
+const Lookup = Trieton.Lookup;
 
 allocator: *mem.Allocator,
-arena: std.heap.ArenaAllocator,
-decomp_trie: DecompTrie,
+decomp_trie: Trieton,
 
 const Self = @This();
 
@@ -27,23 +25,20 @@ const Self = @This();
 /// * .same : Default canonical decomposition to the code point itself.
 /// * .single : Singleton canonical decomposition to a different single code point.
 /// * .canon : Canonical decomposition, which always results in two code points.
-/// * .compat : Compatibility decomposition, which can results in at most 18 code points.
+/// * .compat : Compatibility decomposition, which can result in at most 18 code points.
 pub const Decomposed = union(enum) {
     src: u21,
     same: u21,
     single: u21,
     canon: [2]u21,
-    compat: []const u21,
+    compat: [18]u21,
 };
 
 pub fn init(allocator: *mem.Allocator, filename: []const u8) !Self {
     var self = Self{
         .allocator = allocator,
-        .arena = std.heap.ArenaAllocator.init(allocator),
-        .decomp_trie = undefined,
+        .decomp_trie = Trieton.init(allocator),
     };
-
-    self.decomp_trie = DecompTrie.init(&self.arena.allocator);
 
     try self.load(filename);
 
@@ -51,7 +46,7 @@ pub fn init(allocator: *mem.Allocator, filename: []const u8) !Self {
 }
 
 pub fn deinit(self: *Self) void {
-    self.arena.deinit();
+    self.decomp_trie.deinit();
 }
 
 var cp_buf: [4]u8 = undefined;
@@ -85,40 +80,41 @@ fn load(self: *Self, filename: []const u8) !void {
                 };
 
                 var is_compat = false;
-                var cp_list = std.ArrayList([]const u8).init(self.allocator);
-                defer cp_list.deinit();
+                var cp_list: [18][]const u8 = [_][]const u8{""} ** 18;
 
                 var cp_iter = mem.split(raw, " ");
+                var i: usize = 0;
                 while (cp_iter.next()) |cp| {
                     if (mem.startsWith(u8, cp, "<")) {
                         is_compat = true;
                         continue;
                     }
-                    try cp_list.append(cp);
+                    cp_list[i] = cp;
+                    i += 1;
                 }
 
-                if (!is_compat and cp_list.items.len == 1) {
+                if (!is_compat and i == 1) {
                     // Singleton
-                    const singleton = try fmt.parseInt(u21, cp_list.items[0], 16);
+                    const singleton = try fmt.parseInt(u21, cp_list[0], 16);
                     try self.decomp_trie.add(key, .{ .single = singleton });
                 } else if (!is_compat) {
                     // Canonical
-                    std.debug.assert(cp_list.items.len == 2);
+                    std.debug.assert(i == 2);
                     var canon: [2]u21 = undefined;
-                    canon[0] = try fmt.parseInt(u21, cp_list.items[0], 16);
-                    canon[1] = try fmt.parseInt(u21, cp_list.items[1], 16);
+                    canon[0] = try fmt.parseInt(u21, cp_list[0], 16);
+                    canon[1] = try fmt.parseInt(u21, cp_list[1], 16);
                     try self.decomp_trie.add(key, .{ .canon = canon });
                 } else {
                     // Compatibility
-                    std.debug.assert(cp_list.items.len != 0);
-                    var compat = std.ArrayList(u21).init(&self.arena.allocator);
-                    defer compat.deinit();
+                    std.debug.assert(i != 0 and i <= 18);
+                    var compat: [18]u21 = [_]u21{0} ** 18;
 
-                    for (cp_list.items) |ccp| {
-                        try compat.append(try fmt.parseInt(u21, ccp, 16));
+                    for (cp_list) |ccp, j| {
+                        if (ccp.len == 0) break; // sentinel
+                        compat[j] = try fmt.parseInt(u21, ccp, 16);
                     }
 
-                    try self.decomp_trie.add(key, .{ .compat = compat.toOwnedSlice() });
+                    try self.decomp_trie.add(key, .{ .compat = compat });
                 }
             } else {
                 continue;
@@ -233,6 +229,7 @@ fn decompD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anyer
             },
             .compat => |seq| {
                 for (seq) |cp| {
+                    if (cp == 0) break; // sentinel
                     const m = try self.mapping(cp);
                     switch (m) {
                         .same, .compat => try rdcs.append(.{ .same = cp }),
@@ -272,6 +269,7 @@ fn decompKD(self: Self, allocator: *mem.Allocator, dcs: []const Decomposed) anye
             },
             .compat => |seq| {
                 for (seq) |cp| {
+                    if (cp == 0) break; // sentinel
                     const m = [1]Decomposed{try self.mapping(cp)};
                     try rdcs.appendSlice(try self.decompKD(allocator, &m));
                 }
