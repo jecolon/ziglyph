@@ -44,32 +44,6 @@ test "Component structs" {
     try expectEqual(uz, 'Z');
 }
 
-test "decomposeTo" {
-    var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
-    defer normalizer.deinit();
-
-    const Decomposed = Normalizer.Decomposed;
-
-    // CD: ox03D3 -> 0x03D2, 0x0301
-    var src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    var result = try normalizer.decomposeTo(allocator, .D, &src);
-    defer allocator.free(result);
-    try expectEqual(result.len, 2);
-    try expectEqual(result[0].same, 0x03D2);
-    try expectEqual(result[1].same, 0x0301);
-    allocator.free(result);
-
-    // KD: ox03D3 -> 0x03D2, 0x0301 -> 0x03A5, 0x0301
-    src = [1]Decomposed{.{ .src = '\u{03D3}' }};
-    result = try normalizer.decomposeTo(allocator, .KD, &src);
-    try expectEqual(result.len, 2);
-    try expect(result[0] == .same);
-    try expectEqual(result[0].same, 0x03A5);
-    try expect(result[1] == .same);
-    try expectEqual(result[1].same, 0x0301);
-}
-
 test "normalizeTo" {
     var allocator = std.testing.allocator;
     var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
@@ -78,7 +52,7 @@ test "normalizeTo" {
     // Canonical (NFD)
     var input = "Complex char: \u{03D3}";
     var want = "Complex char: \u{03D2}\u{0301}";
-    var got = try normalizer.normalizeTo(allocator, .D, input);
+    var got = try normalizer.normalizeTo(allocator, .canon, input);
     defer allocator.free(got);
     try expectEqualSlices(u8, want, got);
     allocator.free(got);
@@ -86,7 +60,7 @@ test "normalizeTo" {
     // Compatibility (NFKD)
     input = "Complex char: \u{03D3}";
     want = "Complex char: \u{03A5}\u{0301}";
-    got = try normalizer.normalizeTo(allocator, .KD, input);
+    got = try normalizer.normalizeTo(allocator, .compat, input);
     try expectEqualSlices(u8, want, got);
 }
 

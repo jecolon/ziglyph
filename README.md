@@ -98,7 +98,7 @@ test "normalizeTo" {
     // Canonical (NFD)
     var input = "Complex char: \u{03D3}";
     var want = "Complex char: \u{03D2}\u{0301}";
-    var got = try normalizer.normalizeTo(allocator, .D, input);
+    var got = try normalizer.normalizeTo(allocator, .canon, input);
     defer allocator.free(got);
     try expectEqualSlices(u8, want, got);
     allocator.free(got);
@@ -106,7 +106,7 @@ test "normalizeTo" {
     // Compatibility (NFKD)
     input = "Complex char: \u{03D3}";
     want = "Complex char: \u{03A5}\u{0301}";
-    got = try normalizer.normalizeTo(allocator, .KD, input);
+    got = try normalizer.normalizeTo(allocator, .compat, input);
     try expectEqualSlices(u8, want, got);
 
     // String comparisons.

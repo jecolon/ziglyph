@@ -1,12 +1,12 @@
 const std = @import("std");
 const mem = std.mem;
 const testing = std.testing;
-const Decomposed = @import("Normalizer.zig").Decomposed;
+const Decomp = @import("Normalizer.zig").Decomp;
 
 const Self = @This();
 
 const Node = struct {
-    value: ?Decomposed = null,
+    value: ?Decomp = null,
     children: [256]?*Node = [_]?*Node{null} ** 256,
 
     fn deinit(self: *Node, allocator: *mem.Allocator) void {
@@ -33,7 +33,7 @@ pub fn deinit(self: *Self) void {
 }
 
 /// add a value for the specified key. Keys are slices of the key value type.
-pub fn add(self: *Self, key: []const u8, value: Decomposed) !void {
+pub fn add(self: *Self, key: []const u8, value: Decomp) !void {
     var current = &self.root;
 
     for (key) |k| {
@@ -53,7 +53,7 @@ pub fn add(self: *Self, key: []const u8, value: Decomposed) !void {
 /// the index of the element in the key slice that produced the match.
 pub const Lookup = struct {
     index: usize,
-    value: Decomposed,
+    value: Decomp,
 };
 
 /// finds the matching value for the given key, null otherwise.
@@ -82,9 +82,12 @@ test "Normalizer Trieton" {
     var trie = init(allocator);
     defer trie.deinit();
 
-    try trie.add(&[_]u8{ 2, 3 }, .{ .single = 33 });
+    try trie.add(&[_]u8{ 2, 3 }, .{ .seq = [_]u21{ 33, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } });
     const result = trie.find(&[_]u8{ 2, 3 });
     try testing.expect(result != null);
     try testing.expectEqual(result.?.index, 1);
-    try testing.expectEqual(result.?.value.single, 33);
+    try testing.expectEqual(result.?.value.form, .canon);
+    try testing.expectEqual(result.?.value.len, 2);
+    try testing.expectEqual(result.?.value.seq[0], 33);
+    try testing.expectEqual(result.?.value.seq[1], 33);
 }

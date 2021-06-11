@@ -118,8 +118,8 @@ pub fn load(self: *Self, filename: []const u8) !void {
     }
 }
 
-pub fn collationElements(self: Self, normalized: []const u21) ![]Trie.Element {
-    var all_elements = std.ArrayList(Trie.Element).init(self.allocator);
+pub fn collationElements(self: Self, allocator: *mem.Allocator, normalized: []const u21) ![]Trie.Element {
+    var all_elements = std.ArrayList(Trie.Element).init(allocator);
     defer all_elements.deinit();
 
     var code_points = normalized;
@@ -225,9 +225,8 @@ pub fn sortKey(self: Self, str: []const u8) ![]const u16 {
     var arena = std.heap.ArenaAllocator.init(self.allocator);
     defer arena.deinit();
 
-    const normalized = try self.normalizer.normalizeCodePointsTo(&arena.allocator, .D, str);
-    const collation_elements = try self.collationElements(normalized);
-    defer self.allocator.free(collation_elements);
+    const normalized = try self.normalizer.normalizeCodePointsTo(&arena.allocator, .canon, str);
+    const collation_elements = try self.collationElements(&arena.allocator, normalized);
 
     return self.sortKeyFromCollationElements(collation_elements);
 }
