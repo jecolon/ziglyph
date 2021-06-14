@@ -6,7 +6,7 @@ Unicode processing with Zig, and a UTF-8 string type: [Zigstr](src/zigstr).
 learn more in the [Zigstr subdirectory](src/zigstr).
 
 ## Status
-This is pre-1.0 software. Althogh breaking changes are less frequent with each minor version release,
+This is pre-1.0 software. Although breaking changes are less frequent with each minor version release,
 they still will occur until we reach 1.0.
 
 ## Integrating Ziglyph in your Project
@@ -38,7 +38,7 @@ Finally, you can build the project with:
 $ zig build
 ```
 
-Note that to build in realase modes, either specify them in the `build.zig` file or on the command line
+Note that to build in release modes, either specify them in the `build.zig` file or on the command line
 via the `-Drelease-fast=true`, `-Drelease-small=true`, `-Drelease-safe=true` options to `zig build`.
 
 ### Using the Ziglyph Struct
