@@ -188,19 +188,20 @@ test "Code point / string widths" {
 One of the most common operations required by string processing is sorting and ordering comparisons.
 The Unicode Collation Algorithm was developed to attend this area of string processing. The `Collator`
 struct implements the algorithm, allowing for proper sorting and order comparison of Unicode strings.
-The `init` function requires the path to the file with the Unicode sort keys, which can be found at
-http://www.unicode.org/Public/UCA/latest/allkeys.txt . A copy of this file can be found in the 
-`src/data/uca` directory. `init` also takes a pointer to a `Normalizer` because collation depends on
-normaliztion.
+The `init` function requires the path to a file with derived Unicode sort keys. The full file of keys
+can be found at http://www.unicode.org/Public/UCA/latest/allkeys.txt . The derived copy of this file
+can be found in the `src/data/uca` directory. This derived copy is a minimal stripped-down version to
+reduce memory usage and binary size. `init` also takes a pointer to a `Normalizer` because collation
+depends on normaliztion.
 
 ```
 const Collator = @import("Ziglyph").Collator;
 
 test "Collation" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.txt");
+    var normalizer = try Normalizer.init(allocator, "../libs/ziglyph/src/data/ucd/Decompositions.txt");
     defer normalizer.deinit();
-    var collator = try Collator.init(allocator, "path/to/allkeys.txt", &normalizer);
+    var collator = try Collator.init(allocator, "../libs/ziglyph/src/data/uca/allkeys-minimal.txt", &normalizer);
     defer collator.deinit();
 
     // Collation weight levels overview:

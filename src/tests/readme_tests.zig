@@ -105,7 +105,7 @@ test "Collation" {
     var allocator = std.testing.allocator;
     var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.txt");
     defer normalizer.deinit();
-    var collator = try Collator.init(allocator, "src/data/uca/allkeys.txt", &normalizer);
+    var collator = try Collator.init(allocator, "src/data/uca/allkeys-minimal.txt", &normalizer);
     defer collator.deinit();
 
     try expect(collator.tertiaryAsc("abc", "def"));

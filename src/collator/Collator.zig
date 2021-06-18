@@ -9,7 +9,6 @@ const unicode = std.unicode;
 
 const CccMap = @import("../components.zig").CombiningMap;
 const Normalizer = @import("../components.zig").Normalizer;
-const NFDCheck = @import("../components.zig").NFDCheck;
 const Trie = @import("CollatorTrie.zig");
 const Props = @import("../components.zig").PropList;
 
@@ -54,19 +53,13 @@ pub fn load(self: *Self, filename: []const u8) !void {
     var buf: [1024]u8 = undefined;
 
     lines: while (try uca_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
-        // Skip empty or comment.
-        if (line.len == 0 or line[0] == '#' or mem.startsWith(u8, line, "@version")) continue;
-
         var raw = mem.trim(u8, line, " ");
-        if (mem.indexOf(u8, line, "#")) |octo| {
-            raw = mem.trimRight(u8, line[0..octo], " ");
-        }
 
         if (mem.startsWith(u8, raw, "@implicitweights")) {
             raw = raw[17..]; // 17 == length of "@implicitweights "
             const semi = mem.indexOf(u8, raw, ";").?;
             const ch_range = raw[0..semi];
-            const base = mem.trim(u8, raw[semi + 1 ..], " ");
+            const base = raw[semi + 1 ..];
 
             const dots = mem.indexOf(u8, ch_range, "..").?;
             const range_start = ch_range[0..dots];
@@ -82,39 +75,31 @@ pub fn load(self: *Self, filename: []const u8) !void {
         }
 
         const semi = mem.indexOf(u8, raw, ";").?;
-        const cp_strs = mem.trim(u8, raw[0..semi], " ");
-        var cp_list = std.ArrayList(u21).init(self.allocator);
-        defer cp_list.deinit();
+        const cp_strs = raw[0..semi];
         var cp_strs_iter = mem.split(cp_strs, " ");
+        var cp_list: [3]?u21 = [_]?u21{null} ** 3;
+        var i: usize = 0;
 
-        while (cp_strs_iter.next()) |cp_str| {
-            const cp = try fmt.parseInt(u21, cp_str, 16);
-            if (!NFDCheck.isNFD(cp)) continue :lines; // Skip non-NFD.
-            try cp_list.append(cp);
+        while (cp_strs_iter.next()) |cp_str| : (i += 1) {
+            cp_list[i] = try fmt.parseInt(u21, cp_str, 16);
         }
 
-        var coll_elements = std.ArrayList(Trie.Element).init(self.allocator);
-        defer coll_elements.deinit();
-        const ce_strs = mem.trim(u8, raw[semi + 1 ..], " ");
-        var ce_strs_iter = mem.split(ce_strs[1 .. ce_strs.len - 1], "]["); // no ^[. or ^[* or ]$
+        const ce_strs = raw[semi + 1 ..];
+        var ce_strs_iter = mem.split(ce_strs, ";");
+        var elements = [_]?Trie.Element{null} ** 18;
+        i = 0;
 
-        while (ce_strs_iter.next()) |ce_str| {
-            const just_levels = ce_str[1..];
-            var w_strs_iter = mem.split(just_levels, ".");
+        while (ce_strs_iter.next()) |ce_str| : (i += 1) {
+            var w_strs_iter = mem.split(ce_str, ".");
 
-            try coll_elements.append(Trie.Element{
+            elements[i] = Trie.Element{
                 .l1 = try fmt.parseInt(u16, w_strs_iter.next().?, 16),
                 .l2 = try fmt.parseInt(u16, w_strs_iter.next().?, 16),
                 .l3 = try fmt.parseInt(u16, w_strs_iter.next().?, 16),
-            });
+            };
         }
 
-        var elements = [_]?Trie.Element{null} ** 18;
-        for (coll_elements.items) |element, i| {
-            elements[i] = element;
-        }
-
-        try self.table.add(cp_list.items, elements);
+        try self.table.add(cp_list, elements);
     }
 }
 
@@ -381,7 +366,7 @@ test "Collator keyLevelCmp" {
     var allocator = std.testing.allocator;
     var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.txt");
     defer normalizer.deinit();
-    var collator = try init(allocator, "src/data/uca/allkeys.txt", &normalizer);
+    var collator = try init(allocator, "src/data/uca/allkeys-minimal.txt", &normalizer);
     defer collator.deinit();
 
     var key_a = try collator.sortKey("cab");
@@ -462,7 +447,7 @@ test "Collator sort" {
     var allocator = std.testing.allocator;
     var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.txt");
     defer normalizer.deinit();
-    var collator = try init(allocator, "src/data/uca/allkeys.txt", &normalizer);
+    var collator = try init(allocator, "src/data/uca/allkeys-minimal.txt", &normalizer);
     defer collator.deinit();
 
     try testing.expect(collator.tertiaryAsc("abc", "def"));
@@ -515,7 +500,7 @@ test "Collator UCA" {
 
     var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.txt");
     defer normalizer.deinit();
-    var collator = try init(allocator, "src/data/uca/allkeys.txt", &normalizer);
+    var collator = try init(allocator, "src/data/uca/allkeys-minimal.txt", &normalizer);
     defer collator.deinit();
     var cp_buf: [4]u8 = undefined;
 
@@ -535,6 +520,7 @@ test "Collator UCA" {
         }
 
         const current_key = try collator.sortKey(bytes.items);
+        errdefer allocator.free(current_key);
 
         if (prev_key.len == 0) {
             prev_key = current_key;
