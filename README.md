@@ -84,7 +84,7 @@ In addition to the basic functions to detect and convert code point case, the `N
 provides code point and string normalization methods. This library currently only 
 performs full canonical and compatibility decomposition and normalization (NFD and NFKD). Future 
 versions may add more normalization forms. The `init` function takes an allocator and the path to the
-`UnicodeData.txt` file from the Unicode Character Database. A copy of this file is found in the 
+`Decompositions.txt` file derived from the Unicode Character Database. A copy of this file is found in the 
 `src/data/ucd` directory.
 
 ```zig
@@ -92,7 +92,7 @@ const Normalizer = @import("Ziglyph").Normalizer;
 
 test "normalizeTo" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
+    var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.txt");
     defer normalizer.deinit();
 
     // Canonical (NFD)
@@ -198,7 +198,7 @@ const Collator = @import("Ziglyph").Collator;
 
 test "Collation" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
+    var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.txt");
     defer normalizer.deinit();
     var collator = try Collator.init(allocator, "path/to/allkeys.txt", &normalizer);
     defer collator.deinit();
