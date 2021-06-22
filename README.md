@@ -99,9 +99,7 @@ test "normalizeTo" {
     var input = "Complex char: \u{03D3}";
     var want = "Complex char: \u{03D2}\u{0301}";
     var got = try normalizer.normalizeTo(allocator, .canon, input);
-    defer allocator.free(got);
     try expectEqualSlices(u8, want, got);
-    allocator.free(got);
 
     // Compatibility (NFKD)
     input = "Complex char: \u{03D3}";

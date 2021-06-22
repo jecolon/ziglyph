@@ -16,6 +16,7 @@ const Trieton = @import("Trieton.zig");
 const Lookup = Trieton.Lookup;
 
 allocator: *mem.Allocator,
+arena: std.heap.ArenaAllocator,
 decomp_trie: Trieton,
 
 const Self = @This();
@@ -40,6 +41,7 @@ pub const Decomp = struct {
 pub fn init(allocator: *mem.Allocator, filename: []const u8) !Self {
     var self = Self{
         .allocator = allocator,
+        .arena = std.heap.ArenaAllocator.init(allocator),
         .decomp_trie = Trieton.init(allocator),
     };
 
@@ -50,6 +52,7 @@ pub fn init(allocator: *mem.Allocator, filename: []const u8) !Self {
 
 pub fn deinit(self: *Self) void {
     self.decomp_trie.deinit();
+    self.arena.deinit();
 }
 
 var cp_buf: [4]u8 = undefined;
@@ -157,8 +160,9 @@ pub fn mapping(self: Self, cp: u21, nfd: bool) Decomp {
 
 /// decompose takes a code point and returns its decomposition to NFD if `nfd` is true, NFKD otherwise.
 pub fn decompose(self: Self, cp: u21, nfd: bool) Decomp {
+    var dc = Decomp{};
+
     if (nfd and NFDCheck.isNFD(cp)) {
-        var dc = Decomp{};
         dc.len = 1;
         dc.seq[0] = cp;
         return dc;
@@ -167,13 +171,11 @@ pub fn decompose(self: Self, cp: u21, nfd: bool) Decomp {
     if (self.isHangulPrecomposed(cp)) {
         // Hangul precomposed syllable full decomposition.
         const seq = self.decomposeHangul(cp);
-        var dc = Decomp{};
         dc.len = if (seq[2] == 0) 2 else 3;
         mem.copy(u21, &dc.seq, seq[0..dc.len]);
         return dc;
     }
 
-    var dc = Decomp{};
     if (!nfd) dc.form = .compat;
     var result_index: usize = 0;
 
@@ -207,9 +209,8 @@ pub fn decompose(self: Self, cp: u21, nfd: bool) Decomp {
     return dc;
 }
 
-fn finalizeAndEncode(self: Self, allocator: *mem.Allocator, code_points: []u21) ![]u8 {
-    var result = try std.ArrayList(u8).initCapacity(allocator, code_points.len * 4);
-    defer result.deinit();
+fn finalizeAndEncode(self: *Self, code_points: []u21) ![]u8 {
+    var result = try std.ArrayList(u8).initCapacity(&self.arena.allocator, code_points.len * 4);
 
     // Apply canonical sort algorithm.
     self.canonicalSort(code_points);
@@ -221,15 +222,14 @@ fn finalizeAndEncode(self: Self, allocator: *mem.Allocator, code_points: []u21) 
         result.appendSliceAssumeCapacity(buf[0..len]);
     }
 
-    return result.toOwnedSlice();
+    return result.items;
 }
 
 /// normalizeTo will normalize the code points in str, producing a slice of u8 with the new bytes
-/// corresponding to the specified Normalization Form. Caller must free returned bytes.
-pub fn normalizeTo(self: Self, allocator: *mem.Allocator, form: Form, str: []const u8) anyerror![]u8 {
+/// corresponding to the specified Normalization Form.
+pub fn normalizeTo(self: *Self, form: Form, str: []const u8) anyerror![]u8 {
     // Gather source code points.
-    var code_points = try std.ArrayList(u21).initCapacity(allocator, str.len);
-    defer code_points.deinit();
+    var code_points = try std.ArrayList(u21).initCapacity(&self.arena.allocator, str.len);
 
     var iter = (try unicode.Utf8View.init(str)).iterator();
 
@@ -246,11 +246,10 @@ pub fn normalizeTo(self: Self, allocator: *mem.Allocator, form: Form, str: []con
         }
 
         // Already NFD, nothing more to do.
-        if (already_nfd) return self.finalizeAndEncode(allocator, code_points.items);
+        if (already_nfd) return self.finalizeAndEncode(code_points.items);
     }
 
-    var d_code_points = std.ArrayList(u21).init(allocator);
-    defer d_code_points.deinit();
+    var d_code_points = std.ArrayList(u21).init(&self.arena.allocator);
 
     // Gather decomposed code points.
     for (code_points.items) |cp| {
@@ -258,15 +257,14 @@ pub fn normalizeTo(self: Self, allocator: *mem.Allocator, form: Form, str: []con
         try d_code_points.appendSlice(dc.seq[0..dc.len]);
     }
 
-    return self.finalizeAndEncode(allocator, d_code_points.items);
+    return self.finalizeAndEncode(d_code_points.items);
 }
 
 /// normalizeCodePointsTo will normalize the code points in str, producing a new slice of code points
-/// corresponding to the specified Normalization Form. Caller must free returned bytes.
-pub fn normalizeCodePointsTo(self: Self, allocator: *mem.Allocator, form: Form, str: []const u8) anyerror![]u21 {
+/// corresponding to the specified Normalization Form.
+pub fn normalizeCodePointsTo(self: *Self, form: Form, str: []const u8) anyerror![]u21 {
     // Gather source code points.
-    var code_points = try std.ArrayList(u21).initCapacity(allocator, str.len);
-    defer code_points.deinit();
+    var code_points = try std.ArrayList(u21).initCapacity(&self.arena.allocator, str.len);
 
     var iter = (try unicode.Utf8View.init(str)).iterator();
 
@@ -286,12 +284,11 @@ pub fn normalizeCodePointsTo(self: Self, allocator: *mem.Allocator, form: Form, 
         if (already_nfd) {
             // Apply canonical sort algorithm.
             self.canonicalSort(code_points.items);
-            return code_points.toOwnedSlice();
+            return code_points.items;
         }
     }
 
-    var d_code_points = std.ArrayList(u21).init(allocator);
-    defer d_code_points.deinit();
+    var d_code_points = std.ArrayList(u21).init(&self.arena.allocator);
 
     // Gather decomposed code points.
     for (code_points.items) |cp| {
@@ -301,7 +298,7 @@ pub fn normalizeCodePointsTo(self: Self, allocator: *mem.Allocator, form: Form, 
 
     // Apply canonical sort algorithm.
     self.canonicalSort(d_code_points.items);
-    return d_code_points.toOwnedSlice();
+    return d_code_points.items;
 }
 
 fn cccLess(self: Self, lhs: u21, rhs: u21) bool {
@@ -364,7 +361,7 @@ pub const CmpMode = enum {
 };
 
 /// eqlBy compares for equality between `a` and `b` according to the specified comparison mode.
-pub fn eqlBy(self: Self, a: []const u8, b: []const u8, mode: CmpMode) !bool {
+pub fn eqlBy(self: *Self, a: []const u8, b: []const u8, mode: CmpMode) !bool {
     // Empty string quick check.
     if (a.len == 0 and b.len == 0) return true;
     if (a.len == 0 and b.len != 0) return false;
@@ -406,37 +403,29 @@ pub fn eqlBy(self: Self, a: []const u8, b: []const u8, mode: CmpMode) !bool {
     return false;
 }
 
-fn eqlIgnoreCase(self: Self, a: []const u8, b: []const u8) !bool {
-    const cf_a = try CaseFoldMap.caseFoldStr(self.allocator, a);
-    defer self.allocator.free(cf_a);
-    const cf_b = try CaseFoldMap.caseFoldStr(self.allocator, b);
-    defer self.allocator.free(cf_b);
+fn eqlIgnoreCase(self: *Self, a: []const u8, b: []const u8) !bool {
+    const cf_a = try CaseFoldMap.caseFoldStr(&self.arena.allocator, a);
+    const cf_b = try CaseFoldMap.caseFoldStr(&self.arena.allocator, b);
 
     return mem.eql(u8, cf_a, cf_b);
 }
 
-fn eqlNorm(self: Self, a: []const u8, b: []const u8) !bool {
-    var arena = std.heap.ArenaAllocator.init(self.allocator);
-    defer arena.deinit();
-
-    const norm_a = try self.normalizeTo(&arena.allocator, .canon, a);
-    const norm_b = try self.normalizeTo(&arena.allocator, .canon, b);
+fn eqlNorm(self: *Self, a: []const u8, b: []const u8) !bool {
+    const norm_a = try self.normalizeTo(.canon, a);
+    const norm_b = try self.normalizeTo(.canon, b);
 
     return mem.eql(u8, norm_a, norm_b);
 }
 
-fn eqlNormIgnore(self: Self, a: []const u8, b: []const u8) !bool {
-    var arena = std.heap.ArenaAllocator.init(self.allocator);
-    defer arena.deinit();
-
+fn eqlNormIgnore(self: *Self, a: []const u8, b: []const u8) !bool {
     // The long winding road of normalized caseless matching...
     // NFD(CaseFold(NFD(str)))
-    var norm_a = try self.normalizeTo(&arena.allocator, .canon, a);
-    var cf_a = try CaseFoldMap.caseFoldStr(&arena.allocator, norm_a);
-    norm_a = try self.normalizeTo(&arena.allocator, .canon, cf_a);
-    var norm_b = try self.normalizeTo(&arena.allocator, .canon, b);
-    var cf_b = try CaseFoldMap.caseFoldStr(&arena.allocator, norm_b);
-    norm_b = try self.normalizeTo(&arena.allocator, .canon, cf_b);
+    var norm_a = try self.normalizeTo(.canon, a);
+    var cf_a = try CaseFoldMap.caseFoldStr(&self.arena.allocator, norm_a);
+    norm_a = try self.normalizeTo(.canon, cf_a);
+    var norm_b = try self.normalizeTo(.canon, b);
+    var cf_b = try CaseFoldMap.caseFoldStr(&self.arena.allocator, norm_b);
+    norm_b = try self.normalizeTo(.canon, cf_b);
 
     return mem.eql(u8, norm_a, norm_b);
 }
@@ -502,7 +491,9 @@ test "Normalizer decompose KD" {
 }
 
 test "Normalizer normalizeTo" {
-    var allocator = std.testing.allocator;
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var allocator = &arena.allocator;
     var normalizer = try init(allocator, "src/data/ucd/Decompositions.txt");
     defer normalizer.deinit();
 
@@ -519,7 +510,7 @@ test "Normalizer normalizeTo" {
         var fields = mem.split(line, ";");
         var field_index: usize = 0;
         var input: []u8 = undefined;
-        defer allocator.free(input);
+
         while (fields.next()) |field| : (field_index += 1) {
             if (field_index == 0) {
                 var i_buf = std.ArrayList(u8).init(allocator);
@@ -541,10 +532,8 @@ test "Normalizer normalizeTo" {
                     const len = try unicode.utf8Encode(wcp, &cp_buf);
                     try w_buf.appendSlice(cp_buf[0..len]);
                 }
-                const want = w_buf.toOwnedSlice();
-                defer allocator.free(want);
-                const got = try normalizer.normalizeTo(allocator, .canon, input);
-                defer allocator.free(got);
+                const want = w_buf.items;
+                const got = try normalizer.normalizeTo(.canon, input);
                 try std.testing.expectEqualSlices(u8, want, got);
                 continue;
             } else if (field_index == 4) {
@@ -557,10 +546,8 @@ test "Normalizer normalizeTo" {
                     const len = try unicode.utf8Encode(wcp, &cp_buf);
                     try w_buf.appendSlice(cp_buf[0..len]);
                 }
-                const want = w_buf.toOwnedSlice();
-                defer allocator.free(want);
-                const got = try normalizer.normalizeTo(allocator, .compat, input);
-                defer allocator.free(got);
+                const want = w_buf.items;
+                const got = try normalizer.normalizeTo(.compat, input);
                 try std.testing.expectEqualSlices(u8, want, got);
                 continue;
             } else {

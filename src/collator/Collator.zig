@@ -21,6 +21,7 @@ const Implicit = struct {
 const ImplicitList = std.ArrayList(Implicit);
 
 allocator: *mem.Allocator,
+arena: std.heap.ArenaAllocator,
 normalizer: *Normalizer,
 implicits: ImplicitList,
 table: Trie,
@@ -30,6 +31,7 @@ const Self = @This();
 pub fn init(allocator: *mem.Allocator, allkeys: []const u8, normalizer: *Normalizer) !Self {
     var self = Self{
         .allocator = allocator,
+        .arena = std.heap.ArenaAllocator.init(allocator),
         .normalizer = normalizer,
         .implicits = ImplicitList.init(allocator),
         .table = Trie.init(allocator),
@@ -43,6 +45,7 @@ pub fn init(allocator: *mem.Allocator, allkeys: []const u8, normalizer: *Normali
 pub fn deinit(self: *Self) void {
     self.table.deinit();
     self.implicits.deinit();
+    self.arena.deinit();
 }
 
 pub fn load(self: *Self, filename: []const u8) !void {
@@ -103,13 +106,11 @@ pub fn load(self: *Self, filename: []const u8) !void {
     }
 }
 
-pub fn collationElements(self: Self, allocator: *mem.Allocator, normalized: []const u21) ![]Trie.Element {
-    var all_elements = std.ArrayList(Trie.Element).init(allocator);
-    defer all_elements.deinit();
+pub fn collationElements(self: *Self, normalized: []const u21) ![]Trie.Element {
+    var all_elements = std.ArrayList(Trie.Element).init(&self.arena.allocator);
 
     var code_points = normalized;
     var code_points_len = code_points.len;
-    var need_to_free: bool = false;
     var cp_index: usize = 0;
 
     while (cp_index < code_points_len) {
@@ -142,8 +143,7 @@ pub fn collationElements(self: Self, allocator: *mem.Allocator, normalized: []co
 
         if (tail_index > tail_start) {
             const C = code_points[tail_index];
-            var new_key = try self.allocator.alloc(u21, S.len + 1);
-            defer self.allocator.free(new_key);
+            var new_key = try self.arena.allocator.alloc(u21, S.len + 1);
             mem.copy(u21, new_key, S);
             new_key[new_key.len - 1] = C;
             var new_lookup = self.table.find(new_key);
@@ -151,8 +151,7 @@ pub fn collationElements(self: Self, allocator: *mem.Allocator, normalized: []co
             if (new_lookup.index == (new_key.len - 1) and new_lookup.value != null) {
                 cp_index = tail_start;
                 // Splice
-                var tmp = try self.allocator.alloc(u21, code_points_len - 1);
-                need_to_free = true;
+                var tmp = try self.arena.allocator.alloc(u21, code_points_len - 1);
                 mem.copy(u21, tmp, code_points[0..tail_index]);
                 if (tail_index + 1 < code_points_len) {
                     mem.copy(u21, tmp[tail_index..], code_points[tail_index + 1 ..]);
@@ -179,14 +178,11 @@ pub fn collationElements(self: Self, allocator: *mem.Allocator, normalized: []co
         cp_index += lookup.index + 1;
     }
 
-    if (need_to_free) self.allocator.free(code_points);
-
     return all_elements.toOwnedSlice();
 }
 
-pub fn sortKeyFromCollationElements(self: Self, collation_elements: []Trie.Element) ![]const u16 {
-    var sort_key = std.ArrayList(u16).init(self.allocator);
-    defer sort_key.deinit();
+pub fn sortKeyFromCollationElements(self: *Self, collation_elements: []Trie.Element) ![]const u16 {
+    var sort_key = std.ArrayList(u16).init(&self.arena.allocator);
 
     var level: usize = 0;
 
@@ -206,12 +202,9 @@ pub fn sortKeyFromCollationElements(self: Self, collation_elements: []Trie.Eleme
     return sort_key.toOwnedSlice();
 }
 
-pub fn sortKey(self: Self, str: []const u8) ![]const u16 {
-    var arena = std.heap.ArenaAllocator.init(self.allocator);
-    defer arena.deinit();
-
-    const normalized = try self.normalizer.normalizeCodePointsTo(&arena.allocator, .canon, str);
-    const collation_elements = try self.collationElements(&arena.allocator, normalized);
+pub fn sortKey(self: *Self, str: []const u8) ![]const u16 {
+    const normalized = try self.normalizer.normalizeCodePointsTo(.canon, str);
+    const collation_elements = try self.collationElements(normalized);
 
     return self.sortKeyFromCollationElements(collation_elements);
 }
@@ -370,26 +363,20 @@ test "Collator keyLevelCmp" {
     defer collator.deinit();
 
     var key_a = try collator.sortKey("cab");
-    defer allocator.free(key_a);
     var key_b = try collator.sortKey("Cab");
-    defer allocator.free(key_b);
 
     try testing.expectEqual(keyLevelCmp(key_a, key_b, .tertiary), .lt);
     try testing.expectEqual(keyLevelCmp(key_a, key_b, .secondary), .eq);
     try testing.expectEqual(keyLevelCmp(key_a, key_b, .primary), .eq);
 
-    allocator.free(key_a);
     key_a = try collator.sortKey("Cab");
-    allocator.free(key_b);
     key_b = try collator.sortKey("cáb");
 
     try testing.expectEqual(keyLevelCmp(key_a, key_b, .tertiary), .lt);
     try testing.expectEqual(keyLevelCmp(key_a, key_b, .secondary), .lt);
     try testing.expectEqual(keyLevelCmp(key_a, key_b, .primary), .eq);
 
-    allocator.free(key_a);
     key_a = try collator.sortKey("cáb");
-    allocator.free(key_b);
     key_b = try collator.sortKey("dab");
 
     try testing.expectEqual(keyLevelCmp(key_a, key_b, .tertiary), .lt);
@@ -400,34 +387,32 @@ test "Collator keyLevelCmp" {
 /// tertiaryAsc is a sort function producing a full weight matching ascending sort. Since this
 /// function cannot return an error as per `sort.sort` requirements, it may cause a crash or undefined
 /// behavior under error conditions.
-pub fn tertiaryAsc(self: Self, a: []const u8, b: []const u8) bool {
+pub fn tertiaryAsc(self: *Self, a: []const u8, b: []const u8) bool {
     return self.orderFn(a, b, .tertiary, .lt) catch unreachable;
 }
 
 /// tertiaryDesc is a sort function producing a full weight matching descending sort. Since this
 /// function cannot return an error as per `sort.sort` requirements, it may cause a crash or undefined
 /// behavior under error conditions.
-pub fn tertiaryDesc(self: Self, a: []const u8, b: []const u8) bool {
+pub fn tertiaryDesc(self: *Self, a: []const u8, b: []const u8) bool {
     return self.orderFn(a, b, .tertiary, .gt) catch unreachable;
 }
 
 /// orderFn can be used to match, compare, and sort strings at various collation element levels and orderings.
-pub fn orderFn(self: Self, a: []const u8, b: []const u8, level: Level, order: math.Order) !bool {
+pub fn orderFn(self: *Self, a: []const u8, b: []const u8, level: Level, order: math.Order) !bool {
     var key_a = try self.sortKey(a);
-    defer self.allocator.free(key_a);
     var key_b = try self.sortKey(b);
-    defer self.allocator.free(key_b);
 
     return keyLevelCmp(key_a, key_b, level) == order;
 }
 
 /// sortAsc orders the strings in `strings` in ascending full tertiary level order.
-pub fn sortAsc(self: Self, strings: [][]const u8) void {
+pub fn sortAsc(self: *Self, strings: [][]const u8) void {
     zort([]const u8, strings, self, tertiaryAsc);
 }
 
 /// sortDesc orders the strings in `strings` in ascending full tertiary level order.
-pub fn sortDesc(self: Self, strings: [][]const u8) void {
+pub fn sortDesc(self: *Self, strings: [][]const u8) void {
     zort([]const u8, strings, self, tertiaryDesc);
 }
 
@@ -483,7 +468,9 @@ test "Collator UCA" {
     defer file.close();
     var buf_reader = std.io.bufferedReader(file.reader()).reader();
 
-    var allocator = std.testing.allocator;
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var allocator = &arena.allocator;
     var buf: [1024]u8 = undefined;
 
     // Skip header.
@@ -496,7 +483,6 @@ test "Collator UCA" {
     }
 
     var prev_key: []const u16 = &[_]u16{};
-    defer allocator.free(prev_key);
 
     var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.txt");
     defer normalizer.deinit();
@@ -509,7 +495,6 @@ test "Collator UCA" {
 
         //std.debug.print("line {d}: {s}\n", .{ line_no, line });
         var bytes = std.ArrayList(u8).init(allocator);
-        defer bytes.deinit();
 
         var cp_strs = mem.split(line, " ");
 
@@ -520,7 +505,6 @@ test "Collator UCA" {
         }
 
         const current_key = try collator.sortKey(bytes.items);
-        errdefer allocator.free(current_key);
 
         if (prev_key.len == 0) {
             prev_key = current_key;
@@ -530,7 +514,6 @@ test "Collator UCA" {
         try testing.expect((keyLevelCmp(prev_key, current_key, .tertiary) == .eq) or
             (keyLevelCmp(prev_key, current_key, .tertiary) == .lt));
 
-        allocator.free(prev_key);
         prev_key = current_key;
     }
 }
