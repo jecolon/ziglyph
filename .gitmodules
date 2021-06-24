@@ -1,3 +1,0 @@
-[submodule "src/trieton"]
-	path = src/trieton
-	url = https://github.com/jecolon/trieton.git
