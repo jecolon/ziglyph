@@ -92,7 +92,7 @@ const Normalizer = @import("Ziglyph").Normalizer;
 
 test "normalizeTo" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.txt");
+    var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
     defer normalizer.deinit();
 
     // Canonical (NFD)
@@ -197,7 +197,7 @@ const Collator = @import("Ziglyph").Collator;
 
 test "Collation" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator, "../libs/ziglyph/src/data/ucd/Decompositions.txt");
+    var normalizer = try Normalizer.init(allocator, "../libs/ziglyph/src/data/ucd/UnicodeData.txt");
     defer normalizer.deinit();
     var collator = try Collator.init(allocator, "../libs/ziglyph/src/data/uca/allkeys-minimal.txt", &normalizer);
     defer collator.deinit();

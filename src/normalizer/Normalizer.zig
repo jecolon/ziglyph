@@ -464,7 +464,7 @@ fn isAsciiStr(str: []const u8) !bool {
 
 test "Normalizer decompose D" {
     var allocator = std.testing.allocator;
-    var normalizer = try init(allocator, "src/data/ucd/Decompositions.txt");
+    var normalizer = try init(allocator, "src/data/ucd/UnicodeData.txt");
     defer normalizer.deinit();
 
     var result = normalizer.decompose('\u{00E9}', true);
@@ -478,7 +478,7 @@ test "Normalizer decompose D" {
 
 test "Normalizer decompose KD" {
     var allocator = std.testing.allocator;
-    var normalizer = try init(allocator, "src/data/ucd/Decompositions.txt");
+    var normalizer = try init(allocator, "src/data/ucd/UnicodeData.txt");
     defer normalizer.deinit();
 
     var result = normalizer.decompose('\u{00E9}', false);
@@ -494,7 +494,7 @@ test "Normalizer normalizeTo" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var allocator = &arena.allocator;
-    var normalizer = try init(allocator, "src/data/ucd/Decompositions.txt");
+    var normalizer = try init(allocator, "src/data/ucd/UnicodeData.txt");
     defer normalizer.deinit();
 
     var file = try std.fs.cwd().openFile("src/data/ucd/NormalizationTest.txt", .{});
@@ -559,7 +559,7 @@ test "Normalizer normalizeTo" {
 
 test "Normalizer eqlBy" {
     var allocator = std.testing.allocator;
-    var normalizer = try init(allocator, "src/data/ucd/Decompositions.txt");
+    var normalizer = try init(allocator, "src/data/ucd/UnicodeData.txt");
     defer normalizer.deinit();
 
     try std.testing.expect(try normalizer.eqlBy("foé", "foe\u{0301}", .normalize));
