@@ -1,7 +1,7 @@
 const std = @import("std");
 const mem = std.mem;
 const testing = std.testing;
-const Decomp = @import("Normalizer.zig").Decomp;
+const Decomp = @import("DecompFile.zig").Decomp;
 
 const Self = @This();
 
