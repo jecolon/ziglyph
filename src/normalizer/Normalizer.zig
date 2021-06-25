@@ -12,6 +12,9 @@ const CccMap = @import("../components.zig").CombiningMap;
 const HangulMap = @import("../components.zig").HangulMap;
 const NFDCheck = @import("../components.zig").NFDCheck;
 const Trieton = @import("Trieton.zig");
+const DecompFile = @import("DecompFile.zig");
+const Decomp = DecompFile.Decomp;
+const Form = DecompFile.Form;
 
 const Lookup = Trieton.Lookup;
 
@@ -21,23 +24,6 @@ decomp_trie: Trieton,
 
 const Self = @This();
 
-/// Form is the normalization form.
-/// * .canon : Canonical decomposition, which always results in two code points.
-/// * .compat : Compatibility decomposition, which can result in at most 18 code points.
-/// * .same : Default canonical decomposition to the code point itself.
-pub const Form = enum {
-    canon, // D
-    compat, // KD
-    same, // no more decomposition.
-};
-
-/// Decomp is the result of decomposing a code point to a normaliztion form.
-pub const Decomp = struct {
-    form: Form = .canon,
-    len: usize = 2,
-    seq: [18]u21 = [_]u21{0} ** 18,
-};
-
 pub fn init(allocator: *mem.Allocator, filename: []const u8) !Self {
     var self = Self{
         .allocator = allocator,
@@ -45,7 +31,11 @@ pub fn init(allocator: *mem.Allocator, filename: []const u8) !Self {
         .decomp_trie = Trieton.init(allocator),
     };
 
-    try self.load(filename);
+    var file = try DecompFile.decompressFile(allocator, filename);
+    defer file.deinit();
+    while (file.next()) |entry| {
+        try self.decomp_trie.add(entry.key[0..entry.key_len], entry.value);
+    }
 
     return self;
 }
@@ -56,83 +46,6 @@ pub fn deinit(self: *Self) void {
 }
 
 var cp_buf: [4]u8 = undefined;
-
-// data/ucd/UnicodeData.txt
-fn load(self: *Self, filename: []const u8) !void {
-    // Setup input.
-    var in_file = try std.fs.cwd().openFile(filename, .{});
-    defer in_file.close();
-    var buf_reader = std.io.bufferedReader(in_file.reader());
-    var input_stream = buf_reader.reader();
-
-    // Iterate over lines.
-    var buf: [640]u8 = undefined;
-
-    while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
-        // Iterate over fields.
-        var fields = mem.split(line, ";");
-        var field_index: usize = 0;
-        var code_point: []const u8 = undefined;
-        var dc = Decomp{};
-
-        while (fields.next()) |raw| : (field_index += 1) {
-            if (field_index == 0) {
-                // Code point.
-                code_point = raw;
-            } else if (field_index == 1) {
-                // Normalization.
-                const parsed_cp = try fmt.parseInt(u21, code_point, 16);
-                const key = blk: {
-                    const len = try unicode.utf8Encode(parsed_cp, &cp_buf);
-                    break :blk cp_buf[0..len];
-                };
-
-                var is_compat = false;
-                var cp_list: [18][]const u8 = [_][]const u8{""} ** 18;
-
-                var cp_iter = mem.split(raw, " ");
-                var i: usize = 0;
-                while (cp_iter.next()) |cp| {
-                    if (mem.startsWith(u8, cp, "<")) {
-                        is_compat = true;
-                        continue;
-                    }
-                    cp_list[i] = cp;
-                    i += 1;
-                }
-
-                if (!is_compat and i == 1) {
-                    // Singleton
-                    dc.len = 1;
-                    dc.seq[0] = try fmt.parseInt(u21, cp_list[0], 16);
-                    try self.decomp_trie.add(key, dc);
-                } else if (!is_compat) {
-                    // Canonical
-                    std.debug.assert(i == 2);
-                    dc.seq[0] = try fmt.parseInt(u21, cp_list[0], 16);
-                    dc.seq[1] = try fmt.parseInt(u21, cp_list[1], 16);
-                    try self.decomp_trie.add(key, dc);
-                } else {
-                    // Compatibility
-                    std.debug.assert(i != 0 and i <= 18);
-                    var j: usize = 0;
-
-                    for (cp_list) |ccp| {
-                        if (ccp.len == 0) break; // sentinel
-                        dc.seq[j] = try fmt.parseInt(u21, ccp, 16);
-                        j += 1;
-                    }
-
-                    dc.form = .compat;
-                    dc.len = j;
-                    try self.decomp_trie.add(key, dc);
-                }
-            } else {
-                continue;
-            }
-        }
-    }
-}
 
 /// mapping retrieves the decomposition mapping for a code point as per the UCD.
 pub fn mapping(self: Self, cp: u21, nfd: bool) Decomp {
@@ -464,7 +377,7 @@ fn isAsciiStr(str: []const u8) !bool {
 
 test "Normalizer decompose D" {
     var allocator = std.testing.allocator;
-    var normalizer = try init(allocator, "src/data/ucd/Decompositions.txt");
+    var normalizer = try init(allocator, "src/data/ucd/Decompositions.bin");
     defer normalizer.deinit();
 
     var result = normalizer.decompose('\u{00E9}', true);
@@ -478,7 +391,7 @@ test "Normalizer decompose D" {
 
 test "Normalizer decompose KD" {
     var allocator = std.testing.allocator;
-    var normalizer = try init(allocator, "src/data/ucd/Decompositions.txt");
+    var normalizer = try init(allocator, "src/data/ucd/Decompositions.bin");
     defer normalizer.deinit();
 
     var result = normalizer.decompose('\u{00E9}', false);
@@ -494,7 +407,7 @@ test "Normalizer normalizeTo" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var allocator = &arena.allocator;
-    var normalizer = try init(allocator, "src/data/ucd/Decompositions.txt");
+    var normalizer = try init(allocator, "src/data/ucd/Decompositions.bin");
     defer normalizer.deinit();
 
     var file = try std.fs.cwd().openFile("src/data/ucd/NormalizationTest.txt", .{});
@@ -559,7 +472,7 @@ test "Normalizer normalizeTo" {
 
 test "Normalizer eqlBy" {
     var allocator = std.testing.allocator;
-    var normalizer = try init(allocator, "src/data/ucd/Decompositions.txt");
+    var normalizer = try init(allocator, "src/data/ucd/Decompositions.bin");
     defer normalizer.deinit();
 
     try std.testing.expect(try normalizer.eqlBy("foé", "foe\u{0301}", .normalize));
