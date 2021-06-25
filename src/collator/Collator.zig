@@ -203,7 +203,7 @@ pub fn sortKeyFromCollationElements(self: *Self, collation_elements: []Trie.Elem
 }
 
 pub fn sortKey(self: *Self, str: []const u8) ![]const u16 {
-    const normalized = try self.normalizer.normalizeCodePointsTo(.canon, str);
+    const normalized = try self.normalizer.normalizeToCodePoints(.canon, str);
     const collation_elements = try self.collationElements(normalized);
 
     return self.sortKeyFromCollationElements(collation_elements);

@@ -11,11 +11,12 @@ const CaseFoldMap = @import("../components.zig").CaseFoldMap;
 const CccMap = @import("../components.zig").CombiningMap;
 const HangulMap = @import("../components.zig").HangulMap;
 const NFDCheck = @import("../components.zig").NFDCheck;
-const Trieton = @import("Trieton.zig");
+
 const DecompFile = @import("DecompFile.zig");
 const Decomp = DecompFile.Decomp;
 const Form = DecompFile.Form;
 
+const Trieton = @import("Trieton.zig");
 const Lookup = Trieton.Lookup;
 
 allocator: *mem.Allocator,
@@ -122,15 +123,31 @@ pub fn decompose(self: Self, cp: u21, nfd: bool) Decomp {
     return dc;
 }
 
-fn finalizeAndEncode(self: *Self, code_points: []u21) ![]u8 {
+fn getCodePoints(self: *Self, str: []const u8) ![]u21 {
+    var code_points = std.ArrayList(u21).init(&self.arena.allocator);
+    var iter = (try unicode.Utf8View.init(str)).iterator();
+
+    while (iter.nextCodepoint()) |cp| {
+        try code_points.append(cp);
+    }
+
+    return code_points.items;
+}
+
+/// normalizeTo will normalize the code points in str, producing a slice of u8 with the new bytes
+/// corresponding to the specified Normalization Form.
+pub fn normalizeTo(self: *Self, form: Form, str: []const u8) anyerror![]u8 {
+    const code_points = try self.getCodePoints(str);
+    return self.normalizeCodePointsTo(form, code_points);
+}
+
+fn normalizeCodePointsTo(self: *Self, form: Form, code_points: []u21) anyerror![]u8 {
+    const d_code_points = try self.normalizeCodePointsToCodePoints(form, code_points);
     var result = try std.ArrayList(u8).initCapacity(&self.arena.allocator, code_points.len * 4);
-
-    // Apply canonical sort algorithm.
-    self.canonicalSort(code_points);
-
-    // Encode as UTF-8 code units.
     var buf: [4]u8 = undefined;
-    for (code_points) |dcp| {
+
+    // Encode as UTF-8 bytes.
+    for (d_code_points) |dcp| {
         const len = try unicode.utf8Encode(dcp, &buf);
         result.appendSliceAssumeCapacity(buf[0..len]);
     }
@@ -138,79 +155,41 @@ fn finalizeAndEncode(self: *Self, code_points: []u21) ![]u8 {
     return result.items;
 }
 
-/// normalizeTo will normalize the code points in str, producing a slice of u8 with the new bytes
+/// normalizeToCodePoints will normalize the code points in str, producing a new slice of code points
 /// corresponding to the specified Normalization Form.
-pub fn normalizeTo(self: *Self, form: Form, str: []const u8) anyerror![]u8 {
-    // Gather source code points.
-    var code_points = try std.ArrayList(u21).initCapacity(&self.arena.allocator, str.len);
-
-    var iter = (try unicode.Utf8View.init(str)).iterator();
-
-    while (iter.nextCodepoint()) |cp| {
-        code_points.appendAssumeCapacity(cp);
-    }
-
-    // NFD Quick Check.
-    if (form == .canon) {
-        var already_nfd = true;
-
-        for (code_points.items) |cp| {
-            if (!NFDCheck.isNFD(cp)) already_nfd = false;
-        }
-
-        // Already NFD, nothing more to do.
-        if (already_nfd) return self.finalizeAndEncode(code_points.items);
-    }
-
-    var d_code_points = std.ArrayList(u21).init(&self.arena.allocator);
-
-    // Gather decomposed code points.
-    for (code_points.items) |cp| {
-        const dc = self.decompose(cp, form == .canon);
-        try d_code_points.appendSlice(dc.seq[0..dc.len]);
-    }
-
-    return self.finalizeAndEncode(d_code_points.items);
+pub fn normalizeToCodePoints(self: *Self, form: Form, str: []const u8) anyerror![]u21 {
+    var code_points = try self.getCodePoints(str);
+    return self.normalizeCodePointsToCodePoints(form, code_points);
 }
 
-/// normalizeCodePointsTo will normalize the code points in str, producing a new slice of code points
-/// corresponding to the specified Normalization Form.
-pub fn normalizeCodePointsTo(self: *Self, form: Form, str: []const u8) anyerror![]u21 {
-    // Gather source code points.
-    var code_points = try std.ArrayList(u21).initCapacity(&self.arena.allocator, str.len);
-
-    var iter = (try unicode.Utf8View.init(str)).iterator();
-
-    while (iter.nextCodepoint()) |cp| {
-        code_points.appendAssumeCapacity(cp);
-    }
-
+fn normalizeCodePointsToCodePoints(self: *Self, form: Form, code_points: []u21) anyerror![]u21 {
     // NFD Quick Check.
     if (form == .canon) {
         var already_nfd = true;
 
-        for (code_points.items) |cp| {
+        for (code_points) |cp| {
             if (!NFDCheck.isNFD(cp)) already_nfd = false;
         }
 
         // Already NFD, nothing more to do.
         if (already_nfd) {
             // Apply canonical sort algorithm.
-            self.canonicalSort(code_points.items);
-            return code_points.items;
+            self.canonicalSort(code_points);
+            return code_points;
         }
     }
 
     var d_code_points = std.ArrayList(u21).init(&self.arena.allocator);
 
     // Gather decomposed code points.
-    for (code_points.items) |cp| {
+    for (code_points) |cp| {
         const dc = self.decompose(cp, form == .canon);
         try d_code_points.appendSlice(dc.seq[0..dc.len]);
     }
 
     // Apply canonical sort algorithm.
     self.canonicalSort(d_code_points.items);
+
     return d_code_points.items;
 }
 
@@ -307,20 +286,13 @@ pub fn eqlBy(self: *Self, a: []const u8, b: []const u8, mode: CmpMode) !bool {
         }
 
         // Non-ASCII case insensitive.
-        return self.eqlIgnoreCase(a, b);
+        return self.eqlNormIgnore(a, b);
     }
 
     if (mode == .normalize) return self.eqlNorm(a, b);
     if (mode == .norm_ignore) return self.eqlNormIgnore(a, b);
 
     return false;
-}
-
-fn eqlIgnoreCase(self: *Self, a: []const u8, b: []const u8) !bool {
-    const cf_a = try CaseFoldMap.caseFoldStr(&self.arena.allocator, a);
-    const cf_b = try CaseFoldMap.caseFoldStr(&self.arena.allocator, b);
-
-    return mem.eql(u8, cf_a, cf_b);
 }
 
 fn eqlNorm(self: *Self, a: []const u8, b: []const u8) !bool {
@@ -330,13 +302,39 @@ fn eqlNorm(self: *Self, a: []const u8, b: []const u8) !bool {
     return mem.eql(u8, norm_a, norm_b);
 }
 
+fn requiresNfdBeforeCaseFold(cp: u21) bool {
+    return switch (cp) {
+        0x0345 => true,
+        0x1F80...0x1FAF => true,
+        0x1FB2...0x1FB4 => true,
+        0x1FB7 => true,
+        0x1FBC => true,
+        0x1FC2...0x1FC4 => true,
+        0x1FC7 => true,
+        0x1FCC => true,
+        0x1FF2...0x1FF4 => true,
+        0x1FF7 => true,
+        0x1FFC => true,
+        else => false,
+    };
+}
+
+fn requiresPreNfd(code_points: []const u21) bool {
+    return for (code_points) |cp| {
+        if (requiresNfdBeforeCaseFold(cp)) break true;
+    } else false;
+}
+
 fn eqlNormIgnore(self: *Self, a: []const u8, b: []const u8) !bool {
+    const code_points_a = try self.getCodePoints(a);
+    const code_points_b = try self.getCodePoints(b);
+
     // The long winding road of normalized caseless matching...
-    // NFD(CaseFold(NFD(str)))
-    var norm_a = try self.normalizeTo(.canon, a);
+    // NFD(CaseFold(NFD(str))) or NFD(CaseFold(str))
+    var norm_a = if (requiresPreNfd(code_points_a)) try self.normalizeCodePointsTo(.canon, code_points_a) else a;
     var cf_a = try CaseFoldMap.caseFoldStr(&self.arena.allocator, norm_a);
     norm_a = try self.normalizeTo(.canon, cf_a);
-    var norm_b = try self.normalizeTo(.canon, b);
+    var norm_b = if (requiresPreNfd(code_points_b)) try self.normalizeCodePointsTo(.canon, code_points_b) else b;
     var cf_b = try CaseFoldMap.caseFoldStr(&self.arena.allocator, norm_b);
     norm_b = try self.normalizeTo(.canon, cf_b);
 
