@@ -19,7 +19,7 @@ pub const Entry = struct {
 /// * .canon : Canonical decomposition, which always results in two code points.
 /// * .compat : Compatibility decomposition, which can result in at most 18 code points.
 /// * .same : Default canonical decomposition to the code point itself.
-pub const Form = enum {
+pub const Form = enum(u2) {
     canon, // D
     compat, // KD
     same, // no more decomposition.
@@ -70,7 +70,7 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !DecompFile {
             } else if (field_index == 5 and raw.len != 0) {
                 // Normalization.
                 const parsed_cp = try fmt.parseInt(u21, code_point, 16);
-                var _key_backing: [4]u8 = undefined;
+                var _key_backing = std.mem.zeroes([4]u8);
                 const key = blk: {
                     const len = try unicode.utf8Encode(parsed_cp, &_key_backing);
                     break :blk _key_backing[0..len];
@@ -124,11 +124,77 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !DecompFile {
     return DecompFile{ .iter = 0, .entries = entries };
 }
 
+pub fn compressToFile(self: *DecompFile, filename: []const u8) !void {
+    var out_file = try std.fs.cwd().createFile(filename, .{});
+    defer out_file.close();
+    return self.compressTo(out_file.writer());
+}
+
+pub fn compressTo(self: *DecompFile, writer: anytype) !void {
+    var buf_writer = std.io.bufferedWriter(writer);
+    var out = std.io.bitWriter(.Little, buf_writer.writer());
+    try out.writeBits(@intCast(u16, self.entries.items.len), 16);
+    while (self.next()) |entry| {
+        try out.writeBits(entry.key_len, 3);
+        _ = try out.write(entry.key[0..entry.key_len]);
+        try out.writeBits(@enumToInt(entry.value.form), @bitSizeOf(Form));
+        try out.writeBits(entry.value.len, 5);
+        for (entry.value.seq[0..entry.value.len]) |s| try out.writeBits(s, 21);
+    }
+    try out.flushBits();
+    try buf_writer.flush();
+}
+
+pub fn decompressFile(allocator: *mem.Allocator, filename: []const u8) !DecompFile {
+    var in_file = try std.fs.cwd().openFile(filename, .{});
+    defer in_file.close();
+    return decompress(allocator, in_file.reader());
+}
+
+pub fn decompress(allocator: *mem.Allocator, reader: anytype) !DecompFile {
+    var buf_reader = std.io.bufferedReader(reader);
+    var in = std.io.bitReader(.Little, buf_reader.reader());
+    var entries = std.ArrayList(Entry).init(allocator);
+    var num_entries = try in.readBitsNoEof(usize, 16);
+    var i: usize = 0;
+    while (i < num_entries) : (i += 1) {
+        var entry: Entry = std.mem.zeroes(Entry);
+        entry.key_len = try in.readBitsNoEof(usize, 3);
+        _ = try in.read(entry.key[0..entry.key_len]);
+        entry.value.form = @intToEnum(Form, try in.readBitsNoEof(std.meta.Tag(Form), @bitSizeOf(Form)));
+        entry.value.len = try in.readBitsNoEof(usize, 5);
+        var j: usize = 0;
+        while (j < entry.value.len) : (j += 1) entry.value.seq[j] = try in.readBitsNoEof(u21, 21);
+        try entries.append(entry);
+    }
+    return DecompFile{ .iter = 0, .entries = entries };
+}
+
 test "parse" {
     const allocator = testing.allocator;
     var file = try parseFile(allocator, "src/data/ucd/UnicodeData.txt");
     defer file.deinit();
     while (file.next()) |entry| {
         _ = entry;
+    }
+}
+
+test "compression_is_lossless" {
+    const allocator = testing.allocator;
+
+    // Compress UnicodeData.txt -> Decompositions.bin
+    var file = try parseFile(allocator, "src/data/ucd/UnicodeData.txt");
+    defer file.deinit();
+    try file.compressToFile("src/data/ucd/Decompositions.bin");
+
+    // Reset the raw file iterator.
+    file.iter = 0;
+
+    // Decompress the file.
+    var decompressed = try decompressFile(allocator, "src/data/ucd/Decompositions.bin");
+    defer decompressed.deinit();
+    while (file.next()) |expected| {
+        var actual = decompressed.next().?;
+        try testing.expectEqual(expected, actual);
     }
 }
