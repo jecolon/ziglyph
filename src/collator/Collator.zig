@@ -357,7 +357,7 @@ pub fn keyLevelCmp(a: []const u16, b: []const u16, level: Level) math.Order {
 
 test "Collator keyLevelCmp" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
+    var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.bin");
     defer normalizer.deinit();
     var collator = try init(allocator, "src/data/uca/allkeys-minimal.txt", &normalizer);
     defer collator.deinit();
@@ -430,7 +430,7 @@ const testing = std.testing;
 
 test "Collator sort" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
+    var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.bin");
     defer normalizer.deinit();
     var collator = try init(allocator, "src/data/uca/allkeys-minimal.txt", &normalizer);
     defer collator.deinit();
@@ -484,7 +484,7 @@ test "Collator UCA" {
 
     var prev_key: []const u16 = &[_]u16{};
 
-    var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
+    var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.bin");
     defer normalizer.deinit();
     var collator = try init(allocator, "src/data/uca/allkeys-minimal.txt", &normalizer);
     defer collator.deinit();

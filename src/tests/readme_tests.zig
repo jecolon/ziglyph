@@ -46,7 +46,7 @@ test "Component structs" {
 
 test "normalizeTo" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
+    var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.bin");
     defer normalizer.deinit();
 
     // Canonical (NFD)
@@ -101,7 +101,7 @@ test "Code point / string widths" {
 
 test "Collation" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator, "src/data/ucd/UnicodeData.txt");
+    var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.bin");
     defer normalizer.deinit();
     var collator = try Collator.init(allocator, "src/data/uca/allkeys-minimal.txt", &normalizer);
     defer collator.deinit();
