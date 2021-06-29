@@ -7,7 +7,7 @@ const EAW = @import("../../components.zig").DerivedEastAsianWidth;
 const Emoji = @import("../../components.zig").EmojiData;
 const GBP = @import("../../components.zig").GraphemeBreakProperty;
 const GraphemeIterator = @import("../../components.zig").GraphemeIterator;
-const isAsciiStr = @import("../../zigstr/Zigstr.zig").isAsciiStr;
+const isAsciiStr = @import("../../ascii.zig").isAsciiStr;
 
 /// AmbiguousWidth determines the width of ambiguous characters according to the context. In an 
 /// East Asian context, the width of ambiguous code points should be 2 (full), and 1 (half) 

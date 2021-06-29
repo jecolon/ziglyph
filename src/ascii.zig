@@ -414,3 +414,35 @@ pub fn orderIgnoreCase(lhs: []const u8, rhs: []const u8) std.math.Order {
 pub fn lessThanIgnoreCase(lhs: []const u8, rhs: []const u8) bool {
     return orderIgnoreCase(lhs, rhs) == .lt;
 }
+
+/// isAsciiStr checks if a string (`[]const uu`) is composed solely of ASCII characters.
+pub fn isAsciiStr(str: []const u8) !bool {
+    // Shamelessly stolen from std.unicode.
+    const N = @sizeOf(usize);
+    const MASK = 0x80 * (std.math.maxInt(usize) / 0xff);
+
+    var i: usize = 0;
+    while (i < str.len) {
+        // Fast path for ASCII sequences
+        while (i + N <= str.len) : (i += N) {
+            const v = std.mem.readIntNative(usize, str[i..][0..N]);
+            if (v & MASK != 0) {
+                return false;
+            }
+        }
+
+        if (i < str.len) {
+            const n = try std.unicode.utf8ByteSequenceLength(str[i]);
+            if (i + n > str.len) return error.TruncatedInput;
+
+            switch (n) {
+                1 => {}, // ASCII
+                else => return false,
+            }
+
+            i += n;
+        }
+    }
+
+    return true;
+}

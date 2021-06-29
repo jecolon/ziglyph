@@ -7,6 +7,7 @@ const mem = std.mem;
 const sort = std.sort.sort;
 const unicode = std.unicode;
 
+const isAsciiStr = @import("../ascii.zig").isAsciiStr;
 const CaseFoldMap = @import("../components.zig").CaseFoldMap;
 const CccMap = @import("../components.zig").CombiningMap;
 const HangulMap = @import("../components.zig").HangulMap;
@@ -339,38 +340,6 @@ fn eqlNormIgnore(self: *Self, a: []const u8, b: []const u8) !bool {
     norm_b = try self.normalizeTo(.canon, cf_b);
 
     return mem.eql(u8, norm_a, norm_b);
-}
-
-/// isAsciiStr checks if a string (`[]const uu`) is composed solely of ASCII characters.
-fn isAsciiStr(str: []const u8) !bool {
-    // Shamelessly stolen from std.unicode.
-    const N = @sizeOf(usize);
-    const MASK = 0x80 * (std.math.maxInt(usize) / 0xff);
-
-    var i: usize = 0;
-    while (i < str.len) {
-        // Fast path for ASCII sequences
-        while (i + N <= str.len) : (i += N) {
-            const v = mem.readIntNative(usize, str[i..][0..N]);
-            if (v & MASK != 0) {
-                return false;
-            }
-        }
-
-        if (i < str.len) {
-            const n = try unicode.utf8ByteSequenceLength(str[i]);
-            if (i + n > str.len) return error.TruncatedInput;
-
-            switch (n) {
-                1 => {}, // ASCII
-                else => return false,
-            }
-
-            i += n;
-        }
-    }
-
-    return true;
 }
 
 test "Normalizer decompose D" {

@@ -18,10 +18,6 @@ test "components" {
     _ = @import("components.zig").Symbol;
 }
 
-test "Zigstr" {
-    _ = @import("components.zig").Zigstr;
-}
-
 test "Collator" {
     _ = @import("components.zig").Collator;
 }
@@ -32,5 +28,4 @@ test "Width" {
 
 test "READMEs" {
     _ = @import("tests/readme_tests.zig");
-    _ = @import("tests/zigstr_readme_tests.zig");
 }
