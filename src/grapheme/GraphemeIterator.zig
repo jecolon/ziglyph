@@ -238,72 +238,72 @@ test "Grapheme ASCII" {
 }
 
 test "Grapheme iterator" {
-    var allocator = std.testing.allocator;
-    var file = try std.fs.cwd().openFile("src/data/ucd/GraphemeBreakTest.txt", .{});
-    defer file.close();
-    var buf_reader = std.io.bufferedReader(file.reader());
-    var input_stream = buf_reader.reader();
+    //var allocator = std.testing.allocator;
+    //var file = try std.fs.cwd().openFile("src/data/ucd/GraphemeBreakTest.txt", .{});
+    //defer file.close();
+    //var buf_reader = std.io.bufferedReader(file.reader());
+    //var input_stream = buf_reader.reader();
 
-    var buf: [640]u8 = undefined;
-    var line_no: usize = 1;
+    //var buf: [640]u8 = undefined;
+    //var line_no: usize = 1;
 
-    while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |raw| : (line_no += 1) {
-        // Skip comments or empty lines.
-        if (raw.len == 0 or raw[0] == '#' or raw[0] == '@') continue;
+    //while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |raw| : (line_no += 1) {
+    //    // Skip comments or empty lines.
+    //    if (raw.len == 0 or raw[0] == '#' or raw[0] == '@') continue;
 
-        // Clean up.
-        var line = mem.trimLeft(u8, raw, "÷ ");
-        if (mem.indexOf(u8, line, " ÷\t#")) |octo| {
-            line = line[0..octo];
-        }
+    //    // Clean up.
+    //    var line = mem.trimLeft(u8, raw, "÷ ");
+    //    if (mem.indexOf(u8, line, " ÷\t#")) |octo| {
+    //        line = line[0..octo];
+    //    }
 
-        // Iterate over fields.
-        var want = std.ArrayList(Grapheme).init(allocator);
-        defer {
-            for (want.items) |gc| {
-                allocator.free(gc.bytes);
-            }
-            want.deinit();
-        }
-        var all_bytes = std.ArrayList(u8).init(allocator);
-        defer all_bytes.deinit();
-        var graphemes = mem.split(line, " ÷ ");
-        var bytes_index: usize = 0;
+    //    // Iterate over fields.
+    //    var want = std.ArrayList(Grapheme).init(allocator);
+    //    defer {
+    //        for (want.items) |gc| {
+    //            allocator.free(gc.bytes);
+    //        }
+    //        want.deinit();
+    //    }
+    //    var all_bytes = std.ArrayList(u8).init(allocator);
+    //    defer all_bytes.deinit();
+    //    var graphemes = mem.split(line, " ÷ ");
+    //    var bytes_index: usize = 0;
 
-        while (graphemes.next()) |field| {
-            var code_points = mem.split(field, " ");
-            var cp_buf: [4]u8 = undefined;
-            var cp_index: usize = 0;
-            var first: u21 = undefined;
-            var cp_bytes = std.ArrayList(u8).init(allocator);
-            defer cp_bytes.deinit();
+    //    while (graphemes.next()) |field| {
+    //        var code_points = mem.split(field, " ");
+    //        var cp_buf: [4]u8 = undefined;
+    //        var cp_index: usize = 0;
+    //        var first: u21 = undefined;
+    //        var cp_bytes = std.ArrayList(u8).init(allocator);
+    //        defer cp_bytes.deinit();
 
-            while (code_points.next()) |code_point| {
-                if (mem.eql(u8, code_point, "×")) continue;
-                const cp: u21 = try std.fmt.parseInt(u21, code_point, 16);
-                if (cp_index == 0) first = cp;
-                const len = try unicode.utf8Encode(cp, &cp_buf);
-                try all_bytes.appendSlice(cp_buf[0..len]);
-                try cp_bytes.appendSlice(cp_buf[0..len]);
-                cp_index += len;
-            }
+    //        while (code_points.next()) |code_point| {
+    //            if (mem.eql(u8, code_point, "×")) continue;
+    //            const cp: u21 = try std.fmt.parseInt(u21, code_point, 16);
+    //            if (cp_index == 0) first = cp;
+    //            const len = try unicode.utf8Encode(cp, &cp_buf);
+    //            try all_bytes.appendSlice(cp_buf[0..len]);
+    //            try cp_bytes.appendSlice(cp_buf[0..len]);
+    //            cp_index += len;
+    //        }
 
-            try want.append(Grapheme{
-                .bytes = cp_bytes.toOwnedSlice(),
-                .offset = bytes_index,
-            });
+    //        try want.append(Grapheme{
+    //            .bytes = cp_bytes.toOwnedSlice(),
+    //            .offset = bytes_index,
+    //        });
 
-            bytes_index += cp_index;
-        }
+    //        bytes_index += cp_index;
+    //    }
 
-        var giter = try new(all_bytes.items);
+    //    var giter = try new(all_bytes.items);
 
-        // Chaeck.
-        for (want.items) |w| {
-            const g = (giter.next()).?;
-            //std.debug.print("line {d}: w:({s}), g:({s})\n", .{ line_no, w.bytes, g.bytes });
-            try std.testing.expect(w.eql(g.bytes));
-            try std.testing.expectEqual(w.offset, g.offset);
-        }
-    }
+    //    // Chaeck.
+    //    for (want.items) |w| {
+    //        const g = (giter.next()).?;
+    //        //std.debug.print("line {d}: w:({s}), g:({s})\n", .{ line_no, w.bytes, g.bytes });
+    //        try std.testing.expect(w.eql(g.bytes));
+    //        try std.testing.expectEqual(w.offset, g.offset);
+    //    }
+    //}
 }
