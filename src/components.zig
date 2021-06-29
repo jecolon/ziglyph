@@ -10,9 +10,6 @@ pub const Symbol = @import("components/aggregate/Symbol.zig");
 // Display Width
 pub const Width = @import("components/aggregate/Width.zig");
 
-// UTF-8 string struct
-pub const Zigstr = @import("zigstr/Zigstr.zig");
-
 // Grapheme Clusters
 pub const CodePointIterator = @import("grapheme/CodePointIterator.zig");
 pub const GraphemeIterator = @import("grapheme/GraphemeIterator.zig");
