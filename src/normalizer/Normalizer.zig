@@ -371,6 +371,11 @@ test "Normalizer decompose KD" {
 }
 
 test "Normalizer normalizeTo" {
+    var path_buf: [1024]u8 = undefined;
+    var path = try std.fs.cwd().realpath(".", &path_buf);
+    // Check if testing in this library path.
+    if (!mem.endsWith(u8, path, "ziglyph")) return;
+
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var allocator = &arena.allocator;

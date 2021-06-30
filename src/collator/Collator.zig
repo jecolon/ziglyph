@@ -463,6 +463,11 @@ test "Collator sort" {
 }
 
 test "Collator UCA" {
+    var path_buf: [1024]u8 = undefined;
+    var path = try std.fs.cwd().realpath(".", &path_buf);
+    // Check if testing in this library path.
+    if (!mem.endsWith(u8, path, "ziglyph")) return;
+
     const uca_tests = "src/data/uca/CollationTest_NON_IGNORABLE_SHORT.txt";
     var file = try std.fs.cwd().openFile(uca_tests, .{});
     defer file.close();
