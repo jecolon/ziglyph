@@ -1,6 +1,13 @@
-//! This module extracts the subset of allkeys.txt data that are canonically decomposed (since the
-//! collation algorithm's first step requires you to decompoe the string's code points to canonical
-//! NFD form, and hence some ~2,000 non-NFD records in the file are unused by the algorithm.)
+//! This module extracts the subset of allkeys.txt data that are canonically decomposed, and
+//! handles compression/decompression of that subset using Unicode Data Differential Compression
+//! (UDDC).
+//!
+//! See ../normalizer/DecompFile.zig for details on what Unicode Data Differential Compression
+//! (UDDC) is and how it works.
+//!
+//! Note that only the entries which are canonically decomposed are encoded, since the collation
+//! algorithm's first step requires you to decompose the string's code points to canonical NFD
+//! form, and hence some ~2,000 non-NFD entries in the file are unused by the algorithm.
 
 const std = @import("std");
 const mem = std.mem;
@@ -19,6 +26,50 @@ const AllKeysFile = @This();
 pub const Entry = struct {
     key: Key,
     value: Elements,
+
+    // Calculates the difference of each optional integral value in this entry.
+    pub fn diff(self: Entry, other: Entry) Entry {
+        // Determine difference in key values.
+        var d: Entry = undefined;
+        for (self.key) |k, i| {
+            if (k) |self_kv| {
+                if (other.key[i]) |other_kv| {
+                    d.key[i] = self_kv -% other_kv; // self -> other
+                } else {
+                    d.key[i] = null; // self -> null
+                }
+            } else {
+                if (other.key[i]) |other_kv| {
+                    d.key[i] = other_kv; // null -> other
+                } else {
+                    d.key[i] = null; // null -> null
+                }
+            }
+        }
+
+        // Determine difference in element values.
+        for (self.value) |e, i| {
+            if (e) |self_ev| {
+                if (other.value[i]) |other_ev| {
+                    // self -> other
+                    d.value[i] = Element{
+                        .l1 = self_ev.l1 -% other_ev.l1,
+                        .l2 = self_ev.l2 -% other_ev.l2,
+                        .l3 = self_ev.l3 -% other_ev.l3,
+                    };
+                } else {
+                    d.value[i] = null; // self -> null
+                }
+            } else {
+                if (other.value[i]) |other_ev| {
+                    d.value[i] = other_ev; // null -> other
+                } else {
+                    d.value[i] = null; // null -> null
+                }
+            }
+        }
+        return d;
+    }
 };
 
 pub const Element = struct {
@@ -130,6 +181,18 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
     return AllKeysFile{ .iter = 0, .entries = entries, .implicits = implicits };
 }
 
+// A UDDC opcode for an allkeys file.
+const Opcode = enum(u4) {
+    // Sets the value of all registers.
+    set,
+
+    // Denotes the end of the opcode stream. This is so that we don't need to encode the total
+    // number of opcodes in the stream up front (note also the file is bit packed: there may be
+    // a few remaining zero bits at the end as padding so we need an EOF opcode rather than say
+    // catching the actual file read EOF.)
+    eof,
+};
+
 pub fn compressToFile(self: *AllKeysFile, filename: []const u8) !void {
     var out_file = try std.fs.cwd().createFile(filename, .{});
     defer out_file.close();
@@ -148,10 +211,21 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
         try out.writeBits(implicit.end, @bitSizeOf(@TypeOf(implicit.end)));
     }
 
-    // Entries
-    try out.writeBits(@intCast(u16, self.entries.items.len), 16);
+    // For the UDDC registers, we want one register to represent each possible value in a single
+    // entry; we will emit opcodes to modify these registers into the desired form to produce a
+    // real entry.
+    var registers = std.mem.zeroes(Entry);
     while (self.next()) |entry| {
-        // Key
+        // Determine what has changed between this entry and the current registers' state.
+        const diff = entry.diff(registers);
+
+        // If you want to analyze the difference between entries, uncomment the following:
+        //std.debug.print("diff.key={any: <7}\n", .{diff.key});
+        //std.debug.print("diff.value={any: <5}\n", .{diff.value});
+        //registers = entry;
+        //continue;
+
+        try out.writeBits(@enumToInt(Opcode.set), @bitSizeOf(Opcode));
         for (entry.key) |k| {
             if (k) |kv| {
                 try out.writeBits(@as(u1, 1), 1);
@@ -160,8 +234,6 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
             }
             try out.writeBits(@as(u1, 0), 1);
         }
-
-        // Value
         for (entry.value) |elem| {
             if (elem) |ev| {
                 try out.writeBits(@as(u1, 1), 1);
@@ -173,6 +245,7 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
             try out.writeBits(@as(u1, 0), 1);
         }
     }
+    try out.writeBits(@enumToInt(Opcode.eof), @bitSizeOf(Opcode));
     try out.flushBits();
     try buf_writer.flush();
 }
@@ -199,34 +272,42 @@ pub fn decompress(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
         try implicits.append(implicit);
     }
 
-    // Entries
-    var num_entries = try in.readBitsNoEof(usize, 16);
-    i = 0;
-    while (i < num_entries) : (i += 1) {
-        var entry: Entry = undefined;
+    // For the UDDC registers, we want one register to represent each possible value in a single
+    // entry; each opcode we read will modify these registers so we can emit a value.
+    var registers = std.mem.zeroes(Entry);
 
-        // Key
-        var j: usize = 0;
-        while (j < entry.key.len) : (j += 1) {
-            var optional = try in.readBitsNoEof(u1, 1);
-            if (optional != 0) {
-                entry.key[j] = try in.readBitsNoEof(u21, 21);
-            }
-        }
+    while (true) {
+        // Read a single operation.
+        var op = @intToEnum(Opcode, try in.readBitsNoEof(std.meta.Tag(Opcode), @bitSizeOf(Opcode)));
 
-        // Value
-        j = 0;
-        while (j < entry.value.len) : (j += 1) {
-            var optional = try in.readBitsNoEof(u1, 1);
-            if (optional != 0) {
-                var ev: Element = undefined;
-                ev.l1 = try in.readBitsNoEof(u16, 16);
-                ev.l2 = try in.readBitsNoEof(u16, 16);
-                ev.l3 = try in.readBitsNoEof(u16, 16);
-                entry.value[j] = ev;
-            }
+        // If you want to inspect the # of different ops in a stream, uncomment this:
+        //std.debug.print("{}\n", .{op});
+
+        switch (op) {
+            .set => {
+                var entry: Entry = undefined;
+                var j: usize = 0;
+                while (j < entry.key.len) : (j += 1) {
+                    var optional = try in.readBitsNoEof(u1, 1);
+                    if (optional != 0) {
+                        entry.key[j] = try in.readBitsNoEof(u21, 21);
+                    }
+                }
+                j = 0;
+                while (j < entry.value.len) : (j += 1) {
+                    var optional = try in.readBitsNoEof(u1, 1);
+                    if (optional != 0) {
+                        var ev: Element = undefined;
+                        ev.l1 = try in.readBitsNoEof(u16, 16);
+                        ev.l2 = try in.readBitsNoEof(u16, 16);
+                        ev.l3 = try in.readBitsNoEof(u16, 16);
+                        entry.value[j] = ev;
+                    }
+                }
+                try entries.append(entry);
+            },
+            .eof => break,
         }
-        try entries.append(entry);
     }
     return AllKeysFile{ .iter = 0, .entries = entries, .implicits = implicits };
 }

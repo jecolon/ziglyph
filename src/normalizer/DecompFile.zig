@@ -59,7 +59,7 @@ pub const Entry = struct {
     key_len: usize,
     value: Decomp,
 
-    // Calculates the absolute difference of each integral value in this entry.
+    // Calculates the difference of each integral value in this entry.
     pub fn diff(self: Entry, other: Entry, value_form_diff: *u2) Entry {
         var d = Entry{
             .key = undefined,
@@ -259,6 +259,7 @@ pub fn compressTo(self: *DecompFile, writer: anytype) !void {
 
         // If you want to analyze the difference between entries, uncomment the following:
         //std.debug.print("diff={}\n", .{diff});
+        //registers = entry;
         //continue;
 
         // Infrequently changed: key_len, value.form, and value.len registers. Emit opcodes to
