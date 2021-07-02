@@ -130,11 +130,133 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
     return AllKeysFile{ .iter = 0, .entries = entries, .implicits = implicits };
 }
 
+pub fn compressToFile(self: *AllKeysFile, filename: []const u8) !void {
+    var out_file = try std.fs.cwd().createFile(filename, .{});
+    defer out_file.close();
+    return self.compressTo(out_file.writer());
+}
+
+pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
+    var buf_writer = std.io.bufferedWriter(writer);
+    var out = std.io.bitWriter(.Little, buf_writer.writer());
+
+    // Implicits
+    std.debug.assert(self.implicits.items.len == 4); // we don't encode a length for implicits.
+    for (self.implicits.items) |implicit| {
+        try out.writeBits(implicit.base, @bitSizeOf(@TypeOf(implicit.base)));
+        try out.writeBits(implicit.start, @bitSizeOf(@TypeOf(implicit.start)));
+        try out.writeBits(implicit.end, @bitSizeOf(@TypeOf(implicit.end)));
+    }
+
+    // Entries
+    try out.writeBits(@intCast(u16, self.entries.items.len), 16);
+    while (self.next()) |entry| {
+        // Key
+        for (entry.key) |k| {
+            if (k) |kv| {
+                try out.writeBits(@as(u1, 1), 1);
+                try out.writeBits(kv, 21);
+                continue;
+            }
+            try out.writeBits(@as(u1, 0), 1);
+        }
+
+        // Value
+        for (entry.value) |elem| {
+            if (elem) |ev| {
+                try out.writeBits(@as(u1, 1), 1);
+                try out.writeBits(ev.l1, 16);
+                try out.writeBits(ev.l2, 16);
+                try out.writeBits(ev.l3, 16);
+                continue;
+            }
+            try out.writeBits(@as(u1, 0), 1);
+        }
+    }
+    try out.flushBits();
+    try buf_writer.flush();
+}
+
+pub fn decompressFile(allocator: *mem.Allocator, filename: []const u8) !AllKeysFile {
+    var in_file = try std.fs.cwd().openFile(filename, .{});
+    defer in_file.close();
+    return decompress(allocator, in_file.reader());
+}
+
+pub fn decompress(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
+    var buf_reader = std.io.bufferedReader(reader);
+    var in = std.io.bitReader(.Little, buf_reader.reader());
+    var entries = std.ArrayList(Entry).init(allocator);
+    var implicits = std.ArrayList(Implicit).init(allocator);
+
+    // Implicits
+    var i: usize = 0;
+    while (i < 4) : (i += 1) {
+        var implicit: Implicit = undefined;
+        implicit.base = try in.readBitsNoEof(u21, 21);
+        implicit.start = try in.readBitsNoEof(u21, 21);
+        implicit.end = try in.readBitsNoEof(u21, 21);
+        try implicits.append(implicit);
+    }
+
+    // Entries
+    var num_entries = try in.readBitsNoEof(usize, 16);
+    i = 0;
+    while (i < num_entries) : (i += 1) {
+        var entry: Entry = undefined;
+
+        // Key
+        var j: usize = 0;
+        while (j < entry.key.len) : (j += 1) {
+            var optional = try in.readBitsNoEof(u1, 1);
+            if (optional != 0) {
+                entry.key[j] = try in.readBitsNoEof(u21, 21);
+            }
+        }
+
+        // Value
+        j = 0;
+        while (j < entry.value.len) : (j += 1) {
+            var optional = try in.readBitsNoEof(u1, 1);
+            if (optional != 0) {
+                var ev: Element = undefined;
+                ev.l1 = try in.readBitsNoEof(u16, 16);
+                ev.l2 = try in.readBitsNoEof(u16, 16);
+                ev.l3 = try in.readBitsNoEof(u16, 16);
+                entry.value[j] = ev;
+            }
+        }
+        try entries.append(entry);
+    }
+    return AllKeysFile{ .iter = 0, .entries = entries, .implicits = implicits };
+}
+
 test "parse" {
     const allocator = testing.allocator;
     var file = try parseFile(allocator, "src/data/uca/allkeys.txt");
     defer file.deinit();
     while (file.next()) |entry| {
         _ = entry;
+    }
+}
+
+test "compression_is_lossless" {
+    const allocator = testing.allocator;
+
+    // Compress allkeys.txt -> allkeys.bin
+    var file = try parseFile(allocator, "src/data/uca/allkeys.txt");
+    defer file.deinit();
+    try file.compressToFile("src/data/uca/allkeys.bin");
+
+    // Reset the raw file iterator.
+    file.iter = 0;
+
+    // Decompress the file.
+    var decompressed = try decompressFile(allocator, "src/data/uca/allkeys.bin");
+    defer decompressed.deinit();
+    try testing.expectEqualSlices(Implicit, file.implicits.items, decompressed.implicits.items);
+    while (file.next()) |expected| {
+        var actual = decompressed.next().?;
+        try testing.expectEqual(expected, actual);
     }
 }
