@@ -183,8 +183,14 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
 
 // A UDDC opcode for an allkeys file.
 const Opcode = enum(u4) {
-    // Sets the value of all registers.
-    set,
+    // Sets the key register.
+    set_key,
+
+    // Sets the value register.
+    set_value,
+
+    // Emits a single value.
+    emit,
 
     // Denotes the end of the opcode stream. This is so that we don't need to encode the total
     // number of opcodes in the stream up front (note also the file is bit packed: there may be
@@ -225,7 +231,7 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
         //registers = entry;
         //continue;
 
-        try out.writeBits(@enumToInt(Opcode.set), @bitSizeOf(Opcode));
+        try out.writeBits(@enumToInt(Opcode.set_key), @bitSizeOf(Opcode));
         for (entry.key) |k| {
             if (k) |kv| {
                 try out.writeBits(@as(u1, 1), 1);
@@ -234,6 +240,8 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
             }
             try out.writeBits(@as(u1, 0), 1);
         }
+
+        try out.writeBits(@enumToInt(Opcode.set_value), @bitSizeOf(Opcode));
         for (entry.value) |elem| {
             if (elem) |ev| {
                 try out.writeBits(@as(u1, 1), 1);
@@ -244,6 +252,10 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
             }
             try out.writeBits(@as(u1, 0), 1);
         }
+
+        try out.writeBits(@enumToInt(Opcode.emit), @bitSizeOf(Opcode));
+
+        registers = entry;
     }
     try out.writeBits(@enumToInt(Opcode.eof), @bitSizeOf(Opcode));
     try out.flushBits();
@@ -284,27 +296,30 @@ pub fn decompress(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
         //std.debug.print("{}\n", .{op});
 
         switch (op) {
-            .set => {
-                var entry: Entry = undefined;
+            .set_key => {
                 var j: usize = 0;
-                while (j < entry.key.len) : (j += 1) {
+                while (j < registers.key.len) : (j += 1) {
                     var optional = try in.readBitsNoEof(u1, 1);
                     if (optional != 0) {
-                        entry.key[j] = try in.readBitsNoEof(u21, 21);
-                    }
+                        registers.key[j] = try in.readBitsNoEof(u21, 21);
+                    } else registers.key[j] = null;
                 }
-                j = 0;
-                while (j < entry.value.len) : (j += 1) {
+            },
+            .set_value => {
+                var j: usize = 0;
+                while (j < registers.value.len) : (j += 1) {
                     var optional = try in.readBitsNoEof(u1, 1);
                     if (optional != 0) {
                         var ev: Element = undefined;
                         ev.l1 = try in.readBitsNoEof(u16, 16);
                         ev.l2 = try in.readBitsNoEof(u16, 16);
                         ev.l3 = try in.readBitsNoEof(u16, 16);
-                        entry.value[j] = ev;
-                    }
+                        registers.value[j] = ev;
+                    } else registers.value[j] = null;
                 }
-                try entries.append(entry);
+            },
+            .emit => {
+                try entries.append(registers);
             },
             .eof => break,
         }
