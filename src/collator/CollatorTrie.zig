@@ -2,14 +2,10 @@ const std = @import("std");
 const mem = std.mem;
 const testing = std.testing;
 
-pub const Element = struct {
-    l1: u16,
-    l2: u16,
-    l3: u16,
-};
+const Element = @import("AllKeysFile.zig").Element;
+const Elements = @import("AllKeysFile.zig").Elements;
+const Key = @import("AllKeysFile.zig").Key;
 
-pub const Elements = [18]?Element;
-pub const Key = [3]?u21;
 const NodeMap = std.AutoHashMap(u21, Node);
 
 const Node = struct {

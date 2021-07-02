@@ -9,21 +9,14 @@ const unicode = std.unicode;
 
 const CccMap = @import("../components.zig").CombiningMap;
 const Normalizer = @import("../components.zig").Normalizer;
-const Trie = @import("CollatorTrie.zig");
 const Props = @import("../components.zig").PropList;
-
-const Implicit = struct {
-    base: u21,
-    start: u21,
-    end: u21,
-};
-
-const ImplicitList = std.ArrayList(Implicit);
+const Trie = @import("CollatorTrie.zig");
+const AllKeysFile = @import("AllKeysFile.zig");
 
 allocator: *mem.Allocator,
 arena: std.heap.ArenaAllocator,
 normalizer: *Normalizer,
-implicits: ImplicitList,
+implicits: []AllKeysFile.Implicit,
 table: Trie,
 
 const Self = @This();
@@ -33,81 +26,27 @@ pub fn init(allocator: *mem.Allocator, allkeys: []const u8, normalizer: *Normali
         .allocator = allocator,
         .arena = std.heap.ArenaAllocator.init(allocator),
         .normalizer = normalizer,
-        .implicits = ImplicitList.init(allocator),
+        .implicits = undefined,
         .table = Trie.init(allocator),
     };
 
-    try self.load(allkeys);
-
+    var file = try AllKeysFile.parseFile(allocator, allkeys);
+    defer file.deinit();
+    while (file.next()) |entry| {
+        try self.table.add(entry.key, entry.value);
+    }
+    self.implicits = file.implicits.toOwnedSlice();
     return self;
 }
 
 pub fn deinit(self: *Self) void {
     self.table.deinit();
-    self.implicits.deinit();
+    self.arena.child_allocator.free(self.implicits);
     self.arena.deinit();
 }
 
-pub fn load(self: *Self, filename: []const u8) !void {
-    var uca_file = try std.fs.cwd().openFile(filename, .{});
-    defer uca_file.close();
-    var uca_reader = io.bufferedReader(uca_file.reader());
-    var uca_stream = uca_reader.reader();
-    var buf: [1024]u8 = undefined;
-
-    lines: while (try uca_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
-        var raw = mem.trim(u8, line, " ");
-
-        if (mem.startsWith(u8, raw, "@implicitweights")) {
-            raw = raw[17..]; // 17 == length of "@implicitweights "
-            const semi = mem.indexOf(u8, raw, ";").?;
-            const ch_range = raw[0..semi];
-            const base = raw[semi + 1 ..];
-
-            const dots = mem.indexOf(u8, ch_range, "..").?;
-            const range_start = ch_range[0..dots];
-            const range_end = ch_range[dots + 2 ..];
-
-            try self.implicits.append(.{
-                .base = try fmt.parseInt(u21, base, 16),
-                .start = try fmt.parseInt(u21, range_start, 16),
-                .end = try fmt.parseInt(u21, range_end, 16),
-            });
-
-            continue; // next line.
-        }
-
-        const semi = mem.indexOf(u8, raw, ";").?;
-        const cp_strs = raw[0..semi];
-        var cp_strs_iter = mem.split(cp_strs, " ");
-        var cp_list: [3]?u21 = [_]?u21{null} ** 3;
-        var i: usize = 0;
-
-        while (cp_strs_iter.next()) |cp_str| : (i += 1) {
-            cp_list[i] = try fmt.parseInt(u21, cp_str, 16);
-        }
-
-        const ce_strs = raw[semi + 1 ..];
-        var ce_strs_iter = mem.split(ce_strs, ";");
-        var elements = [_]?Trie.Element{null} ** 18;
-        i = 0;
-
-        while (ce_strs_iter.next()) |ce_str| : (i += 1) {
-            var w_strs_iter = mem.split(ce_str, ".");
-
-            elements[i] = Trie.Element{
-                .l1 = try fmt.parseInt(u16, w_strs_iter.next().?, 16),
-                .l2 = try fmt.parseInt(u16, w_strs_iter.next().?, 16),
-                .l3 = try fmt.parseInt(u16, w_strs_iter.next().?, 16),
-            };
-        }
-
-        try self.table.add(cp_list, elements);
-    }
-}
-
-pub fn collationElements(self: *Self, normalized: []const u21) ![]Trie.Element {
-    var all_elements = std.ArrayList(Trie.Element).init(&self.arena.allocator);
+pub fn collationElements(self: *Self, normalized: []const u21) ![]AllKeysFile.Element {
+    var all_elements = std.ArrayList(AllKeysFile.Element).init(&self.arena.allocator);
 
     var code_points = normalized;
     var code_points_len = code_points.len;
@@ -181,7 +120,7 @@ pub fn collationElements(self: *Self, normalized: []const u21) ![]Trie.Element {
     return all_elements.toOwnedSlice();
 }
 
-pub fn sortKeyFromCollationElements(self: *Self, collation_elements: []Trie.Element) ![]const u16 {
+pub fn sortKeyFromCollationElements(self: *Self, collation_elements: []AllKeysFile.Element) ![]const u16 {
     var sort_key = std.ArrayList(u16).init(&self.arena.allocator);
 
     var level: usize = 0;
@@ -209,7 +148,7 @@ pub fn sortKey(self: *Self, str: []const u8) ![]const u16 {
     return self.sortKeyFromCollationElements(collation_elements);
 }
 
-pub fn implicitWeight(self: Self, cp: u21) Trie.Elements {
+pub fn implicitWeight(self: Self, cp: u21) AllKeysFile.Elements {
     var base: u21 = 0;
     var aaaa: ?u21 = null;
     var bbbb: u21 = 0;
@@ -227,7 +166,7 @@ pub fn implicitWeight(self: Self, cp: u21) Trie.Elements {
         aaaa = base + (cp >> 15);
         bbbb = (cp & 0x7FFF) | 0x8000;
     } else {
-        for (self.implicits.items) |weights| {
+        for (self.implicits) |weights| {
             if (cp >= weights.start and cp <= weights.end) {
                 aaaa = weights.base;
                 if (cp >= 0x18D00 and cp <= 0x18D8F) {
@@ -246,7 +185,7 @@ pub fn implicitWeight(self: Self, cp: u21) Trie.Elements {
         }
     }
 
-    var elements = [_]?Trie.Element{null} ** 18;
+    var elements = [_]?AllKeysFile.Element{null} ** 18;
     elements[0] = .{ .l1 = @truncate(u16, aaaa.?), .l2 = 0x0020, .l3 = 0x0002 };
     elements[1] = .{ .l1 = @truncate(u16, bbbb), .l2 = 0x0000, .l3 = 0x0000 };
     return elements;
