@@ -153,26 +153,20 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
             i += 1;
         }
 
-        var coll_elements = std.ArrayList(Element).init(allocator);
-        defer coll_elements.deinit();
         const ce_strs = mem.trim(u8, raw[semi + 1 ..], " ");
         var ce_strs_iter = mem.split(ce_strs[1 .. ce_strs.len - 1], "]["); // no ^[. or ^[* or ]$
 
+        var elements: Elements = std.mem.zeroes(Elements);
         while (ce_strs_iter.next()) |ce_str| {
             const just_levels = ce_str[1..];
             var w_strs_iter = mem.split(just_levels, ".");
 
-            try coll_elements.append(Element{
+            elements.items[elements.len] = Element{
                 .l1 = try fmt.parseInt(u16, w_strs_iter.next().?, 16),
                 .l2 = try fmt.parseInt(u16, w_strs_iter.next().?, 16),
                 .l3 = try fmt.parseInt(u16, w_strs_iter.next().?, 16),
-            });
-        }
-
-        var elements: Elements = std.mem.zeroes(Elements);
-        elements.len = @intCast(u5, coll_elements.items.len);
-        for (coll_elements.items) |element, j| {
-            elements.items[j] = element;
+            };
+            elements.len += 1;
         }
 
         try entries.append(Entry{ .key = cp_list, .value = elements });
