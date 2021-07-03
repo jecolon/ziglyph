@@ -160,12 +160,15 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
 // A UDDC opcode for an allkeys file.
 const Opcode = enum(u4) {
     // Sets an incrementor for the key, incrementing the key by this much on each emission.
+    // 10690 instances
     inc_key,
 
     // Sets the value register.
+    // 31001 instances
     set_value,
 
     // Emits a single value.
+    // 31001 instances
     emit,
 
     // Denotes the end of the opcode stream. This is so that we don't need to encode the total
@@ -211,7 +214,12 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
         if (diff.key.len != 0 or !std.mem.eql(u21, diff.key.items[0..], incrementor.key.items[0..])) {
             try out.writeBits(@enumToInt(Opcode.inc_key), @bitSizeOf(Opcode));
             try out.writeBits(entry.key.len, 2);
-            for (diff.key.items) |kv| try out.writeBits(kv, 21);
+            var diff_key_len: u2 = 0;
+            for (diff.key.items) |kv, i| {
+                if (kv != 0) diff_key_len = @intCast(u2, i + 1);
+            }
+            try out.writeBits(diff_key_len, 2);
+            for (diff.key.items[0..diff_key_len]) |kv| try out.writeBits(kv, 21);
             incrementor.key = diff.key;
         }
 
@@ -271,10 +279,12 @@ pub fn decompress(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
         switch (op) {
             .inc_key => {
                 registers.key.len = try in.readBitsNoEof(u2, 2);
+                var inc_key_len = try in.readBitsNoEof(u2, 2);
                 var j: usize = 0;
-                while (j < 3) : (j += 1) {
+                while (j < inc_key_len) : (j += 1) {
                     incrementor.key.items[j] = try in.readBitsNoEof(u21, 21);
                 }
+                while (j < 3) : (j += 1) incrementor.key.items[j] = 0;
             },
             .set_value => {
                 registers.value.len = try in.readBitsNoEof(u5, 5);
