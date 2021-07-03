@@ -84,6 +84,16 @@ pub const Elements = struct {
 pub const Key = struct {
     len: u2,
     items: [3]u21,
+
+    fn maxBitSize(self: Key) u6 {
+        var bit_size: u6 = 0;
+        for (self.items) |v| {
+            while (v >= @as(usize, 1) << bit_size) {
+                bit_size += 1;
+            }
+        }
+        return bit_size;
+    }
 };
 
 pub const Implicit = struct {
@@ -182,15 +192,15 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
 // A UDDC opcode for an allkeys file.
 const Opcode = enum(u4) {
     // Sets an incrementor for the key register, incrementing the key by this much on each emission.
-    // 10690 instances, 39990 bytes
+    // 10690 instances, 13,480.5 bytes
     inc_key,
 
     // Sets an incrementor for the value register, incrementing the value by this much on each emission.
-    // 7668 instances
+    // 7668 instances, 62,970 bytes
     inc_value,
 
     // Emits a single value.
-    // 31001 instances
+    // 31001 instances, 15,500.5 bytes
     emit,
 
     // Denotes the end of the opcode stream. This is so that we don't need to encode the total
@@ -234,6 +244,7 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
         //continue;
 
         if (diff.key.len != 0 or !std.mem.eql(u21, diff.key.items[0..], incrementor.key.items[0..])) {
+            const max_bit_size = diff.key.maxBitSize();
             try out.writeBits(@enumToInt(Opcode.inc_key), @bitSizeOf(Opcode));
             try out.writeBits(entry.key.len, 2);
             var diff_key_len: u2 = 0;
@@ -241,7 +252,8 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
                 if (kv != 0) diff_key_len = @intCast(u2, i + 1);
             }
             try out.writeBits(diff_key_len, 2);
-            for (diff.key.items[0..diff_key_len]) |kv| try out.writeBits(kv, 21);
+            try out.writeBits(max_bit_size, 6);
+            for (diff.key.items[0..diff_key_len]) |kv| try out.writeBits(kv, max_bit_size);
             incrementor.key = diff.key;
         }
 
@@ -312,9 +324,10 @@ pub fn decompress(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
             .inc_key => {
                 registers.key.len = try in.readBitsNoEof(u2, 2);
                 var inc_key_len = try in.readBitsNoEof(u2, 2);
+                const max_bit_size = try in.readBitsNoEof(u6, 6);
                 var j: usize = 0;
                 while (j < inc_key_len) : (j += 1) {
-                    incrementor.key.items[j] = try in.readBitsNoEof(u21, 21);
+                    incrementor.key.items[j] = try in.readBitsNoEof(u21, max_bit_size);
                 }
                 while (j < 3) : (j += 1) incrementor.key.items[j] = 0;
             },
