@@ -31,7 +31,7 @@ pub fn init(allocator: *mem.Allocator, allkeys: []const u8, normalizer: *Normali
         .table = Trie.init(allocator),
     };
 
-    var file = try AllKeysFile.parseFile(allocator, allkeys);
+    var file = try AllKeysFile.decompressFile(allocator, allkeys);
     defer file.deinit();
     while (file.next()) |entry| {
         try self.table.add(entry.key, entry.value);
@@ -300,7 +300,7 @@ test "Collator keyLevelCmp" {
     var allocator = std.testing.allocator;
     var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.bin");
     defer normalizer.deinit();
-    var collator = try init(allocator, "src/data/uca/allkeys.txt", &normalizer);
+    var collator = try init(allocator, "src/data/uca/allkeys.bin", &normalizer);
     defer collator.deinit();
 
     var key_a = try collator.sortKey("cab");
@@ -373,7 +373,7 @@ test "Collator sort" {
     var allocator = std.testing.allocator;
     var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.bin");
     defer normalizer.deinit();
-    var collator = try init(allocator, "src/data/uca/allkeys.txt", &normalizer);
+    var collator = try init(allocator, "src/data/uca/allkeys.bin", &normalizer);
     defer collator.deinit();
 
     try testing.expect(collator.tertiaryAsc("abc", "def"));
@@ -432,7 +432,7 @@ test "Collator UCA" {
 
     var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.bin");
     defer normalizer.deinit();
-    var collator = try init(allocator, "src/data/uca/allkeys.txt", &normalizer);
+    var collator = try init(allocator, "src/data/uca/allkeys.bin", &normalizer);
     defer collator.deinit();
     var cp_buf: [4]u8 = undefined;
 
