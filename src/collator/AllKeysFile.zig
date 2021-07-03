@@ -27,32 +27,13 @@ pub const Entry = struct {
     key: Key,
     value: Elements,
 
-    pub fn keyLen(self: Entry) u2 {
-        var i: u2 = 0;
-        for (self.key) |k| {
-            if (k) |kv| i += 1 else break;
-        }
-        return i;
-    }
-
     // Calculates the difference of each optional integral value in this entry.
     pub fn diff(self: Entry, other: Entry) Entry {
         // Determine difference in key values.
         var d: Entry = undefined;
-        for (self.key) |k, i| {
-            if (k) |self_kv| {
-                if (other.key[i]) |other_kv| {
-                    d.key[i] = self_kv -% other_kv; // self -> other
-                } else {
-                    d.key[i] = null; // self -> null
-                }
-            } else {
-                if (other.key[i]) |other_kv| {
-                    d.key[i] = other_kv; // null -> other
-                } else {
-                    d.key[i] = null; // null -> null
-                }
-            }
+        d.key.len = self.key.len -% other.key.len;
+        for (self.key.items) |k, i| {
+            d.key.items[i] = k -% other.key.items[i];
         }
 
         // Determine difference in element values.
@@ -78,7 +59,10 @@ pub const Elements = struct {
     len: u5,
     items: [18]Element,
 };
-pub const Key = [3]?u21;
+pub const Key = struct {
+    len: u2,
+    items: [3]u21,
+};
 
 pub const Implicit = struct {
     base: u21,
@@ -143,14 +127,12 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
         const semi = mem.indexOf(u8, raw, ";").?;
         const cp_strs = mem.trim(u8, raw[0..semi], " ");
         var cp_strs_iter = mem.split(cp_strs, " ");
-        var cp_list: [3]?u21 = [_]?u21{null} ** 3;
-        var i: usize = 0;
-
+        var key: Key = std.mem.zeroes(Key);
         while (cp_strs_iter.next()) |cp_str| {
             const cp = try fmt.parseInt(u21, cp_str, 16);
             if (!NFDCheck.isNFD(cp)) continue :lines; // Skip non-NFD.
-            cp_list[i] = cp;
-            i += 1;
+            key.items[key.len] = cp;
+            key.len += 1;
         }
 
         const ce_strs = mem.trim(u8, raw[semi + 1 ..], " ");
@@ -169,7 +151,7 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
             elements.len += 1;
         }
 
-        try entries.append(Entry{ .key = cp_list, .value = elements });
+        try entries.append(Entry{ .key = key, .value = elements });
     }
 
     return AllKeysFile{ .iter = 0, .entries = entries, .implicits = implicits };
@@ -226,12 +208,8 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
         //continue;
 
         try out.writeBits(@enumToInt(Opcode.set_key), @bitSizeOf(Opcode));
-        try out.writeBits(entry.keyLen(), 2);
-        for (entry.key) |k| {
-            if (k) |kv| {
-                try out.writeBits(kv, 21);
-            } else break;
-        }
+        try out.writeBits(entry.key.len, 2);
+        for (entry.key.items[0..entry.key.len]) |kv| try out.writeBits(kv, 21);
 
         try out.writeBits(@enumToInt(Opcode.set_value), @bitSizeOf(Opcode));
         try out.writeBits(entry.value.len, 5);
@@ -285,13 +263,13 @@ pub fn decompress(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
 
         switch (op) {
             .set_key => {
-                const key_len = try in.readBitsNoEof(u2, 2);
+                registers.key.len = try in.readBitsNoEof(u2, 2);
                 var j: usize = 0;
-                while (j < key_len) : (j += 1) {
-                    registers.key[j] = try in.readBitsNoEof(u21, 21);
-                }
                 while (j < registers.key.len) : (j += 1) {
-                    registers.key[j] = null;
+                    registers.key.items[j] = try in.readBitsNoEof(u21, 21);
+                }
+                while (j < registers.key.items.len) : (j += 1) {
+                    registers.key.items[j] = 0;
                 }
             },
             .set_value => {
