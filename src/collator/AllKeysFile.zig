@@ -58,6 +58,16 @@ pub const Element = struct {
 pub const Elements = struct {
     len: u5,
     items: [18]Element,
+
+    fn allItemsEql(self: Elements, other: Elements) bool {
+        for (self.items) |a, i| {
+            const b = other.items[i];
+            if (a.l1 != b.l1 or a.l2 != b.l2 or a.l3 != b.l3) {
+                return false;
+            }
+        }
+        return true;
+    }
 };
 pub const Key = struct {
     len: u2,
@@ -159,13 +169,13 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
 
 // A UDDC opcode for an allkeys file.
 const Opcode = enum(u4) {
-    // Sets an incrementor for the key, incrementing the key by this much on each emission.
-    // 10690 instances
+    // Sets an incrementor for the key register, incrementing the key by this much on each emission.
+    // 10690 instances, 39990 bytes
     inc_key,
 
-    // Sets the value register.
+    // Sets an incrementor for the value register, incrementing the value by this much on each emission.
     // 31001 instances
-    set_value,
+    inc_value,
 
     // Emits a single value.
     // 31001 instances
@@ -223,12 +233,20 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
             incrementor.key = diff.key;
         }
 
-        try out.writeBits(@enumToInt(Opcode.set_value), @bitSizeOf(Opcode));
-        try out.writeBits(entry.value.len, 5);
-        for (entry.value.items[0..entry.value.len]) |ev| {
-            try out.writeBits(ev.l1, 16);
-            try out.writeBits(ev.l2, 16);
-            try out.writeBits(ev.l3, 16);
+        if (diff.value.len != 0 or !diff.value.allItemsEql(incrementor.value)) {
+            try out.writeBits(@enumToInt(Opcode.inc_value), @bitSizeOf(Opcode));
+            try out.writeBits(entry.value.len, 5);
+            var diff_value_len: u5 = 0;
+            for (diff.value.items) |ev, i| {
+                if (ev.l1 != 0 or ev.l2 != 0 or ev.l3 != 0) diff_value_len = @intCast(u5, i + 1);
+            }
+            try out.writeBits(diff_value_len, 5);
+            for (diff.value.items[0..diff_value_len]) |ev| {
+                try out.writeBits(ev.l1, 16);
+                try out.writeBits(ev.l2, 16);
+                try out.writeBits(ev.l3, 16);
+            }
+            incrementor.value = diff.value;
         }
 
         try out.writeBits(@enumToInt(Opcode.emit), @bitSizeOf(Opcode));
@@ -286,22 +304,26 @@ pub fn decompress(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
                 }
                 while (j < 3) : (j += 1) incrementor.key.items[j] = 0;
             },
-            .set_value => {
+            .inc_value => {
                 registers.value.len = try in.readBitsNoEof(u5, 5);
+                var inc_value_len = try in.readBitsNoEof(u5, 5);
                 var j: usize = 0;
-                while (j < registers.value.len) : (j += 1) {
+                while (j < inc_value_len) : (j += 1) {
                     var ev: Element = undefined;
                     ev.l1 = try in.readBitsNoEof(u16, 16);
                     ev.l2 = try in.readBitsNoEof(u16, 16);
                     ev.l3 = try in.readBitsNoEof(u16, 16);
-                    registers.value.items[j] = ev;
+                    incrementor.value.items[j] = ev;
                 }
-                while (j < registers.value.items.len) : (j += 1) {
-                    registers.value.items[j] = std.mem.zeroes(Element);
-                }
+                while (j < 18) : (j += 1) incrementor.value.items[j] = std.mem.zeroes(Element);
             },
             .emit => {
                 for (incrementor.key.items) |k, i| registers.key.items[i] +%= k;
+                for (incrementor.value.items) |v, i| {
+                    registers.value.items[i].l1 +%= v.l1;
+                    registers.value.items[i].l2 +%= v.l2;
+                    registers.value.items[i].l3 +%= v.l3;
+                }
                 try entries.append(registers);
             },
             .eof => break,
@@ -336,7 +358,7 @@ test "compression_is_lossless" {
     try testing.expectEqualSlices(Implicit, file.implicits.items, decompressed.implicits.items);
     while (file.next()) |expected| {
         var actual = decompressed.next().?;
-        // std.debug.print("{}\n{}\n\n", .{expected, actual});
+        //std.debug.print("{}\n{}\n\n", .{expected, actual});
         try testing.expectEqual(expected, actual);
     }
 }
