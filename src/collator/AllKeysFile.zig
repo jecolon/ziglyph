@@ -190,7 +190,7 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
 }
 
 // A UDDC opcode for an allkeys file.
-const Opcode = enum(u4) {
+const Opcode = enum(u3) {
     // Sets an incrementor for the key register, incrementing the key by this much on each emission.
     // 10690 instances, 13,480.5 bytes
     inc_key,
@@ -201,7 +201,11 @@ const Opcode = enum(u4) {
 
     // Emits a single value.
     // 31001 instances, 15,500.5 bytes
-    emit,
+    emit_1,
+    emit_2,
+    emit_4,
+    emit_8,
+    emit_32,
 
     // Denotes the end of the opcode stream. This is so that we don't need to encode the total
     // number of opcodes in the stream up front (note also the file is bit packed: there may be
@@ -233,6 +237,16 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
     // real entry.
     var registers = std.mem.zeroes(Entry);
     var incrementor = std.mem.zeroes(Entry);
+    var emissions: usize = 0;
+    comptime var flush_emissions = struct {
+        fn flush_emissions(pending: *usize, _out: anytype) !void {
+            while (pending.* >= 32) : (pending.* -= 32) try _out.writeBits(@enumToInt(Opcode.emit_32), @bitSizeOf(Opcode));
+            while (pending.* >= 8) : (pending.* -= 8) try _out.writeBits(@enumToInt(Opcode.emit_8), @bitSizeOf(Opcode));
+            while (pending.* >= 4) : (pending.* -= 4) try _out.writeBits(@enumToInt(Opcode.emit_4), @bitSizeOf(Opcode));
+            while (pending.* >= 2) : (pending.* -= 2) try _out.writeBits(@enumToInt(Opcode.emit_2), @bitSizeOf(Opcode));
+            while (pending.* >= 1) : (pending.* -= 1) try _out.writeBits(@enumToInt(Opcode.emit_1), @bitSizeOf(Opcode));
+        }
+    }.flush_emissions;
     while (self.next()) |entry| {
         // Determine what has changed between this entry and the current registers' state.
         const diff = entry.diff(registers);
@@ -244,6 +258,8 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
         //continue;
 
         if (diff.key.len != 0 or !std.mem.eql(u21, diff.key.items[0..], incrementor.key.items[0..])) {
+            try flush_emissions(&emissions, &out);
+
             const max_bit_size = diff.key.maxBitSize();
             try out.writeBits(@enumToInt(Opcode.inc_key), @bitSizeOf(Opcode));
             try out.writeBits(entry.key.len, 2);
@@ -258,6 +274,8 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
         }
 
         if (diff.value.len != 0 or !diff.value.allItemsEql(incrementor.value)) {
+            try flush_emissions(&emissions, &out);
+
             const max_bit_size = diff.value.maxBitSize();
             try out.writeBits(@enumToInt(Opcode.inc_value), @bitSizeOf(Opcode));
             try out.writeBits(entry.value.len, 5);
@@ -275,10 +293,11 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
             incrementor.value = diff.value;
         }
 
-        try out.writeBits(@enumToInt(Opcode.emit), @bitSizeOf(Opcode));
-
+        emissions += 1;
         registers = entry;
     }
+    try flush_emissions(&emissions, &out);
+
     try out.writeBits(@enumToInt(Opcode.eof), @bitSizeOf(Opcode));
     try out.flushBits();
     try buf_writer.flush();
@@ -345,14 +364,25 @@ pub fn decompress(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
                 }
                 while (j < 18) : (j += 1) incrementor.value.items[j] = std.mem.zeroes(Element);
             },
-            .emit => {
-                for (incrementor.key.items) |k, i| registers.key.items[i] +%= k;
-                for (incrementor.value.items) |v, i| {
-                    registers.value.items[i].l1 +%= v.l1;
-                    registers.value.items[i].l2 +%= v.l2;
-                    registers.value.items[i].l3 +%= v.l3;
+            .emit_1, .emit_2, .emit_4, .emit_8, .emit_32 => {
+                var emissions: usize = switch (op) {
+                    .emit_1 => 1,
+                    .emit_2 => 2,
+                    .emit_4 => 4,
+                    .emit_8 => 8,
+                    .emit_32 => 32,
+                    else => unreachable,
+                };
+                var j: usize = 0;
+                while (j < emissions) : (j += 1) {
+                    for (incrementor.key.items) |k, i| registers.key.items[i] +%= k;
+                    for (incrementor.value.items) |v, i| {
+                        registers.value.items[i].l1 +%= v.l1;
+                        registers.value.items[i].l2 +%= v.l2;
+                        registers.value.items[i].l3 +%= v.l3;
+                    }
+                    try entries.append(registers);
                 }
-                try entries.append(registers);
             },
             .eof => break,
         }
