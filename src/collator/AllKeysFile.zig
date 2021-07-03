@@ -27,6 +27,22 @@ pub const Entry = struct {
     key: Key,
     value: Elements,
 
+    pub fn keyLen(self: Entry) u2 {
+        var i: u2 = 0;
+        for (self.key) |k| {
+            if (k) |kv| i += 1 else break;
+        }
+        return i;
+    }
+
+    pub fn valueLen(self: Entry) u5 {
+        var i: u5 = 0;
+        for (self.value) |v| {
+            if (v) |ev| i += 1 else break;
+        }
+        return i;
+    }
+
     // Calculates the difference of each optional integral value in this entry.
     pub fn diff(self: Entry, other: Entry) Entry {
         // Determine difference in key values.
@@ -232,25 +248,21 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
         //continue;
 
         try out.writeBits(@enumToInt(Opcode.set_key), @bitSizeOf(Opcode));
+        try out.writeBits(entry.keyLen(), 2);
         for (entry.key) |k| {
             if (k) |kv| {
-                try out.writeBits(@as(u1, 1), 1);
                 try out.writeBits(kv, 21);
-                continue;
-            }
-            try out.writeBits(@as(u1, 0), 1);
+            } else break;
         }
 
         try out.writeBits(@enumToInt(Opcode.set_value), @bitSizeOf(Opcode));
+        try out.writeBits(entry.valueLen(), 5);
         for (entry.value) |elem| {
             if (elem) |ev| {
-                try out.writeBits(@as(u1, 1), 1);
                 try out.writeBits(ev.l1, 16);
                 try out.writeBits(ev.l2, 16);
                 try out.writeBits(ev.l3, 16);
-                continue;
-            }
-            try out.writeBits(@as(u1, 0), 1);
+            } else break;
         }
 
         try out.writeBits(@enumToInt(Opcode.emit), @bitSizeOf(Opcode));
@@ -297,25 +309,27 @@ pub fn decompress(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
 
         switch (op) {
             .set_key => {
+                const key_len = try in.readBitsNoEof(u2, 2);
                 var j: usize = 0;
+                while (j < key_len) : (j += 1) {
+                    registers.key[j] = try in.readBitsNoEof(u21, 21);
+                }
                 while (j < registers.key.len) : (j += 1) {
-                    var optional = try in.readBitsNoEof(u1, 1);
-                    if (optional != 0) {
-                        registers.key[j] = try in.readBitsNoEof(u21, 21);
-                    } else registers.key[j] = null;
+                    registers.key[j] = null;
                 }
             },
             .set_value => {
+                const value_len = try in.readBitsNoEof(u5, 5);
                 var j: usize = 0;
+                while (j < value_len) : (j += 1) {
+                    var ev: Element = undefined;
+                    ev.l1 = try in.readBitsNoEof(u16, 16);
+                    ev.l2 = try in.readBitsNoEof(u16, 16);
+                    ev.l3 = try in.readBitsNoEof(u16, 16);
+                    registers.value[j] = ev;
+                }
                 while (j < registers.value.len) : (j += 1) {
-                    var optional = try in.readBitsNoEof(u1, 1);
-                    if (optional != 0) {
-                        var ev: Element = undefined;
-                        ev.l1 = try in.readBitsNoEof(u16, 16);
-                        ev.l2 = try in.readBitsNoEof(u16, 16);
-                        ev.l3 = try in.readBitsNoEof(u16, 16);
-                        registers.value[j] = ev;
-                    } else registers.value[j] = null;
+                    registers.value[j] = null;
                 }
             },
             .emit => {
