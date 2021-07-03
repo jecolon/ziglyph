@@ -68,6 +68,18 @@ pub const Elements = struct {
         }
         return true;
     }
+
+    fn maxBitSize(self: Elements) u6 {
+        var bit_size: u6 = 0;
+        for (self.items) |v| {
+            var max_value = @as(usize, 1) << bit_size;
+            while (v.l1 >= max_value or v.l2 >= max_value or v.l3 >= max_value) {
+                bit_size += 1;
+                max_value = @as(usize, 1) << bit_size;
+            }
+        }
+        return bit_size;
+    }
 };
 pub const Key = struct {
     len: u2,
@@ -174,7 +186,7 @@ const Opcode = enum(u4) {
     inc_key,
 
     // Sets an incrementor for the value register, incrementing the value by this much on each emission.
-    // 31001 instances
+    // 7668 instances
     inc_value,
 
     // Emits a single value.
@@ -234,6 +246,7 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
         }
 
         if (diff.value.len != 0 or !diff.value.allItemsEql(incrementor.value)) {
+            const max_bit_size = diff.value.maxBitSize();
             try out.writeBits(@enumToInt(Opcode.inc_value), @bitSizeOf(Opcode));
             try out.writeBits(entry.value.len, 5);
             var diff_value_len: u5 = 0;
@@ -241,10 +254,11 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
                 if (ev.l1 != 0 or ev.l2 != 0 or ev.l3 != 0) diff_value_len = @intCast(u5, i + 1);
             }
             try out.writeBits(diff_value_len, 5);
+            try out.writeBits(max_bit_size, 6);
             for (diff.value.items[0..diff_value_len]) |ev| {
-                try out.writeBits(ev.l1, 16);
-                try out.writeBits(ev.l2, 16);
-                try out.writeBits(ev.l3, 16);
+                try out.writeBits(ev.l1, max_bit_size);
+                try out.writeBits(ev.l2, max_bit_size);
+                try out.writeBits(ev.l3, max_bit_size);
             }
             incrementor.value = diff.value;
         }
@@ -306,13 +320,14 @@ pub fn decompress(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
             },
             .inc_value => {
                 registers.value.len = try in.readBitsNoEof(u5, 5);
-                var inc_value_len = try in.readBitsNoEof(u5, 5);
+                const inc_value_len = try in.readBitsNoEof(u5, 5);
+                const max_bit_size = try in.readBitsNoEof(u6, 6);
                 var j: usize = 0;
                 while (j < inc_value_len) : (j += 1) {
                     var ev: Element = undefined;
-                    ev.l1 = try in.readBitsNoEof(u16, 16);
-                    ev.l2 = try in.readBitsNoEof(u16, 16);
-                    ev.l3 = try in.readBitsNoEof(u16, 16);
+                    ev.l1 = try in.readBitsNoEof(u16, max_bit_size);
+                    ev.l2 = try in.readBitsNoEof(u16, max_bit_size);
+                    ev.l3 = try in.readBitsNoEof(u16, max_bit_size);
                     incrementor.value.items[j] = ev;
                 }
                 while (j < 18) : (j += 1) incrementor.value.items[j] = std.mem.zeroes(Element);
