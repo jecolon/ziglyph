@@ -12,6 +12,7 @@ const Normalizer = @import("../components.zig").Normalizer;
 const Props = @import("../components.zig").PropList;
 const Trie = @import("CollatorTrie.zig");
 const AllKeysFile = @import("AllKeysFile.zig");
+const Elements = @import("AllKeysFile.zig").Elements;
 
 allocator: *mem.Allocator,
 arena: std.heap.ArenaAllocator,
@@ -98,8 +99,8 @@ pub fn collationElements(self: *Self, normalized: []const u21) ![]AllKeysFile.El
                 code_points = tmp;
                 code_points_len = code_points.len;
                 // Add elements to final collection.
-                for (new_lookup.value.?) |element| {
-                    if (element) |e| try all_elements.append(e);
+                for (new_lookup.value.?.items[0..new_lookup.value.?.len]) |element| {
+                    try all_elements.append(element);
                 }
                 continue;
             }
@@ -110,8 +111,8 @@ pub fn collationElements(self: *Self, normalized: []const u21) ![]AllKeysFile.El
         }
 
         // Add elements to final collection.
-        for (elements.?) |element| {
-            if (element) |e| try all_elements.append(e);
+        for (elements.?.items[0..elements.?.len]) |element| {
+            try all_elements.append(element);
         }
 
         cp_index += lookup.index + 1;
@@ -185,9 +186,10 @@ pub fn implicitWeight(self: Self, cp: u21) AllKeysFile.Elements {
         }
     }
 
-    var elements = [_]?AllKeysFile.Element{null} ** 18;
-    elements[0] = .{ .l1 = @truncate(u16, aaaa.?), .l2 = 0x0020, .l3 = 0x0002 };
-    elements[1] = .{ .l1 = @truncate(u16, bbbb), .l2 = 0x0000, .l3 = 0x0000 };
+    var elements: Elements = undefined;
+    elements.len = 2;
+    elements.items[0] = .{ .l1 = @truncate(u16, aaaa.?), .l2 = 0x0020, .l3 = 0x0002 };
+    elements.items[1] = .{ .l1 = @truncate(u16, bbbb), .l2 = 0x0000, .l3 = 0x0000 };
     return elements;
 }
 

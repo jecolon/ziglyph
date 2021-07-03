@@ -93,23 +93,25 @@ test "Collator Trie" {
     var trie = init(std.testing.allocator);
     defer trie.deinit();
 
-    var a1 = [_]?Element{null} ** 18;
-    a1[0] = .{ .l1 = 1, .l2 = 1, .l3 = 1 };
-    a1[1] = .{ .l1 = 2, .l2 = 2, .l3 = 2 };
-    var a2 = [_]?Element{null} ** 18;
-    a2[0] = .{ .l1 = 1, .l2 = 1, .l3 = 1 };
-    a2[1] = .{ .l1 = 2, .l2 = 2, .l3 = 2 };
-    a2[2] = .{ .l1 = 3, .l2 = 3, .l3 = 3 };
+    var a1: Elements = undefined;
+    a1.len = 2;
+    a1.items[0] = .{ .l1 = 1, .l2 = 1, .l3 = 1 };
+    a1.items[1] = .{ .l1 = 2, .l2 = 2, .l3 = 2 };
+    var a2: Elements = undefined;
+    a2.len = 3;
+    a2.items[0] = .{ .l1 = 1, .l2 = 1, .l3 = 1 };
+    a2.items[1] = .{ .l1 = 2, .l2 = 2, .l3 = 2 };
+    a2.items[2] = .{ .l1 = 3, .l2 = 3, .l3 = 3 };
 
     try trie.add([_]?u21{ 1, 2, null }, a1);
     try trie.add([_]?u21{ 1, 2, 3 }, a2);
 
     var lookup = trie.find(&[_]u21{ 1, 2 });
     try testing.expectEqual(@as(usize, 1), lookup.index);
-    try testing.expectEqualSlices(?Element, &a1, &lookup.value.?);
+    try testing.expectEqualSlices(Element, a1.items[0..a1.len], lookup.value.?.items[0..lookup.value.?.len]);
     lookup = trie.find(&[_]u21{ 1, 2, 3 });
     try testing.expectEqual(@as(usize, 2), lookup.index);
-    try testing.expectEqualSlices(?Element, &a2, &lookup.value.?);
+    try testing.expectEqualSlices(Element, a2.items[0..a2.len], lookup.value.?.items[0..lookup.value.?.len]);
     lookup = trie.find(&[_]u21{1});
     try testing.expectEqual(@as(usize, 0), lookup.index);
     try testing.expect(lookup.value == null);

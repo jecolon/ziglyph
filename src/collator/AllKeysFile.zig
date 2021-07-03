@@ -35,14 +35,6 @@ pub const Entry = struct {
         return i;
     }
 
-    pub fn valueLen(self: Entry) u5 {
-        var i: u5 = 0;
-        for (self.value) |v| {
-            if (v) |ev| i += 1 else break;
-        }
-        return i;
-    }
-
     // Calculates the difference of each optional integral value in this entry.
     pub fn diff(self: Entry, other: Entry) Entry {
         // Determine difference in key values.
@@ -64,25 +56,13 @@ pub const Entry = struct {
         }
 
         // Determine difference in element values.
-        for (self.value) |e, i| {
-            if (e) |self_ev| {
-                if (other.value[i]) |other_ev| {
-                    // self -> other
-                    d.value[i] = Element{
-                        .l1 = self_ev.l1 -% other_ev.l1,
-                        .l2 = self_ev.l2 -% other_ev.l2,
-                        .l3 = self_ev.l3 -% other_ev.l3,
-                    };
-                } else {
-                    d.value[i] = null; // self -> null
-                }
-            } else {
-                if (other.value[i]) |other_ev| {
-                    d.value[i] = other_ev; // null -> other
-                } else {
-                    d.value[i] = null; // null -> null
-                }
-            }
+        for (self.value.items) |e, i| {
+            d.value.len = self.value.len -% other.value.len;
+            d.value.items[i] = Element{
+                .l1 = e.l1 -% other.value.items[i].l1,
+                .l2 = e.l2 -% other.value.items[i].l2,
+                .l3 = e.l3 -% other.value.items[i].l3,
+            };
         }
         return d;
     }
@@ -94,7 +74,10 @@ pub const Element = struct {
     l3: u16,
 };
 
-pub const Elements = [18]?Element;
+pub const Elements = struct {
+    len: u5,
+    items: [18]Element,
+};
 pub const Key = [3]?u21;
 
 pub const Implicit = struct {
@@ -186,9 +169,10 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
             });
         }
 
-        var elements = [_]?Element{null} ** 18;
+        var elements: Elements = std.mem.zeroes(Elements);
+        elements.len = @intCast(u5, coll_elements.items.len);
         for (coll_elements.items) |element, j| {
-            elements[j] = element;
+            elements.items[j] = element;
         }
 
         try entries.append(Entry{ .key = cp_list, .value = elements });
@@ -256,13 +240,11 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
         }
 
         try out.writeBits(@enumToInt(Opcode.set_value), @bitSizeOf(Opcode));
-        try out.writeBits(entry.valueLen(), 5);
-        for (entry.value) |elem| {
-            if (elem) |ev| {
-                try out.writeBits(ev.l1, 16);
-                try out.writeBits(ev.l2, 16);
-                try out.writeBits(ev.l3, 16);
-            } else break;
+        try out.writeBits(entry.value.len, 5);
+        for (entry.value.items[0..entry.value.len]) |ev| {
+            try out.writeBits(ev.l1, 16);
+            try out.writeBits(ev.l2, 16);
+            try out.writeBits(ev.l3, 16);
         }
 
         try out.writeBits(@enumToInt(Opcode.emit), @bitSizeOf(Opcode));
@@ -319,17 +301,17 @@ pub fn decompress(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
                 }
             },
             .set_value => {
-                const value_len = try in.readBitsNoEof(u5, 5);
+                registers.value.len = try in.readBitsNoEof(u5, 5);
                 var j: usize = 0;
-                while (j < value_len) : (j += 1) {
+                while (j < registers.value.len) : (j += 1) {
                     var ev: Element = undefined;
                     ev.l1 = try in.readBitsNoEof(u16, 16);
                     ev.l2 = try in.readBitsNoEof(u16, 16);
                     ev.l3 = try in.readBitsNoEof(u16, 16);
-                    registers.value[j] = ev;
+                    registers.value.items[j] = ev;
                 }
-                while (j < registers.value.len) : (j += 1) {
-                    registers.value[j] = null;
+                while (j < registers.value.items.len) : (j += 1) {
+                    registers.value.items[j] = std.mem.zeroes(Element);
                 }
             },
             .emit => {
@@ -367,6 +349,7 @@ test "compression_is_lossless" {
     try testing.expectEqualSlices(Implicit, file.implicits.items, decompressed.implicits.items);
     while (file.next()) |expected| {
         var actual = decompressed.next().?;
+        // std.debug.print("{}\n{}\n\n", .{expected, actual});
         try testing.expectEqual(expected, actual);
     }
 }
