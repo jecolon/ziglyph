@@ -159,8 +159,8 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
 
 // A UDDC opcode for an allkeys file.
 const Opcode = enum(u4) {
-    // Sets the key register.
-    set_key,
+    // Sets an incrementor for the key, incrementing the key by this much on each emission.
+    inc_key,
 
     // Sets the value register.
     set_value,
@@ -197,6 +197,7 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
     // entry; we will emit opcodes to modify these registers into the desired form to produce a
     // real entry.
     var registers = std.mem.zeroes(Entry);
+    var incrementor = std.mem.zeroes(Entry);
     while (self.next()) |entry| {
         // Determine what has changed between this entry and the current registers' state.
         const diff = entry.diff(registers);
@@ -207,9 +208,12 @@ pub fn compressTo(self: *AllKeysFile, writer: anytype) !void {
         //registers = entry;
         //continue;
 
-        try out.writeBits(@enumToInt(Opcode.set_key), @bitSizeOf(Opcode));
-        try out.writeBits(entry.key.len, 2);
-        for (entry.key.items[0..entry.key.len]) |kv| try out.writeBits(kv, 21);
+        if (diff.key.len != 0 or !std.mem.eql(u21, diff.key.items[0..], incrementor.key.items[0..])) {
+            try out.writeBits(@enumToInt(Opcode.inc_key), @bitSizeOf(Opcode));
+            try out.writeBits(entry.key.len, 2);
+            for (diff.key.items) |kv| try out.writeBits(kv, 21);
+            incrementor.key = diff.key;
+        }
 
         try out.writeBits(@enumToInt(Opcode.set_value), @bitSizeOf(Opcode));
         try out.writeBits(entry.value.len, 5);
@@ -241,18 +245,21 @@ pub fn decompress(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
     var implicits = std.ArrayList(Implicit).init(allocator);
 
     // Implicits
-    var i: usize = 0;
-    while (i < 4) : (i += 1) {
-        var implicit: Implicit = undefined;
-        implicit.base = try in.readBitsNoEof(u21, 21);
-        implicit.start = try in.readBitsNoEof(u21, 21);
-        implicit.end = try in.readBitsNoEof(u21, 21);
-        try implicits.append(implicit);
+    {
+        var i: usize = 0;
+        while (i < 4) : (i += 1) {
+            var implicit: Implicit = undefined;
+            implicit.base = try in.readBitsNoEof(u21, 21);
+            implicit.start = try in.readBitsNoEof(u21, 21);
+            implicit.end = try in.readBitsNoEof(u21, 21);
+            try implicits.append(implicit);
+        }
     }
 
     // For the UDDC registers, we want one register to represent each possible value in a single
     // entry; each opcode we read will modify these registers so we can emit a value.
     var registers = std.mem.zeroes(Entry);
+    var incrementor = std.mem.zeroes(Entry);
 
     while (true) {
         // Read a single operation.
@@ -262,14 +269,11 @@ pub fn decompress(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
         //std.debug.print("{}\n", .{op});
 
         switch (op) {
-            .set_key => {
+            .inc_key => {
                 registers.key.len = try in.readBitsNoEof(u2, 2);
                 var j: usize = 0;
-                while (j < registers.key.len) : (j += 1) {
-                    registers.key.items[j] = try in.readBitsNoEof(u21, 21);
-                }
-                while (j < registers.key.items.len) : (j += 1) {
-                    registers.key.items[j] = 0;
+                while (j < 3) : (j += 1) {
+                    incrementor.key.items[j] = try in.readBitsNoEof(u21, 21);
                 }
             },
             .set_value => {
@@ -287,6 +291,7 @@ pub fn decompress(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
                 }
             },
             .emit => {
+                for (incrementor.key.items) |k, i| registers.key.items[i] +%= k;
                 try entries.append(registers);
             },
             .eof => break,
