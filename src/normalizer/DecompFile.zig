@@ -38,9 +38,18 @@
 //! | `Decompositions.bin.br` | 24,411         | 14,783        | -39.4% (-9,628 bytes)  |
 //! | `Decompositions.bin.gz` | 30,931         | 15,670        | -49.34% (15,261 bytes) |
 //! 
+//! Similarly, for allkeys.txt, we find a raw, uncompressed binary format results in a 365K file. With UDDC
+//! compression we reduce that down to just 99K, again beating brotli and gzip compression:
+//!
+//! | File                    | Before (bytes) | After (bytes) | Change                  |
+//! |-------------------------|----------------|---------------|-------------------------|
+//! | `allkeys.bin`           | 373,719        | 100,907       | -73.0% (-272,812 bytes) |
+//! | `allkeys.bin.br`        | 108,982        | 44,860        | -58.8% (-64,122 bytes)  |
+//! | `allkeys.bin.gz`        | 163,237        | 46,996        | -71.2% (-116,241 bytes) |
+//!
 //! * Before represents binary format without UDDC compression.
 //! * After represents binary format with UDDC compression.
-//! * `.br` represents `brotli <file>` compression
+//! * `.br` represents `brotli -9 <file>` compression
 //! * `.gz` represents `gzip -9 <file>` compression
 
 const std = @import("std");
@@ -59,7 +68,7 @@ pub const Entry = struct {
     key_len: usize,
     value: Decomp,
 
-    // Calculates the absolute difference of each integral value in this entry.
+    // Calculates the difference of each integral value in this entry.
     pub fn diff(self: Entry, other: Entry, value_form_diff: *u2) Entry {
         var d = Entry{
             .key = undefined,
@@ -259,6 +268,7 @@ pub fn compressTo(self: *DecompFile, writer: anytype) !void {
 
         // If you want to analyze the difference between entries, uncomment the following:
         //std.debug.print("diff={}\n", .{diff});
+        //registers = entry;
         //continue;
 
         // Infrequently changed: key_len, value.form, and value.len registers. Emit opcodes to

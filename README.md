@@ -188,9 +188,9 @@ The Unicode Collation Algorithm was developed to attend this area of string proc
 struct implements the algorithm, allowing for proper sorting and order comparison of Unicode strings.
 The `init` function requires the path to a file with derived Unicode sort keys. The full file of keys
 can be found at http://www.unicode.org/Public/UCA/latest/allkeys.txt . The derived copy of this file
-can be found in the `src/data/uca` directory. This derived copy is a minimal stripped-down version to
-reduce memory usage and binary size. `init` also takes a pointer to a `Normalizer` because collation
-depends on normaliztion.
+can be found in the `src/data/uca` directory. This derived copy is a minimal, stripped-down and compressed
+version to reduce memory usage and binary size. `init` also takes a pointer to a `Normalizer` because
+collation depends on normaliztion.
 
 ```
 const Collator = @import("Ziglyph").Collator;
@@ -199,7 +199,7 @@ test "Collation" {
     var allocator = std.testing.allocator;
     var normalizer = try Normalizer.init(allocator, "../libs/ziglyph/src/data/ucd/Decompositions.bin");
     defer normalizer.deinit();
-    var collator = try Collator.init(allocator, "../libs/ziglyph/src/data/uca/allkeys-minimal.txt", &normalizer);
+    var collator = try Collator.init(allocator, "../libs/ziglyph/src/data/uca/allkeys.bin", &normalizer);
     defer collator.deinit();
 
     // Collation weight levels overview:
