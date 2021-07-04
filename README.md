@@ -1,5 +1,5 @@
 # ziglyph
-Unicode processing with Zig, and a UTF-8 string type: [Zigstr](src/zigstr).
+Unicode text processing for the Zig Programming Language.
 
 ### Looking for an UTF-8 String Type?
 `Zigstr` is a UTF-8 string type that incorporates many of Ziglyph's Unicode processing tools. You can
@@ -85,7 +85,8 @@ provides code point and string normalization methods. This library currently onl
 performs full canonical and compatibility decomposition and normalization (NFD and NFKD). Future 
 versions may add more normalization forms. The `init` function takes an allocator and the path to the
 compressed `Decompositions.bin` file derived from the Unicode Character Database. A copy of this file
-is found in the `src/data/ucd` directory.
+is found in the `src/data/ucd` directory. See the section on Collation for more information on the 
+compression algorithm applied the the Unicode data files for both Normalization and Collation.
 
 ```zig
 const Normalizer = @import("Ziglyph").Normalizer;
