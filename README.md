@@ -115,6 +115,57 @@ test "normalizeTo" {
 }
 ```
 
+## Collation (String Ordering)
+One of the most common operations required by string processing is sorting and ordering comparisons.
+The Unicode Collation Algorithm was developed to attend this area of string processing. The `Collator`
+struct implements the algorithm, allowing for proper sorting and order comparison of Unicode strings.
+The `init` function requires the path to a file with derived Unicode sort keys. The full file of keys
+can be found [here](http://www.unicode.org/Public/UCA/latest/allkeys.txt). The derived copy of this file
+can be found in the `src/data/uca` directory. This derived copy is compressed with a novel compression
+algorithm developed by @slimsag / @hexops called Unicode Data Differential Compression (UDDC). The
+algorithm achieves extremely efficient compression of the large Unicode data files required for 
+Normalization and Collation. You can read more about it in 
+[this blog post](https://devlog.hexops.com/2021/unicode-data-file-compression).
+`init` also takes a pointer to a `Normalizer` because collation depends on normaliztion.
+
+```
+const Collator = @import("Ziglyph").Collator;
+
+test "Collation" {
+    var allocator = std.testing.allocator;
+    var normalizer = try Normalizer.init(allocator, "../libs/ziglyph/src/data/ucd/Decompositions.bin");
+    defer normalizer.deinit();
+    var collator = try Collator.init(allocator, "../libs/ziglyph/src/data/uca/allkeys.bin", &normalizer);
+    defer collator.deinit();
+
+    // Collation weight levels overview:
+    // * .primary: different letters.
+    // * .secondary: could be same letters but with marks (like accents) differ.
+    // * .tertiary: same letters and marks but case is different.
+    // So cab < dab at .primary, and cab < cáb at .secondary, and cáb < Cáb at .tertiary level.
+    testing.expect(collator.tertiaryAsc("abc", "def"));
+    testing.expect(collator.tertiaryDesc("def", "abc"));
+
+    // At only primary level, José and jose are equal because base letters are the same, only marks 
+    // and case differ, which are .secondary and .tertiary respectively.
+    testing.expect(try collator.orderFn("José", "jose", .primary, .eq));
+
+    // Full Unicode sort.
+    var strings: [3][]const u8 = .{ "xyz", "def", "abc" };
+    collator.sortAsc(&strings);
+    testing.expectEqual(strings[0], "abc");
+    testing.expectEqual(strings[1], "def");
+    testing.expectEqual(strings[2], "xyz");
+
+    // ASCII only binary sort. If you know the strings are ASCII only, this is much faster.
+    strings = .{ "xyz", "def", "abc" };
+    collator.sortAsciiAsc(&strings);
+    testing.expectEqual(strings[0], "abc");
+    testing.expectEqual(strings[1], "def");
+    testing.expectEqual(strings[2], "xyz");
+}
+```
+
 ## Grapheme Clusters
 Many programming languages and libraries provide a basic `Character` or `char` type to represent what
 we normally consider to be the characters that we see printed out composing strings of text. Unfortunately,
@@ -179,53 +230,5 @@ test "Code point / string widths" {
     const left_aligned = try Width.padRight(allocator, "w😊w", 10, "-");
     defer allocator.free(left_aligned);
     try expectEqualSlices(u8, "w😊w------", left_aligned);
-}
-```
-
-## Collation (String Ordering)
-One of the most common operations required by string processing is sorting and ordering comparisons.
-The Unicode Collation Algorithm was developed to attend this area of string processing. The `Collator`
-struct implements the algorithm, allowing for proper sorting and order comparison of Unicode strings.
-The `init` function requires the path to a file with derived Unicode sort keys. The full file of keys
-can be found at http://www.unicode.org/Public/UCA/latest/allkeys.txt . The derived copy of this file
-can be found in the `src/data/uca` directory. This derived copy is a minimal, stripped-down and compressed
-version to reduce memory usage and binary size. `init` also takes a pointer to a `Normalizer` because
-collation depends on normaliztion.
-
-```
-const Collator = @import("Ziglyph").Collator;
-
-test "Collation" {
-    var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator, "../libs/ziglyph/src/data/ucd/Decompositions.bin");
-    defer normalizer.deinit();
-    var collator = try Collator.init(allocator, "../libs/ziglyph/src/data/uca/allkeys.bin", &normalizer);
-    defer collator.deinit();
-
-    // Collation weight levels overview:
-    // * .primary: different letters.
-    // * .secondary: could be same letters but with marks (like accents) differ.
-    // * .tertiary: same letters and marks but case is different.
-    // So cab < dab at .primary, and cab < cáb at .secondary, and cáb < Cáb at .tertiary level.
-    testing.expect(collator.tertiaryAsc("abc", "def"));
-    testing.expect(collator.tertiaryDesc("def", "abc"));
-
-    // At only primary level, José and jose are equal because base letters are the same, only marks 
-    // and case differ, which are .secondary and .tertiary respectively.
-    testing.expect(try collator.orderFn("José", "jose", .primary, .eq));
-
-    // Full Unicode sort.
-    var strings: [3][]const u8 = .{ "xyz", "def", "abc" };
-    collator.sortAsc(&strings);
-    testing.expectEqual(strings[0], "abc");
-    testing.expectEqual(strings[1], "def");
-    testing.expectEqual(strings[2], "xyz");
-
-    // ASCII only binary sort. If you know the strings are ASCII only, this is much faster.
-    strings = .{ "xyz", "def", "abc" };
-    collator.sortAsciiAsc(&strings);
-    testing.expectEqual(strings[0], "abc");
-    testing.expectEqual(strings[1], "def");
-    testing.expectEqual(strings[2], "xyz");
 }
 ```
