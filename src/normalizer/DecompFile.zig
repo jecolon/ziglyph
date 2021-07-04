@@ -7,7 +7,10 @@
 //! UnicodeData.txt) and for sorting via the Unicode Collation Algorithm (allkeys.txt). It is
 //! designed to compress the files better than e.g. gzip or brotli by exploiting some properties
 //! unique to these data tables, but gzip or brotli on top can be complementary. See this issue
-//! for some motivations: https://github.com/jecolon/ziglyph/issues/3
+//! for some motivations: https://github.com/jecolon/ziglyph/issues/3 and the following blog post for
+//! some more insight into the general approach I took:
+//!
+//! https://devlog.hexops.com/2021/unicode-data-file-compression
 //!
 //! The compression technique is a form of differential encoding based on a state machine. The
 //! compressed file is a stream of opcodes that describe how to reproduce the original input file
