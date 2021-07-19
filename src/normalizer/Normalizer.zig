@@ -166,11 +166,9 @@ pub fn normalizeToCodePoints(self: *Self, form: Form, str: []const u8) anyerror!
 fn normalizeCodePointsToCodePoints(self: *Self, form: Form, code_points: []u21) anyerror![]u21 {
     // NFD Quick Check.
     if (form == .canon) {
-        var already_nfd = true;
-
-        for (code_points) |cp| {
-            if (!NFDCheck.isNFD(cp)) already_nfd = false;
-        }
+        const already_nfd = for (code_points) |cp| {
+            if (!NFDCheck.isNFD(cp)) break false;
+        } else true;
 
         // Already NFD, nothing more to do.
         if (already_nfd) {
