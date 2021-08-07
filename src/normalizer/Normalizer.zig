@@ -11,7 +11,7 @@ const isAsciiStr = @import("../ascii.zig").isAsciiStr;
 const CaseFoldMap = @import("../components.zig").CaseFoldMap;
 const CccMap = @import("../components.zig").CombiningMap;
 const HangulMap = @import("../components.zig").HangulMap;
-const NFDCheck = @import("../components.zig").NFDCheck;
+const NFDCheck = @import("../components.zig").DerivedNormalizationProps;
 
 const DecompFile = @import("DecompFile.zig");
 const Decomp = DecompFile.Decomp;

@@ -15,7 +15,7 @@ const fmt = std.fmt;
 const unicode = std.unicode;
 const testing = std.testing;
 
-const NFDCheck = @import("../components.zig").NFDCheck;
+const NFDCheck = @import("../components.zig").DerivedNormalizationProps;
 
 iter: usize,
 entries: std.ArrayList(Entry),
