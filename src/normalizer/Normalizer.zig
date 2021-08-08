@@ -574,7 +574,6 @@ test "Normalizer normalizeTo" {
                 const want = w_buf.items;
                 const got = try normalizer.normalizeTo(.composed, input);
                 try std.testing.expectEqualSlices(u8, want, got);
-                continue;
             } else if (field_index == 2) {
                 // NFD, time to test.
                 var w_buf = std.ArrayList(u8).init(allocator);
@@ -588,7 +587,19 @@ test "Normalizer normalizeTo" {
                 const want = w_buf.items;
                 const got = try normalizer.normalizeTo(.canon, input);
                 try std.testing.expectEqualSlices(u8, want, got);
-                continue;
+            } else if (field_index == 3) {
+                // NFKC, time to test.
+                var w_buf = std.ArrayList(u8).init(allocator);
+                defer w_buf.deinit();
+                var w_fields = mem.split(field, " ");
+                while (w_fields.next()) |s| {
+                    const wcp = try std.fmt.parseInt(u21, s, 16);
+                    const len = try unicode.utf8Encode(wcp, &cp_buf);
+                    try w_buf.appendSlice(cp_buf[0..len]);
+                }
+                const want = w_buf.items;
+                const got = try normalizer.normalizeTo(.komposed, input);
+                try std.testing.expectEqualSlices(u8, want, got);
             } else if (field_index == 4) {
                 // NFKD, time to test.
                 var w_buf = std.ArrayList(u8).init(allocator);
@@ -602,7 +613,6 @@ test "Normalizer normalizeTo" {
                 const want = w_buf.items;
                 const got = try normalizer.normalizeTo(.compat, input);
                 try std.testing.expectEqualSlices(u8, want, got);
-                continue;
             } else {
                 continue;
             }
