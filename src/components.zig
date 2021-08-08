@@ -22,6 +22,7 @@ pub const Normalizer = @import("normalizer/Normalizer.zig");
 
 // Auto-Generated
 pub const Blocks = @import("components/autogen/Blocks.zig");
+pub const Canonicals = @import("components/autogen/Canonicals.zig");
 pub const CaseFoldMap = @import("components/autogen/CaseFoldMap.zig");
 pub const CombiningMap = @import("components/autogen/CombiningMap.zig");
 pub const DerivedCoreProperties = @import("components/autogen/DerivedCoreProperties.zig");

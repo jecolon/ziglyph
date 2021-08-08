@@ -2,7 +2,7 @@
 //! Unicode Derived Normalization Properties.
 
 // isFcx returns true if `cp` has Full Composition Exclusion.
-pub fn isFxc(cp: u21) bool {
+pub fn isFcx(cp: u21) bool {
     return switch (cp) {
         0x0340...0x0341 => true,
         0x0343...0x0344 => true,

@@ -8,14 +8,14 @@ const sort = std.sort.sort;
 const unicode = std.unicode;
 
 const isAsciiStr = @import("../ascii.zig").isAsciiStr;
+const Canonicals = @import("../components.zig").Canonicals;
 const CaseFoldMap = @import("../components.zig").CaseFoldMap;
 const CccMap = @import("../components.zig").CombiningMap;
 const HangulMap = @import("../components.zig").HangulMap;
-const NFDCheck = @import("../components.zig").DerivedNormalizationProps;
+const NormProps = @import("../components.zig").DerivedNormalizationProps;
 
 const DecompFile = @import("DecompFile.zig");
 const Decomp = DecompFile.Decomp;
-const Form = DecompFile.Form;
 
 const Trieton = @import("Trieton.zig");
 const Lookup = Trieton.Lookup;
@@ -77,15 +77,15 @@ pub fn mapping(self: Self, cp: u21, nfd: bool) Decomp {
 pub fn decompose(self: Self, cp: u21, nfd: bool) Decomp {
     var dc = Decomp{};
 
-    if (nfd and NFDCheck.isNFD(cp)) {
+    if (nfd and NormProps.isNFD(cp)) {
         dc.len = 1;
         dc.seq[0] = cp;
         return dc;
     }
 
-    if (self.isHangulPrecomposed(cp)) {
+    if (isHangulPrecomposed(cp)) {
         // Hangul precomposed syllable full decomposition.
-        const seq = self.decomposeHangul(cp);
+        const seq = decomposeHangul(cp);
         dc.len = if (seq[2] == 0) 2 else 3;
         mem.copy(u21, &dc.seq, seq[0..dc.len]);
         return dc;
@@ -135,6 +135,14 @@ fn getCodePoints(self: *Self, str: []const u8) ![]u21 {
     return code_points.items;
 }
 
+const Form = enum {
+    canon, // NFD
+    compat, // NFKD
+    same, // Same code point.
+    composed, // NFC
+    komposed, // NFKC
+};
+
 /// normalizeTo will normalize the code points in str, producing a slice of u8 with the new bytes
 /// corresponding to the specified Normalization Form.
 pub fn normalizeTo(self: *Self, form: Form, str: []const u8) anyerror![]u8 {
@@ -163,17 +171,18 @@ pub fn normalizeToCodePoints(self: *Self, form: Form, str: []const u8) anyerror!
     return self.normalizeCodePointsToCodePoints(form, code_points);
 }
 
-fn normalizeCodePointsToCodePoints(self: *Self, form: Form, code_points: []u21) anyerror![]u21 {
+pub fn normalizeCodePointsToCodePoints(self: *Self, form: Form, code_points: []u21) anyerror![]u21 {
+    if (form == .composed or form == .komposed) return self.composeCodePoints(form, code_points);
+
     // NFD Quick Check.
     if (form == .canon) {
         const already_nfd = for (code_points) |cp| {
-            if (!NFDCheck.isNFD(cp)) break false;
+            if (!NormProps.isNFD(cp)) break false;
         } else true;
 
-        // Already NFD, nothing more to do.
         if (already_nfd) {
             // Apply canonical sort algorithm.
-            self.canonicalSort(code_points);
+            canonicalSort(code_points);
             return code_points;
         }
     }
@@ -187,37 +196,165 @@ fn normalizeCodePointsToCodePoints(self: *Self, form: Form, code_points: []u21) 
     }
 
     // Apply canonical sort algorithm.
-    self.canonicalSort(d_code_points.items);
+    canonicalSort(d_code_points.items);
 
     return d_code_points.items;
 }
 
-fn cccLess(self: Self, lhs: u21, rhs: u21) bool {
+pub fn composeCodePoints(self: *Self, form: Form, code_points: []u21) anyerror![]u21 {
+    var decomposed = if (form == .composed)
+        try self.normalizeCodePointsToCodePoints(.canon, code_points)
+    else
+        try self.normalizeCodePointsToCodePoints(.compat, code_points);
+
+    while (true) {
+        var deleted: usize = 0;
+        var i: usize = 1; // start at second code point.
+
+        block_check: while (i < decomposed.len) : (i += 1) {
+            const C = decomposed[i];
+            var starter_index: ?usize = null;
+            var j: usize = i;
+
+            while (true) {
+                j -= 1;
+
+                if (CccMap.combiningClass(decomposed[j]) == 0) {
+                    if (i - j > 1) {
+                        for (decomposed[(j + 1)..i]) |B| {
+                            if (isHangul(C)) {
+                                if (isCombining(B) or isNonHangulStarter(B)) continue :block_check;
+                            }
+                            if (CccMap.combiningClass(B) >= CccMap.combiningClass(C)) continue :block_check;
+                        }
+                    }
+                    starter_index = j;
+                    break;
+                }
+
+                if (j == 0) break;
+            }
+
+            if (starter_index) |sidx| {
+                const L = decomposed[sidx];
+
+                var processed_hangul: bool = false;
+
+                if (isHangul(L) and isHangul(C)) {
+                    const l_stype = HangulMap.syllableType(L).?;
+                    const c_stype = HangulMap.syllableType(C).?;
+
+                    if (l_stype == .LV and c_stype == .T) {
+                        // LV, T
+                        decomposed[sidx] = composeHangulCanon(L, C);
+                        decomposed[i] = 0xFFFD;
+                        processed_hangul = true;
+                    }
+
+                    if (l_stype == .L and c_stype == .V) {
+                        // Handle L, V. L, V, T is handled via main loop.
+                        decomposed[sidx] = composeHangulFull(L, C, 0);
+                        decomposed[i] = 0xFFFD;
+                        processed_hangul = true;
+                    }
+
+                    if (processed_hangul) deleted += 1;
+                }
+
+                if (!processed_hangul) {
+                    // Not Hangul.
+                    if (Canonicals.composite(L, C)) |P| {
+                        if (!NormProps.isFcx(P)) {
+                            decomposed[sidx] = P;
+                            decomposed[i] = 0xFFFD; // Mark as deleted.
+                            deleted += 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (deleted == 0) return decomposed;
+
+        var composed = try std.ArrayList(u21).initCapacity(&self.arena.allocator, decomposed.len - deleted);
+
+        for (decomposed) |cp| {
+            if (cp != 0xFFFD) composed.appendAssumeCapacity(cp);
+        }
+
+        decomposed = composed.items;
+    }
+}
+
+//test "Normalizer composeCodePoints" {
+//    var allocator = std.testing.allocator;
+//    var normalizer = try init(allocator, "src/data/ucd/Decompositions.bin");
+//    defer normalizer.deinit();
+//
+//    var sequence = [_]u21{ 0x0061, 0x0305, 0x0315, 0x0300, 0x05AE, 0x0062 };
+//    std.debug.print("\n", .{});
+//    for (sequence) |cp| {
+//        std.debug.print("{x} {}\n", .{ cp, CccMap.combiningClass(cp) });
+//    }
+//    const decomposed = try normalizer.normalizeCodePointsToCodePoints(.canon, &sequence);
+//    std.debug.print("\n", .{});
+//    for (decomposed) |cp| {
+//        std.debug.print("{x} {}\n", .{ cp, CccMap.combiningClass(cp) });
+//    }
+//    const result = try normalizer.composeCodePoints(.composed, &sequence);
+//    std.debug.print("\n", .{});
+//    for (result) |cp| {
+//        std.debug.print("{x}\n", .{cp});
+//    }
+//}
+
+fn cccLess(ctx: void, lhs: u21, rhs: u21) bool {
     return CccMap.combiningClass(lhs) < CccMap.combiningClass(rhs);
 }
 
-fn canonicalSort(self: Self, cp_list: []u21) void {
+fn canonicalSort(cp_list: []u21) void {
     var i: usize = 0;
     while (true) {
         if (i >= cp_list.len) break;
         var start: usize = i;
         while (i < cp_list.len and CccMap.combiningClass(cp_list[i]) != 0) : (i += 1) {}
-        sort(u21, cp_list[start..i], self, cccLess);
+        sort(u21, cp_list[start..i], {}, cccLess);
         i += 1;
     }
 }
 
-fn decomposeHangul(self: Self, cp: u21) [3]u21 {
-    const SBase: u21 = 0xAC00;
-    const LBase: u21 = 0x1100;
-    const VBase: u21 = 0x1161;
-    const TBase: u21 = 0x11A7;
-    const LCount: u21 = 19;
-    const VCount: u21 = 21;
-    const TCount: u21 = 28;
-    const NCount: u21 = 588; // VCount * TCount
-    const SCount: u21 = 11172; // LCount * NCount
+// Hangul Syllable constants.
+const SBase: u21 = 0xAC00;
+const LBase: u21 = 0x1100;
+const VBase: u21 = 0x1161;
+const TBase: u21 = 0x11A7;
+const LCount: u21 = 19;
+const VCount: u21 = 21;
+const TCount: u21 = 28;
+const NCount: u21 = 588; // VCount * TCount
+const SCount: u21 = 11172; // LCount * NCount
 
+fn composeHangulCanon(lv: u21, t: u21) u21 {
+    std.debug.assert(0x11A8 <= t and t <= 0x11C2);
+    return lv + (t - TBase);
+}
+
+fn composeHangulFull(l: u21, v: u21, t: u21) u21 {
+    std.debug.assert(0x1100 <= l and l <= 0x1112);
+    std.debug.assert(0x1161 <= v and v <= 0x1175);
+    const LIndex = l - LBase;
+    const VIndex = v - VBase;
+    const LVIndex = LIndex * NCount + VIndex * TCount;
+
+    if (t == 0) return SBase + LVIndex;
+
+    std.debug.assert(0x11A8 <= t and t <= 0x11C2);
+    const TIndex = t - TBase;
+
+    return SBase + LVIndex + TIndex;
+}
+
+fn decomposeHangul(cp: u21) [3]u21 {
     const SIndex: u21 = cp - SBase;
     const LIndex: u21 = SIndex / NCount;
     const VIndex: u21 = (SIndex % NCount) / TCount;
@@ -230,7 +367,7 @@ fn decomposeHangul(self: Self, cp: u21) [3]u21 {
     return [3]u21{ LPart, VPart, TPart };
 }
 
-fn isHangulPrecomposed(self: Self, cp: u21) bool {
+fn isHangulPrecomposed(cp: u21) bool {
     if (HangulMap.syllableType(cp)) |kind| {
         return switch (kind) {
             .LV, .LVT => true,
@@ -239,6 +376,22 @@ fn isHangulPrecomposed(self: Self, cp: u21) bool {
     } else {
         return false;
     }
+}
+
+fn isHangul(cp: u21) bool {
+    return HangulMap.syllableType(cp) != null;
+}
+
+fn isStarter(cp: u21) bool {
+    return CccMap.combiningClass(cp) == 0;
+}
+
+fn isCombining(cp: u21) bool {
+    return CccMap.combiningClass(cp) > 0;
+}
+
+fn isNonHangulStarter(cp: u21) bool {
+    return !isHangul(cp) and isStarter(cp);
 }
 
 /// CmpMode determines the type of comparison to be performed.
@@ -384,11 +537,14 @@ test "Normalizer normalizeTo" {
     defer file.close();
     var buf_reader = std.io.bufferedReader(file.reader());
     var input_stream = buf_reader.reader();
-    var buf: [640]u8 = undefined;
+    var line_no: usize = 0;
+    var buf: [4096]u8 = undefined;
 
     while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+        line_no += 1;
         // Skip comments or empty lines.
         if (line.len == 0 or line[0] == '#' or line[0] == '@') continue;
+        //std.debug.print("{}: {s}\n", .{ line_no, line });
         // Iterate over fields.
         var fields = mem.split(line, ";");
         var field_index: usize = 0;
@@ -405,6 +561,20 @@ test "Normalizer normalizeTo" {
                     try i_buf.appendSlice(cp_buf[0..len]);
                 }
                 input = i_buf.toOwnedSlice();
+            } else if (field_index == 1) {
+                // NFC, time to test.
+                var w_buf = std.ArrayList(u8).init(allocator);
+                defer w_buf.deinit();
+                var w_fields = mem.split(field, " ");
+                while (w_fields.next()) |s| {
+                    const wcp = try std.fmt.parseInt(u21, s, 16);
+                    const len = try unicode.utf8Encode(wcp, &cp_buf);
+                    try w_buf.appendSlice(cp_buf[0..len]);
+                }
+                const want = w_buf.items;
+                const got = try normalizer.normalizeTo(.composed, input);
+                try std.testing.expectEqualSlices(u8, want, got);
+                continue;
             } else if (field_index == 2) {
                 // NFD, time to test.
                 var w_buf = std.ArrayList(u8).init(allocator);

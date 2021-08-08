@@ -71,7 +71,7 @@ pub fn collationElements(self: *Self, normalized: []const u21) ![]AllKeysFile.El
                 break;
             }
             if (last_class) |last| {
-                if (combining_class <= last) {
+                if (last >= combining_class) {
                     if (tail_index != tail_start) tail_index -= 1;
                     break;
                 }
