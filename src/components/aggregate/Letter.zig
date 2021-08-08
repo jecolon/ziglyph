@@ -33,7 +33,7 @@ pub fn isAsciiLetter(cp: u21) bool {
 pub fn isLower(cp: u21) bool {
     // ASCII optimization.
     if (cp >= 'a' and cp <= 'z') return true;
-    return Cats.isLowercaseLetter(cp) or !isCased(cp);
+    return Props.isLowercase(cp);
 }
 
 /// isAsciiLower detects ASCII only lowercase letters.
@@ -43,14 +43,14 @@ pub fn isAsciiLower(cp: u21) bool {
 
 /// isTitle detects code points in titlecase.
 pub fn isTitle(cp: u21) bool {
-    return Cats.isTitlecaseLetter(cp) or !isCased(cp);
+    return Cats.isTitlecaseLetter(cp);
 }
 
 /// isUpper detects code points in uppercase.
 pub fn isUpper(cp: u21) bool {
     // ASCII optimization.
     if (cp >= 'A' and cp <= 'Z') return true;
-    return Cats.isUppercaseLetter(cp) or !isCased(cp);
+    return Props.isUppercase(cp);
 }
 
 /// isAsciiUpper detects ASCII only uppercase letters.
@@ -64,7 +64,7 @@ pub fn toLower(cp: u21) u21 {
     // ASCII optimization.
     if (cp >= 'A' and cp <= 'Z') return cp ^ 32;
     // Only cased letters.
-    if (!isCased(cp)) return cp;
+    if (!Props.isChangesWhenCasemapped(cp)) return cp;
     return LowerMap.toLower(cp);
 }
 
@@ -77,7 +77,7 @@ pub fn toAsciiLower(self: Self, cp: u21) u21 {
 /// code point given if no mapping exists.
 pub fn toTitle(cp: u21) u21 {
     // Only cased letters.
-    if (!isCased(cp)) return cp;
+    if (!Props.isChangesWhenCasemapped(cp)) return cp;
     return TitleMap.toTitle(cp);
 }
 
@@ -87,7 +87,7 @@ pub fn toUpper(cp: u21) u21 {
     // ASCII optimization.
     if (cp >= 'a' and cp <= 'z') return cp ^ 32;
     // Only cased letters.
-    if (!isCased(cp)) return cp;
+    if (!Props.isChangesWhenCasemapped(cp)) return cp;
     return UpperMap.toUpper(cp);
 }
 
@@ -128,8 +128,6 @@ test "Component isLower" {
     try expect(!isLower('A'));
     try expect(!isLower('É'));
     try expect(!isLower('İ'));
-    // Numbers are lower, upper, and title all at once.
-    try expect(isLower('1'));
 }
 
 const expectEqualSlices = std.testing.expectEqualSlices;
@@ -171,8 +169,6 @@ test "Component isUpper" {
     try expect(isUpper('A'));
     try expect(isUpper('É'));
     try expect(isUpper('İ'));
-    // Numbers are lower, upper, and title all at once.
-    try expect(isUpper('1'));
 }
 
 test "Component toUpper" {
@@ -193,8 +189,6 @@ test "Component isTitle" {
     try expect(isTitle('\u{1FBC}'));
     try expect(isTitle('\u{1FCC}'));
     try expect(isTitle('ǈ'));
-    // Numbers are lower, upper, and title all at once.
-    try expect(isTitle('1'));
 }
 
 test "Component toTitle" {
