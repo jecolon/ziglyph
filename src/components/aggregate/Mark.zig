@@ -11,5 +11,6 @@ const expect = std.testing.expect;
 
 test "Component isMark" {
     try expect(isMark('\u{20E4}'));
+    try expect(isMark(0x0301));
     try expect(!isMark('='));
 }

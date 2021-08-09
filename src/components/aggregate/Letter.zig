@@ -123,6 +123,7 @@ test "Component isCased" {
 
 test "Component isLower" {
     try expect(isLower('a'));
+    try expect(isAsciiLower('a'));
     try expect(isLower('é'));
     try expect(isLower('i'));
     try expect(!isLower('A'));
@@ -164,6 +165,7 @@ test "Component toLower" {
 
 test "Component isUpper" {
     try expect(!isUpper('a'));
+    try expect(!isAsciiUpper('a'));
     try expect(!isUpper('é'));
     try expect(!isUpper('i'));
     try expect(isUpper('A'));

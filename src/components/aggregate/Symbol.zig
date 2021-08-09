@@ -11,12 +11,13 @@ pub fn isSymbol(cp: u21) bool {
 
 /// isAsciiSymbol detects ASCII only symbols.
 pub fn isAsciiSymbol(cp: u21) bool {
-    return if (cp < 128) ascii.isSymbol(@intCast(u8, cp)) else false;
+    return ascii.isSymbol(@intCast(u8, cp));
 }
 
 const expect = std.testing.expect;
 
 test "Component isSymbol" {
+    try expect(isAsciiSymbol('<'));
     try expect(isSymbol('<'));
     try expect(isSymbol('>'));
     try expect(isSymbol('='));

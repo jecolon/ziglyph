@@ -13,12 +13,13 @@ pub fn isPunct(cp: u21) bool {
 
 /// isAsciiPunct detects ASCII only punctuation.
 pub fn isAsciiPunct(cp: u21) bool {
-    return if (cp < 128) ascii.isPunct(@intCast(u8, cp)) else false;
+    return ascii.isPunct(@intCast(u8, cp));
 }
 
 const expect = std.testing.expect;
 
 test "Component isPunct" {
+    try expect(isAsciiPunct('!'));
     try expect(isPunct('!'));
     try expect(isPunct('?'));
     try expect(isPunct(','));
