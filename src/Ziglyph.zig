@@ -204,6 +204,32 @@ pub fn toAsciiLower(cp: u21) u21 {
     return if (cp >= 'A' and cp <= 'Z') cp ^ 32 else cp;
 }
 
+/// toCaseFoldStr returns the lowercase version of `s`. Caller must free returned memory with `allocator`.
+pub fn toCaseFoldStr(allocator: *std.mem.Allocator, s: []const u8) ![]u8 {
+    var result = std.ArrayList(u8).init(allocator);
+    defer result.deinit();
+    var buf: [4]u8 = undefined;
+    var iter = (try unicode.Utf8View.init(s)).iterator();
+
+    while (iter.nextCodepoint()) |cp| {
+        const cf = Letter.toCaseFold(cp);
+        for (cf) |cfcp| {
+            if (cfcp == 0) break;
+            const len = try unicode.utf8Encode(cfcp, &buf);
+            try result.appendSlice(buf[0..len]);
+        }
+    }
+
+    return result.toOwnedSlice();
+}
+
+test "Ziglyph toCaseFoldStr" {
+    var allocator = std.testing.allocator;
+    const got = try toCaseFoldStr(allocator, "AbC123\u{0390}");
+    defer allocator.free(got);
+    try expect(std.mem.eql(u8, "abc123\u{03B9}\u{0308}\u{0301}", got));
+}
+
 /// toLowerStr returns the lowercase version of `s`. Caller must free returned memory with `allocator`.
 pub fn toLowerStr(allocator: *std.mem.Allocator, s: []const u8) ![]u8 {
     var result = std.ArrayList(u8).init(allocator);
