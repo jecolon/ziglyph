@@ -28,6 +28,21 @@ pub fn isCased(cp: u21) bool {
     return Letter.isCased(cp);
 }
 
+/// isCasedStr returns true when all code points in `s` can be mapped to a different case.
+pub fn isCasedStr(s: []const u8) !bool {
+    var iter = (try unicode.Utf8View.init(s)).iterator();
+
+    return while (iter.nextCodepoint()) |cp| {
+        if (!isCased(cp)) break false;
+    } else true;
+}
+
+test "Ziglyph isCasedStr" {
+    try expect(try isCasedStr("abc"));
+    try expect(!try isCasedStr("abc123"));
+    try expect(!try isCasedStr("123"));
+}
+
 /// isDecimal detects all Unicode decimal numbers.
 pub fn isDecimal(cp: u21) bool {
     return Number.isDecimal(cp);
@@ -95,6 +110,21 @@ pub fn isAsciiLower(cp: u21) bool {
     return cp >= 'a' and cp <= 'z';
 }
 
+/// isLowerStr returns true when all code points in `s` are lowercase.
+pub fn isLowerStr(s: []const u8) !bool {
+    var iter = (try unicode.Utf8View.init(s)).iterator();
+
+    return while (iter.nextCodepoint()) |cp| {
+        if (isCased(cp) and !isLower(cp)) break false;
+    } else true;
+}
+
+test "Ziglyph isLowerStr" {
+    try expect(try isLowerStr("abc"));
+    try expect(try isLowerStr("abc123"));
+    try expect(!try isLowerStr("Abc123"));
+}
+
 /// isMark detects special code points that serve as marks in different alphabets.
 pub fn isMark(cp: u21) bool {
     return Mark.isMark(cp);
@@ -149,6 +179,21 @@ pub fn isAsciiUpper(cp: u21) bool {
     return cp >= 'A' and cp <= 'Z';
 }
 
+/// isUpperStr returns true when all code points in `s` are uppercase.
+pub fn isUpperStr(s: []const u8) !bool {
+    var iter = (try unicode.Utf8View.init(s)).iterator();
+
+    return while (iter.nextCodepoint()) |cp| {
+        if (isCased(cp) and !isUpper(cp)) break false;
+    } else true;
+}
+
+test "Ziglyph isUpperStr" {
+    try expect(try isUpperStr("ABC"));
+    try expect(try isUpperStr("ABC123"));
+    try expect(!try isUpperStr("abc123"));
+}
+
 /// toLower returns the lowercase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
 pub fn toLower(cp: u21) u21 {
@@ -157,6 +202,28 @@ pub fn toLower(cp: u21) u21 {
 
 pub fn toAsciiLower(cp: u21) u21 {
     return if (cp >= 'A' and cp <= 'Z') cp ^ 32 else cp;
+}
+
+/// toLowerStr returns the lowercase version of `s`. Caller must free returned memory with `allocator`.
+pub fn toLowerStr(allocator: *std.mem.Allocator, s: []const u8) ![]u8 {
+    var result = std.ArrayList(u8).init(allocator);
+    defer result.deinit();
+    var buf: [4]u8 = undefined;
+    var iter = (try unicode.Utf8View.init(s)).iterator();
+
+    while (iter.nextCodepoint()) |cp| {
+        const len = try unicode.utf8Encode(toLower(cp), &buf);
+        try result.appendSlice(buf[0..len]);
+    }
+
+    return result.toOwnedSlice();
+}
+
+test "Ziglyph toLowerStr" {
+    var allocator = std.testing.allocator;
+    const got = try toLowerStr(allocator, "AbC123");
+    defer allocator.free(got);
+    try expect(std.mem.eql(u8, "abc123", got));
 }
 
 /// toTitle returns the titlecase code point for the given code point. It returns the same 
@@ -173,6 +240,28 @@ pub fn toUpper(cp: u21) u21 {
 
 pub fn toAsciiUpper(cp: u21) u21 {
     return if (cp >= 'a' and cp <= 'z') cp ^ 32 else cp;
+}
+
+/// toUpperStr returns the uppercase version of `s`. Caller must free returned memory with `allocator`.
+pub fn toUpperStr(allocator: *std.mem.Allocator, s: []const u8) ![]u8 {
+    var result = std.ArrayList(u8).init(allocator);
+    defer result.deinit();
+    var buf: [4]u8 = undefined;
+    var iter = (try unicode.Utf8View.init(s)).iterator();
+
+    while (iter.nextCodepoint()) |cp| {
+        const len = try unicode.utf8Encode(toUpper(cp), &buf);
+        try result.appendSlice(buf[0..len]);
+    }
+
+    return result.toOwnedSlice();
+}
+
+test "Ziglyph toUpperStr" {
+    var allocator = std.testing.allocator;
+    const got = try toUpperStr(allocator, "aBc123");
+    defer allocator.free(got);
+    try expect(std.mem.eql(u8, "ABC123", got));
 }
 
 const expect = std.testing.expect;

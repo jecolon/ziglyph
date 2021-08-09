@@ -22,6 +22,16 @@ test "Ziglyph struct" {
     const uz = Ziglyph.toUpper(z);
     try expect(Ziglyph.isUpper(uz));
     try expectEqual(uz, 'Z');
+
+    // String toLower and toUpper.
+    var allocator = std.testing.allocator;
+    var got = try Ziglyph.toLowerStr(allocator, "AbC123");
+    errdefer allocator.free(got);
+    try expect(std.mem.eql(u8, "abc123", got));
+    allocator.free(got);
+    got = try Ziglyph.toUpperStr(allocator, "aBc123");
+    defer allocator.free(got);
+    try expect(std.mem.eql(u8, "ABC123", got));
 }
 
 test "Aggregate struct" {
