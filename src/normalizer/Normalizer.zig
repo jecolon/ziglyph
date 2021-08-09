@@ -395,10 +395,12 @@ fn isNonHangulStarter(cp: u21) bool {
 }
 
 /// CmpMode determines the type of comparison to be performed.
+/// * ident compares Unicode Identifiers for caseless matching.
 /// * ignore_case compares ignoring letter case.
 /// * normalize compares the result of normalizing to canonical form (NFD).
 /// * norm_ignore combines both ignore_case and normalize modes.
 pub const CmpMode = enum {
+    ident,
     ignore_case,
     normalize,
     norm_ignore,
@@ -425,7 +427,7 @@ pub fn eqlBy(self: *Self, a: []const u8, b: []const u8, mode: CmpMode) !bool {
 
     if (ascii_only and !len_eql) return false;
 
-    if (mode == .ignore_case and len_eql) {
+    if ((mode == .ignore_case or mode == .ident) and len_eql) {
         if (ascii_only) {
             // ASCII case insensitive.
             for (a) |c, i| {
@@ -438,13 +440,41 @@ pub fn eqlBy(self: *Self, a: []const u8, b: []const u8, mode: CmpMode) !bool {
         }
 
         // Non-ASCII case insensitive.
-        return self.eqlNormIgnore(a, b);
+        return if (mode == .ident) self.eqlIdent(a, b) else self.eqlNormIgnore(a, b);
     }
 
-    if (mode == .normalize) return self.eqlNorm(a, b);
-    if (mode == .norm_ignore) return self.eqlNormIgnore(a, b);
+    return switch (mode) {
+        .ident => self.eqlIdent(a, b),
+        .normalize => self.eqlNorm(a, b),
+        .norm_ignore => self.eqlNormIgnore(a, b),
+        else => false,
+    };
+}
 
-    return false;
+fn eqlIdent(self: *Self, a: []const u8, b: []const u8) !bool {
+    const a_cps = try self.getCodePoints(a);
+    var a_cf = std.ArrayList(u21).init(&self.arena.allocator);
+
+    for (a_cps) |cp| {
+        const cf_cps = NormProps.toNFKCCF(cp);
+        for (cf_cps) |cfcp| {
+            if (cfcp == 0) break;
+            try a_cf.append(cfcp);
+        }
+    }
+
+    const b_cps = try self.getCodePoints(b);
+    var b_cf = std.ArrayList(u21).init(&self.arena.allocator);
+
+    for (b_cps) |cp| {
+        const cf_cps = NormProps.toNFKCCF(cp);
+        for (cf_cps) |cfcp| {
+            if (cfcp == 0) break;
+            try b_cf.append(cfcp);
+        }
+    }
+
+    return mem.eql(u21, a_cf.items, b_cf.items);
 }
 
 fn eqlNorm(self: *Self, a: []const u8, b: []const u8) !bool {
@@ -629,4 +659,6 @@ test "Normalizer eqlBy" {
     try std.testing.expect(try normalizer.eqlBy("foϓ", "fo\u{03D2}\u{0301}", .normalize));
     try std.testing.expect(try normalizer.eqlBy("Foϓ", "fo\u{03D2}\u{0301}", .norm_ignore));
     try std.testing.expect(try normalizer.eqlBy("FOÉ", "foe\u{0301}", .norm_ignore)); // foÉ == foé
+    try std.testing.expect(try normalizer.eqlBy("FOE", "foe", .ident));
+    try std.testing.expect(try normalizer.eqlBy("ÁbC123\u{0390}", "ábc123\u{0390}", .ident));
 }
