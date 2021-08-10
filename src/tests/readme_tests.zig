@@ -59,17 +59,36 @@ test "normalizeTo" {
     var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.bin");
     defer normalizer.deinit();
 
-    // Canonical (NFD)
-    var input = "Complex char: \u{03D3}";
-    var want = "Complex char: \u{03D2}\u{0301}";
-    var got = try normalizer.normalizeTo(.canon, input);
-    try expectEqualSlices(u8, want, got);
+    // Canonical Composition (NFC)
+    const input_nfc = "Complex char: \u{03D2}\u{0301}";
+    const want_nfc = "Complex char: \u{03D3}";
+    const got_nfc = try normalizer.normalizeTo(.composed, input_nfc);
+    try expectEqualSlices(u8, want_nfc, got_nfc);
 
-    // Compatibility (NFKD)
-    input = "Complex char: \u{03D3}";
-    want = "Complex char: \u{03A5}\u{0301}";
-    got = try normalizer.normalizeTo(.compat, input);
-    try expectEqualSlices(u8, want, got);
+    // Compatibility Composition (NFKC)
+    const input_nfkc = "Complex char: \u{03A5}\u{0301}";
+    const want_nfkc = "Complex char: \u{038E}";
+    const got_nfkc = try normalizer.normalizeTo(.komposed, input_nfkc);
+    try expectEqualSlices(u8, want_nfkc, got_nfkc);
+
+    // Canonical Decomposition (NFD)
+    const input_nfd = "Complex char: \u{03D3}";
+    const want_nfd = "Complex char: \u{03D2}\u{0301}";
+    const got_nfd = try normalizer.normalizeTo(.canon, input_nfd);
+    try expectEqualSlices(u8, want_nfd, got_nfd);
+
+    // Compatibility Decomposition (NFKD)
+    const input_nfkd = "Complex char: \u{03D3}";
+    const want_nfkd = "Complex char: \u{03A5}\u{0301}";
+    const got_nfkd = try normalizer.normalizeTo(.compat, input_nfkd);
+    try expectEqualSlices(u8, want_nfkd, got_nfkd);
+
+    // String comparisons.
+    try expect(try normalizer.eqlBy("foé", "foe\u{0301}", .normalize));
+    try expect(try normalizer.eqlBy("foϓ", "fo\u{03D2}\u{0301}", .normalize));
+    try expect(try normalizer.eqlBy("Foϓ", "fo\u{03D2}\u{0301}", .norm_ignore));
+    try expect(try normalizer.eqlBy("FOÉ", "foe\u{0301}", .norm_ignore)); // foÉ == foé
+    try expect(try normalizer.eqlBy("Foé", "foé", .ident)); // Unicode Identifiers caseless match.
 }
 
 test "GraphemeIterator" {

@@ -42,7 +42,8 @@ Note that to build in release modes, either specify them in the `build.zig` file
 via the `-Drelease-fast=true`, `-Drelease-small=true`, `-Drelease-safe=true` options to `zig build`.
 
 ### Using the Ziglyph Struct
-The `Ziglyph` struct provides convenient acces to the most frequently-used functions related to Unicode.
+The `Ziglyph` struct provides convenient acces to the most frequently-used functions related to Unicode
+code points and strings.
 
 ```zig
 const Ziglyph = @import("Ziglyph");
@@ -91,12 +92,11 @@ test "Aggregate struct" {
 
 ## Normalization
 In addition to the basic functions to detect and convert code point case, the `Normalizer` struct 
-provides code point and string normalization methods. This library currently only 
-performs full canonical and compatibility decomposition and normalization (NFD and NFKD). Future 
-versions may add more normalization forms. The `init` function takes an allocator and the path to the
-compressed `Decompositions.bin` file derived from the Unicode Character Database. A copy of this file
+provides code point and string normalization methods. All normalization forms are supported (NFC,
+NFKC, NFD, NFKD.) The `init` function takes an allocator and the path to the compressed 
+`Decompositions.bin` file derived from the Unicode Character Database. A copy of this file
 is found in the `src/data/ucd` directory. See the section on Collation for more information on the 
-compression algorithm applied the the Unicode data files for both Normalization and Collation.
+compression algorithm applied to the the Unicode data files for both Normalization and Collation.
 
 ```zig
 const Normalizer = @import("Ziglyph").Normalizer;
@@ -106,23 +106,36 @@ test "normalizeTo" {
     var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.bin");
     defer normalizer.deinit();
 
-    // Canonical (NFD)
-    var input = "Complex char: \u{03D3}";
-    var want = "Complex char: \u{03D2}\u{0301}";
-    var got = try normalizer.normalizeTo(.canon, input);
-    try expectEqualSlices(u8, want, got);
+    // Canonical Composition (NFC)
+    const input_nfc = "Complex char: \u{03D2}\u{0301}";
+    const want_nfc = "Complex char: \u{03D3}";
+    const got_nfc = try normalizer.normalizeTo(.composed, input_nfc);
+    try expectEqualSlices(u8, want_nfc, got_nfc);
 
-    // Compatibility (NFKD)
-    input = "Complex char: \u{03D3}";
-    want = "Complex char: \u{03A5}\u{0301}";
-    got = try normalizer.normalizeTo(.compat, input);
-    try expectEqualSlices(u8, want, got);
+    // Compatibility Composition (NFKC)
+    const input_nfkc = "Complex char: \u{03A5}\u{0301}";
+    const want_nfkc = "Complex char: \u{038E}";
+    const got_nfkc = try normalizer.normalizeTo(.komposed, input_nfkc);
+    try expectEqualSlices(u8, want_nfkc, got_nfkc);
+
+    // Canonical Decomposition (NFD)
+    const input_nfd = "Complex char: \u{03D3}";
+    const want_nfd = "Complex char: \u{03D2}\u{0301}";
+    const got_nfd = try normalizer.normalizeTo(.canon, input_nfd);
+    try expectEqualSlices(u8, want_nfd, got_nfd);
+
+    // Compatibility Decomposition (NFKD)
+    const input_nfkd = "Complex char: \u{03D3}";
+    const want_nfkd = "Complex char: \u{03A5}\u{0301}";
+    const got_nfkd = try normalizer.normalizeTo(.compat, input_nfkd);
+    try expectEqualSlices(u8, want_nfkd, got_nfkd);
 
     // String comparisons.
     try expect(try normalizer.eqlBy("foé", "foe\u{0301}", .normalize));
     try expect(try normalizer.eqlBy("foϓ", "fo\u{03D2}\u{0301}", .normalize));
     try expect(try normalizer.eqlBy("Foϓ", "fo\u{03D2}\u{0301}", .norm_ignore));
     try expect(try normalizer.eqlBy("FOÉ", "foe\u{0301}", .norm_ignore)); // foÉ == foé
+    try expect(try normalizer.eqlBy("Foé", "foé", .ident)); // Unicode Identifiers caseless match.
 }
 ```
 
