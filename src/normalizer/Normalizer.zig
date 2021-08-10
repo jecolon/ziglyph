@@ -456,10 +456,21 @@ fn eqlIdent(self: *Self, a: []const u8, b: []const u8) !bool {
     var a_cf = std.ArrayList(u21).init(&self.arena.allocator);
 
     for (a_cps) |cp| {
-        const cf_cps = NormProps.toNFKCCF(cp);
-        for (cf_cps) |cfcp| {
-            if (cfcp == 0) break;
-            try a_cf.append(cfcp);
+        const cf_s = NormProps.toNFKCCF(cp);
+        if (cf_s.len == 0) {
+            // Same code point. ""
+            try a_cf.append(cp);
+        } else if (cf_s.len == 1) {
+            // Map to nothing. "0"
+            continue;
+        } else {
+            // Got list; parse it. "x,y,z..."
+            var fields = mem.split(cf_s, ",");
+
+            while (fields.next()) |field| {
+                const parsed_cp = try std.fmt.parseInt(u21, field, 16);
+                try a_cf.append(parsed_cp);
+            }
         }
     }
 
@@ -467,10 +478,21 @@ fn eqlIdent(self: *Self, a: []const u8, b: []const u8) !bool {
     var b_cf = std.ArrayList(u21).init(&self.arena.allocator);
 
     for (b_cps) |cp| {
-        const cf_cps = NormProps.toNFKCCF(cp);
-        for (cf_cps) |cfcp| {
-            if (cfcp == 0) break;
-            try b_cf.append(cfcp);
+        const cf_s = NormProps.toNFKCCF(cp);
+        if (cf_s.len == 0) {
+            // Same code point. ""
+            try b_cf.append(cp);
+        } else if (cf_s.len == 1) {
+            // Map to nothing. "0"
+            continue;
+        } else {
+            // Got list; parse it. "x,y,z..."
+            var fields = mem.split(cf_s, ",");
+
+            while (fields.next()) |field| {
+                const parsed_cp = try std.fmt.parseInt(u21, field, 16);
+                try b_cf.append(parsed_cp);
+            }
         }
     }
 
