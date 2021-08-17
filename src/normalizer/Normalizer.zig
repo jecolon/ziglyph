@@ -308,7 +308,7 @@ pub fn composeCodePoints(self: *Self, form: Form, code_points: []u21) anyerror![
 //    }
 //}
 
-fn cccLess(ctx: void, lhs: u21, rhs: u21) bool {
+fn cccLess(_: void, lhs: u21, rhs: u21) bool {
     return CccMap.combiningClass(lhs) < CccMap.combiningClass(rhs);
 }
 
