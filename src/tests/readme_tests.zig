@@ -1,7 +1,5 @@
 const std = @import("std");
-const expect = std.testing.expect;
-const expectEqual = std.testing.expectEqual;
-const expectEqualSlices = std.testing.expectEqualSlices;
+const testing = std.testing;
 
 // Import structs.
 const Ziglyph = @import("../Ziglyph.zig");
@@ -10,48 +8,57 @@ const GraphemeIterator = Ziglyph.GraphemeIterator;
 const Letter = Ziglyph.Letter;
 const Normalizer = Ziglyph.Normalizer;
 const Punct = Ziglyph.Punct;
+const SentenceIterator = Ziglyph.SentenceIterator;
 const UpperMap = Ziglyph.UpperMap;
 const Width = Ziglyph.Width;
+const WordIterator = Ziglyph.WordIterator;
 
 test "Ziglyph struct" {
     const z = 'z';
-    try expect(Ziglyph.isLetter(z));
-    try expect(Ziglyph.isAlphaNum(z));
-    try expect(Ziglyph.isPrint(z));
-    try expect(!Ziglyph.isUpper(z));
+    try testing.expect(Ziglyph.isLetter(z));
+    try testing.expect(Ziglyph.isAlphaNum(z));
+    try testing.expect(Ziglyph.isPrint(z));
+    try testing.expect(!Ziglyph.isUpper(z));
     const uz = Ziglyph.toUpper(z);
-    try expect(Ziglyph.isUpper(uz));
-    try expectEqual(uz, 'Z');
+    try testing.expect(Ziglyph.isUpper(uz));
+    try testing.expectEqual(uz, 'Z');
+    const tz = Ziglyph.toTitle(z);
+    try testing.expect(Ziglyph.isUpper(tz));
+    try testing.expectEqual(tz, 'Z');
 
-    // String toLower and toUpper.
+    // String toLower, toTitle and toUpper.
     var allocator = std.testing.allocator;
     var got = try Ziglyph.toLowerStr(allocator, "AbC123");
     errdefer allocator.free(got);
-    try expect(std.mem.eql(u8, "abc123", got));
+    try testing.expect(std.mem.eql(u8, "abc123", got));
     allocator.free(got);
     got = try Ziglyph.toUpperStr(allocator, "aBc123");
+    errdefer allocator.free(got);
+    try testing.expect(std.mem.eql(u8, "ABC123", got));
+    allocator.free(got);
+    got = try Ziglyph.toTitleStr(allocator, "thE aBc123 moVie. yes!");
     defer allocator.free(got);
-    try expect(std.mem.eql(u8, "ABC123", got));
+    try testing.expect(std.mem.eql(u8, "The Abc123 Movie. Yes!", got));
 }
 
 test "Aggregate struct" {
     const z = 'z';
-    try expect(Letter.isLetter(z));
-    try expect(!Letter.isUpper(z));
-    try expect(!Punct.isPunct(z));
-    try expect(Punct.isPunct('!'));
+    try testing.expect(Letter.isLetter(z));
+    try testing.expect(!Letter.isUpper(z));
+    try testing.expect(!Punct.isPunct(z));
+    try testing.expect(Punct.isPunct('!'));
     const uz = Letter.toUpper(z);
-    try expect(Letter.isUpper(uz));
-    try expectEqual(uz, 'Z');
+    try testing.expect(Letter.isUpper(uz));
+    try testing.expectEqual(uz, 'Z');
 }
 
 test "Component structs" {
     const z = 'z';
-    try expect(Letter.isLower(z));
-    try expect(!Letter.isUpper(z));
+    try testing.expect(Letter.isLower(z));
+    try testing.expect(!Letter.isUpper(z));
     const uz = UpperMap.toUpper(z);
-    try expect(Letter.isUpper(uz));
-    try expectEqual(uz, 'Z');
+    try testing.expect(Letter.isUpper(uz));
+    try testing.expectEqual(uz, 'Z');
 }
 
 test "normalizeTo" {
@@ -63,70 +70,105 @@ test "normalizeTo" {
     const input_nfc = "Complex char: \u{03D2}\u{0301}";
     const want_nfc = "Complex char: \u{03D3}";
     const got_nfc = try normalizer.normalizeTo(.composed, input_nfc);
-    try expectEqualSlices(u8, want_nfc, got_nfc);
+    try testing.expectEqualSlices(u8, want_nfc, got_nfc);
 
     // Compatibility Composition (NFKC)
     const input_nfkc = "Complex char: \u{03A5}\u{0301}";
     const want_nfkc = "Complex char: \u{038E}";
     const got_nfkc = try normalizer.normalizeTo(.komposed, input_nfkc);
-    try expectEqualSlices(u8, want_nfkc, got_nfkc);
+    try testing.expectEqualSlices(u8, want_nfkc, got_nfkc);
 
     // Canonical Decomposition (NFD)
     const input_nfd = "Complex char: \u{03D3}";
     const want_nfd = "Complex char: \u{03D2}\u{0301}";
     const got_nfd = try normalizer.normalizeTo(.canon, input_nfd);
-    try expectEqualSlices(u8, want_nfd, got_nfd);
+    try testing.expectEqualSlices(u8, want_nfd, got_nfd);
 
     // Compatibility Decomposition (NFKD)
     const input_nfkd = "Complex char: \u{03D3}";
     const want_nfkd = "Complex char: \u{03A5}\u{0301}";
     const got_nfkd = try normalizer.normalizeTo(.compat, input_nfkd);
-    try expectEqualSlices(u8, want_nfkd, got_nfkd);
+    try testing.expectEqualSlices(u8, want_nfkd, got_nfkd);
 
     // String comparisons.
-    try expect(try normalizer.eqlBy("foé", "foe\u{0301}", .normalize));
-    try expect(try normalizer.eqlBy("foϓ", "fo\u{03D2}\u{0301}", .normalize));
-    try expect(try normalizer.eqlBy("Foϓ", "fo\u{03D2}\u{0301}", .norm_ignore));
-    try expect(try normalizer.eqlBy("FOÉ", "foe\u{0301}", .norm_ignore)); // foÉ == foé
-    try expect(try normalizer.eqlBy("Foé", "foé", .ident)); // Unicode Identifiers caseless match.
+    try testing.expect(try normalizer.eqlBy("foé", "foe\u{0301}", .normalize));
+    try testing.expect(try normalizer.eqlBy("foϓ", "fo\u{03D2}\u{0301}", .normalize));
+    try testing.expect(try normalizer.eqlBy("Foϓ", "fo\u{03D2}\u{0301}", .norm_ignore));
+    try testing.expect(try normalizer.eqlBy("FOÉ", "foe\u{0301}", .norm_ignore)); // foÉ == foé
+    try testing.expect(try normalizer.eqlBy("Foé", "foé", .ident)); // Unicode Identifiers caseless match.
 }
 
 test "GraphemeIterator" {
     var allocator = std.testing.allocator;
-    var giter = try GraphemeIterator.init(allocator, "H\u{0065}\u{0301}llo");
-    defer giter.deinit();
+    var graphemes = try GraphemeIterator.init(allocator, "H\u{0065}\u{0301}llo");
+    defer graphemes.deinit();
 
     const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
 
     var i: usize = 0;
-    while (giter.next()) |gc| : (i += 1) {
-        try expect(gc.eql(want[i]));
+    while (graphemes.next()) |grapheme| : (i += 1) {
+        try testing.expectEqualStrings(grapheme.bytes, want[i]);
+    }
+}
+
+test "SentenceIterator" {
+    var allocator = std.testing.allocator;
+    const input = 
+        \\("Go.") ("He said.")
+    ;
+    var sentences = try SentenceIterator.init(allocator, input);
+    defer sentences.deinit();
+
+    const s1 = 
+        \\("Go.") 
+    ;
+    const s2 = 
+        \\("He said.")
+    ;
+    const want = &[_][]const u8{ s1, s2 };
+
+    var i: usize = 0;
+    while (sentences.next()) |sentence| : (i += 1) {
+        try testing.expectEqualStrings(sentence.bytes, want[i]);
+    }
+}
+
+test "WordIterator" {
+    var allocator = std.testing.allocator;
+    var words = try WordIterator.init(allocator, "The (quick) fox. Fast! ");
+    defer words.deinit();
+
+    const want = &[_][]const u8{ "The", " ", "(", "quick", ")", " ", "fox", ".", " ", "Fast", "!", " " };
+
+    var i: usize = 0;
+    while (words.next()) |word| : (i += 1) {
+        try testing.expectEqualStrings(word.bytes, want[i]);
     }
 }
 
 test "Code point / string widths" {
     var allocator = std.testing.allocator;
-    try expectEqual(Width.codePointWidth('é', .half), 1);
-    try expectEqual(Width.codePointWidth('😊', .half), 2);
-    try expectEqual(Width.codePointWidth('统', .half), 2);
-    try expectEqual(try Width.strWidth(allocator, "Hello\r\n", .half), 5);
-    try expectEqual(try Width.strWidth(allocator, "\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
-    try expectEqual(try Width.strWidth(allocator, "Héllo 🇪🇸", .half), 8);
-    try expectEqual(try Width.strWidth(allocator, "\u{26A1}\u{FE0E}", .half), 1); // Text sequence
-    try expectEqual(try Width.strWidth(allocator, "\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
+    try testing.expectEqual(Width.codePointWidth('é', .half), 1);
+    try testing.expectEqual(Width.codePointWidth('😊', .half), 2);
+    try testing.expectEqual(Width.codePointWidth('统', .half), 2);
+    try testing.expectEqual(try Width.strWidth(allocator, "Hello\r\n", .half), 5);
+    try testing.expectEqual(try Width.strWidth(allocator, "\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
+    try testing.expectEqual(try Width.strWidth(allocator, "Héllo 🇪🇸", .half), 8);
+    try testing.expectEqual(try Width.strWidth(allocator, "\u{26A1}\u{FE0E}", .half), 1); // Text sequence
+    try testing.expectEqual(try Width.strWidth(allocator, "\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
 
     // padLeft, center, padRight
     const right_aligned = try Width.padLeft(allocator, "w😊w", 10, "-");
     defer allocator.free(right_aligned);
-    try expectEqualSlices(u8, "------w😊w", right_aligned);
+    try testing.expectEqualSlices(u8, "------w😊w", right_aligned);
 
     const centered = try Width.center(allocator, "w😊w", 10, "-");
     defer allocator.free(centered);
-    try expectEqualSlices(u8, "---w😊w---", centered);
+    try testing.expectEqualSlices(u8, "---w😊w---", centered);
 
     const left_aligned = try Width.padRight(allocator, "w😊w", 10, "-");
     defer allocator.free(left_aligned);
-    try expectEqualSlices(u8, "w😊w------", left_aligned);
+    try testing.expectEqualSlices(u8, "w😊w------", left_aligned);
 }
 
 test "Collation" {
@@ -136,19 +178,19 @@ test "Collation" {
     var collator = try Collator.init(allocator, "src/data/uca/allkeys.bin", &normalizer);
     defer collator.deinit();
 
-    try expect(collator.tertiaryAsc("abc", "def"));
-    try expect(collator.tertiaryDesc("def", "abc"));
-    try expect(try collator.orderFn("José", "jose", .primary, .eq));
+    try testing.expect(collator.tertiaryAsc("abc", "def"));
+    try testing.expect(collator.tertiaryDesc("def", "abc"));
+    try testing.expect(try collator.orderFn("José", "jose", .primary, .eq));
 
     var strings: [3][]const u8 = .{ "xyz", "def", "abc" };
     collator.sortAsc(&strings);
-    try expectEqual(strings[0], "abc");
-    try expectEqual(strings[1], "def");
-    try expectEqual(strings[2], "xyz");
+    try testing.expectEqual(strings[0], "abc");
+    try testing.expectEqual(strings[1], "def");
+    try testing.expectEqual(strings[2], "xyz");
 
     strings = .{ "xyz", "def", "abc" };
     collator.sortAsciiAsc(&strings);
-    try expectEqual(strings[0], "abc");
-    try expectEqual(strings[1], "def");
-    try expectEqual(strings[2], "xyz");
+    try testing.expectEqual(strings[0], "abc");
+    try testing.expectEqual(strings[1], "def");
+    try testing.expectEqual(strings[2], "xyz");
 }

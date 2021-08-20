@@ -13,7 +13,7 @@ pub fn end(self: CodePoint) usize {
 
 pub const CodePointIterator = struct {
     bytes: []const u8,
-    i: usize,
+    i: usize = 0,
 
     pub fn nextCodePoint(it: *CodePointIterator) ?CodePoint {
         if (it.i >= it.bytes.len) {

@@ -62,15 +62,21 @@ test "Ziglyph struct" {
     try expect(Ziglyph.isUpper(uz));
     try expectEqual(uz, 'Z');
 
-    // String toLower and toUpper.
+    // String toLower, toTitle, and toUpper.
     var allocator = std.testing.allocator;
     var got = try Ziglyph.toLowerStr(allocator, "AbC123");
     errdefer allocator.free(got);
     try expect(std.mem.eql(u8, "abc123", got));
     allocator.free(got);
+
     got = try Ziglyph.toUpperStr(allocator, "aBc123");
-    defer allocator.free(got);
+    errdefer allocator.free(got);
     try expect(std.mem.eql(u8, "ABC123", got));
+    allocator.free(got);
+
+    got = try Ziglyph.toTitleStr(allocator, "thE aBc123 moVie. yes!");
+    defer allocator.free(got);
+    try expect(std.mem.eql(u8, "The Abc123 Movie. Yes!", got));
 }
 ```
 
@@ -194,28 +200,64 @@ test "Collation" {
 }
 ```
 
-## Grapheme Clusters
-Many programming languages and libraries provide a basic `Character` or `char` type to represent what
-we normally consider to be the characters that we see printed out composing strings of text. Unfortunately,
-these implementations map these types to what Unicode calls a *code point*, which is only correct if 
-you're working with basic latin letters and numbers, mostly in the ASCII character set space. When 
-dealing with the vast majority of other languages, code points do not map directly to what we would 
-consider *characters* of a string, but rather a single visible character can be composed of many code points,
-combined to form a single human-readable character. In Unicode, these combinations of code points are
-called *Grapheme Clusters* and Ziglyph provides the `GraphemeIterator` to extract individual *characters* 
-(not just single code points) from a string.
+## Text Segmentation (Grapheme Clusters, Words, Sentences)
+Ziglyph has iterators to traverse text as Grapheme Clusters (what most people recognize as `characters`), 
+Words, and Sentences. All of these text segmentation functions adhere to the Unicode Text Segmentation rules,
+which may surprise you in terms of what's included and excluded at each break point. Test before assuming any
+results!
 
 ```
 const GraphemeIterator = @import("Ziglyph").GraphemeIterator;
+const SentenceIterator = @import("Ziglyph").SentenceIterator;
+const WordIterator = @import("Ziglyph").WordIterator;
 
 test "GraphemeIterator" {
-    var giter = try GraphemeIterator.new("H\u{0065}\u{0301}llo");
+    var allocator = std.testing.allocator;
+    var graphemes = try GraphemeIterator.init(allocator, "H\u{0065}\u{0301}llo");
+    defer graphemes.deinit();
 
     const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
 
     var i: usize = 0;
-    while (giter.next()) |gc| : (i += 1) {
-        try expect(gc.eql(want[i]));
+    while (graphemes.next()) |grapheme| : (i += 1) {
+        try testing.expectEqualStrings(grapheme.bytes, want[i]);
+    }
+}
+
+test "SentenceIterator" {
+    var allocator = std.testing.allocator;
+    const input = 
+        \\("Go.") ("He said.")
+    ;
+    var sentences = try SentenceIterator.init(allocator, input);
+    defer sentences.deinit();
+
+    // Note the space after the closing right parenthesis is included as part
+    // of the first sentence.
+    const s1 = 
+        \\("Go.") 
+    ;
+    const s2 = 
+        \\("He said.")
+    ;
+    const want = &[_][]const u8{ s1, s2 };
+
+    var i: usize = 0;
+    while (sentences.next()) |sentence| : (i += 1) {
+        try testing.expectEqualStrings(sentence.bytes, want[i]);
+    }
+}
+
+test "WordIterator" {
+    var allocator = std.testing.allocator;
+    var words = try WordIterator.init(allocator, "The (quick) fox. Fast! ");
+    defer words.deinit();
+
+    const want = &[_][]const u8{ "The", " ", "(", "quick", ")", " ", "fox", ".", " ", "Fast", "!", " " };
+
+    var i: usize = 0;
+    while (words.next()) |word| : (i += 1) {
+        try testing.expectEqualStrings(word.bytes, want[i]);
     }
 }
 ```
@@ -237,14 +279,14 @@ test "Code point / string widths" {
     try expectEqual(Width.codePointWidth('😊', .half), 2);
     try expectEqual(Width.codePointWidth('统', .half), 2);
 
-    // strWidth returns usize because it can never be negative, regardless of the code points it contains.
-    try expectEqual(try Width.strWidth("Hello\r\n", .half), 5);
-    try expectEqual(try Width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
-    try expectEqual(try Width.strWidth("Héllo 🇪🇸", .half), 8);
-    try expectEqual(try Width.strWidth("\u{26A1}\u{FE0E}", .half), 1); // Text sequence
-    try expectEqual(try Width.strWidth("\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
-
     var allocator = std.testing.allocator;
+
+    // strWidth returns usize because it can never be negative, regardless of the code points it contains.
+    try expectEqual(try Width.strWidth(allocator, "Hello\r\n", .half), 5);
+    try expectEqual(try Width.strWidth(allocator, "\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
+    try expectEqual(try Width.strWidth(allocator, "Héllo 🇪🇸", .half), 8);
+    try expectEqual(try Width.strWidth(allocator, "\u{26A1}\u{FE0E}", .half), 1); // Text sequence
+    try expectEqual(try Width.strWidth(allocator, "\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
 
     // padLeft, center, padRight
     const right_aligned = try Width.padLeft(allocator, "w😊w", 10, "-");

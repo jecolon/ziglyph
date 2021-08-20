@@ -2,6 +2,7 @@
 
 const std = @import("std");
 const mem = std.mem;
+const testing = std.testing;
 const unicode = std.unicode;
 const ascii = @import("ascii.zig");
 
@@ -38,9 +39,9 @@ pub fn isCasedStr(s: []const u8) !bool {
 }
 
 test "Ziglyph isCasedStr" {
-    try expect(try isCasedStr("abc"));
-    try expect(!try isCasedStr("abc123"));
-    try expect(!try isCasedStr("123"));
+    try testing.expect(try isCasedStr("abc"));
+    try testing.expect(!try isCasedStr("abc123"));
+    try testing.expect(!try isCasedStr("123"));
 }
 
 /// isDecimal detects all Unicode decimal numbers.
@@ -120,9 +121,9 @@ pub fn isLowerStr(s: []const u8) !bool {
 }
 
 test "Ziglyph isLowerStr" {
-    try expect(try isLowerStr("abc"));
-    try expect(try isLowerStr("abc123"));
-    try expect(!try isLowerStr("Abc123"));
+    try testing.expect(try isLowerStr("abc"));
+    try testing.expect(try isLowerStr("abc123"));
+    try testing.expect(!try isLowerStr("Abc123"));
 }
 
 /// isMark detects special code points that serve as marks in different alphabets.
@@ -189,9 +190,9 @@ pub fn isUpperStr(s: []const u8) !bool {
 }
 
 test "Ziglyph isUpperStr" {
-    try expect(try isUpperStr("ABC"));
-    try expect(try isUpperStr("ABC123"));
-    try expect(!try isUpperStr("abc123"));
+    try testing.expect(try isUpperStr("ABC"));
+    try testing.expect(try isUpperStr("ABC123"));
+    try testing.expect(!try isUpperStr("abc123"));
 }
 
 /// toLower returns the lowercase code point for the given code point. It returns the same 
@@ -227,7 +228,7 @@ test "Ziglyph toCaseFoldStr" {
     var allocator = std.testing.allocator;
     const got = try toCaseFoldStr(allocator, "AbC123\u{0390}");
     defer allocator.free(got);
-    try expect(std.mem.eql(u8, "abc123\u{03B9}\u{0308}\u{0301}", got));
+    try testing.expect(std.mem.eql(u8, "abc123\u{03B9}\u{0308}\u{0301}", got));
 }
 
 /// toLowerStr returns the lowercase version of `s`. Caller must free returned memory with `allocator`.
@@ -249,13 +250,54 @@ test "Ziglyph toLowerStr" {
     var allocator = std.testing.allocator;
     const got = try toLowerStr(allocator, "AbC123");
     defer allocator.free(got);
-    try expect(std.mem.eql(u8, "abc123", got));
+    try testing.expect(std.mem.eql(u8, "abc123", got));
 }
 
 /// toTitle returns the titlecase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
 pub fn toTitle(cp: u21) u21 {
     return Letter.toTitle(cp);
+}
+
+/// toTitleStr returns the titlecase version of `s`. Caller must free returned memory with `allocator`.
+pub fn toTitleStr(allocator: *std.mem.Allocator, s: []const u8) ![]u8 {
+    var words = try WordIterator.init(allocator, s);
+    defer words.deinit();
+    var result = std.ArrayList(u8).init(allocator);
+    defer result.deinit();
+    var buf: [4]u8 = undefined;
+
+    while (words.next()) |word| {
+        var code_points = CodePointIterator{ .bytes = word.bytes };
+        var got_f = false;
+
+        while (code_points.nextCodePoint()) |cp| {
+            var len: usize = 0;
+
+            if (!got_f and isCased(cp.scalar)) {
+                // First cased is titlecase.
+                len = try unicode.utf8Encode(toTitle(cp.scalar), &buf);
+                got_f = true;
+            } else if (isCased(cp.scalar)) {
+                // Subsequent cased are lowercase.
+                len = try unicode.utf8Encode(toLower(cp.scalar), &buf);
+            } else {
+                // Uncased remain the same.
+                len = try unicode.utf8Encode(cp.scalar, &buf);
+            }
+
+            try result.appendSlice(buf[0..len]);
+        }
+    }
+
+    return result.toOwnedSlice();
+}
+
+test "Ziglyph toTitleStr" {
+    var allocator = std.testing.allocator;
+    const got = try toTitleStr(allocator, "the aBc123 broWn. fox");
+    defer allocator.free(got);
+    try testing.expectEqualStrings("The Abc123 Brown. Fox", got);
 }
 
 /// toUpper returns the uppercase code point for the given code point. It returns the same 
@@ -287,123 +329,120 @@ test "Ziglyph toUpperStr" {
     var allocator = std.testing.allocator;
     const got = try toUpperStr(allocator, "aBc123");
     defer allocator.free(got);
-    try expect(std.mem.eql(u8, "ABC123", got));
+    try testing.expect(std.mem.eql(u8, "ABC123", got));
 }
-
-const expect = std.testing.expect;
-const expectEqual = std.testing.expectEqual;
 
 test "Ziglyph ASCII methods" {
     const z = 'F';
-    try expect(isAsciiAlphabetic(z));
-    try expect(isAsciiAlphaNum(z));
-    try expect(isAsciiHexDigit(z));
-    try expect(isAsciiGraphic(z));
-    try expect(isAsciiPrint(z));
-    try expect(isAsciiUpper(z));
-    try expect(!isAsciiControl(z));
-    try expect(!isAsciiDigit(z));
-    try expect(!isAsciiNumber(z));
-    try expect(!isAsciiLower(z));
-    try expectEqual(toAsciiLower(z), 'f');
-    try expectEqual(toAsciiUpper('a'), 'A');
-    try expect(isAsciiLower(toAsciiLower(z)));
+    try testing.expect(isAsciiAlphabetic(z));
+    try testing.expect(isAsciiAlphaNum(z));
+    try testing.expect(isAsciiHexDigit(z));
+    try testing.expect(isAsciiGraphic(z));
+    try testing.expect(isAsciiPrint(z));
+    try testing.expect(isAsciiUpper(z));
+    try testing.expect(!isAsciiControl(z));
+    try testing.expect(!isAsciiDigit(z));
+    try testing.expect(!isAsciiNumber(z));
+    try testing.expect(!isAsciiLower(z));
+    try testing.expectEqual(toAsciiLower(z), 'f');
+    try testing.expectEqual(toAsciiUpper('a'), 'A');
+    try testing.expect(isAsciiLower(toAsciiLower(z)));
 }
 
 test "Ziglyph struct" {
     const z = 'z';
-    try expect(isAlphaNum(z));
-    try expect(!isControl(z));
-    try expect(!isDecimal(z));
-    try expect(!isDigit(z));
-    try expect(!isHexDigit(z));
-    try expect(isGraphic(z));
-    try expect(isLetter(z));
-    try expect(isLower(z));
-    try expect(!isMark(z));
-    try expect(!isNumber(z));
-    try expect(isPrint(z));
-    try expect(!isPunct(z));
-    try expect(!isWhiteSpace(z));
-    try expect(!isSymbol(z));
-    try expect(!isTitle(z));
-    try expect(!isUpper(z));
+    try testing.expect(isAlphaNum(z));
+    try testing.expect(!isControl(z));
+    try testing.expect(!isDecimal(z));
+    try testing.expect(!isDigit(z));
+    try testing.expect(!isHexDigit(z));
+    try testing.expect(isGraphic(z));
+    try testing.expect(isLetter(z));
+    try testing.expect(isLower(z));
+    try testing.expect(!isMark(z));
+    try testing.expect(!isNumber(z));
+    try testing.expect(isPrint(z));
+    try testing.expect(!isPunct(z));
+    try testing.expect(!isWhiteSpace(z));
+    try testing.expect(!isSymbol(z));
+    try testing.expect(!isTitle(z));
+    try testing.expect(!isUpper(z));
     const uz = toUpper(z);
-    try expect(isUpper(uz));
-    try expectEqual(uz, 'Z');
+    try testing.expect(isUpper(uz));
+    try testing.expectEqual(uz, 'Z');
     const lz = toLower(uz);
-    try expect(isLower(lz));
-    try expectEqual(lz, 'z');
+    try testing.expect(isLower(lz));
+    try testing.expectEqual(lz, 'z');
     const tz = toTitle(lz);
-    try expect(isUpper(tz));
-    try expectEqual(tz, 'Z');
+    try testing.expect(isUpper(tz));
+    try testing.expectEqual(tz, 'Z');
 }
 
 test "Ziglyph isGraphic" {
-    try expect(isGraphic('A'));
-    try expect(isGraphic('\u{20E4}'));
-    try expect(isGraphic('1'));
-    try expect(isGraphic('?'));
-    try expect(isGraphic(' '));
-    try expect(isGraphic('='));
-    try expect(!isGraphic('\u{0003}'));
+    try testing.expect(isGraphic('A'));
+    try testing.expect(isGraphic('\u{20E4}'));
+    try testing.expect(isGraphic('1'));
+    try testing.expect(isGraphic('?'));
+    try testing.expect(isGraphic(' '));
+    try testing.expect(isGraphic('='));
+    try testing.expect(!isGraphic('\u{0003}'));
 }
 
 test "Ziglyph isHexDigit" {
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        try expect(isHexDigit(cp));
+        try testing.expect(isHexDigit(cp));
     }
 
     cp = 'A';
     while (cp <= 'F') : (cp += 1) {
-        try expect(isHexDigit(cp));
+        try testing.expect(isHexDigit(cp));
     }
 
     cp = 'a';
     while (cp <= 'f') : (cp += 1) {
-        try expect(isHexDigit(cp));
+        try testing.expect(isHexDigit(cp));
     }
 
-    try expect(!isHexDigit('\u{0003}'));
-    try expect(!isHexDigit('Z'));
+    try testing.expect(!isHexDigit('\u{0003}'));
+    try testing.expect(!isHexDigit('Z'));
 }
 
 test "Ziglyph isPrint" {
-    try expect(isPrint('A'));
-    try expect(isPrint('\u{20E4}'));
-    try expect(isPrint('1'));
-    try expect(isPrint('?'));
-    try expect(isPrint('='));
-    try expect(isPrint(' '));
-    try expect(isPrint('\t'));
-    try expect(!isPrint('\u{0003}'));
+    try testing.expect(isPrint('A'));
+    try testing.expect(isPrint('\u{20E4}'));
+    try testing.expect(isPrint('1'));
+    try testing.expect(isPrint('?'));
+    try testing.expect(isPrint('='));
+    try testing.expect(isPrint(' '));
+    try testing.expect(isPrint('\t'));
+    try testing.expect(!isPrint('\u{0003}'));
 }
 
 test "Ziglyph isAlphaNum" {
     var cp: u21 = '0';
     while (cp <= '9') : (cp += 1) {
-        try expect(isAlphaNum(cp));
+        try testing.expect(isAlphaNum(cp));
     }
 
     cp = 'a';
     while (cp <= 'z') : (cp += 1) {
-        try expect(isAlphaNum(cp));
+        try testing.expect(isAlphaNum(cp));
     }
 
     cp = 'A';
     while (cp <= 'Z') : (cp += 1) {
-        try expect(isAlphaNum(cp));
+        try testing.expect(isAlphaNum(cp));
     }
 
-    try expect(!isAlphaNum('='));
+    try testing.expect(!isAlphaNum('='));
 }
 
 test "Ziglyph isControl" {
-    try expect(isControl('\t'));
-    try expect(isControl('\u{0008}'));
-    try expect(isControl('\u{0012}'));
-    try expect(isControl('\n'));
-    try expect(isControl('\r'));
-    try expect(!isControl('A'));
+    try testing.expect(isControl('\t'));
+    try testing.expect(isControl('\u{0008}'));
+    try testing.expect(isControl('\u{0012}'));
+    try testing.expect(isControl('\n'));
+    try testing.expect(isControl('\r'));
+    try testing.expect(!isControl('A'));
 }
