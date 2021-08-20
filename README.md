@@ -1,7 +1,10 @@
 # ziglyph
 Unicode text processing for the Zig Programming Language.
 
-### Looking for an UTF-8 String Type?
+## Stable Branch
+This is the `stable` branch which is built with and guaranteed to work with the latest stable version of Zig.
+
+## Looking for an UTF-8 String Type?
 `Zigstr` is a UTF-8 string type that incorporates many of Ziglyph's Unicode processing tools. You can
 learn more in the [Zigstr repo](https://github.com/jecolon/zigstr).
 
