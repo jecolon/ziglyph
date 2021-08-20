@@ -122,7 +122,10 @@ pub const SentenceIterator = struct {
 
                 if (current_token.is(.cr)) {
                     if (self.peek()) |p| {
-                        if (p.is(.lf)) end = self.advance().?;
+                        if (p.is(.lf)) {
+                            _ = self.advance();
+                            end = self.current();
+                        }
                     }
                 }
 
@@ -146,7 +149,6 @@ pub const SentenceIterator = struct {
                             if (isUpperLower(v)) continue :no_break;
                         }
                     } else if (isParaSep(p) or isLower(p) or isNumeric(p) or isSContinue(p)) {
-                        //end = self.advance().?;
                         continue :no_break;
                     } else if (isSpace(p)) {
                         // ATerm Sp*
@@ -162,7 +164,8 @@ pub const SentenceIterator = struct {
                         if (self.peek()) |pp| {
                             // Possible ParaSep after.
                             if (isParaSep(pp)) {
-                                end = self.advance().?;
+                                _ = self.advance();
+                                end = self.current();
                                 const start = self.start.?;
                                 self.start = self.peek();
 
@@ -205,7 +208,8 @@ pub const SentenceIterator = struct {
 
                 if (self.peek()) |p| {
                     if (isParaSep(p) or isSATerm(p) or isSContinue(p)) {
-                        end = self.advance().?;
+                        _ = self.advance();
+                        end = self.current();
                     } else if (isSpace(p)) {
                         self.run(isSpace);
                         end = self.current();
