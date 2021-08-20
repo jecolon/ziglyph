@@ -10,9 +10,15 @@ pub const Symbol = @import("components/aggregate/Symbol.zig");
 // Display Width
 pub const Width = @import("components/aggregate/Width.zig");
 
-// Grapheme Clusters
-pub const CodePointIterator = @import("grapheme/CodePointIterator.zig");
-pub const GraphemeIterator = @import("grapheme/GraphemeIterator.zig");
+// String Segmentation
+pub const CodePoint = @import("segmenter/CodePoint.zig");
+pub const CodePointIterator = CodePoint.CodePointIterator;
+pub const Grapheme = @import("segmenter/Grapheme.zig");
+pub const GraphemeIterator = Grapheme.GraphemeIterator;
+pub const Word = @import("segmenter/Word.zig");
+pub const WordIterator = Word.WordIterator;
+pub const Sentence = @import("segmenter/Sentence.zig");
+pub const SentenceIterator = Sentence.SentenceIterator;
 
 // Collation
 pub const Collator = @import("collator/Collator.zig");
@@ -35,5 +41,7 @@ pub const GraphemeBreakProperty = @import("components/autogen/GraphemeBreakPrope
 pub const HangulMap = @import("components/autogen/HangulMap.zig");
 pub const LowerMap = @import("components/autogen/LowerMap.zig");
 pub const PropList = @import("components/autogen/PropList.zig");
+pub const SentenceBreakProperty = @import("components/autogen/SentenceBreakProperty.zig");
 pub const TitleMap = @import("components/autogen/TitleMap.zig");
 pub const UpperMap = @import("components/autogen/UpperMap.zig");
+pub const WordBreakProperty = @import("components/autogen/WordBreakProperty.zig");

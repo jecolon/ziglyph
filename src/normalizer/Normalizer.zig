@@ -152,13 +152,15 @@ pub fn normalizeTo(self: *Self, form: Form, str: []const u8) anyerror![]u8 {
 
 fn normalizeCodePointsTo(self: *Self, form: Form, code_points: []u21) anyerror![]u8 {
     const d_code_points = try self.normalizeCodePointsToCodePoints(form, code_points);
-    var result = try std.ArrayList(u8).initCapacity(&self.arena.allocator, code_points.len * 4);
+    //var result = try std.ArrayList(u8).initCapacity(&self.arena.allocator, code_points.len * 4);
+    var result = std.ArrayList(u8).init(&self.arena.allocator);
     var buf: [4]u8 = undefined;
 
     // Encode as UTF-8 bytes.
     for (d_code_points) |dcp| {
         const len = try unicode.utf8Encode(dcp, &buf);
-        result.appendSliceAssumeCapacity(buf[0..len]);
+        //result.appendSliceAssumeCapacity(buf[0..len]);
+        try result.appendSlice(buf[0..len]);
     }
 
     return result.items;
@@ -465,7 +467,7 @@ fn eqlIdent(self: *Self, a: []const u8, b: []const u8) !bool {
             continue;
         } else {
             // Got list; parse it. "x,y,z..."
-            var fields = mem.split(cf_s, ",");
+            var fields = mem.split(u8, cf_s, ",");
 
             while (fields.next()) |field| {
                 const parsed_cp = try std.fmt.parseInt(u21, field, 16);
@@ -487,7 +489,7 @@ fn eqlIdent(self: *Self, a: []const u8, b: []const u8) !bool {
             continue;
         } else {
             // Got list; parse it. "x,y,z..."
-            var fields = mem.split(cf_s, ",");
+            var fields = mem.split(u8, cf_s, ",");
 
             while (fields.next()) |field| {
                 const parsed_cp = try std.fmt.parseInt(u21, field, 16);
@@ -598,7 +600,7 @@ test "Normalizer normalizeTo" {
         if (line.len == 0 or line[0] == '#' or line[0] == '@') continue;
         //std.debug.print("{}: {s}\n", .{ line_no, line });
         // Iterate over fields.
-        var fields = mem.split(line, ";");
+        var fields = mem.split(u8, line, ";");
         var field_index: usize = 0;
         var input: []u8 = undefined;
 
@@ -606,7 +608,7 @@ test "Normalizer normalizeTo" {
             if (field_index == 0) {
                 var i_buf = std.ArrayList(u8).init(allocator);
                 defer i_buf.deinit();
-                var i_fields = mem.split(field, " ");
+                var i_fields = mem.split(u8, field, " ");
                 while (i_fields.next()) |s| {
                     const icp = try std.fmt.parseInt(u21, s, 16);
                     const len = try unicode.utf8Encode(icp, &cp_buf);
@@ -617,7 +619,7 @@ test "Normalizer normalizeTo" {
                 // NFC, time to test.
                 var w_buf = std.ArrayList(u8).init(allocator);
                 defer w_buf.deinit();
-                var w_fields = mem.split(field, " ");
+                var w_fields = mem.split(u8, field, " ");
                 while (w_fields.next()) |s| {
                     const wcp = try std.fmt.parseInt(u21, s, 16);
                     const len = try unicode.utf8Encode(wcp, &cp_buf);
@@ -630,7 +632,7 @@ test "Normalizer normalizeTo" {
                 // NFD, time to test.
                 var w_buf = std.ArrayList(u8).init(allocator);
                 defer w_buf.deinit();
-                var w_fields = mem.split(field, " ");
+                var w_fields = mem.split(u8, field, " ");
                 while (w_fields.next()) |s| {
                     const wcp = try std.fmt.parseInt(u21, s, 16);
                     const len = try unicode.utf8Encode(wcp, &cp_buf);
@@ -643,7 +645,7 @@ test "Normalizer normalizeTo" {
                 // NFKC, time to test.
                 var w_buf = std.ArrayList(u8).init(allocator);
                 defer w_buf.deinit();
-                var w_fields = mem.split(field, " ");
+                var w_fields = mem.split(u8, field, " ");
                 while (w_fields.next()) |s| {
                     const wcp = try std.fmt.parseInt(u21, s, 16);
                     const len = try unicode.utf8Encode(wcp, &cp_buf);
@@ -656,7 +658,7 @@ test "Normalizer normalizeTo" {
                 // NFKD, time to test.
                 var w_buf = std.ArrayList(u8).init(allocator);
                 defer w_buf.deinit();
-                var w_fields = mem.split(field, " ");
+                var w_fields = mem.split(u8, field, " ");
                 while (w_fields.next()) |s| {
                     const wcp = try std.fmt.parseInt(u21, s, 16);
                     const len = try unicode.utf8Encode(wcp, &cp_buf);

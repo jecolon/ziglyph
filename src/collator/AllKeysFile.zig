@@ -158,7 +158,7 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
 
         const semi = mem.indexOf(u8, raw, ";").?;
         const cp_strs = mem.trim(u8, raw[0..semi], " ");
-        var cp_strs_iter = mem.split(cp_strs, " ");
+        var cp_strs_iter = mem.split(u8, cp_strs, " ");
         var key: Key = std.mem.zeroes(Key);
         while (cp_strs_iter.next()) |cp_str| {
             const cp = try fmt.parseInt(u21, cp_str, 16);
@@ -168,12 +168,12 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
         }
 
         const ce_strs = mem.trim(u8, raw[semi + 1 ..], " ");
-        var ce_strs_iter = mem.split(ce_strs[1 .. ce_strs.len - 1], "]["); // no ^[. or ^[* or ]$
+        var ce_strs_iter = mem.split(u8, ce_strs[1 .. ce_strs.len - 1], "]["); // no ^[. or ^[* or ]$
 
         var elements: Elements = std.mem.zeroes(Elements);
         while (ce_strs_iter.next()) |ce_str| {
             const just_levels = ce_str[1..];
-            var w_strs_iter = mem.split(just_levels, ".");
+            var w_strs_iter = mem.split(u8, just_levels, ".");
 
             elements.items[elements.len] = Element{
                 .l1 = try fmt.parseInt(u16, w_strs_iter.next().?, 16),

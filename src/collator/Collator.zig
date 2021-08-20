@@ -444,7 +444,7 @@ test "Collator UCA" {
         //std.debug.print("line {d}: {s}\n", .{ line_no, line });
         var bytes = std.ArrayList(u8).init(allocator);
 
-        var cp_strs = mem.split(line, " ");
+        var cp_strs = mem.split(u8, line, " ");
 
         while (cp_strs.next()) |cp_str| {
             const cp = try fmt.parseInt(u21, cp_str, 16);

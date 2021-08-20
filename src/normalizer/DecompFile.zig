@@ -131,7 +131,7 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !DecompFile {
     var buf: [640]u8 = undefined;
     while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
         // Iterate over fields.
-        var fields = mem.split(line, ";");
+        var fields = mem.split(u8, line, ";");
         var field_index: usize = 0;
         var code_point: []const u8 = undefined;
         var dc = Decomp{};
@@ -152,7 +152,7 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !DecompFile {
                 var is_compat = false;
                 var cp_list: [18][]const u8 = [_][]const u8{""} ** 18;
 
-                var cp_iter = mem.split(raw, " ");
+                var cp_iter = mem.split(u8, raw, " ");
                 var i: usize = 0;
                 while (cp_iter.next()) |cp| {
                     if (mem.startsWith(u8, cp, "<")) {

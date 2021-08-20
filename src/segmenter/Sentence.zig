@@ -1,0 +1,471 @@
+const std = @import("std");
+const debug = std.debug;
+const mem = std.mem;
+const testing = std.testing;
+const unicode = std.unicode;
+
+const SBP = @import("../components.zig").SentenceBreakProperty;
+const CodePoint = @import("CodePoint.zig");
+const CodePointIterator = CodePoint.CodePointIterator;
+
+pub const Sentence = @This();
+
+bytes: []const u8,
+offset: usize,
+
+pub fn eql(self: Sentence, str: []const u8) bool {
+    return mem.eql(u8, self.bytes, str);
+}
+
+const Type = enum {
+    aterm,
+    close,
+    cr,
+    extend,
+    format,
+    lf,
+    lower,
+    numeric,
+    oletter,
+    scontinue,
+    sep,
+    sp,
+    sterm,
+    upper,
+    any,
+
+    fn get(cp: CodePoint) Type {
+        var ty: Type = .any;
+        if (0x000D == cp.scalar) ty = .cr;
+        if (0x000A == cp.scalar) ty = .lf;
+        if (SBP.isLower(cp.scalar)) ty = .lower;
+        if (SBP.isUpper(cp.scalar)) ty = .upper;
+        if (SBP.isOLetter(cp.scalar)) ty = .oletter;
+        if (SBP.isNumeric(cp.scalar)) ty = .numeric;
+        if (SBP.isSep(cp.scalar)) ty = .sep;
+        if (SBP.isSp(cp.scalar)) ty = .sp;
+        if (SBP.isClose(cp.scalar)) ty = .close;
+        if (SBP.isATerm(cp.scalar)) ty = .aterm;
+        if (SBP.isSTerm(cp.scalar)) ty = .sterm;
+        if (SBP.isSContinue(cp.scalar)) ty = .scontinue;
+        if (SBP.isExtend(cp.scalar)) ty = .extend;
+        if (SBP.isFormat(cp.scalar)) ty = .format;
+
+        return ty;
+    }
+};
+
+const Token = struct {
+    ty: Type,
+    code_point: CodePoint,
+    offset: usize = 0,
+
+    fn is(self: Token, ty: Type) bool {
+        return self.ty == ty;
+    }
+};
+
+const TokenList = std.ArrayList(Token);
+
+pub const SentenceIterator = struct {
+    bytes: []const u8,
+    i: ?usize = null,
+    start: ?Token = null,
+    tokens: TokenList,
+
+    const Self = @This();
+
+    pub fn init(allocator: *mem.Allocator, str: []const u8) !Self {
+        if (!unicode.utf8ValidateSlice(str)) return error.InvalidUtf8;
+
+        var self = Self{
+            .bytes = str,
+            .tokens = TokenList.init(allocator),
+        };
+
+        try self.lex();
+
+        if (self.tokens.items.len == 0) return error.NoTokens;
+        self.start = self.tokens.items[0];
+
+        // Set token offsets.
+        for (self.tokens.items) |*token, i| {
+            token.offset = i;
+        }
+
+        return self;
+    }
+
+    pub fn deinit(self: *Self) void {
+        self.tokens.deinit();
+    }
+
+    fn lex(self: *Self) !void {
+        var iter = CodePointIterator{
+            .bytes = self.bytes,
+            .i = 0,
+        };
+
+        while (iter.nextCodePoint()) |cp| {
+            try self.tokens.append(.{
+                .ty = Type.get(cp),
+                .code_point = cp,
+            });
+        }
+    }
+
+    // Main API.
+    pub fn next(self: *Self) ?Sentence {
+        no_break: while (self.advance()) |current_token| {
+            if (isParaSep(current_token)) {
+                var end = current_token;
+
+                if (current_token.is(.cr)) {
+                    if (self.peek()) |p| {
+                        if (p.is(.lf)) end = self.advance().?;
+                    }
+                }
+
+                const start = self.start.?;
+                self.start = self.peek();
+
+                return self.emit(start, end);
+            }
+
+            if (current_token.is(.aterm)) {
+                var end = self.current();
+
+                if (self.peek()) |p| {
+                    if (isUpper(p)) {
+                        // self.i may not be the same as current token's offset due to ignorable skipping.
+                        const original_i = self.i;
+                        self.i = current_token.offset;
+                        defer self.i = original_i;
+
+                        if (self.prevAfterSkip(isIgnorable)) |v| {
+                            if (isUpperLower(v)) continue :no_break;
+                        }
+                    } else if (isParaSep(p) or isLower(p) or isNumeric(p) or isSContinue(p)) {
+                        //end = self.advance().?;
+                        continue :no_break;
+                    } else if (isSpace(p)) {
+                        // ATerm Sp*
+                        self.run(isSpace);
+                        end = self.current();
+                        // Possible lower case after.
+                        if (self.peek()) |pp| {
+                            if (isLower(pp)) continue :no_break;
+                        }
+                    } else if (isClose(p)) {
+                        // ATerm Close*
+                        self.run(isClose);
+                        if (self.peek()) |pp| {
+                            // Possible ParaSep after.
+                            if (isParaSep(pp)) {
+                                end = self.advance().?;
+                                const start = self.start.?;
+                                self.start = self.peek();
+
+                                return self.emit(start, end);
+                            }
+                            // Possible spaces after.
+                            if (isSpace(pp)) {
+                                // ATerm Close* Sp*
+                                self.run(isSpace);
+
+                                if (self.peek()) |ppp| {
+                                    // Possible lower after.
+                                    if (isLower(ppp)) continue :no_break;
+                                    // Possible lower after some allowed code points.
+                                    if (isAllowedBeforeLower(ppp)) {
+                                        if (self.peekAfterSkip(isAllowedBeforeLower)) |pppp| {
+                                            // ATerm Close* Sp* !(Unallowed) Lower
+                                            if (isLower(pppp)) continue :no_break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        end = self.current();
+                    } else if (isSATerm(p)) {
+                        self.run(isSATerm);
+                        end = self.current();
+                    }
+                }
+
+                const start = self.start.?;
+                self.start = self.peek();
+
+                return self.emit(start, end);
+            }
+
+            if (current_token.is(.sterm)) {
+                var end = self.current();
+
+                if (self.peek()) |p| {
+                    if (isParaSep(p) or isSATerm(p) or isSContinue(p)) {
+                        end = self.advance().?;
+                    } else if (isSpace(p)) {
+                        self.run(isSpace);
+                        end = self.current();
+                    } else if (isClose(p)) {
+                        // STerm Close*
+                        self.run(isClose);
+                        if (self.peek()) |pp| {
+                            if (isSpace(pp)) {
+                                // STerm Close* Sp*
+                                self.run(isSpace);
+                            }
+                        }
+
+                        end = self.current();
+                    }
+                }
+
+                const start = self.start.?;
+                self.start = self.peek();
+
+                return self.emit(start, end);
+            }
+        }
+
+        return if (self.start) |start| self.emit(start, self.last()) else null;
+    }
+
+    // Token array movement.
+    fn forward(self: *Self) bool {
+        if (self.i) |*index| {
+            index.* += 1;
+            if (index.* >= self.tokens.items.len) return false;
+        } else {
+            self.i = 0;
+        }
+
+        return true;
+    }
+
+    // Token array movement.
+    fn getRelative(self: Self, n: isize) ?Token {
+        var index: usize = self.i orelse 0;
+
+        if (n < 0) {
+            if (index == 0 or -%n > index) return null;
+            index -= @intCast(usize, -%n);
+        } else {
+            const un = @intCast(usize, n);
+            if (index + un >= self.tokens.items.len) return null;
+            index += un;
+        }
+
+        return self.tokens.items[index];
+    }
+
+    fn prevAfterSkip(self: *Self, predicate: TokenPredicate) ?Token {
+        if (self.i == null or self.i.? == 0) return null;
+
+        var i: isize = 1;
+        while (self.getRelative(-i)) |token| : (i += 1) {
+            if (!predicate(token)) return token;
+        }
+
+        return null;
+    }
+
+    fn current(self: Self) Token {
+        // Assumes self.i is not null.
+        return self.tokens.items[self.i.?];
+    }
+
+    fn last(self: Self) Token {
+        return self.tokens.items[self.tokens.items.len - 1];
+    }
+
+    fn peek(self: Self) ?Token {
+        return self.getRelative(1);
+    }
+
+    fn peekAfterSkip(self: *Self, predicate: TokenPredicate) ?Token {
+        var i: isize = 1;
+        while (self.getRelative(i)) |token| : (i += 1) {
+            if (!predicate(token)) return token;
+        }
+
+        return null;
+    }
+
+    fn advance(self: *Self) ?Token {
+        const token = if (self.forward()) self.current() else return null;
+        if (!isParaSep(token)) _ = self.skipIgnorables(token);
+
+        return token;
+    }
+
+    fn run(self: *Self, predicate: TokenPredicate) void {
+        while (self.peek()) |token| {
+            if (!predicate(token)) break;
+            _ = self.advance();
+        }
+    }
+
+    fn skipIgnorables(self: *Self, end: Token) Token {
+        if (self.peek()) |p| {
+            if (isIgnorable(p)) {
+                self.run(isIgnorable);
+                return self.current();
+            }
+        }
+
+        return end;
+    }
+
+    // Production.
+    fn emit(self: Self, start_token: Token, end_token: Token) Sentence {
+        const start = start_token.code_point.offset;
+        const end = end_token.code_point.end();
+
+        return .{
+            .bytes = self.bytes[start..end],
+            .offset = start,
+        };
+    }
+};
+
+// Predicates
+const TokenPredicate = fn (Token) bool;
+
+fn isNumeric(token: Token) bool {
+    return token.ty == .numeric;
+}
+
+fn isLower(token: Token) bool {
+    return token.ty == .lower;
+}
+
+fn isUpper(token: Token) bool {
+    return token.ty == .upper;
+}
+
+fn isUpperLower(token: Token) bool {
+    return isUpper(token) or isLower(token);
+}
+
+fn isIgnorable(token: Token) bool {
+    return token.ty == .extend or token.ty == .format;
+}
+
+fn isClose(token: Token) bool {
+    return token.ty == .close;
+}
+
+fn isSpace(token: Token) bool {
+    return token.ty == .sp;
+}
+
+fn isParaSep(token: Token) bool {
+    return token.ty == .cr or token.ty == .lf or token.ty == .sep;
+}
+
+fn isSATerm(token: Token) bool {
+    return token.ty == .aterm or token.ty == .sterm;
+}
+
+fn isSContinue(token: Token) bool {
+    return token.ty == .scontinue;
+}
+
+fn isUnallowedBeforeLower(token: Token) bool {
+    return token.ty == .oletter or isUpperLower(token) or isSATerm(token) or isParaSep(token);
+}
+
+fn isAllowedBeforeLower(token: Token) bool {
+    return !isUnallowedBeforeLower(token);
+}
+
+test "Segmentation SentenceIterator" {
+    var path_buf: [1024]u8 = undefined;
+    var path = try std.fs.cwd().realpath(".", &path_buf);
+    // Check if testing in this library path.
+    if (!mem.endsWith(u8, path, "ziglyph")) return;
+
+    var allocator = std.testing.allocator;
+    var file = try std.fs.cwd().openFile("src/data/ucd/SentenceBreakTest.txt", .{});
+    defer file.close();
+    var buf_reader = std.io.bufferedReader(file.reader());
+    var input_stream = buf_reader.reader();
+
+    var buf: [4096]u8 = undefined;
+    var line_no: usize = 1;
+
+    while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |raw| : (line_no += 1) {
+        // Skip comments or empty lines.
+        if (raw.len == 0 or raw[0] == '#' or raw[0] == '@') continue;
+
+        // Clean up.
+        var line = mem.trimLeft(u8, raw, "÷ ");
+        if (mem.indexOf(u8, line, " ÷\t#")) |octo| {
+            line = line[0..octo];
+        }
+        //debug.print("\nline {}: {s}\n", .{ line_no, line });
+
+        // Iterate over fields.
+        var want = std.ArrayList(Sentence).init(allocator);
+        defer {
+            for (want.items) |snt| {
+                allocator.free(snt.bytes);
+            }
+            want.deinit();
+        }
+
+        var all_bytes = std.ArrayList(u8).init(allocator);
+        defer all_bytes.deinit();
+
+        var sentences = mem.split(u8, line, " ÷ ");
+        var bytes_index: usize = 0;
+
+        while (sentences.next()) |field| {
+            var code_points = mem.split(u8, field, " ");
+            var cp_buf: [4]u8 = undefined;
+            var cp_index: usize = 0;
+            var first: u21 = undefined;
+            var cp_bytes = std.ArrayList(u8).init(allocator);
+            defer cp_bytes.deinit();
+
+            while (code_points.next()) |code_point| {
+                if (mem.eql(u8, code_point, "×")) continue;
+                const cp: u21 = try std.fmt.parseInt(u21, code_point, 16);
+                if (cp_index == 0) first = cp;
+                const len = try unicode.utf8Encode(cp, &cp_buf);
+                try all_bytes.appendSlice(cp_buf[0..len]);
+                try cp_bytes.appendSlice(cp_buf[0..len]);
+                cp_index += len;
+            }
+
+            try want.append(Sentence{
+                .bytes = cp_bytes.toOwnedSlice(),
+                .offset = bytes_index,
+            });
+
+            bytes_index += cp_index;
+        }
+
+        //debug.print("\nline {}: {s}\n", .{ line_no, all_bytes.items });
+        var iter = try SentenceIterator.init(allocator, all_bytes.items);
+        defer iter.deinit();
+
+        // Chaeck.
+        for (want.items) |w| {
+            const g = (iter.next()).?;
+            //debug.print("\n", .{});
+            //for (w.bytes) |b| {
+            //    debug.print("line {}: w:({x})\n", .{ line_no, b });
+            //}
+            //for (g.bytes) |b| {
+            //    debug.print("line {}: g:({x})\n", .{ line_no, b });
+            //}
+            //debug.print("line {}: w:({s}), g:({s})\n", .{ line_no, w.bytes, g.bytes });
+            try testing.expectEqualStrings(w.bytes, g.bytes);
+            try testing.expectEqual(w.offset, g.offset);
+        }
+    }
+}

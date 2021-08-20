@@ -6,8 +6,11 @@ test "Normalizer" {
     _ = @import("components.zig").Normalizer;
 }
 
-test "Grapheme" {
-    _ = @import("components.zig").GraphemeIterator;
+test "Segmentation" {
+    _ = @import("components.zig").CodePoint;
+    _ = @import("components.zig").Grapheme;
+    _ = @import("components.zig").Word;
+    _ = @import("components.zig").Sentence;
 }
 
 test "components" {
