@@ -69,8 +69,7 @@ pub fn toLower(cp: u21) u21 {
 }
 
 /// toAsciiLower converts an ASCII letter to lowercase.
-pub fn toAsciiLower(self: Self, cp: u21) u21 {
-    _ = self;
+pub fn toAsciiLower(cp: u21) u21 {
     return if (cp >= 'A' and cp <= 'Z') cp ^ 32 else cp;
 }
 
@@ -93,8 +92,7 @@ pub fn toUpper(cp: u21) u21 {
 }
 
 /// toAsciiUpper converts an ASCII letter to uppercase.
-pub fn toAsciiUpper(self: Self, cp: u21) u21 {
-    _ = self;
+pub fn toAsciiUpper(cp: u21) u21 {
     return if (cp >= 'a' and cp <= 'z') cp ^ 32 else cp;
 }
 

@@ -224,18 +224,16 @@ test "Collator ASCII compare" {
 }
 
 /// asciiAsc is a sort function producing ascending binary order of ASCII strings.
-pub fn asciiAsc(self: Self, a: []const u8, b: []const u8) bool {
-    _ = self;
+pub fn asciiAsc(_: Self, a: []const u8, b: []const u8) bool {
     return asciiCmp(a, b) == .lt;
 }
 
 /// asciiDesc is a sort function producing descending binary order of ASCII strings.
-pub fn asciiDesc(self: Self, a: []const u8, b: []const u8) bool {
-    _ = self;
+pub fn asciiDesc(_: Self, a: []const u8, b: []const u8) bool {
     return asciiCmp(a, b) == .gt;
 }
 
-pub const Level = enum(u32) {
+pub const Level = enum(u2) {
     primary = 1, // different base letters.
     secondary, // different marks (i.e. accents).
     tertiary, // different letter case.
