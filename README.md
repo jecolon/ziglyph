@@ -14,67 +14,73 @@ This is pre-1.0 software. Although breaking changes are less frequent with each 
 they still will occur until we reach 1.0.
 
 ## Integrating Ziglyph in your Project
+### Using Zigmod
+```sh
+$ zigmod aq add 1/jecolon/zigstr
+$ zigmod fetch
+```
+Now in your `build.zig` you add this import:
+
+```
+const deps = @import("deps.zig");
+```
+In the `exe` section for the executable where you wish to have Zigstr available, add:
+
+```
+deps.addAllTo(exe);
+```
+
+### Manually via Git
 In a `libs` subdirectory under the root of your project, clone this repository via
 
 ```sh
 $  git clone https://github.com/jecolon/ziglyph.git
 ```
-
 Now in your build.zig, you can add:
 
 ```zig
-exe.addPackagePath("Ziglyph", "libs/ziglyph/src/Ziglyph.zig");
+exe.addPackagePath("ziglyph", "libs/ziglyph/src/Ziglyph.zig");
 ```
-
 to the `exe` section for the executable where you wish to have Ziglyph available. Now in the code, you
 can import components like this:
 
 ```zig
-const Ziglyph = @import("Ziglyph");
-const Letter = @import("Ziglyph").Letter; // or const Letter = Ziglyph.Letter;
-const Number = @import("Ziglyph").Number; // or const Number = Ziglyph.Number;
+const ziglyph = @import("ziglyph");
+const Letter = @import("ziglyph").Letter; // or const Letter = Ziglyph.Letter;
+const Number = @import("ziglyph").Number; // or const Number = Ziglyph.Number;
 
 ```
-
-Finally, you can build the project with:
-
-```sh
-$ zig build
-```
-
-Note that to build in release modes, either specify them in the `build.zig` file or on the command line
-via the `-Drelease-fast=true`, `-Drelease-small=true`, `-Drelease-safe=true` options to `zig build`.
 
 ### Using the Ziglyph Struct
 The `Ziglyph` struct provides convenient acces to the most frequently-used functions related to Unicode
 code points and strings.
 
 ```zig
-const Ziglyph = @import("Ziglyph");
+const ziglyph = @import("ziglyph");
 
 test "Ziglyph struct" {
     const z = 'z';
-    try expect(Ziglyph.isLetter(z));
-    try expect(Ziglyph.isAlphaNum(z));
-    try expect(Ziglyph.isPrint(z));
-    try expect(!Ziglyph.isUpper(z));
-    const uz = Ziglyph.toUpper(z);
-    try expect(Ziglyph.isUpper(uz));
+    try expect(ziglyph.isLetter(z));
+    try expect(ziglyph.isAlphaNum(z));
+    try expect(ziglyph.isPrint(z));
+    try expect(!ziglyph.isUpper(z));
+    const uz = ziglyph.toUpper(z);
+    try expect(ziglyph.isUpper(uz));
     try expectEqual(uz, 'Z');
 
     // String toLower, toTitle, and toUpper.
     var allocator = std.testing.allocator;
-    var got = try Ziglyph.toLowerStr(allocator, "AbC123");
+    var got = try ziglyph.toLowerStr(allocator, "AbC123");
     errdefer allocator.free(got);
     try expect(std.mem.eql(u8, "abc123", got));
     allocator.free(got);
 
-    got = try Ziglyph.toUpperStr(allocator, "aBc123");
+    got = try ziglyph.toUpperStr(allocator, "aBc123");
     errdefer allocator.free(got);
     try expect(std.mem.eql(u8, "ABC123", got));
     allocator.free(got);
 
-    got = try Ziglyph.toTitleStr(allocator, "thE aBc123 moVie. yes!");
+    got = try ziglyph.toTitleStr(allocator, "thE aBc123 moVie. yes!");
     defer allocator.free(got);
     try expect(std.mem.eql(u8, "The Abc123 Movie. Yes!", got));
 }
@@ -85,8 +91,8 @@ Smaller aggregate structs are privided for specific areas of functionality.
 See [components.zig](src/components.zig) for a full list of all components.
 
 ```zig
-const Letter = @import("Ziglyph").Letter;
-const Punct = @import("Ziglyph").Punct;
+const Letter = @import("ziglyph").Letter;
+const Punct = @import("ziglyph").Punct;
 
 test "Aggregate struct" {
     const z = 'z';
@@ -109,7 +115,7 @@ is found in the `src/data/ucd` directory. See the section on Collation for more 
 compression algorithm applied to the the Unicode data files for both Normalization and Collation.
 
 ```zig
-const Normalizer = @import("Ziglyph").Normalizer;
+const Normalizer = @import("ziglyph").Normalizer;
 
 test "normalizeTo" {
     var allocator = std.testing.allocator;
@@ -163,7 +169,7 @@ Normalization and Collation. You can read more about it in
 `init` also takes a pointer to a `Normalizer` because collation depends on normaliztion.
 
 ```
-const Collator = @import("Ziglyph").Collator;
+const Collator = @import("ziglyph").Collator;
 
 test "Collation" {
     var allocator = std.testing.allocator;
@@ -207,9 +213,9 @@ which may surprise you in terms of what's included and excluded at each break po
 results!
 
 ```
-const GraphemeIterator = @import("Ziglyph").GraphemeIterator;
-const SentenceIterator = @import("Ziglyph").SentenceIterator;
-const WordIterator = @import("Ziglyph").WordIterator;
+const GraphemeIterator = @import("ziglyph").GraphemeIterator;
+const SentenceIterator = @import("ziglyph").SentenceIterator;
+const WordIterator = @import("ziglyph").WordIterator;
 
 test "GraphemeIterator" {
     var allocator = std.testing.allocator;
@@ -268,7 +274,7 @@ emulators, it's necessary to know how many cells (or columns) a particular code 
 occupy. The `Width` component struct provides methods to do just that.
 
 ```
-const Width = @import("Ziglyph").Width;
+const Width = @import("ziglyph").Width;
 
 test "Code point / string widths" {
     // The width methods take a second parameter of value .half or .full to determine the width of 
