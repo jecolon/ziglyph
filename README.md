@@ -207,26 +207,44 @@ test "Collation" {
 ```
 
 ## Text Segmentation (Grapheme Clusters, Words, Sentences)
-Ziglyph has iterators to traverse text as Grapheme Clusters (what most people recognize as `characters`), 
+Ziglyph has iterators to traverse text as Grapheme Clusters (what most people recognize as *characters*), 
 Words, and Sentences. All of these text segmentation functions adhere to the Unicode Text Segmentation rules,
 which may surprise you in terms of what's included and excluded at each break point. Test before assuming any
-results!
+results! There are also non-allocating compile-time versions for use with string literals or embedded files.
 
 ```
-const GraphemeIterator = @import("ziglyph").GraphemeIterator;
+const Grapheme = @import("ziglyph").Grapheme;
+const GraphemeIterator = Grapheme.GraphemeIterator;
+const ComptimeGraphemeIterator = Grapheme.ComptimeGraphemeIterator;
 const SentenceIterator = @import("ziglyph").SentenceIterator;
 const WordIterator = @import("ziglyph").WordIterator;
 
 test "GraphemeIterator" {
     var allocator = std.testing.allocator;
-    var graphemes = try GraphemeIterator.init(allocator, "H\u{0065}\u{0301}llo");
-    defer graphemes.deinit();
+    const input = "H\u{0065}\u{0301}llo";
+    var iter = try GraphemeIterator.init(allocator, input);
+    defer iter.deinit();
 
     const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
 
     var i: usize = 0;
-    while (graphemes.next()) |grapheme| : (i += 1) {
-        try testing.expectEqualStrings(grapheme.bytes, want[i]);
+    while (iter.next()) |grapheme| : (i += 1) {
+        try testing.expect(grapheme.eql(want[i]));
+    }
+
+    // Need your grapheme clusters at compile time?
+    comptime var ct_iter = ComptimeGraphemeIterator(input){};
+    const n: usize = comptime ct_iter.count();
+    comptime var graphemes: [n]Grapheme = undefined;
+    comptime {
+        var ct_i: usize = 0;
+        while (ct_iter.next()) |grapheme| : (ct_i += 1) {
+            graphemes[ct_i] = grapheme;
+        }
+    }
+
+    for (graphemes) |grapheme, j| {
+        try testing.expect(grapheme.eql(want[j]));
     }
 }
 

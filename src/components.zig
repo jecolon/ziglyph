@@ -15,6 +15,7 @@ pub const CodePoint = @import("segmenter/CodePoint.zig");
 pub const CodePointIterator = CodePoint.CodePointIterator;
 pub const Grapheme = @import("segmenter/Grapheme.zig");
 pub const GraphemeIterator = Grapheme.GraphemeIterator;
+pub const ComptimeGraphemeIterator = Grapheme.ComptimeGraphemeIterator;
 pub const Word = @import("segmenter/Word.zig");
 pub const WordIterator = Word.WordIterator;
 pub const Sentence = @import("segmenter/Sentence.zig");

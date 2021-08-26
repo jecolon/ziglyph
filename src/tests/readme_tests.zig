@@ -4,7 +4,9 @@ const testing = std.testing;
 // Import structs.
 const Ziglyph = @import("../Ziglyph.zig");
 const Collator = Ziglyph.Collator;
-const GraphemeIterator = Ziglyph.GraphemeIterator;
+const Grapheme = Ziglyph.Grapheme;
+const GraphemeIterator = Grapheme.GraphemeIterator;
+const ComptimeGraphemeIterator = Grapheme.ComptimeGraphemeIterator;
 const Letter = Ziglyph.Letter;
 const Normalizer = Ziglyph.Normalizer;
 const Punct = Ziglyph.Punct;
@@ -100,29 +102,45 @@ test "normalizeTo" {
 
 test "GraphemeIterator" {
     var allocator = std.testing.allocator;
-    var graphemes = try GraphemeIterator.init(allocator, "H\u{0065}\u{0301}llo");
-    defer graphemes.deinit();
+    const input = "H\u{0065}\u{0301}llo";
+    var iter = try GraphemeIterator.init(allocator, input);
+    defer iter.deinit();
 
     const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
 
     var i: usize = 0;
-    while (graphemes.next()) |grapheme| : (i += 1) {
-        try testing.expectEqualStrings(grapheme.bytes, want[i]);
+    while (iter.next()) |grapheme| : (i += 1) {
+        try testing.expect(grapheme.eql(want[i]));
+    }
+
+    // Need your grapheme clusters at compile time?
+    comptime var ct_iter = ComptimeGraphemeIterator(input){};
+    const n: usize = comptime ct_iter.count();
+    comptime var graphemes: [n]Grapheme = undefined;
+    comptime {
+        var ct_i: usize = 0;
+        while (ct_iter.next()) |grapheme| : (ct_i += 1) {
+            graphemes[ct_i] = grapheme;
+        }
+    }
+
+    for (graphemes) |grapheme, j| {
+        try testing.expect(grapheme.eql(want[j]));
     }
 }
 
 test "SentenceIterator" {
     var allocator = std.testing.allocator;
-    const input = 
+    const input =
         \\("Go.") ("He said.")
     ;
     var sentences = try SentenceIterator.init(allocator, input);
     defer sentences.deinit();
 
-    const s1 = 
+    const s1 =
         \\("Go.") 
     ;
-    const s2 = 
+    const s2 =
         \\("He said.")
     ;
     const want = &[_][]const u8{ s1, s2 };
