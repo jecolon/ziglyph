@@ -10,7 +10,9 @@ const ComptimeGraphemeIterator = Grapheme.ComptimeGraphemeIterator;
 const Letter = Ziglyph.Letter;
 const Normalizer = Ziglyph.Normalizer;
 const Punct = Ziglyph.Punct;
-const SentenceIterator = Ziglyph.SentenceIterator;
+const Sentence = Ziglyph.Sentence;
+const SentenceIterator = Sentence.SentenceIterator;
+const ComptimeSentenceIterator = Sentence.ComptimeSentenceIterator;
 const UpperMap = Ziglyph.UpperMap;
 const Width = Ziglyph.Width;
 const Word = Ziglyph.Word;
@@ -136,9 +138,11 @@ test "SentenceIterator" {
     const input =
         \\("Go.") ("He said.")
     ;
-    var sentences = try SentenceIterator.init(allocator, input);
-    defer sentences.deinit();
+    var iter = try SentenceIterator.init(allocator, input);
+    defer iter.deinit();
 
+    // Note the space after the closing right parenthesis is included as part
+    // of the first sentence.
     const s1 =
         \\("Go.") 
     ;
@@ -148,8 +152,25 @@ test "SentenceIterator" {
     const want = &[_][]const u8{ s1, s2 };
 
     var i: usize = 0;
-    while (sentences.next()) |sentence| : (i += 1) {
+    while (iter.next()) |sentence| : (i += 1) {
         try testing.expectEqualStrings(sentence.bytes, want[i]);
+    }
+
+    // Need your sentences at compile time?
+    @setEvalBranchQuota(2_000);
+
+    comptime var ct_iter = ComptimeSentenceIterator(input){};
+    const n = comptime ct_iter.count();
+    var sentences: [n]Sentence = undefined;
+    comptime {
+        var ct_i: usize = 0;
+        while (ct_iter.next()) |sentence| : (ct_i += 1) {
+            sentences[ct_i] = sentence;
+        }
+    }
+
+    for (sentences) |sentence, j| {
+        try testing.expect(sentence.eql(want[j]));
     }
 }
 

@@ -473,3 +473,304 @@ test "Segmentation SentenceIterator" {
         }
     }
 }
+
+// Comptime
+fn getTokens(comptime str: []const u8, comptime n: usize) [n]Token {
+    var i: usize = 0;
+    var cp_iter = CodePointIterator{ .bytes = str };
+    var tokens: [n]Token = undefined;
+
+    while (cp_iter.next()) |cp| : (i += 1) {
+        tokens[i] = .{
+            .ty = Type.get(cp),
+            .code_point = cp,
+            .offset = i,
+        };
+    }
+
+    return tokens;
+}
+
+pub fn ComptimeSentenceIterator(comptime str: []const u8) type {
+    const cp_count: usize = unicode.utf8CountCodepoints(str) catch @compileError("Invalid UTF-8.");
+    if (cp_count == 0) @compileError("No code points?");
+    const tokens = getTokens(str, cp_count);
+
+    return struct {
+        bytes: []const u8 = str,
+        i: ?usize = null,
+        start: ?Token = tokens[0],
+        tokens: [cp_count]Token = tokens,
+
+        const Self = @This();
+
+        // Main API.
+        pub fn next(self: *Self) ?Sentence {
+            no_break: while (self.advance()) |current_token| {
+                if (isParaSep(current_token)) {
+                    var end = current_token;
+
+                    if (current_token.is(.cr)) {
+                        if (self.peek()) |p| {
+                            if (p.is(.lf)) {
+                                _ = self.advance();
+                                end = self.current();
+                            }
+                        }
+                    }
+
+                    const start = self.start.?;
+                    self.start = self.peek();
+
+                    return self.emit(start, end);
+                }
+
+                if (current_token.is(.aterm)) {
+                    var end = self.current();
+
+                    if (self.peek()) |p| {
+                        if (isUpper(p)) {
+                            // self.i may not be the same as current token's offset due to ignorable skipping.
+                            const original_i = self.i;
+                            self.i = current_token.offset;
+                            defer self.i = original_i;
+
+                            if (self.prevAfterSkip(isIgnorable)) |v| {
+                                if (isUpperLower(v)) continue :no_break;
+                            }
+                        } else if (isParaSep(p) or isLower(p) or isNumeric(p) or isSContinue(p)) {
+                            continue :no_break;
+                        } else if (isSpace(p)) {
+                            // ATerm Sp*
+                            self.run(isSpace);
+                            end = self.current();
+                            // Possible lower case after.
+                            if (self.peek()) |pp| {
+                                if (isLower(pp)) continue :no_break;
+                            }
+                        } else if (isClose(p)) {
+                            // ATerm Close*
+                            self.run(isClose);
+                            if (self.peek()) |pp| {
+                                // Possible ParaSep after.
+                                if (isParaSep(pp)) {
+                                    _ = self.advance();
+                                    end = self.current();
+                                    const start = self.start.?;
+                                    self.start = self.peek();
+
+                                    return self.emit(start, end);
+                                }
+                                // Possible spaces after.
+                                if (isSpace(pp)) {
+                                    // ATerm Close* Sp*
+                                    self.run(isSpace);
+
+                                    if (self.peek()) |ppp| {
+                                        // Possible lower after.
+                                        if (isLower(ppp)) continue :no_break;
+                                        // Possible lower after some allowed code points.
+                                        if (isAllowedBeforeLower(ppp)) {
+                                            if (self.peekAfterSkip(isAllowedBeforeLower)) |pppp| {
+                                                // ATerm Close* Sp* !(Unallowed) Lower
+                                                if (isLower(pppp)) continue :no_break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            end = self.current();
+                        } else if (isSATerm(p)) {
+                            self.run(isSATerm);
+                            end = self.current();
+                        }
+                    }
+
+                    const start = self.start.?;
+                    self.start = self.peek();
+
+                    return self.emit(start, end);
+                }
+
+                if (current_token.is(.sterm)) {
+                    var end = self.current();
+
+                    if (self.peek()) |p| {
+                        if (isParaSep(p) or isSATerm(p) or isSContinue(p)) {
+                            _ = self.advance();
+                            end = self.current();
+                        } else if (isSpace(p)) {
+                            self.run(isSpace);
+                            end = self.current();
+                        } else if (isClose(p)) {
+                            // STerm Close*
+                            self.run(isClose);
+                            if (self.peek()) |pp| {
+                                if (isSpace(pp)) {
+                                    // STerm Close* Sp*
+                                    self.run(isSpace);
+                                }
+                            }
+
+                            end = self.current();
+                        }
+                    }
+
+                    const start = self.start.?;
+                    self.start = self.peek();
+
+                    return self.emit(start, end);
+                }
+            }
+
+            return if (self.start) |start| self.emit(start, self.last()) else null;
+        }
+
+        // Token array movement.
+        fn forward(self: *Self) bool {
+            if (self.i) |*index| {
+                index.* += 1;
+                if (index.* >= self.tokens.len) return false;
+            } else {
+                self.i = 0;
+            }
+
+            return true;
+        }
+
+        pub fn count(self: *Self) usize {
+            const original_i = self.i;
+            const original_start = self.start;
+            defer {
+                self.i = original_i;
+                self.start = original_start;
+            }
+
+            self.rewind();
+            var i: usize = 0;
+            while (self.next()) |_| : (i += 1) {}
+
+            return i;
+        }
+
+        // Token array movement.
+        pub fn rewind(self: *Self) void {
+            self.i = null;
+            self.start = self.tokens[0];
+        }
+
+        fn getRelative(self: Self, n: isize) ?Token {
+            var index: usize = self.i orelse 0;
+
+            if (n < 0) {
+                if (index == 0 or -%n > index) return null;
+                index -= @intCast(usize, -%n);
+            } else {
+                const un = @intCast(usize, n);
+                if (index + un >= self.tokens.len) return null;
+                index += un;
+            }
+
+            return self.tokens[index];
+        }
+
+        fn prevAfterSkip(self: *Self, predicate: TokenPredicate) ?Token {
+            if (self.i == null or self.i.? == 0) return null;
+
+            var i: isize = 1;
+            while (self.getRelative(-i)) |token| : (i += 1) {
+                if (!predicate(token)) return token;
+            }
+
+            return null;
+        }
+
+        fn current(self: Self) Token {
+            // Assumes self.i is not null.
+            return self.tokens[self.i.?];
+        }
+
+        fn last(self: Self) Token {
+            return self.tokens[self.tokens.len - 1];
+        }
+
+        fn peek(self: Self) ?Token {
+            return self.getRelative(1);
+        }
+
+        fn peekAfterSkip(self: *Self, predicate: TokenPredicate) ?Token {
+            var i: isize = 1;
+            while (self.getRelative(i)) |token| : (i += 1) {
+                if (!predicate(token)) return token;
+            }
+
+            return null;
+        }
+
+        fn advance(self: *Self) ?Token {
+            const token = if (self.forward()) self.current() else return null;
+            if (!isParaSep(token)) _ = self.skipIgnorables(token);
+
+            return token;
+        }
+
+        fn run(self: *Self, predicate: TokenPredicate) void {
+            while (self.peek()) |token| {
+                if (!predicate(token)) break;
+                _ = self.advance();
+            }
+        }
+
+        fn skipIgnorables(self: *Self, end: Token) Token {
+            if (self.peek()) |p| {
+                if (isIgnorable(p)) {
+                    self.run(isIgnorable);
+                    return self.current();
+                }
+            }
+
+            return end;
+        }
+
+        // Production.
+        fn emit(self: Self, start_token: Token, end_token: Token) Sentence {
+            const start = start_token.code_point.offset;
+            const end = end_token.code_point.end();
+
+            return .{
+                .bytes = self.bytes[start..end],
+                .offset = start,
+            };
+        }
+    };
+}
+
+test "Segmentation ComptimeSentenceIterator" {
+    @setEvalBranchQuota(2_000);
+
+    const input =
+        \\("Go.") ("He said.")
+    ;
+    comptime var ct_iter = ComptimeSentenceIterator(input){};
+    const n = comptime ct_iter.count();
+    var sentences: [n]Sentence = undefined;
+    comptime {
+        var i: usize = 0;
+        while (ct_iter.next()) |sentence| : (i += 1) {
+            sentences[i] = sentence;
+        }
+    }
+
+    const s1 =
+        \\("Go.") 
+    ;
+    const s2 =
+        \\("He said.")
+    ;
+    const want = &[_][]const u8{ s1, s2 };
+
+    for (sentences) |sentence, i| {
+        try testing.expect(sentence.eql(want[i]));
+    }
+}
