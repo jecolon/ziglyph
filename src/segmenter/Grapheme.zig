@@ -107,7 +107,7 @@ pub const GraphemeIterator = struct {
             .i = 0,
         };
 
-        while (iter.nextCodePoint()) |cp| {
+        while (iter.next()) |cp| {
             try self.tokens.append(.{
                 .ty = Type.get(cp),
                 .code_point = cp,
@@ -408,7 +408,7 @@ fn getTokens(comptime str: []const u8, comptime n: usize) [n]Token {
     var cp_iter = CodePointIterator{ .bytes = str };
     var tokens: [n]Token = undefined;
 
-    while (cp_iter.nextCodePoint()) |cp| : (i += 1) {
+    while (cp_iter.next()) |cp| : (i += 1) {
         tokens[i] = .{
             .ty = Type.get(cp),
             .code_point = cp,

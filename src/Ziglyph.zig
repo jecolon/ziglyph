@@ -271,7 +271,7 @@ pub fn toTitleStr(allocator: *std.mem.Allocator, s: []const u8) ![]u8 {
         var code_points = CodePointIterator{ .bytes = word.bytes };
         var got_f = false;
 
-        while (code_points.nextCodePoint()) |cp| {
+        while (code_points.next()) |cp| {
             var len: usize = 0;
 
             if (!got_f and isCased(cp.scalar)) {

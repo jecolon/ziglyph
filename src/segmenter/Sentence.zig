@@ -106,7 +106,7 @@ pub const SentenceIterator = struct {
             .i = 0,
         };
 
-        while (iter.nextCodePoint()) |cp| {
+        while (iter.next()) |cp| {
             try self.tokens.append(.{
                 .ty = Type.get(cp),
                 .code_point = cp,
