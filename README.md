@@ -21,12 +21,12 @@ $ zigmod fetch
 ```
 Now in your `build.zig` you add this import:
 
-```
+```zig
 const deps = @import("deps.zig");
 ```
 In the `exe` section for the executable where you wish to have Zigstr available, add:
 
-```
+```zig
 deps.addAllTo(exe);
 ```
 
@@ -168,7 +168,7 @@ Normalization and Collation. You can read more about it in
 [this blog post](https://devlog.hexops.com/2021/unicode-data-file-compression).
 `init` also takes a pointer to a `Normalizer` because collation depends on normaliztion.
 
-```
+```zig
 const Collator = @import("ziglyph").Collator;
 
 test "Collation" {
@@ -214,7 +214,7 @@ results! There are also non-allocating compile-time versions for use with string
 Note that for compile-time versions, you may need to increase the compile-time branch evaluation quota via
 `@setEvalBranchQuota`.
 
-```
+```zig
 const Grapheme = @import("ziglyph").Grapheme;
 const GraphemeIterator = Grapheme.GraphemeIterator;
 const ComptimeGraphemeIterator = Grapheme.ComptimeGraphemeIterator;
@@ -332,7 +332,7 @@ When working with environments in which text is rendered in a fixed-width font, 
 emulators, it's necessary to know how many cells (or columns) a particular code point or string will
 occupy. The `Width` component struct provides methods to do just that.
 
-```
+```zig
 const Width = @import("ziglyph").Width;
 
 test "Code point / string widths" {
