@@ -218,7 +218,7 @@ Note that for compile-time versions, you may need to increase the compile-time b
 const Grapheme = @import("ziglyph").Grapheme;
 const GraphemeIterator = Grapheme.GraphemeIterator;
 const ComptimeGraphemeIterator = Grapheme.ComptimeGraphemeIterator;
-const Sentence = Ziglyph.Sentence;
+const Sentence = @import("ziglyph").Sentence;
 const SentenceIterator = Sentence.SentenceIterator;
 const ComptimeSentenceIterator = Sentence.ComptimeSentenceIterator;
 const Word = @import("ziglyph").Word;
