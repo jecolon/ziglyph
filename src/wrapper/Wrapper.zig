@@ -16,6 +16,10 @@ pub fn wrap(allocator: *std.mem.Allocator, str: []const u8, columns: usize, thre
     var line_width: usize = 0;
 
     while (iter.next()) |word| {
+        if (isLineBreak(word.bytes)) {
+            try result.append(' ');
+            continue;
+        }
         try result.appendSlice(word.bytes);
         line_width += try Width.strWidth(allocator, word.bytes, .half);
 
@@ -28,9 +32,21 @@ pub fn wrap(allocator: *std.mem.Allocator, str: []const u8, columns: usize, thre
     return result.toOwnedSlice();
 }
 
+fn isLineBreak(str: []const u8) bool {
+    if (std.mem.eql(u8, str, "\r\n")) {
+        return true;
+    } else if (std.mem.eql(u8, str, "\r")) {
+        return true;
+    } else if (std.mem.eql(u8, str, "\n")) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 test "Wrapper wrap" {
     var allocator = testing.allocator;
-    var input = "The quick brown fox jumped over the lazy dog!";
+    var input = "The quick brown fox\r\njumped over the lazy dog!";
     var got = try wrap(allocator, input, 10, 3);
     defer allocator.free(got);
     var want = "The quick\n brown \nfox jumped\n over the\n lazy dog\n!";

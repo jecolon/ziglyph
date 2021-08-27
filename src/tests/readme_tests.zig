@@ -257,7 +257,7 @@ test "Collation" {
 
 test "Wrapper wrap" {
     var allocator = testing.allocator;
-    var input = "The quick brown fox jumped over the lazy dog!";
+    var input = "The quick brown fox\r\njumped over the lazy dog!";
     var got = try Wrapper.wrap(allocator, input, 10, 3);
     defer allocator.free(got);
     var want = "The quick\n brown \nfox jumped\n over the\n lazy dog\n!";
