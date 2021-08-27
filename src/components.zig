@@ -20,7 +20,6 @@ pub const Word = @import("segmenter/Word.zig");
 pub const WordIterator = Word.WordIterator;
 pub const Sentence = @import("segmenter/Sentence.zig");
 pub const SentenceIterator = Sentence.SentenceIterator;
-pub const Wrapper = @import("wrapper/Wrapper.zig");
 
 // Collation
 pub const Collator = @import("collator/Collator.zig");
