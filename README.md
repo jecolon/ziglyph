@@ -367,3 +367,21 @@ test "Code point / string widths" {
     try expectEqualSlices(u8, "w😊w------", left_aligned);
 }
 ```
+
+## Word Wrap
+If you need to wrap a string to a specific number of columns according to Unicode Word boundaries and display width,
+you can use the `Wrapper` struct's `wrap` function for this. You can also specify a threshold value indicating how close
+a word boundary can be to the column limit and trigger a line break.
+
+```zig
+const Wrapper = @import("ziglyph").Wrapper;
+
+test "Wrapper wrap" {
+    var allocator = testing.allocator;
+    var input = "The quick brown fox jumped over the lazy dog!";
+    var got = try Wrapper.wrap(allocator, input, 10, 3);
+    defer allocator.free(got);
+    var want = "The quick\n brown \nfox jumped\n over the\n lazy dog\n!";
+    try testing.expectEqualStrings(want, got);
+}
+```

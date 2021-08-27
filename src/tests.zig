@@ -11,6 +11,7 @@ test "Segmentation" {
     _ = @import("components.zig").Grapheme;
     _ = @import("components.zig").Word;
     _ = @import("components.zig").Sentence;
+    _ = @import("components.zig").Wrapper;
 }
 
 test "components" {

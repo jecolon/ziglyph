@@ -18,6 +18,7 @@ const Width = Ziglyph.Width;
 const Word = Ziglyph.Word;
 const WordIterator = Word.WordIterator;
 const ComptimeWordIterator = Word.ComptimeWordIterator;
+const Wrapper = Ziglyph.Wrapper;
 
 test "Ziglyph struct" {
     const z = 'z';
@@ -252,4 +253,13 @@ test "Collation" {
     try testing.expectEqual(strings[0], "abc");
     try testing.expectEqual(strings[1], "def");
     try testing.expectEqual(strings[2], "xyz");
+}
+
+test "Wrapper wrap" {
+    var allocator = testing.allocator;
+    var input = "The quick brown fox jumped over the lazy dog!";
+    var got = try Wrapper.wrap(allocator, input, 10, 3);
+    defer allocator.free(got);
+    var want = "The quick\n brown \nfox jumped\n over the\n lazy dog\n!";
+    try testing.expectEqualStrings(want, got);
 }
