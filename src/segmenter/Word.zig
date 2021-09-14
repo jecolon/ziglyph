@@ -557,6 +557,7 @@ fn getTokens(comptime str: []const u8, comptime n: usize) [n]Token {
 
     return tokens;
 }
+
 pub fn ComptimeWordIterator(comptime str: []const u8) type {
     const cp_count: usize = unicode.utf8CountCodepoints(str) catch @compileError("Invalid UTF-8.");
     if (cp_count == 0) @compileError("No code points?");

@@ -15,15 +15,18 @@ they still will occur until we reach 1.0.
 
 ## Integrating Ziglyph in your Project
 ### Using Zigmod
+
 ```sh
 $ zigmod aq add 1/jecolon/zigstr
 $ zigmod fetch
 ```
+
 Now in your `build.zig` you add this import:
 
 ```zig
 const deps = @import("deps.zig");
 ```
+
 In the `exe` section for the executable where you wish to have Zigstr available, add:
 
 ```zig
@@ -36,11 +39,13 @@ In a `libs` subdirectory under the root of your project, clone this repository v
 ```sh
 $  git clone https://github.com/jecolon/ziglyph.git
 ```
+
 Now in your build.zig, you can add:
 
 ```zig
 exe.addPackagePath("ziglyph", "libs/ziglyph/src/Ziglyph.zig");
 ```
+
 to the `exe` section for the executable where you wish to have Ziglyph available. Now in the code, you
 can import components like this:
 
@@ -48,7 +53,6 @@ can import components like this:
 const ziglyph = @import("ziglyph");
 const Letter = @import("ziglyph").Letter; // or const Letter = Ziglyph.Letter;
 const Number = @import("ziglyph").Number; // or const Number = Ziglyph.Number;
-
 ```
 
 ### Using the Ziglyph Struct
@@ -217,8 +221,7 @@ Note that for compile-time versions, you may need to increase the compile-time b
 ```zig
 const Grapheme = @import("ziglyph").Grapheme;
 const GraphemeIterator = Grapheme.GraphemeIterator;
-const ComptimeGraphemeIterator = Grapheme.ComptimeGraphemeIterator;
-const Sentence = @import("ziglyph").Sentence;
+const ComptimeGraphemeIterator = Grapheme.ComptimeGraphemeIterator; const Sentence = @import("ziglyph").Sentence;
 const SentenceIterator = Sentence.SentenceIterator;
 const ComptimeSentenceIterator = Sentence.ComptimeSentenceIterator;
 const Word = @import("ziglyph").Word;

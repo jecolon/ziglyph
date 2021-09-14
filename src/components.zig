@@ -18,8 +18,10 @@ pub const GraphemeIterator = Grapheme.GraphemeIterator;
 pub const ComptimeGraphemeIterator = Grapheme.ComptimeGraphemeIterator;
 pub const Word = @import("segmenter/Word.zig");
 pub const WordIterator = Word.WordIterator;
+pub const ComptimeWordIterator = Word.ComptimeWordIterator;
 pub const Sentence = @import("segmenter/Sentence.zig");
 pub const SentenceIterator = Sentence.SentenceIterator;
+pub const ComptimeSentenceIterator = Sentence.ComptimeSentenceIterator;
 
 // Collation
 pub const Collator = @import("collator/Collator.zig");

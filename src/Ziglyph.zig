@@ -8,8 +8,10 @@ const ascii = @import("ascii.zig");
 
 pub usingnamespace @import("components.zig");
 
+const Self = @This();
+
 pub fn isAlphabetic(cp: u21) bool {
-    return DerivedCoreProperties.isAlphabetic(cp);
+    return Self.DerivedCoreProperties.isAlphabetic(cp);
 }
 
 pub fn isAsciiAlphabetic(cp: u21) bool {
@@ -26,7 +28,7 @@ pub fn isAsciiAlphaNum(cp: u21) bool {
 
 /// isCased detects cased code points, usually letters.
 pub fn isCased(cp: u21) bool {
-    return Letter.isCased(cp);
+    return Self.Letter.isCased(cp);
 }
 
 /// isCasedStr returns true when all code points in `s` can be mapped to a different case.
@@ -46,12 +48,12 @@ test "Ziglyph isCasedStr" {
 
 /// isDecimal detects all Unicode decimal numbers.
 pub fn isDecimal(cp: u21) bool {
-    return Number.isDecimal(cp);
+    return Self.Number.isDecimal(cp);
 }
 
 /// isDigit detects all Unicode digits, which curiosly don't include the ASCII digits.
 pub fn isDigit(cp: u21) bool {
-    return Number.isDigit(cp);
+    return Self.Number.isDigit(cp);
 }
 
 pub fn isAsciiDigit(cp: u21) bool {
@@ -69,7 +71,7 @@ pub fn isAsciiGraphic(cp: u21) bool {
 
 // isHex detects hexadecimal code points.
 pub fn isHexDigit(cp: u21) bool {
-    return Number.isHexDigit(cp);
+    return Self.Number.isHexDigit(cp);
 }
 
 pub fn isAsciiHexDigit(cp: u21) bool {
@@ -87,7 +89,7 @@ pub fn isAsciiPrint(cp: u21) bool {
 }
 
 pub fn isControl(cp: u21) bool {
-    return DerivedGeneralCategory.isControl(cp);
+    return Self.DerivedGeneralCategory.isControl(cp);
 }
 
 pub fn isAsciiControl(cp: u21) bool {
@@ -95,7 +97,7 @@ pub fn isAsciiControl(cp: u21) bool {
 }
 
 pub fn isLetter(cp: u21) bool {
-    return Letter.isLetter(cp);
+    return Self.Letter.isLetter(cp);
 }
 
 pub fn isAsciiLetter(cp: u21) bool {
@@ -104,7 +106,7 @@ pub fn isAsciiLetter(cp: u21) bool {
 
 /// isLower detects code points that are lowercase.
 pub fn isLower(cp: u21) bool {
-    return Letter.isLower(cp);
+    return Self.Letter.isLower(cp);
 }
 
 pub fn isAsciiLower(cp: u21) bool {
@@ -128,11 +130,11 @@ test "Ziglyph isLowerStr" {
 
 /// isMark detects special code points that serve as marks in different alphabets.
 pub fn isMark(cp: u21) bool {
-    return Mark.isMark(cp);
+    return Self.Mark.isMark(cp);
 }
 
 pub fn isNumber(cp: u21) bool {
-    return Number.isNumber(cp);
+    return Self.Number.isNumber(cp);
 }
 
 pub fn isAsciiNumber(cp: u21) bool {
@@ -141,7 +143,7 @@ pub fn isAsciiNumber(cp: u21) bool {
 
 /// isPunct detects punctuation characters. Note some punctuation may be considered as symbols by Unicode.
 pub fn isPunct(cp: u21) bool {
-    return Punct.isPunct(cp);
+    return Self.Punct.isPunct(cp);
 }
 
 pub fn isAsciiPunct(cp: u21) bool {
@@ -150,7 +152,7 @@ pub fn isAsciiPunct(cp: u21) bool {
 
 /// isWhiteSpace detects code points that have the Unicode *WhiteSpace* property.
 pub fn isWhiteSpace(cp: u21) bool {
-    return PropList.isWhiteSpace(cp);
+    return Self.PropList.isWhiteSpace(cp);
 }
 
 pub fn isAsciiWhiteSpace(cp: u21) bool {
@@ -159,7 +161,7 @@ pub fn isAsciiWhiteSpace(cp: u21) bool {
 
 // isSymbol detects symbols which may include code points commonly considered punctuation.
 pub fn isSymbol(cp: u21) bool {
-    return Symbol.isSymbol(cp);
+    return Self.Symbol.isSymbol(cp);
 }
 
 pub fn isAsciiSymbol(cp: u21) bool {
@@ -168,12 +170,12 @@ pub fn isAsciiSymbol(cp: u21) bool {
 
 /// isTitle detects code points in titlecase.
 pub fn isTitle(cp: u21) bool {
-    return Letter.isTitle(cp);
+    return Self.Letter.isTitle(cp);
 }
 
 /// isUpper detects code points in uppercase.
 pub fn isUpper(cp: u21) bool {
-    return Letter.isUpper(cp);
+    return Self.Letter.isUpper(cp);
 }
 
 pub fn isAsciiUpper(cp: u21) bool {
@@ -198,7 +200,7 @@ test "Ziglyph isUpperStr" {
 /// toLower returns the lowercase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
 pub fn toLower(cp: u21) u21 {
-    return Letter.toLower(cp);
+    return Self.Letter.toLower(cp);
 }
 
 pub fn toAsciiLower(cp: u21) u21 {
@@ -213,7 +215,7 @@ pub fn toCaseFoldStr(allocator: *std.mem.Allocator, s: []const u8) ![]u8 {
     var iter = (try unicode.Utf8View.init(s)).iterator();
 
     while (iter.nextCodepoint()) |cp| {
-        const cf = Letter.toCaseFold(cp);
+        const cf = Self.Letter.toCaseFold(cp);
         for (cf) |cfcp| {
             if (cfcp == 0) break;
             const len = try unicode.utf8Encode(cfcp, &buf);
@@ -256,19 +258,19 @@ test "Ziglyph toLowerStr" {
 /// toTitle returns the titlecase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
 pub fn toTitle(cp: u21) u21 {
-    return Letter.toTitle(cp);
+    return Self.Letter.toTitle(cp);
 }
 
 /// toTitleStr returns the titlecase version of `s`. Caller must free returned memory with `allocator`.
 pub fn toTitleStr(allocator: *std.mem.Allocator, s: []const u8) ![]u8 {
-    var words = try WordIterator.init(allocator, s);
+    var words = try Self.WordIterator.init(allocator, s);
     defer words.deinit();
     var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
     var buf: [4]u8 = undefined;
 
     while (words.next()) |word| {
-        var code_points = CodePointIterator{ .bytes = word.bytes };
+        var code_points = Self.CodePointIterator{ .bytes = word.bytes };
         var got_f = false;
 
         while (code_points.next()) |cp| {
@@ -303,7 +305,7 @@ test "Ziglyph toTitleStr" {
 /// toUpper returns the uppercase code point for the given code point. It returns the same 
 /// code point given if no mapping exists.
 pub fn toUpper(cp: u21) u21 {
-    return Letter.toUpper(cp);
+    return Self.Letter.toUpper(cp);
 }
 
 pub fn toAsciiUpper(cp: u21) u21 {
