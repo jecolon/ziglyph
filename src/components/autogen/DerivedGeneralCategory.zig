@@ -3270,19 +3270,11 @@ pub fn isSpaceSeparator(cp: u21) bool {
 }
 
 pub fn isLineSeparator(cp: u21) bool {
-    if (cp < 0x2028 or cp > 0x2028) return false;
-    return switch (cp) {
-        0x2028 => true,
-        else => false,
-    };
+    return cp == 0x2028;
 }
 
 pub fn isParagraphSeparator(cp: u21) bool {
-    if (cp < 0x2029 or cp > 0x2029) return false;
-    return switch (cp) {
-        0x2029 => true,
-        else => false,
-    };
+    return cp == 0x2029;
 }
 
 pub fn isControl(cp: u21) bool {

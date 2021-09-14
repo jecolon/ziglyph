@@ -21,19 +21,11 @@ pub fn isPrepend(cp: u21) bool {
 }
 
 pub fn isCR(cp: u21) bool {
-    if (cp < 0xd or cp > 0xd) return false;
-    return switch (cp) {
-        0xd => true,
-        else => false,
-    };
+    return cp == 0xd;
 }
 
 pub fn isLF(cp: u21) bool {
-    if (cp < 0xa or cp > 0xa) return false;
-    return switch (cp) {
-        0xa => true,
-        else => false,
-    };
+    return cp == 0xa;
 }
 
 pub fn isControl(cp: u21) bool {
@@ -1448,9 +1440,5 @@ pub fn isLVT(cp: u21) bool {
 }
 
 pub fn isZWJ(cp: u21) bool {
-    if (cp < 0x200d or cp > 0x200d) return false;
-    return switch (cp) {
-        0x200d => true,
-        else => false,
-    };
+    return cp == 0x200d;
 }
