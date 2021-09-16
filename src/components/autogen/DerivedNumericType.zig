@@ -246,6 +246,7 @@ pub fn isDecimal(cp: u21) bool {
         0x11d50...0x11d59 => true,
         0x11da0...0x11da9 => true,
         0x16a60...0x16a69 => true,
+        0x16ac0...0x16ac9 => true,
         0x16b50...0x16b59 => true,
         0x1d7ce...0x1d7ff => true,
         0x1e140...0x1e149 => true,

@@ -1,6 +1,6 @@
-# WordBreakTest-13.0.0.txt
-# Date: 2019-11-20, 22:27:23 GMT
-# © 2019 Unicode®, Inc.
+# WordBreakTest-14.0.0.txt
+# Date: 2021-03-08, 06:22:40 GMT
+# © 2021 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
@@ -1846,7 +1846,6 @@
 ÷ 0061 × 005F × 0031 ÷ 002C ÷ 002C ÷ 0061 ÷	#  ÷ [0.2] LATIN SMALL LETTER A (ALetter) × [13.1] LOW LINE (ExtendNumLet) × [13.2] DIGIT ONE (Numeric) ÷ [999.0] COMMA (MidNum) ÷ [999.0] COMMA (MidNum) ÷ [999.0] LATIN SMALL LETTER A (ALetter) ÷ [0.3]
 ÷ 0061 × 005F × 0061 ÷ 002C ÷ 002C ÷ 0061 ÷	#  ÷ [0.2] LATIN SMALL LETTER A (ALetter) × [13.1] LOW LINE (ExtendNumLet) × [13.2] LATIN SMALL LETTER A (ALetter) ÷ [999.0] COMMA (MidNum) ÷ [999.0] COMMA (MidNum) ÷ [999.0] LATIN SMALL LETTER A (ALetter) ÷ [0.3]
 #
-÷ 005F × 0030 × 005F × 3031 × 005F × 0041 ÷	#  ÷ [0.2] LATIN CAPITAL LETTER A (ALetter) × [13.1] LOW LINE (ExtendNumLet) × [13.2] DIGIT ZERO (Numeric) × [13.1] LOW LINE (ExtendNumLet) × [13.2] VERTICAL KANA REPEAT MARK (Katakana) × [13.1] LOW LINE (ExtendNumLet) ÷ [0.3]
 # Lines: 1823
 #
 # EOF

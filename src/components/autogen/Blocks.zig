@@ -160,6 +160,14 @@ pub fn isSyriacSupplement(cp: u21) bool {
     };
 }
 
+pub fn isArabicExtendedB(cp: u21) bool {
+    if (cp < 0x870 or cp > 0x89f) return false;
+    return switch (cp) {
+        0x870...0x89f => true,
+        else => false,
+    };
+}
+
 pub fn isArabicExtendedA(cp: u21) bool {
     if (cp < 0x8a0 or cp > 0x8ff) return false;
     return switch (cp) {
@@ -1464,10 +1472,26 @@ pub fn isCaucasianAlbanian(cp: u21) bool {
     };
 }
 
+pub fn isVithkuqi(cp: u21) bool {
+    if (cp < 0x10570 or cp > 0x105bf) return false;
+    return switch (cp) {
+        0x10570...0x105bf => true,
+        else => false,
+    };
+}
+
 pub fn isLinearA(cp: u21) bool {
     if (cp < 0x10600 or cp > 0x1077f) return false;
     return switch (cp) {
         0x10600...0x1077f => true,
+        else => false,
+    };
+}
+
+pub fn isLatinExtendedF(cp: u21) bool {
+    if (cp < 0x10780 or cp > 0x107bf) return false;
+    return switch (cp) {
+        0x10780...0x107bf => true,
         else => false,
     };
 }
@@ -1664,6 +1688,14 @@ pub fn isSogdian(cp: u21) bool {
     };
 }
 
+pub fn isOldUyghur(cp: u21) bool {
+    if (cp < 0x10f70 or cp > 0x10faf) return false;
+    return switch (cp) {
+        0x10f70...0x10faf => true,
+        else => false,
+    };
+}
+
 pub fn isChorasmian(cp: u21) bool {
     if (cp < 0x10fb0 or cp > 0x10fdf) return false;
     return switch (cp) {
@@ -1817,9 +1849,9 @@ pub fn isTakri(cp: u21) bool {
 }
 
 pub fn isAhom(cp: u21) bool {
-    if (cp < 0x11700 or cp > 0x1173f) return false;
+    if (cp < 0x11700 or cp > 0x1174f) return false;
     return switch (cp) {
-        0x11700...0x1173f => true,
+        0x11700...0x1174f => true,
         else => false,
     };
 }
@@ -1868,6 +1900,14 @@ pub fn isSoyombo(cp: u21) bool {
     if (cp < 0x11a50 or cp > 0x11aaf) return false;
     return switch (cp) {
         0x11a50...0x11aaf => true,
+        else => false,
+    };
+}
+
+pub fn isUnifiedCanadianAboriginalSyllabicsExtendedA(cp: u21) bool {
+    if (cp < 0x11ab0 or cp > 0x11abf) return false;
+    return switch (cp) {
+        0x11ab0...0x11abf => true,
         else => false,
     };
 }
@@ -1960,6 +2000,14 @@ pub fn isEarlyDynasticCuneiform(cp: u21) bool {
     };
 }
 
+pub fn isCyproMinoan(cp: u21) bool {
+    if (cp < 0x12f90 or cp > 0x12fff) return false;
+    return switch (cp) {
+        0x12f90...0x12fff => true,
+        else => false,
+    };
+}
+
 pub fn isEgyptianHieroglyphs(cp: u21) bool {
     if (cp < 0x13000 or cp > 0x1342f) return false;
     return switch (cp) {
@@ -1996,6 +2044,14 @@ pub fn isMro(cp: u21) bool {
     if (cp < 0x16a40 or cp > 0x16a6f) return false;
     return switch (cp) {
         0x16a40...0x16a6f => true,
+        else => false,
+    };
+}
+
+pub fn isTangsa(cp: u21) bool {
+    if (cp < 0x16a70 or cp > 0x16acf) return false;
+    return switch (cp) {
+        0x16a70...0x16acf => true,
         else => false,
     };
 }
@@ -2065,9 +2121,17 @@ pub fn isKhitanSmallScript(cp: u21) bool {
 }
 
 pub fn isTangutSupplement(cp: u21) bool {
-    if (cp < 0x18d00 or cp > 0x18d8f) return false;
+    if (cp < 0x18d00 or cp > 0x18d7f) return false;
     return switch (cp) {
-        0x18d00...0x18d8f => true,
+        0x18d00...0x18d7f => true,
+        else => false,
+    };
+}
+
+pub fn isKanaExtendedB(cp: u21) bool {
+    if (cp < 0x1aff0 or cp > 0x1afff) return false;
+    return switch (cp) {
+        0x1aff0...0x1afff => true,
         else => false,
     };
 }
@@ -2116,6 +2180,14 @@ pub fn isShorthandFormatControls(cp: u21) bool {
     if (cp < 0x1bca0 or cp > 0x1bcaf) return false;
     return switch (cp) {
         0x1bca0...0x1bcaf => true,
+        else => false,
+    };
+}
+
+pub fn isZnamennyMusicalNotation(cp: u21) bool {
+    if (cp < 0x1cf00 or cp > 0x1cfcf) return false;
+    return switch (cp) {
+        0x1cf00...0x1cfcf => true,
         else => false,
     };
 }
@@ -2184,6 +2256,14 @@ pub fn isSuttonSignWriting(cp: u21) bool {
     };
 }
 
+pub fn isLatinExtendedG(cp: u21) bool {
+    if (cp < 0x1df00 or cp > 0x1dfff) return false;
+    return switch (cp) {
+        0x1df00...0x1dfff => true,
+        else => false,
+    };
+}
+
 pub fn isGlagoliticSupplement(cp: u21) bool {
     if (cp < 0x1e000 or cp > 0x1e02f) return false;
     return switch (cp) {
@@ -2200,10 +2280,26 @@ pub fn isNyiakengPuachueHmong(cp: u21) bool {
     };
 }
 
+pub fn isToto(cp: u21) bool {
+    if (cp < 0x1e290 or cp > 0x1e2bf) return false;
+    return switch (cp) {
+        0x1e290...0x1e2bf => true,
+        else => false,
+    };
+}
+
 pub fn isWancho(cp: u21) bool {
     if (cp < 0x1e2c0 or cp > 0x1e2ff) return false;
     return switch (cp) {
         0x1e2c0...0x1e2ff => true,
+        else => false,
+    };
+}
+
+pub fn isEthiopicExtendedB(cp: u21) bool {
+    if (cp < 0x1e7e0 or cp > 0x1e7ff) return false;
+    return switch (cp) {
+        0x1e7e0...0x1e7ff => true,
         else => false,
     };
 }
