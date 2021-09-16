@@ -81,6 +81,7 @@ pub const Elements = struct {
         return bit_size;
     }
 };
+
 pub const Key = struct {
     len: u2,
     items: [3]u21,

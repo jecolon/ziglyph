@@ -113,17 +113,14 @@ test "Aggregate struct" {
 ## Normalization
 In addition to the basic functions to detect and convert code point case, the `Normalizer` struct 
 provides code point and string normalization methods. All normalization forms are supported (NFC,
-NFKC, NFD, NFKD.) The `init` function takes an allocator and the path to the compressed 
-`Decompositions.bin` file derived from the Unicode Character Database. A copy of this file
-is found in the `src/data/ucd` directory. See the section on Collation for more information on the 
-compression algorithm applied to the the Unicode data files for both Normalization and Collation.
+NFKC, NFD, NFKD.).
 
 ```zig
 const Normalizer = @import("ziglyph").Normalizer;
 
 test "normalizeTo" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.bin");
+    var normalizer = try Normalizer.init(allocator);
     defer normalizer.deinit();
 
     // Canonical Composition (NFC)
@@ -163,23 +160,16 @@ test "normalizeTo" {
 One of the most common operations required by string processing is sorting and ordering comparisons.
 The Unicode Collation Algorithm was developed to attend this area of string processing. The `Collator`
 struct implements the algorithm, allowing for proper sorting and order comparison of Unicode strings.
-The `init` function requires the path to a file with derived Unicode sort keys. The full file of keys
-can be found [here](http://www.unicode.org/Public/UCA/latest/allkeys.txt). The derived copy of this file
-can be found in the `src/data/uca` directory. This derived copy is compressed with a novel compression
-algorithm developed by @slimsag / @hexops called Unicode Data Differential Compression (UDDC). The
-algorithm achieves extremely efficient compression of the large Unicode data files required for 
-Normalization and Collation. You can read more about it in 
-[this blog post](https://devlog.hexops.com/2021/unicode-data-file-compression).
-`init` also takes a pointer to a `Normalizer` because collation depends on normaliztion.
+`init` takes a pointer to a `Normalizer`, since collation depends on normaliztion.
 
 ```zig
 const Collator = @import("ziglyph").Collator;
 
 test "Collation" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator, "../libs/ziglyph/src/data/ucd/Decompositions.bin");
+    var normalizer = try Normalizer.init(allocator);
     defer normalizer.deinit();
-    var collator = try Collator.init(allocator, "../libs/ziglyph/src/data/uca/allkeys.bin", &normalizer);
+    var collator = try Collator.init(allocator, &normalizer);
     defer collator.deinit();
 
     // Collation weight levels overview:

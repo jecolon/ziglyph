@@ -69,7 +69,7 @@ test "Component structs" {
 
 test "normalizeTo" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.bin");
+    var normalizer = try Normalizer.init(allocator);
     defer normalizer.deinit();
 
     // Canonical Composition (NFC)
@@ -232,9 +232,9 @@ test "Code point / string widths" {
 
 test "Collation" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator, "src/data/ucd/Decompositions.bin");
+    var normalizer = try Normalizer.init(allocator);
     defer normalizer.deinit();
-    var collator = try Collator.init(allocator, "src/data/uca/allkeys.bin", &normalizer);
+    var collator = try Collator.init(allocator, &normalizer);
     defer collator.deinit();
 
     try testing.expect(collator.tertiaryAsc("abc", "def"));

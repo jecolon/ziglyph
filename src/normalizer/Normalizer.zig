@@ -26,7 +26,25 @@ decomp_trie: Trieton,
 
 const Self = @This();
 
-pub fn init(allocator: *mem.Allocator, filename: []const u8) !Self {
+pub fn init(allocator: *mem.Allocator) !Self {
+    var self = Self{
+        .allocator = allocator,
+        .arena = std.heap.ArenaAllocator.init(allocator),
+        .decomp_trie = Trieton.init(allocator),
+    };
+
+    const decompositions = @embedFile("../data/ucd/Decompositions.bin");
+    var reader = std.io.fixedBufferStream(decompositions).reader();
+    var file = try DecompFile.decompress(allocator, reader);
+    defer file.deinit();
+    while (file.next()) |entry| {
+        try self.decomp_trie.add(entry.key[0..entry.key_len], entry.value);
+    }
+
+    return self;
+}
+
+pub fn initWithFile(allocator: *mem.Allocator, filename: []const u8) !Self {
     var self = Self{
         .allocator = allocator,
         .arena = std.heap.ArenaAllocator.init(allocator),
@@ -549,7 +567,7 @@ fn eqlNormIgnore(self: *Self, a: []const u8, b: []const u8) !bool {
 
 test "Normalizer decompose D" {
     var allocator = std.testing.allocator;
-    var normalizer = try init(allocator, "src/data/ucd/Decompositions.bin");
+    var normalizer = try init(allocator);
     defer normalizer.deinit();
 
     var result = normalizer.decompose('\u{00E9}', true);
@@ -563,7 +581,7 @@ test "Normalizer decompose D" {
 
 test "Normalizer decompose KD" {
     var allocator = std.testing.allocator;
-    var normalizer = try init(allocator, "src/data/ucd/Decompositions.bin");
+    var normalizer = try init(allocator);
     defer normalizer.deinit();
 
     var result = normalizer.decompose('\u{00E9}', false);
@@ -584,7 +602,7 @@ test "Normalizer normalizeTo" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var allocator = &arena.allocator;
-    var normalizer = try init(allocator, "src/data/ucd/Decompositions.bin");
+    var normalizer = try init(allocator);
     defer normalizer.deinit();
 
     var file = try std.fs.cwd().openFile("src/data/ucd/NormalizationTest.txt", .{});
@@ -676,7 +694,7 @@ test "Normalizer normalizeTo" {
 
 test "Normalizer eqlBy" {
     var allocator = std.testing.allocator;
-    var normalizer = try init(allocator, "src/data/ucd/Decompositions.bin");
+    var normalizer = try init(allocator);
     defer normalizer.deinit();
 
     try std.testing.expect(try normalizer.eqlBy("foé", "foe\u{0301}", .normalize));
