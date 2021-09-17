@@ -14,7 +14,7 @@ const CccMap = @import("../components.zig").CombiningMap;
 const HangulMap = @import("../components.zig").HangulMap;
 const NormProps = @import("../components.zig").DerivedNormalizationProps;
 
-const DecompFile = @import("DecompFile.zig");
+pub const DecompFile = @import("DecompFile.zig");
 const Decomp = DecompFile.Decomp;
 
 const Trieton = @import("Trieton.zig");
@@ -36,22 +36,6 @@ pub fn init(allocator: *mem.Allocator) !Self {
     const decompositions = @embedFile("../data/ucd/Decompositions.bin");
     var reader = std.io.fixedBufferStream(decompositions).reader();
     var file = try DecompFile.decompress(allocator, reader);
-    defer file.deinit();
-    while (file.next()) |entry| {
-        try self.decomp_trie.add(entry.key[0..entry.key_len], entry.value);
-    }
-
-    return self;
-}
-
-pub fn initWithFile(allocator: *mem.Allocator, filename: []const u8) !Self {
-    var self = Self{
-        .allocator = allocator,
-        .arena = std.heap.ArenaAllocator.init(allocator),
-        .decomp_trie = Trieton.init(allocator),
-    };
-
-    var file = try DecompFile.decompressFile(allocator, filename);
     defer file.deinit();
     while (file.next()) |entry| {
         try self.decomp_trie.add(entry.key[0..entry.key_len], entry.value);

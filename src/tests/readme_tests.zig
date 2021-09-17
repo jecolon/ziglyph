@@ -232,9 +232,7 @@ test "Code point / string widths" {
 
 test "Collation" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator);
-    defer normalizer.deinit();
-    var collator = try Collator.init(allocator, &normalizer);
+    var collator = try Collator.init(allocator);
     defer collator.deinit();
 
     try testing.expect(collator.tertiaryAsc("abc", "def"));

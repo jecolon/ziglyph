@@ -11,23 +11,24 @@ const CccMap = @import("../components.zig").CombiningMap;
 const Normalizer = @import("../components.zig").Normalizer;
 const Props = @import("../components.zig").PropList;
 const Trie = @import("CollatorTrie.zig");
-const AllKeysFile = @import("AllKeysFile.zig");
+pub const AllKeysFile = @import("AllKeysFile.zig");
 const Elements = @import("AllKeysFile.zig").Elements;
 
 allocator: *mem.Allocator,
 arena: std.heap.ArenaAllocator,
-normalizer: *Normalizer,
 implicits: []AllKeysFile.Implicit,
+normalizer: Normalizer,
 table: Trie,
 
 const Self = @This();
 
-pub fn init(allocator: *mem.Allocator, normalizer: *Normalizer) !Self {
+/// `init` produces a new Collator using the Default Unicode Collation Elements Table (DUCET) in `src/data/uca/allkeys.bin`.
+pub fn init(allocator: *mem.Allocator) !Self {
     var self = Self{
         .allocator = allocator,
         .arena = std.heap.ArenaAllocator.init(allocator),
-        .normalizer = normalizer,
         .implicits = undefined,
+        .normalizer = try Normalizer.init(allocator),
         .table = Trie.init(allocator),
     };
 
@@ -45,16 +46,18 @@ pub fn init(allocator: *mem.Allocator, normalizer: *Normalizer) !Self {
     return self;
 }
 
-pub fn initWithFile(allocator: *mem.Allocator, normalizer: *Normalizer, path_to_allkeys: []const u8) !Self {
+/// `initWithReader` allows tailoring of the sorting algorithm via a supplied alternate weights table. The `reader`
+/// parameter can be a file, network stream, or anything else that exposes a `std.io.Reader`.
+pub fn initWithReader(allocator: *mem.Allocator, reader: anytype) !Self {
     var self = Self{
         .allocator = allocator,
         .arena = std.heap.ArenaAllocator.init(allocator),
-        .normalizer = normalizer,
         .implicits = undefined,
+        .normalizer = try Normalizer.init(allocator),
         .table = Trie.init(allocator),
     };
 
-    var file = try AllKeysFile.decompressFile(allocator, path_to_allkeys);
+    var file = try AllKeysFile.decompress(allocator, reader);
     defer file.deinit();
 
     while (file.next()) |entry| {
@@ -67,6 +70,7 @@ pub fn initWithFile(allocator: *mem.Allocator, normalizer: *Normalizer, path_to_
 }
 
 pub fn deinit(self: *Self) void {
+    self.normalizer.deinit();
     self.table.deinit();
     self.arena.child_allocator.free(self.implicits);
     self.arena.deinit();
@@ -324,9 +328,7 @@ pub fn keyLevelCmp(a: []const u16, b: []const u16, level: Level) math.Order {
 
 test "Collator keyLevelCmp" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator);
-    defer normalizer.deinit();
-    var collator = try init(allocator, &normalizer);
+    var collator = try init(allocator);
     defer collator.deinit();
 
     var key_a = try collator.sortKey("cab");
@@ -397,9 +399,7 @@ const testing = std.testing;
 
 test "Collator sort" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator);
-    defer normalizer.deinit();
-    var collator = try init(allocator, &normalizer);
+    var collator = try init(allocator);
     defer collator.deinit();
 
     try testing.expect(collator.tertiaryAsc("abc", "def"));
@@ -456,9 +456,7 @@ test "Collator UCA" {
 
     var prev_key: []const u16 = &[_]u16{};
 
-    var normalizer = try Normalizer.init(allocator);
-    defer normalizer.deinit();
-    var collator = try init(allocator, &normalizer);
+    var collator = try init(allocator);
     defer collator.deinit();
     var cp_buf: [4]u8 = undefined;
 

@@ -160,16 +160,17 @@ test "normalizeTo" {
 One of the most common operations required by string processing is sorting and ordering comparisons.
 The Unicode Collation Algorithm was developed to attend this area of string processing. The `Collator`
 struct implements the algorithm, allowing for proper sorting and order comparison of Unicode strings.
-`init` takes a pointer to a `Normalizer`, since collation depends on normaliztion.
+Aside from the usual `init` function, there's `initWithReader` which you can use to initialize the 
+struct with an alternate weights table file (`allkeys.bin`), be it a file, a network stream, or anything
+else that exposes a `std.io.Reader`. This allows for tailoring of the sorting algorithm.
+
 
 ```zig
 const Collator = @import("ziglyph").Collator;
 
 test "Collation" {
     var allocator = std.testing.allocator;
-    var normalizer = try Normalizer.init(allocator);
-    defer normalizer.deinit();
-    var collator = try Collator.init(allocator, &normalizer);
+    var collator = try Collator.init(allocator);
     defer collator.deinit();
 
     // Collation weight levels overview:
@@ -198,6 +199,42 @@ test "Collation" {
     testing.expectEqual(strings[1], "def");
     testing.expectEqual(strings[2], "xyz");
 }
+```
+
+### Tailoring With `allkeys.txt`
+To tailor the sorting algorithm, you can create a modified `allkeys.txt` and generate a new compressed binary `allkeys.bin`
+file from it. Follow these steps:
+
+```sh
+# Change to the Ziglyph source directory.
+cd <path to ziglyph>/src/
+# Build the UDDC tool for your platform.
+zig build-exe -O ReleaseSafe uddc.zig
+# Create a new directory to store the UDDC tool and modified data files.
+mkdir <path to new data dir>
+# Move the tool and copy the data file to the new directory.
+mv uddc <path to new data dir>/
+cp data/uca/allkeys.txt <path to new data dir>/
+# Change into the new data dir.
+cd <path to new data dir>/
+# Modifiy the allkeys.txt file with your favorite editor.
+vim allkeys.txt
+# Generate the new compressed binary allkeys.bin
+./uddc allkeys.txt
+```
+
+After running these commands, you can then use this new allkeys.bin file with the `initWithReader` method:
+
+```zig
+const Collator = @import("ziglyph").Collator;
+
+var file = try std.fs.cwd().openFile("<path to new data dir>/allkeys.bin", .{});
+defer file.close();
+var reader = std.io.bufferedReader(file.reader()).reader();
+var collator = try Collator.initWithReader(allocator, reader);
+defer collator.deinit();
+
+// ...use the collator as usual.
 ```
 
 ## Text Segmentation (Grapheme Clusters, Words, Sentences)
