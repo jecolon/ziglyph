@@ -43,7 +43,7 @@ $  git clone https://github.com/jecolon/ziglyph.git
 Now in your build.zig, you can add:
 
 ```zig
-exe.addPackagePath("ziglyph", "libs/ziglyph/src/Ziglyph.zig");
+exe.addPackagePath("ziglyph", "libs/ziglyph/src/ziglyph.zig");
 ```
 
 to the `exe` section for the executable where you wish to have Ziglyph available. Now in the code, you
@@ -51,12 +51,12 @@ can import components like this:
 
 ```zig
 const ziglyph = @import("ziglyph");
-const letter = @import("ziglyph").letter; // or const Letter = Ziglyph.Letter;
-const number = @import("ziglyph").number; // or const Number = Ziglyph.Number;
+const letter = @import("ziglyph").letter; // or const letter = ziglyph.letter;
+const number = @import("ziglyph").number; // or const number = ziglyph.number;
 ```
 
-### Using the ziglyph namespace
-The `Ziglyph` namespace provides convenient acces to the most frequently-used functions related to Unicode
+### Using the `ziglyph` Namespace
+The `ziglyph` namespace provides convenient acces to the most frequently-used functions related to Unicode
 code points and strings.
 
 ```zig
@@ -90,7 +90,7 @@ test "ziglyph namespace" {
 }
 ```
 
-### Using Component namespaces
+### Using Component Namespaces
 Smaller namespaces are privided for specific areas of functionality.
 See [ziglyph.zig](src/ziglyph.zig) for a full list of all components.
 
