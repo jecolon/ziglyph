@@ -88,7 +88,7 @@ pub const Entry = struct {
     }
 };
 
-/// Form is the normalization form.
+/// `Form` is the normalization form.
 /// * .canon : Canonical decomposition, which always results in two code points.
 /// * .compat : Compatibility decomposition, which can result in at most 18 code points.
 /// * .same : Default canonical decomposition to the code point itself.
@@ -98,7 +98,7 @@ pub const Form = enum(u2) {
     same, // no more decomposition.
 };
 
-/// Decomp is the result of decomposing a code point to a normaliztion form.
+/// `Decomp` is the result of decomposing a code point to a normaliztion form.
 pub const Decomp = struct {
     form: Form = .canon,
     len: usize = 2,

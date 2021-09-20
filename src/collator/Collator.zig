@@ -1,18 +1,22 @@
+//! `Collator` implements the Unicode Collation Algorithm to sort Unicode strings.
+
 const std = @import("std");
 const atomic = std.atomic;
 const fmt = std.fmt;
 const io = std.io;
 const math = std.math;
 const mem = std.mem;
-const zort = std.sort.sort;
+const testing = std.testing;
 const unicode = std.unicode;
+const zort = std.sort.sort;
 
-const CccMap = @import("../components.zig").CombiningMap;
-const Normalizer = @import("../components.zig").Normalizer;
-const Props = @import("../components.zig").PropList;
-const Trie = @import("CollatorTrie.zig");
 pub const AllKeysFile = @import("AllKeysFile.zig");
+
+const ccc_map = @import("../ziglyph.zig").combining_map;
 const Elements = @import("AllKeysFile.zig").Elements;
+const Normalizer = @import("../ziglyph.zig").Normalizer;
+const props = @import("../ziglyph.zig").prop_list;
+const Trie = @import("CollatorTrie.zig");
 
 allocator: *mem.Allocator,
 arena: std.heap.ArenaAllocator,
@@ -76,7 +80,7 @@ pub fn deinit(self: *Self) void {
     self.arena.deinit();
 }
 
-pub fn collationElements(self: *Self, normalized: []const u21) ![]AllKeysFile.Element {
+fn collationElements(self: *Self, normalized: []const u21) ![]AllKeysFile.Element {
     var all_elements = std.ArrayList(AllKeysFile.Element).init(&self.arena.allocator);
 
     var code_points = normalized;
@@ -95,7 +99,7 @@ pub fn collationElements(self: *Self, normalized: []const u21) ![]AllKeysFile.El
 
         // Advance to last combining C.
         while (tail_index < code_points_len) : (tail_index += 1) {
-            const combining_class = CccMap.combiningClass(code_points[tail_index]);
+            const combining_class = ccc_map.combiningClass(code_points[tail_index]);
             if (combining_class == 0) {
                 if (tail_index != tail_start) tail_index -= 1;
                 break;
@@ -151,7 +155,7 @@ pub fn collationElements(self: *Self, normalized: []const u21) ![]AllKeysFile.El
     return all_elements.toOwnedSlice();
 }
 
-pub fn sortKeyFromCollationElements(self: *Self, collation_elements: []AllKeysFile.Element) ![]const u16 {
+fn sortKeyFromCollationElements(self: *Self, collation_elements: []AllKeysFile.Element) ![]const u16 {
     var sort_key = std.ArrayList(u16).init(&self.arena.allocator);
 
     var level: usize = 0;
@@ -172,25 +176,25 @@ pub fn sortKeyFromCollationElements(self: *Self, collation_elements: []AllKeysFi
     return sort_key.toOwnedSlice();
 }
 
-pub fn sortKey(self: *Self, str: []const u8) ![]const u16 {
+fn sortKey(self: *Self, str: []const u8) ![]const u16 {
     const normalized = try self.normalizer.normalizeToCodePoints(.canon, str);
     const collation_elements = try self.collationElements(normalized);
 
     return self.sortKeyFromCollationElements(collation_elements);
 }
 
-pub fn implicitWeight(self: Self, cp: u21) AllKeysFile.Elements {
+fn implicitWeight(self: Self, cp: u21) AllKeysFile.Elements {
     var base: u21 = 0;
     var aaaa: ?u21 = null;
     var bbbb: u21 = 0;
 
-    if (Props.isUnifiedIdeograph(cp) and ((cp >= 0x4E00 and cp <= 0x9FFF) or
+    if (props.isUnifiedIdeograph(cp) and ((cp >= 0x4E00 and cp <= 0x9FFF) or
         (cp >= 0xF900 and cp <= 0xFAFF)))
     {
         base = 0xFB40;
         aaaa = base + (cp >> 15);
         bbbb = (cp & 0x7FFF) | 0x8000;
-    } else if (Props.isUnifiedIdeograph(cp) and !((cp >= 0x4E00 and cp <= 0x9FFF) or
+    } else if (props.isUnifiedIdeograph(cp) and !((cp >= 0x4E00 and cp <= 0x9FFF) or
         (cp >= 0xF900 and cp <= 0xFAFF)))
     {
         base = 0xFB80;
@@ -223,7 +227,7 @@ pub fn implicitWeight(self: Self, cp: u21) AllKeysFile.Elements {
     return elements;
 }
 
-/// asciiCmp compares `a` with `b` returing a `math.Order` result.
+/// `asciiCmp` compares `a` with `b` returing a `math.Order` result.
 pub fn asciiCmp(a: []const u8, b: []const u8) math.Order {
     var long_is_a = true;
     var long = a;
@@ -253,21 +257,23 @@ test "Collator ASCII compare" {
     try testing.expectEqual(asciiCmp("abd", "abc"), .gt);
 }
 
-/// asciiAsc is a sort function producing ascending binary order of ASCII strings.
+/// `asciiAsc` is a sort function producing ascending binary order of ASCII strings.
 pub fn asciiAsc(_: Self, a: []const u8, b: []const u8) bool {
     return asciiCmp(a, b) == .lt;
 }
 
-/// asciiDesc is a sort function producing descending binary order of ASCII strings.
+/// `asciiDesc` is a sort function producing descending binary order of ASCII strings.
 pub fn asciiDesc(_: Self, a: []const u8, b: []const u8) bool {
     return asciiCmp(a, b) == .gt;
 }
 
+/// `Level` refers to the Collation Element's weight level.
 pub const Level = enum(u2) {
     primary = 1, // different base letters.
     secondary, // different marks (i.e. accents).
     tertiary, // different letter case.
 
+    /// `incr` returns the next higher level.
     pub fn incr(self: Level) Level {
         return switch (self) {
             .primary => .secondary,
@@ -277,7 +283,7 @@ pub const Level = enum(u2) {
     }
 };
 
-/// keyLevelCmp compares key `a` with key `b` up to the given level, returning a `math.Order`.
+/// `keyLevelCmp` compares key `a` with key `b` up to the given level, returning a `math.Order`.
 pub fn keyLevelCmp(a: []const u16, b: []const u16, level: Level) math.Order {
     // Compare
     var long_is_a = true;
@@ -353,21 +359,21 @@ test "Collator keyLevelCmp" {
     try testing.expectEqual(keyLevelCmp(key_a, key_b, .primary), .lt);
 }
 
-/// tertiaryAsc is a sort function producing a full weight matching ascending sort. Since this
+/// `tertiaryAsc` is a sort function producing a full weight matching ascending sort. Since this
 /// function cannot return an error as per `sort.sort` requirements, it may cause a crash or undefined
 /// behavior under error conditions.
 pub fn tertiaryAsc(self: *Self, a: []const u8, b: []const u8) bool {
     return self.orderFn(a, b, .tertiary, .lt) catch unreachable;
 }
 
-/// tertiaryDesc is a sort function producing a full weight matching descending sort. Since this
+/// `tertiaryDesc` is a sort function producing a full weight matching descending sort. Since this
 /// function cannot return an error as per `sort.sort` requirements, it may cause a crash or undefined
 /// behavior under error conditions.
 pub fn tertiaryDesc(self: *Self, a: []const u8, b: []const u8) bool {
     return self.orderFn(a, b, .tertiary, .gt) catch unreachable;
 }
 
-/// orderFn can be used to match, compare, and sort strings at various collation element levels and orderings.
+/// `orderFn` can be used to match, compare, and sort strings at various collation element levels and orderings.
 pub fn orderFn(self: *Self, a: []const u8, b: []const u8, level: Level, order: math.Order) !bool {
     var key_a = try self.sortKey(a);
     var key_b = try self.sortKey(b);
@@ -375,27 +381,25 @@ pub fn orderFn(self: *Self, a: []const u8, b: []const u8, level: Level, order: m
     return keyLevelCmp(key_a, key_b, level) == order;
 }
 
-/// sortAsc orders the strings in `strings` in ascending full tertiary level order.
+/// `sortAsc` orders the strings in `strings` in ascending full tertiary level order.
 pub fn sortAsc(self: *Self, strings: [][]const u8) void {
     zort([]const u8, strings, self, tertiaryAsc);
 }
 
-/// sortDesc orders the strings in `strings` in ascending full tertiary level order.
+/// `sortDesc` orders the strings in `strings` in ascending full tertiary level order.
 pub fn sortDesc(self: *Self, strings: [][]const u8) void {
     zort([]const u8, strings, self, tertiaryDesc);
 }
 
-/// sortAsciiAsc orders the strings in `strings` in ASCII ascending order.
+/// `sortAsciiAsc` orders the strings in `strings` in ASCII ascending order.
 pub fn sortAsciiAsc(self: Self, strings: [][]const u8) void {
     zort([]const u8, strings, self, asciiAsc);
 }
 
-/// sortAsciiDesc orders the strings in `strings` in ASCII ascending order.
+/// `sortAsciiDesc` orders the strings in `strings` in ASCII ascending order.
 pub fn sortAsciiDesc(self: Self, strings: [][]const u8) void {
     zort([]const u8, strings, self, asciiDesc);
 }
-
-const testing = std.testing;
 
 test "Collator sort" {
     var allocator = std.testing.allocator;

@@ -1,3 +1,5 @@
+//! `Trieton` is a trie implementation tailored for the `Normalizer` struct.
+
 const std = @import("std");
 const mem = std.mem;
 const testing = std.testing;
@@ -32,7 +34,7 @@ pub fn deinit(self: *Self) void {
     self.root.deinit(self.allocator);
 }
 
-/// add a value for the specified key. Keys are slices of the key value type.
+/// `add` a value for the specified key. Keys are slices of the key value type.
 pub fn add(self: *Self, key: []const u8, value: Decomp) !void {
     var current = &self.root;
 
@@ -49,14 +51,14 @@ pub fn add(self: *Self, key: []const u8, value: Decomp) !void {
     current.value = value;
 }
 
-/// Lookup is returned from the find method on a successful match. The index field refers to
+/// `Lookup` is returned from the find method on a successful match. The index field refers to
 /// the index of the element in the key slice that produced the match.
 pub const Lookup = struct {
     index: usize,
     value: Decomp,
 };
 
-/// finds the matching value for the given key, null otherwise.
+/// `finds` the matching value for the given key, null otherwise.
 pub fn find(self: Self, key: []const u8) ?Lookup {
     var current = &self.root;
     var result: ?Lookup = null;

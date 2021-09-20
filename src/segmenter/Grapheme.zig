@@ -1,19 +1,22 @@
+//! `Grapheme` represents a Unicode grapheme cluster with related functionality.
+
 const std = @import("std");
 const debug = std.debug;
 const mem = std.mem;
 const testing = std.testing;
 const unicode = std.unicode;
 
-const GBP = @import("../components.zig").GraphemeBreakProperty;
 const CodePoint = @import("CodePoint.zig");
 const CodePointIterator = CodePoint.CodePointIterator;
-const Emoji = @import("../components.zig").EmojiData;
+const emoji = @import("../ziglyph.zig").emoji_data;
+const gbp = @import("../ziglyph.zig").grapheme_break_property;
 
 pub const Grapheme = @This();
 
 bytes: []const u8,
 offset: usize,
 
+/// `eql` comparse `str` with the bytes of this grapheme cluster for equality.
 pub fn eql(self: Grapheme, str: []const u8) bool {
     return mem.eql(u8, self.bytes, str);
 }
@@ -40,17 +43,17 @@ const Type = enum {
         if (0x000D == cp.scalar) ty = .cr;
         if (0x000A == cp.scalar) ty = .lf;
         if (0x200D == cp.scalar) ty = .zwj;
-        if (GBP.isControl(cp.scalar)) ty = .control;
-        if (GBP.isExtend(cp.scalar)) ty = .extend;
-        if (GBP.isL(cp.scalar)) ty = .han_l;
-        if (GBP.isLV(cp.scalar)) ty = .han_lv;
-        if (GBP.isLVT(cp.scalar)) ty = .han_lvt;
-        if (GBP.isT(cp.scalar)) ty = .han_t;
-        if (GBP.isV(cp.scalar)) ty = .han_v;
-        if (GBP.isPrepend(cp.scalar)) ty = .prepend;
-        if (GBP.isRegionalIndicator(cp.scalar)) ty = .regional;
-        if (GBP.isSpacingMark(cp.scalar)) ty = .spacing;
-        if (Emoji.isExtendedPictographic(cp.scalar)) ty = .xpic;
+        if (gbp.isControl(cp.scalar)) ty = .control;
+        if (gbp.isExtend(cp.scalar)) ty = .extend;
+        if (gbp.isL(cp.scalar)) ty = .han_l;
+        if (gbp.isLV(cp.scalar)) ty = .han_lv;
+        if (gbp.isLVT(cp.scalar)) ty = .han_lvt;
+        if (gbp.isT(cp.scalar)) ty = .han_t;
+        if (gbp.isV(cp.scalar)) ty = .han_v;
+        if (gbp.isPrepend(cp.scalar)) ty = .prepend;
+        if (gbp.isRegionalIndicator(cp.scalar)) ty = .regional;
+        if (gbp.isSpacingMark(cp.scalar)) ty = .spacing;
+        if (emoji.isExtendedPictographic(cp.scalar)) ty = .xpic;
 
         return ty;
     }
@@ -68,6 +71,7 @@ const Token = struct {
 
 const TokenList = std.ArrayList(Token);
 
+/// `GraphemeIterator` iterates a sting one grapheme cluster at-a-time.
 pub const GraphemeIterator = struct {
     bytes: []const u8,
     i: ?usize = null,
@@ -419,6 +423,7 @@ fn getTokens(comptime str: []const u8, comptime n: usize) [n]Token {
     return tokens;
 }
 
+/// `ComptimeGraphemeIterator` is like `GraphemeIterator` but must be given a string literal to do its work at compile time.
 pub fn ComptimeGraphemeIterator(comptime str: []const u8) type {
     const cp_count: usize = unicode.utf8CountCodepoints(str) catch @compileError("Invalid UTF-8.");
     if (cp_count == 0) @compileError("No code points?");

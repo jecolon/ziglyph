@@ -2,68 +2,68 @@ const std = @import("std");
 const testing = std.testing;
 
 // Import structs.
-const Ziglyph = @import("../Ziglyph.zig");
-const Collator = Ziglyph.Collator;
-const Grapheme = Ziglyph.Grapheme;
+const ziglyph = @import("../ziglyph.zig");
+const Collator = ziglyph.Collator;
+const Grapheme = ziglyph.Grapheme;
 const GraphemeIterator = Grapheme.GraphemeIterator;
 const ComptimeGraphemeIterator = Grapheme.ComptimeGraphemeIterator;
-const Letter = Ziglyph.Letter;
-const Normalizer = Ziglyph.Normalizer;
-const Punct = Ziglyph.Punct;
-const Sentence = Ziglyph.Sentence;
+const letter = ziglyph.letter;
+const Normalizer = ziglyph.Normalizer;
+const punct = ziglyph.punct;
+const Sentence = ziglyph.Sentence;
 const SentenceIterator = Sentence.SentenceIterator;
 const ComptimeSentenceIterator = Sentence.ComptimeSentenceIterator;
-const UpperMap = Ziglyph.UpperMap;
-const Width = Ziglyph.Width;
-const Word = Ziglyph.Word;
+const upper_map = ziglyph.upper_map;
+const display_width = ziglyph.display_width;
+const Word = ziglyph.Word;
 const WordIterator = Word.WordIterator;
 const ComptimeWordIterator = Word.ComptimeWordIterator;
 
-test "Ziglyph struct" {
+test "ziglyph struct" {
     const z = 'z';
-    try testing.expect(Ziglyph.isLetter(z));
-    try testing.expect(Ziglyph.isAlphaNum(z));
-    try testing.expect(Ziglyph.isPrint(z));
-    try testing.expect(!Ziglyph.isUpper(z));
-    const uz = Ziglyph.toUpper(z);
-    try testing.expect(Ziglyph.isUpper(uz));
+    try testing.expect(ziglyph.isLetter(z));
+    try testing.expect(ziglyph.isAlphaNum(z));
+    try testing.expect(ziglyph.isPrint(z));
+    try testing.expect(!ziglyph.isUpper(z));
+    const uz = ziglyph.toUpper(z);
+    try testing.expect(ziglyph.isUpper(uz));
     try testing.expectEqual(uz, 'Z');
-    const tz = Ziglyph.toTitle(z);
-    try testing.expect(Ziglyph.isUpper(tz));
+    const tz = ziglyph.toTitle(z);
+    try testing.expect(ziglyph.isUpper(tz));
     try testing.expectEqual(tz, 'Z');
 
     // String toLower, toTitle and toUpper.
     var allocator = std.testing.allocator;
-    var got = try Ziglyph.toLowerStr(allocator, "AbC123");
+    var got = try ziglyph.toLowerStr(allocator, "AbC123");
     errdefer allocator.free(got);
     try testing.expect(std.mem.eql(u8, "abc123", got));
     allocator.free(got);
-    got = try Ziglyph.toUpperStr(allocator, "aBc123");
+    got = try ziglyph.toUpperStr(allocator, "aBc123");
     errdefer allocator.free(got);
     try testing.expect(std.mem.eql(u8, "ABC123", got));
     allocator.free(got);
-    got = try Ziglyph.toTitleStr(allocator, "thE aBc123 moVie. yes!");
+    got = try ziglyph.toTitleStr(allocator, "thE aBc123 moVie. yes!");
     defer allocator.free(got);
     try testing.expect(std.mem.eql(u8, "The Abc123 Movie. Yes!", got));
 }
 
 test "Aggregate struct" {
     const z = 'z';
-    try testing.expect(Letter.isLetter(z));
-    try testing.expect(!Letter.isUpper(z));
-    try testing.expect(!Punct.isPunct(z));
-    try testing.expect(Punct.isPunct('!'));
-    const uz = Letter.toUpper(z);
-    try testing.expect(Letter.isUpper(uz));
+    try testing.expect(letter.isLetter(z));
+    try testing.expect(!letter.isUpper(z));
+    try testing.expect(!punct.isPunct(z));
+    try testing.expect(punct.isPunct('!'));
+    const uz = letter.toUpper(z);
+    try testing.expect(letter.isUpper(uz));
     try testing.expectEqual(uz, 'Z');
 }
 
 test "Component structs" {
     const z = 'z';
-    try testing.expect(Letter.isLower(z));
-    try testing.expect(!Letter.isUpper(z));
-    const uz = UpperMap.toUpper(z);
-    try testing.expect(Letter.isUpper(uz));
+    try testing.expect(letter.isLower(z));
+    try testing.expect(!letter.isUpper(z));
+    const uz = upper_map.toUpper(z);
+    try testing.expect(letter.isUpper(uz));
     try testing.expectEqual(uz, 'Z');
 }
 
@@ -207,25 +207,25 @@ test "WordIterator" {
 
 test "Code point / string widths" {
     var allocator = std.testing.allocator;
-    try testing.expectEqual(Width.codePointWidth('é', .half), 1);
-    try testing.expectEqual(Width.codePointWidth('😊', .half), 2);
-    try testing.expectEqual(Width.codePointWidth('统', .half), 2);
-    try testing.expectEqual(try Width.strWidth(allocator, "Hello\r\n", .half), 5);
-    try testing.expectEqual(try Width.strWidth(allocator, "\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
-    try testing.expectEqual(try Width.strWidth(allocator, "Héllo 🇪🇸", .half), 8);
-    try testing.expectEqual(try Width.strWidth(allocator, "\u{26A1}\u{FE0E}", .half), 1); // Text sequence
-    try testing.expectEqual(try Width.strWidth(allocator, "\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
+    try testing.expectEqual(display_width.codePointWidth('é', .half), 1);
+    try testing.expectEqual(display_width.codePointWidth('😊', .half), 2);
+    try testing.expectEqual(display_width.codePointWidth('统', .half), 2);
+    try testing.expectEqual(try display_width.strWidth(allocator, "Hello\r\n", .half), 5);
+    try testing.expectEqual(try display_width.strWidth(allocator, "\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
+    try testing.expectEqual(try display_width.strWidth(allocator, "Héllo 🇪🇸", .half), 8);
+    try testing.expectEqual(try display_width.strWidth(allocator, "\u{26A1}\u{FE0E}", .half), 1); // Text sequence
+    try testing.expectEqual(try display_width.strWidth(allocator, "\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
 
     // padLeft, center, padRight
-    const right_aligned = try Width.padLeft(allocator, "w😊w", 10, "-");
+    const right_aligned = try display_width.padLeft(allocator, "w😊w", 10, "-");
     defer allocator.free(right_aligned);
     try testing.expectEqualSlices(u8, "------w😊w", right_aligned);
 
-    const centered = try Width.center(allocator, "w😊w", 10, "-");
+    const centered = try display_width.center(allocator, "w😊w", 10, "-");
     defer allocator.free(centered);
     try testing.expectEqualSlices(u8, "---w😊w---", centered);
 
-    const left_aligned = try Width.padRight(allocator, "w😊w", 10, "-");
+    const left_aligned = try display_width.padRight(allocator, "w😊w", 10, "-");
     defer allocator.free(left_aligned);
     try testing.expectEqualSlices(u8, "w😊w------", left_aligned);
 }
@@ -252,10 +252,10 @@ test "Collation" {
     try testing.expectEqual(strings[2], "xyz");
 }
 
-test "Width wrap" {
+test "display_width wrap" {
     var allocator = testing.allocator;
     var input = "The quick brown fox\r\njumped over the lazy dog!";
-    var got = try Width.wrap(allocator, input, 10, 3);
+    var got = try display_width.wrap(allocator, input, 10, 3);
     defer allocator.free(got);
     var want = "The quick\n brown \nfox jumped\n over the\n lazy dog\n!";
     try testing.expectEqualStrings(want, got);

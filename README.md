@@ -51,18 +51,18 @@ can import components like this:
 
 ```zig
 const ziglyph = @import("ziglyph");
-const Letter = @import("ziglyph").Letter; // or const Letter = Ziglyph.Letter;
-const Number = @import("ziglyph").Number; // or const Number = Ziglyph.Number;
+const letter = @import("ziglyph").letter; // or const Letter = Ziglyph.Letter;
+const number = @import("ziglyph").number; // or const Number = Ziglyph.Number;
 ```
 
-### Using the Ziglyph Struct
-The `Ziglyph` struct provides convenient acces to the most frequently-used functions related to Unicode
+### Using the ziglyph namespace
+The `Ziglyph` namespace provides convenient acces to the most frequently-used functions related to Unicode
 code points and strings.
 
 ```zig
 const ziglyph = @import("ziglyph");
 
-test "Ziglyph struct" {
+test "ziglyph namespace" {
     const z = 'z';
     try expect(ziglyph.isLetter(z));
     try expect(ziglyph.isAlphaNum(z));
@@ -90,22 +90,22 @@ test "Ziglyph struct" {
 }
 ```
 
-### Using Component Structs
-Smaller aggregate structs are privided for specific areas of functionality.
-See [components.zig](src/components.zig) for a full list of all components.
+### Using Component namespaces
+Smaller namespaces are privided for specific areas of functionality.
+See [ziglyph.zig](src/ziglyph.zig) for a full list of all components.
 
 ```zig
-const Letter = @import("ziglyph").Letter;
-const Punct = @import("ziglyph").Punct;
+const letter = @import("ziglyph").letter;
+const punct = @import("ziglyph").punct;
 
 test "Aggregate struct" {
     const z = 'z';
-    try expect(Letter.isLetter(z));
-    try expect(!Letter.isUpper(z));
-    try expect(!Punct.isPunct(z));
-    try expect(Punct.isPunct('!'));
-    const uz = Letter.toUpper(z);
-    try expect(Letter.isUpper(uz));
+    try expect(letter.isletter(z));
+    try expect(!letter.isUpper(z));
+    try expect(!punct.ispunct(z));
+    try expect(punct.ispunct('!'));
+    const uz = letter.toUpper(z);
+    try expect(letter.isUpper(uz));
     try expectEqual(uz, 'Z');
 }
 ```
@@ -357,42 +357,42 @@ test "WordIterator" {
 }
 ```
 
-## Code Point and String Width
+## Code Point and String Display Width
 When working with environments in which text is rendered in a fixed-width font, such as terminal 
 emulators, it's necessary to know how many cells (or columns) a particular code point or string will
-occupy. The `Width` component struct provides methods to do just that.
+occupy. The `display_width` namespace provides functions to do just that.
 
 ```zig
-const Width = @import("ziglyph").Width;
+const display_width = @import("ziglyph").display_width;
 
 test "Code point / string widths" {
     // The width methods take a second parameter of value .half or .full to determine the width of 
     // ambiguous code points as per the Unicode standard. .half is the most common case.
 
     // Note that codePointWidth returns an i3 because code points like backspace have width -1.
-    try expectEqual(Width.codePointWidth('é', .half), 1);
-    try expectEqual(Width.codePointWidth('😊', .half), 2);
-    try expectEqual(Width.codePointWidth('统', .half), 2);
+    try expectEqual(display_width.codePointWidth('é', .half), 1);
+    try expectEqual(display_width.codePointWidth('😊', .half), 2);
+    try expectEqual(display_width.codePointWidth('统', .half), 2);
 
     var allocator = std.testing.allocator;
 
     // strWidth returns usize because it can never be negative, regardless of the code points it contains.
-    try expectEqual(try Width.strWidth(allocator, "Hello\r\n", .half), 5);
-    try expectEqual(try Width.strWidth(allocator, "\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
-    try expectEqual(try Width.strWidth(allocator, "Héllo 🇪🇸", .half), 8);
-    try expectEqual(try Width.strWidth(allocator, "\u{26A1}\u{FE0E}", .half), 1); // Text sequence
-    try expectEqual(try Width.strWidth(allocator, "\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
+    try expectEqual(try display_width.strWidth(allocator, "Hello\r\n", .half), 5);
+    try expectEqual(try display_width.strWidth(allocator, "\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
+    try expectEqual(try display_width.strWidth(allocator, "Héllo 🇪🇸", .half), 8);
+    try expectEqual(try display_width.strWidth(allocator, "\u{26A1}\u{FE0E}", .half), 1); // Text sequence
+    try expectEqual(try display_width.strWidth(allocator, "\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
 
     // padLeft, center, padRight
-    const right_aligned = try Width.padLeft(allocator, "w😊w", 10, "-");
+    const right_aligned = try display_width.padLeft(allocator, "w😊w", 10, "-");
     defer allocator.free(right_aligned);
     try expectEqualSlices(u8, "------w😊w", right_aligned);
 
-    const centered = try Width.center(allocator, "w😊w", 10, "-");
+    const centered = try display_width.center(allocator, "w😊w", 10, "-");
     defer allocator.free(centered);
     try expectEqualSlices(u8, "---w😊w---", centered);
 
-    const left_aligned = try Width.padRight(allocator, "w😊w", 10, "-");
+    const left_aligned = try display_width.padRight(allocator, "w😊w", 10, "-");
     defer allocator.free(left_aligned);
     try expectEqualSlices(u8, "w😊w------", left_aligned);
 }
@@ -400,16 +400,16 @@ test "Code point / string widths" {
 
 ## Word Wrap
 If you need to wrap a string to a specific number of columns according to Unicode Word boundaries and display width,
-you can use the `Width` struct's `wrap` function for this. You can also specify a threshold value indicating how close
+you can use the `display_width` struct's `wrap` function for this. You can also specify a threshold value indicating how close
 a word boundary can be to the column limit and trigger a line break.
 
 ```zig
-const Width = @import("ziglyph").Width;
+const display_width = @import("ziglyph").display_width;
 
-test "Width wrap" {
+test "display_width wrap" {
     var allocator = testing.allocator;
     var input = "The quick brown fox\r\njumped over the lazy dog!";
-    var got = try Width.wrap(allocator, input, 10, 3);
+    var got = try display_width.wrap(allocator, input, 10, 3);
     defer allocator.free(got);
     var want = "The quick\n brown \nfox jumped\n over the\n lazy dog\n!";
     try testing.expectEqualStrings(want, got);

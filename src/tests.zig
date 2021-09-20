@@ -1,34 +1,34 @@
-test "Ziglyph" {
-    _ = @import("Ziglyph.zig");
+test "ziglyph" {
+    _ = @import("ziglyph.zig");
 }
 
 test "Normalizer" {
-    _ = @import("components.zig").Normalizer;
+    _ = @import("ziglyph.zig").Normalizer;
 }
 
 test "Segmentation" {
-    _ = @import("components.zig").CodePoint;
-    _ = @import("components.zig").Grapheme;
-    _ = @import("components.zig").Word;
-    _ = @import("components.zig").Sentence;
+    _ = @import("ziglyph.zig").CodePoint;
+    _ = @import("ziglyph.zig").Grapheme;
+    _ = @import("ziglyph.zig").Word;
+    _ = @import("ziglyph.zig").Sentence;
 }
 
-test "components" {
-    _ = @import("components.zig").Letter;
-    _ = @import("components.zig").Mark;
-    _ = @import("components.zig").Number;
-    _ = @import("components.zig").Punct;
-    _ = @import("components.zig").Symbol;
+test "ziglyph" {
+    _ = @import("ziglyph.zig").letter;
+    _ = @import("ziglyph.zig").mark;
+    _ = @import("ziglyph.zig").number;
+    _ = @import("ziglyph.zig").punct;
+    _ = @import("ziglyph.zig").symbol;
 }
 
 test "Collator" {
-    _ = @import("components.zig").Collator;
+    _ = @import("ziglyph.zig").Collator;
 }
 
-test "Width" {
-    _ = @import("components.zig").Width;
+test "display_width" {
+    _ = @import("ziglyph.zig").display_width;
 }
 
-test "READMEs" {
+test "README" {
     _ = @import("tests/readme_tests.zig");
 }

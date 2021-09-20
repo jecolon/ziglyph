@@ -1,14 +1,18 @@
+//! `display_width` provides functions that calculate the display width of a code point or string when displayed in a
+//! fixed-width font.
+
 const std = @import("std");
 const mem = std.mem;
+const testing = std.testing;
 const unicode = std.unicode;
 
-const Cats = @import("../../components.zig").DerivedGeneralCategory;
-const EAW = @import("../../components.zig").DerivedEastAsianWidth;
-const Emoji = @import("../../components.zig").EmojiData;
-const GBP = @import("../../components.zig").GraphemeBreakProperty;
-const GraphemeIterator = @import("../../components.zig").GraphemeIterator;
-const isAsciiStr = @import("../../ascii.zig").isAsciiStr;
-const Word = @import("../../components.zig").Word;
+const cats = @import("ziglyph.zig").derived_general_category;
+const eaw = @import("ziglyph.zig").derived_east_asian_width;
+const emoji = @import("ziglyph.zig").emoji_data;
+const gbp = @import("ziglyph.zig").grapheme_break_property;
+const GraphemeIterator = @import("ziglyph.zig").GraphemeIterator;
+const isAsciiStr = @import("ascii.zig").isAsciiStr;
+const Word = @import("ziglyph.zig").Word;
 const WordIterator = Word.WordIterator;
 
 /// AmbiguousWidth determines the width of ambiguous characters according to the context. In an 
@@ -37,10 +41,10 @@ pub fn codePointWidth(cp: u21, am_width: AmbiguousWidth) i3 {
     } else if (cp == 0x2E3B) {
         // three-em dash
         return 3;
-    } else if (Cats.isEnclosingMark(cp) or Cats.isNonspacingMark(cp)) {
+    } else if (cats.isEnclosingMark(cp) or cats.isNonspacingMark(cp)) {
         // Combining Marks.
         return 0;
-    } else if (Cats.isFormat(cp) and (!(cp >= 0x0600 and cp <= 0x0605) and cp != 0x061C and
+    } else if (cats.isFormat(cp) and (!(cp >= 0x0600 and cp <= 0x0605) and cp != 0x061C and
         cp != 0x06DD and cp != 0x08E2))
     {
         // Format except Arabic.
@@ -55,11 +59,11 @@ pub fn codePointWidth(cp: u21, am_width: AmbiguousWidth) i3 {
         (cp >= 0x30000 and cp <= 0x3FFFD))
     {
         return 2;
-    } else if (EAW.isWide(cp) or EAW.isFullwidth(cp)) {
+    } else if (eaw.isWide(cp) or eaw.isFullwidth(cp)) {
         return 2;
-    } else if (GBP.isRegionalIndicator(cp)) {
+    } else if (gbp.isRegionalIndicator(cp)) {
         return 2;
-    } else if (EAW.isAmbiguous(cp)) {
+    } else if (eaw.isAmbiguous(cp)) {
         return @enumToInt(am_width);
     } else {
         return 1;
@@ -101,9 +105,9 @@ pub fn strWidth(allocator: *mem.Allocator, str: []const u8, am_width: AmbiguousW
 
             if (w != 0) {
                 // Only adding width of first non-zero-width code point.
-                if (Emoji.isExtendedPictographic(cp)) {
+                if (emoji.isExtendedPictographic(cp)) {
                     if (cp_iter.nextCodepoint()) |ncp| {
-                        // Emoji text sequence.
+                        // emoji text sequence.
                         if (ncp == 0xFE0E) w = 1;
                     }
                 }
@@ -208,89 +212,6 @@ pub fn padRight(allocator: *mem.Allocator, str: []const u8, total_width: usize, 
     return result;
 }
 
-const expectEqual = std.testing.expectEqual;
-const expectEqualSlices = std.testing.expectEqualSlices;
-const expectEqualStrings = std.testing.expectEqualStrings;
-
-test "Width Width" {
-    var allocator = std.testing.allocator;
-
-    try expectEqual(@as(i8, -1), codePointWidth(0x0008, .half)); // \b
-    try expectEqual(@as(i8, 0), codePointWidth(0x0000, .half)); // null
-    try expectEqual(@as(i8, 0), codePointWidth(0x0005, .half)); // Cf
-    try expectEqual(@as(i8, 0), codePointWidth(0x0007, .half)); // \a BEL
-    try expectEqual(@as(i8, 0), codePointWidth(0x000A, .half)); // \n LF
-    try expectEqual(@as(i8, 0), codePointWidth(0x000B, .half)); // \v VT
-    try expectEqual(@as(i8, 0), codePointWidth(0x000C, .half)); // \f FF
-    try expectEqual(@as(i8, 0), codePointWidth(0x000D, .half)); // \r CR
-    try expectEqual(@as(i8, 0), codePointWidth(0x000E, .half)); // SQ
-    try expectEqual(@as(i8, 0), codePointWidth(0x000F, .half)); // SI
-
-    try expectEqual(@as(i8, 0), codePointWidth(0x070F, .half)); // Cf
-    try expectEqual(@as(i8, 1), codePointWidth(0x0603, .half)); // Cf Arabic
-
-    try expectEqual(@as(i8, 1), codePointWidth(0x00AD, .half)); // soft-hyphen
-    try expectEqual(@as(i8, 2), codePointWidth(0x2E3A, .half)); // two-em dash
-    try expectEqual(@as(i8, 3), codePointWidth(0x2E3B, .half)); // three-em dash
-
-    try expectEqual(@as(i8, 1), codePointWidth(0x00BD, .half)); // ambiguous halfwidth
-    try expectEqual(@as(i8, 2), codePointWidth(0x00BD, .full)); // ambiguous fullwidth
-
-    try expectEqual(@as(i8, 1), codePointWidth('é', .half));
-    try expectEqual(@as(i8, 2), codePointWidth('😊', .half));
-    try expectEqual(@as(i8, 2), codePointWidth('统', .half));
-
-    try expectEqual(@as(usize, 5), try strWidth(allocator, "Hello\r\n", .half));
-    try expectEqual(@as(usize, 1), try strWidth(allocator, "\u{0065}\u{0301}", .half));
-    try expectEqual(@as(usize, 2), try strWidth(allocator, "\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half));
-    try expectEqual(@as(usize, 8), try strWidth(allocator, "Hello 😊", .half));
-    try expectEqual(@as(usize, 8), try strWidth(allocator, "Héllo 😊", .half));
-    try expectEqual(@as(usize, 8), try strWidth(allocator, "Héllo :)", .half));
-    try expectEqual(@as(usize, 8), try strWidth(allocator, "Héllo 🇪🇸", .half));
-    try expectEqual(@as(usize, 2), try strWidth(allocator, "\u{26A1}", .half)); // Lone emoji
-    try expectEqual(@as(usize, 1), try strWidth(allocator, "\u{26A1}\u{FE0E}", .half)); // Text sequence
-    try expectEqual(@as(usize, 2), try strWidth(allocator, "\u{26A1}\u{FE0F}", .half)); // Presentation sequence
-    try expectEqual(@as(usize, 0), try strWidth(allocator, "A\x08", .half)); // Backspace
-    try expectEqual(@as(usize, 0), try strWidth(allocator, "\x7FA", .half)); // DEL
-    try expectEqual(@as(usize, 0), try strWidth(allocator, "\x7FA\x08\x08", .half)); // never less than o
-}
-
-test "Width center" {
-    var allocator = std.testing.allocator;
-
-    var centered = try center(allocator, "abc", 9, "*");
-    defer allocator.free(centered);
-    try expectEqualSlices(u8, "***abc***", centered);
-
-    allocator.free(centered);
-    centered = try center(allocator, "w😊w", 10, "-");
-    try expectEqualSlices(u8, "---w😊w---", centered);
-}
-
-test "Width padLeft" {
-    var allocator = std.testing.allocator;
-
-    var right_aligned = try padLeft(allocator, "abc", 9, "*");
-    defer allocator.free(right_aligned);
-    try expectEqualSlices(u8, "******abc", right_aligned);
-
-    allocator.free(right_aligned);
-    right_aligned = try padLeft(allocator, "w😊w", 10, "-");
-    try expectEqualSlices(u8, "------w😊w", right_aligned);
-}
-
-test "Width padRight" {
-    var allocator = std.testing.allocator;
-
-    var left_aligned = try padRight(allocator, "abc", 9, "*");
-    defer allocator.free(left_aligned);
-    try expectEqualSlices(u8, "abc******", left_aligned);
-
-    allocator.free(left_aligned);
-    left_aligned = try padRight(allocator, "w😊w", 10, "-");
-    try expectEqualSlices(u8, "w😊w------", left_aligned);
-}
-
 /// Wraps a string approximately at the given number of colums per line. Threshold defines how far the last column of
 /// the last word can be from the edge. Caller must free returned bytes.
 pub fn wrap(allocator: *std.mem.Allocator, str: []const u8, columns: usize, threshold: usize) ![]u8 {
@@ -329,11 +250,90 @@ fn isLineBreak(str: []const u8) bool {
     }
 }
 
-test "Width wrap" {
+test "display_width Width" {
+    var allocator = std.testing.allocator;
+
+    try testing.expectEqual(@as(i8, -1), codePointWidth(0x0008, .half)); // \b
+    try testing.expectEqual(@as(i8, 0), codePointWidth(0x0000, .half)); // null
+    try testing.expectEqual(@as(i8, 0), codePointWidth(0x0005, .half)); // Cf
+    try testing.expectEqual(@as(i8, 0), codePointWidth(0x0007, .half)); // \a BEL
+    try testing.expectEqual(@as(i8, 0), codePointWidth(0x000A, .half)); // \n LF
+    try testing.expectEqual(@as(i8, 0), codePointWidth(0x000B, .half)); // \v VT
+    try testing.expectEqual(@as(i8, 0), codePointWidth(0x000C, .half)); // \f FF
+    try testing.expectEqual(@as(i8, 0), codePointWidth(0x000D, .half)); // \r CR
+    try testing.expectEqual(@as(i8, 0), codePointWidth(0x000E, .half)); // SQ
+    try testing.expectEqual(@as(i8, 0), codePointWidth(0x000F, .half)); // SI
+
+    try testing.expectEqual(@as(i8, 0), codePointWidth(0x070F, .half)); // Cf
+    try testing.expectEqual(@as(i8, 1), codePointWidth(0x0603, .half)); // Cf Arabic
+
+    try testing.expectEqual(@as(i8, 1), codePointWidth(0x00AD, .half)); // soft-hyphen
+    try testing.expectEqual(@as(i8, 2), codePointWidth(0x2E3A, .half)); // two-em dash
+    try testing.expectEqual(@as(i8, 3), codePointWidth(0x2E3B, .half)); // three-em dash
+
+    try testing.expectEqual(@as(i8, 1), codePointWidth(0x00BD, .half)); // ambiguous halfwidth
+    try testing.expectEqual(@as(i8, 2), codePointWidth(0x00BD, .full)); // ambiguous fullwidth
+
+    try testing.expectEqual(@as(i8, 1), codePointWidth('é', .half));
+    try testing.expectEqual(@as(i8, 2), codePointWidth('😊', .half));
+    try testing.expectEqual(@as(i8, 2), codePointWidth('统', .half));
+
+    try testing.expectEqual(@as(usize, 5), try strWidth(allocator, "Hello\r\n", .half));
+    try testing.expectEqual(@as(usize, 1), try strWidth(allocator, "\u{0065}\u{0301}", .half));
+    try testing.expectEqual(@as(usize, 2), try strWidth(allocator, "\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half));
+    try testing.expectEqual(@as(usize, 8), try strWidth(allocator, "Hello 😊", .half));
+    try testing.expectEqual(@as(usize, 8), try strWidth(allocator, "Héllo 😊", .half));
+    try testing.expectEqual(@as(usize, 8), try strWidth(allocator, "Héllo :)", .half));
+    try testing.expectEqual(@as(usize, 8), try strWidth(allocator, "Héllo 🇪🇸", .half));
+    try testing.expectEqual(@as(usize, 2), try strWidth(allocator, "\u{26A1}", .half)); // Lone emoji
+    try testing.expectEqual(@as(usize, 1), try strWidth(allocator, "\u{26A1}\u{FE0E}", .half)); // Text sequence
+    try testing.expectEqual(@as(usize, 2), try strWidth(allocator, "\u{26A1}\u{FE0F}", .half)); // Presentation sequence
+    try testing.expectEqual(@as(usize, 0), try strWidth(allocator, "A\x08", .half)); // Backspace
+    try testing.expectEqual(@as(usize, 0), try strWidth(allocator, "\x7FA", .half)); // DEL
+    try testing.expectEqual(@as(usize, 0), try strWidth(allocator, "\x7FA\x08\x08", .half)); // never less than o
+}
+
+test "display_width center" {
+    var allocator = std.testing.allocator;
+
+    var centered = try center(allocator, "abc", 9, "*");
+    defer allocator.free(centered);
+    try testing.expectEqualSlices(u8, "***abc***", centered);
+
+    allocator.free(centered);
+    centered = try center(allocator, "w😊w", 10, "-");
+    try testing.expectEqualSlices(u8, "---w😊w---", centered);
+}
+
+test "display_width padLeft" {
+    var allocator = std.testing.allocator;
+
+    var right_aligned = try padLeft(allocator, "abc", 9, "*");
+    defer allocator.free(right_aligned);
+    try testing.expectEqualSlices(u8, "******abc", right_aligned);
+
+    allocator.free(right_aligned);
+    right_aligned = try padLeft(allocator, "w😊w", 10, "-");
+    try testing.expectEqualSlices(u8, "------w😊w", right_aligned);
+}
+
+test "display_width padRight" {
+    var allocator = std.testing.allocator;
+
+    var left_aligned = try padRight(allocator, "abc", 9, "*");
+    defer allocator.free(left_aligned);
+    try testing.expectEqualSlices(u8, "abc******", left_aligned);
+
+    allocator.free(left_aligned);
+    left_aligned = try padRight(allocator, "w😊w", 10, "-");
+    try testing.expectEqualSlices(u8, "w😊w------", left_aligned);
+}
+
+test "display_width wrap" {
     var allocator = std.testing.allocator;
     var input = "The quick brown fox\r\njumped over the lazy dog!";
     var got = try wrap(allocator, input, 10, 3);
     defer allocator.free(got);
     var want = "The quick\n brown \nfox jumped\n over the\n lazy dog\n!";
-    try expectEqualStrings(want, got);
+    try testing.expectEqualStrings(want, got);
 }

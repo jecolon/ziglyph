@@ -1,3 +1,5 @@
+//! `CollatorTrie` is a trie implementation tailored for use with Ziglyph's `Collator`.
+
 const std = @import("std");
 const mem = std.mem;
 const testing = std.testing;
@@ -30,6 +32,7 @@ const Node = struct {
     }
 };
 
+/// `Lookup` is the result of a lookup in the trie.
 pub const Lookup = struct {
     index: usize,
     value: ?Elements,
@@ -51,6 +54,7 @@ pub fn deinit(self: *Self) void {
     self.root.deinit();
 }
 
+/// `add` an element to the trie.
 pub fn add(self: *Self, key: Key, value: Elements) !void {
     var current_node = &self.root;
 
@@ -66,6 +70,7 @@ pub fn add(self: *Self, key: Key, value: Elements) !void {
     current_node.value = value;
 }
 
+/// `find` an element in the trie.
 pub fn find(self: Self, key: []const u21) Lookup {
     var current_node = self.root;
     var success_index: usize = 0;

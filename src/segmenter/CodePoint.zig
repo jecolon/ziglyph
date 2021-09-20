@@ -1,3 +1,5 @@
+//! `CodePoint` represents a Unicode code point wit hrealted functionality.
+
 const std = @import("std");
 const unicode = std.unicode;
 
@@ -7,10 +9,12 @@ scalar: u21,
 
 const CodePoint = @This();
 
+/// `end` returns the index of the byte after this code points last byte in the source string.
 pub fn end(self: CodePoint) usize {
     return self.offset + self.bytes.len;
 }
 
+/// `CodePointIterator` iterates a string one code point at-a-time.
 pub const CodePointIterator = struct {
     bytes: []const u8,
     i: usize = 0,

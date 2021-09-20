@@ -1,10 +1,12 @@
+//! `Sentence` represents a sentence within a Unicode string.
+
 const std = @import("std");
 const debug = std.debug;
 const mem = std.mem;
 const testing = std.testing;
 const unicode = std.unicode;
 
-const SBP = @import("../components.zig").SentenceBreakProperty;
+const sbp = @import("../ziglyph.zig").sentence_break_property;
 const CodePoint = @import("CodePoint.zig");
 const CodePointIterator = CodePoint.CodePointIterator;
 
@@ -13,6 +15,7 @@ pub const Sentence = @This();
 bytes: []const u8,
 offset: usize,
 
+/// `eql` compares `str` with the bytes of this sentence for equality.
 pub fn eql(self: Sentence, str: []const u8) bool {
     return mem.eql(u8, self.bytes, str);
 }
@@ -38,18 +41,18 @@ const Type = enum {
         var ty: Type = .any;
         if (0x000D == cp.scalar) ty = .cr;
         if (0x000A == cp.scalar) ty = .lf;
-        if (SBP.isLower(cp.scalar)) ty = .lower;
-        if (SBP.isUpper(cp.scalar)) ty = .upper;
-        if (SBP.isOLetter(cp.scalar)) ty = .oletter;
-        if (SBP.isNumeric(cp.scalar)) ty = .numeric;
-        if (SBP.isSep(cp.scalar)) ty = .sep;
-        if (SBP.isSp(cp.scalar)) ty = .sp;
-        if (SBP.isClose(cp.scalar)) ty = .close;
-        if (SBP.isATerm(cp.scalar)) ty = .aterm;
-        if (SBP.isSTerm(cp.scalar)) ty = .sterm;
-        if (SBP.isSContinue(cp.scalar)) ty = .scontinue;
-        if (SBP.isExtend(cp.scalar)) ty = .extend;
-        if (SBP.isFormat(cp.scalar)) ty = .format;
+        if (sbp.isLower(cp.scalar)) ty = .lower;
+        if (sbp.isUpper(cp.scalar)) ty = .upper;
+        if (sbp.isOLetter(cp.scalar)) ty = .oletter;
+        if (sbp.isNumeric(cp.scalar)) ty = .numeric;
+        if (sbp.isSep(cp.scalar)) ty = .sep;
+        if (sbp.isSp(cp.scalar)) ty = .sp;
+        if (sbp.isClose(cp.scalar)) ty = .close;
+        if (sbp.isATerm(cp.scalar)) ty = .aterm;
+        if (sbp.isSTerm(cp.scalar)) ty = .sterm;
+        if (sbp.isSContinue(cp.scalar)) ty = .scontinue;
+        if (sbp.isExtend(cp.scalar)) ty = .extend;
+        if (sbp.isFormat(cp.scalar)) ty = .format;
 
         return ty;
     }
@@ -67,6 +70,7 @@ const Token = struct {
 
 const TokenList = std.ArrayList(Token);
 
+/// `SentenceIterator` iterates a string one sentence at-a-time.
 pub const SentenceIterator = struct {
     bytes: []const u8,
     i: ?usize = null,
@@ -491,6 +495,7 @@ fn getTokens(comptime str: []const u8, comptime n: usize) [n]Token {
     return tokens;
 }
 
+/// `ComptimeSentenceIterator` is like `SentenceIterator` but requires a string literal to do its work at compile time.
 pub fn ComptimeSentenceIterator(comptime str: []const u8) type {
     const cp_count: usize = unicode.utf8CountCodepoints(str) catch @compileError("Invalid UTF-8.");
     if (cp_count == 0) @compileError("No code points?");

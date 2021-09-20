@@ -2,7 +2,7 @@ const Builder = @import("std").build.Builder;
 
 pub fn build(b: *Builder) void {
     const mode = b.standardReleaseOptions();
-    const lib = b.addStaticLibrary("Ziglyph", "src/Ziglyph.zig");
+    const lib = b.addStaticLibrary("ziglyph", "src/ziglyph.zig");
     lib.setBuildMode(mode);
     lib.install();
 

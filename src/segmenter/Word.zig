@@ -1,19 +1,22 @@
+//! `Word` represents a single word within a Unicde string.
+
 const std = @import("std");
 const debug = std.debug;
 const mem = std.mem;
 const testing = std.testing;
 const unicode = std.unicode;
 
-const WBP = @import("../components.zig").WordBreakProperty;
+const wbp = @import("../ziglyph.zig").word_break_property;
 const CodePoint = @import("CodePoint.zig");
 const CodePointIterator = CodePoint.CodePointIterator;
-const Emoji = @import("../components.zig").EmojiData;
+const emoji = @import("../ziglyph.zig").emoji_data;
 
 pub const Word = @This();
 
 bytes: []const u8,
 offset: usize,
 
+/// `eal` compares `str` with the bytes of this word for equality.
 pub fn eql(self: Word, str: []const u8) bool {
     return mem.eql(u8, self.bytes, str);
 }
@@ -47,20 +50,20 @@ const Type = enum {
         if (0x200D == cp.scalar) ty = .zwj;
         if (0x0022 == cp.scalar) ty = .dquote;
         if (0x0027 == cp.scalar) ty = .squote;
-        if (WBP.isALetter(cp.scalar)) ty = .aletter;
-        if (WBP.isExtend(cp.scalar)) ty = .extend;
-        if (WBP.isExtendNumLet(cp.scalar)) ty = .extendnumlet;
-        if (WBP.isFormat(cp.scalar)) ty = .format;
-        if (WBP.isHebrewLetter(cp.scalar)) ty = .hletter;
-        if (WBP.isKatakana(cp.scalar)) ty = .katakana;
-        if (WBP.isMidLetter(cp.scalar)) ty = .midletter;
-        if (WBP.isMidNum(cp.scalar)) ty = .midnum;
-        if (WBP.isMidNumLet(cp.scalar)) ty = .midnumlet;
-        if (WBP.isNewline(cp.scalar)) ty = .newline;
-        if (WBP.isNumeric(cp.scalar)) ty = .numeric;
-        if (WBP.isRegionalIndicator(cp.scalar)) ty = .regional;
-        if (WBP.isWSegSpace(cp.scalar)) ty = .wsegspace;
-        if (Emoji.isExtendedPictographic(cp.scalar)) ty = .xpic;
+        if (wbp.isALetter(cp.scalar)) ty = .aletter;
+        if (wbp.isExtend(cp.scalar)) ty = .extend;
+        if (wbp.isExtendNumLet(cp.scalar)) ty = .extendnumlet;
+        if (wbp.isFormat(cp.scalar)) ty = .format;
+        if (wbp.isHebrewLetter(cp.scalar)) ty = .hletter;
+        if (wbp.isKatakana(cp.scalar)) ty = .katakana;
+        if (wbp.isMidLetter(cp.scalar)) ty = .midletter;
+        if (wbp.isMidNum(cp.scalar)) ty = .midnum;
+        if (wbp.isMidNumLet(cp.scalar)) ty = .midnumlet;
+        if (wbp.isNewline(cp.scalar)) ty = .newline;
+        if (wbp.isNumeric(cp.scalar)) ty = .numeric;
+        if (wbp.isRegionalIndicator(cp.scalar)) ty = .regional;
+        if (wbp.isWSegSpace(cp.scalar)) ty = .wsegspace;
+        if (emoji.isExtendedPictographic(cp.scalar)) ty = .xpic;
 
         return ty;
     }
@@ -78,6 +81,8 @@ const Token = struct {
 
 const TokenList = std.ArrayList(Token);
 
+/// `WordIterator` iterates a Unicde string one word at-a-time. Note that whitespace and punctuation appear as separate 
+/// elements in the iteration.
 pub const WordIterator = struct {
     bytes: []const u8,
     i: ?usize = null,
@@ -558,6 +563,7 @@ fn getTokens(comptime str: []const u8, comptime n: usize) [n]Token {
     return tokens;
 }
 
+/// `ComptimeWordIterator` is like `WordIterator` but requires a string literal to do its work at compile time.
 pub fn ComptimeWordIterator(comptime str: []const u8) type {
     const cp_count: usize = unicode.utf8CountCodepoints(str) catch @compileError("Invalid UTF-8.");
     if (cp_count == 0) @compileError("No code points?");
