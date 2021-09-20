@@ -90,15 +90,15 @@ test "ziglyph namespace" {
 }
 ```
 
-### Using Component Namespaces
-Smaller namespaces are privided for specific areas of functionality.
+### Category Namespaces
+Namespaces for frequently-used Unicode General Categories are available.
 See [ziglyph.zig](src/ziglyph.zig) for a full list of all components.
 
 ```zig
 const letter = @import("ziglyph").letter;
 const punct = @import("ziglyph").punct;
 
-test "Aggregate struct" {
+test "Category namespaces" {
     const z = 'z';
     try expect(letter.isletter(z));
     try expect(!letter.isUpper(z));
@@ -363,36 +363,36 @@ emulators, it's necessary to know how many cells (or columns) a particular code 
 occupy. The `display_width` namespace provides functions to do just that.
 
 ```zig
-const display_width = @import("ziglyph").display_width;
+const dw = @import("ziglyph").display_width;
 
 test "Code point / string widths" {
     // The width methods take a second parameter of value .half or .full to determine the width of 
     // ambiguous code points as per the Unicode standard. .half is the most common case.
 
     // Note that codePointWidth returns an i3 because code points like backspace have width -1.
-    try expectEqual(display_width.codePointWidth('é', .half), 1);
-    try expectEqual(display_width.codePointWidth('😊', .half), 2);
-    try expectEqual(display_width.codePointWidth('统', .half), 2);
+    try expectEqual(dw.codePointWidth('é', .half), 1);
+    try expectEqual(dw.codePointWidth('😊', .half), 2);
+    try expectEqual(dw.codePointWidth('统', .half), 2);
 
     var allocator = std.testing.allocator;
 
     // strWidth returns usize because it can never be negative, regardless of the code points it contains.
-    try expectEqual(try display_width.strWidth(allocator, "Hello\r\n", .half), 5);
-    try expectEqual(try display_width.strWidth(allocator, "\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
-    try expectEqual(try display_width.strWidth(allocator, "Héllo 🇪🇸", .half), 8);
-    try expectEqual(try display_width.strWidth(allocator, "\u{26A1}\u{FE0E}", .half), 1); // Text sequence
-    try expectEqual(try display_width.strWidth(allocator, "\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
+    try expectEqual(try dw.strWidth(allocator, "Hello\r\n", .half), 5);
+    try expectEqual(try dw.strWidth(allocator, "\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
+    try expectEqual(try dw.strWidth(allocator, "Héllo 🇵🇷", .half), 8);
+    try expectEqual(try dw.strWidth(allocator, "\u{26A1}\u{FE0E}", .half), 1); // Text sequence
+    try expectEqual(try dw.strWidth(allocator, "\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
 
     // padLeft, center, padRight
-    const right_aligned = try display_width.padLeft(allocator, "w😊w", 10, "-");
+    const right_aligned = try dw.padLeft(allocator, "w😊w", 10, "-");
     defer allocator.free(right_aligned);
     try expectEqualSlices(u8, "------w😊w", right_aligned);
 
-    const centered = try display_width.center(allocator, "w😊w", 10, "-");
+    const centered = try dw.center(allocator, "w😊w", 10, "-");
     defer allocator.free(centered);
     try expectEqualSlices(u8, "---w😊w---", centered);
 
-    const left_aligned = try display_width.padRight(allocator, "w😊w", 10, "-");
+    const left_aligned = try dw.padRight(allocator, "w😊w", 10, "-");
     defer allocator.free(left_aligned);
     try expectEqualSlices(u8, "w😊w------", left_aligned);
 }
@@ -404,12 +404,12 @@ you can use the `display_width` struct's `wrap` function for this. You can also 
 a word boundary can be to the column limit and trigger a line break.
 
 ```zig
-const display_width = @import("ziglyph").display_width;
+const dw = @import("ziglyph").display_width;
 
 test "display_width wrap" {
     var allocator = testing.allocator;
     var input = "The quick brown fox\r\njumped over the lazy dog!";
-    var got = try display_width.wrap(allocator, input, 10, 3);
+    var got = try dw.wrap(allocator, input, 10, 3);
     defer allocator.free(got);
     var want = "The quick\n brown \nfox jumped\n over the\n lazy dog\n!";
     try testing.expectEqualStrings(want, got);
