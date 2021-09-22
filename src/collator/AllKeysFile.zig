@@ -163,7 +163,7 @@ pub fn parse(allocator: *mem.Allocator, reader: anytype) !AllKeysFile {
         var key: Key = std.mem.zeroes(Key);
         while (cp_strs_iter.next()) |cp_str| {
             const cp = try fmt.parseInt(u21, cp_str, 16);
-            if (!nfd_check.isNFD(cp)) continue :lines; // Skip non-NFD.
+            if (!nfd_check.isNfd(cp)) continue :lines; // Skip non-NFD.
             key.items[key.len] = cp;
             key.len += 1;
         }

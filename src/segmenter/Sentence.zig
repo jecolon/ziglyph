@@ -43,14 +43,14 @@ const Type = enum {
         if (0x000A == cp.scalar) ty = .lf;
         if (sbp.isLower(cp.scalar)) ty = .lower;
         if (sbp.isUpper(cp.scalar)) ty = .upper;
-        if (sbp.isOLetter(cp.scalar)) ty = .oletter;
+        if (sbp.isOletter(cp.scalar)) ty = .oletter;
         if (sbp.isNumeric(cp.scalar)) ty = .numeric;
         if (sbp.isSep(cp.scalar)) ty = .sep;
         if (sbp.isSp(cp.scalar)) ty = .sp;
         if (sbp.isClose(cp.scalar)) ty = .close;
-        if (sbp.isATerm(cp.scalar)) ty = .aterm;
-        if (sbp.isSTerm(cp.scalar)) ty = .sterm;
-        if (sbp.isSContinue(cp.scalar)) ty = .scontinue;
+        if (sbp.isAterm(cp.scalar)) ty = .aterm;
+        if (sbp.isSterm(cp.scalar)) ty = .sterm;
+        if (sbp.isScontinue(cp.scalar)) ty = .scontinue;
         if (sbp.isExtend(cp.scalar)) ty = .extend;
         if (sbp.isFormat(cp.scalar)) ty = .format;
 

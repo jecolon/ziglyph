@@ -78,7 +78,7 @@ pub fn mapping(self: Self, cp: u21, nfd: bool) Decomp {
 pub fn decompose(self: Self, cp: u21, nfd: bool) Decomp {
     var dc = Decomp{};
 
-    if (nfd and norm_props.isNFD(cp)) {
+    if (nfd and norm_props.isNfd(cp)) {
         dc.len = 1;
         dc.seq[0] = cp;
         return dc;
@@ -182,7 +182,7 @@ pub fn normalizeCodePointsToCodePoints(self: *Self, form: Form, code_points: []u
     // NFD Quick Check.
     if (form == .canon) {
         const already_nfd = for (code_points) |cp| {
-            if (!norm_props.isNFD(cp)) break false;
+            if (!norm_props.isNfd(cp)) break false;
         } else true;
 
         if (already_nfd) {
@@ -440,7 +440,7 @@ fn eqlIdent(self: *Self, a: []const u8, b: []const u8) !bool {
     var a_cf = std.ArrayList(u21).init(&self.arena.allocator);
 
     for (a_cps) |cp| {
-        const cf_s = norm_props.toNFKCCF(cp);
+        const cf_s = norm_props.toNfkcCaseFold(cp);
         if (cf_s.len == 0) {
             // Same code point. ""
             try a_cf.append(cp);
@@ -462,7 +462,7 @@ fn eqlIdent(self: *Self, a: []const u8, b: []const u8) !bool {
     var b_cf = std.ArrayList(u21).init(&self.arena.allocator);
 
     for (b_cps) |cp| {
-        const cf_s = norm_props.toNFKCCF(cp);
+        const cf_s = norm_props.toNfkcCaseFold(cp);
         if (cf_s.len == 0) {
             // Same code point. ""
             try b_cf.append(cp);

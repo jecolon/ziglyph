@@ -46,13 +46,13 @@ const Type = enum {
         if (gbp.isControl(cp.scalar)) ty = .control;
         if (gbp.isExtend(cp.scalar)) ty = .extend;
         if (gbp.isL(cp.scalar)) ty = .han_l;
-        if (gbp.isLV(cp.scalar)) ty = .han_lv;
-        if (gbp.isLVT(cp.scalar)) ty = .han_lvt;
+        if (gbp.isLv(cp.scalar)) ty = .han_lv;
+        if (gbp.isLvt(cp.scalar)) ty = .han_lvt;
         if (gbp.isT(cp.scalar)) ty = .han_t;
         if (gbp.isV(cp.scalar)) ty = .han_v;
         if (gbp.isPrepend(cp.scalar)) ty = .prepend;
         if (gbp.isRegionalIndicator(cp.scalar)) ty = .regional;
-        if (gbp.isSpacingMark(cp.scalar)) ty = .spacing;
+        if (gbp.isSpacingmark(cp.scalar)) ty = .spacing;
         if (emoji.isExtendedPictographic(cp.scalar)) ty = .xpic;
 
         return ty;

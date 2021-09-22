@@ -50,19 +50,19 @@ const Type = enum {
         if (0x200D == cp.scalar) ty = .zwj;
         if (0x0022 == cp.scalar) ty = .dquote;
         if (0x0027 == cp.scalar) ty = .squote;
-        if (wbp.isALetter(cp.scalar)) ty = .aletter;
+        if (wbp.isAletter(cp.scalar)) ty = .aletter;
         if (wbp.isExtend(cp.scalar)) ty = .extend;
-        if (wbp.isExtendNumLet(cp.scalar)) ty = .extendnumlet;
+        if (wbp.isExtendnumlet(cp.scalar)) ty = .extendnumlet;
         if (wbp.isFormat(cp.scalar)) ty = .format;
         if (wbp.isHebrewLetter(cp.scalar)) ty = .hletter;
         if (wbp.isKatakana(cp.scalar)) ty = .katakana;
-        if (wbp.isMidLetter(cp.scalar)) ty = .midletter;
-        if (wbp.isMidNum(cp.scalar)) ty = .midnum;
-        if (wbp.isMidNumLet(cp.scalar)) ty = .midnumlet;
+        if (wbp.isMidletter(cp.scalar)) ty = .midletter;
+        if (wbp.isMidnum(cp.scalar)) ty = .midnum;
+        if (wbp.isMidnumlet(cp.scalar)) ty = .midnumlet;
         if (wbp.isNewline(cp.scalar)) ty = .newline;
         if (wbp.isNumeric(cp.scalar)) ty = .numeric;
         if (wbp.isRegionalIndicator(cp.scalar)) ty = .regional;
-        if (wbp.isWSegSpace(cp.scalar)) ty = .wsegspace;
+        if (wbp.isWsegspace(cp.scalar)) ty = .wsegspace;
         if (emoji.isExtendedPictographic(cp.scalar)) ty = .xpic;
 
         return ty;
