@@ -6,7 +6,7 @@ const testing = std.testing;
 const unicode = std.unicode;
 const ascii = @import("ascii.zig");
 
-// Functionality by code point category.
+// Functionality by popular Unicode General Category.
 pub const letter = @import("category/letter.zig");
 pub const mark = @import("category/mark.zig");
 pub const number = @import("category/number.zig");
