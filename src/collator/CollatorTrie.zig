@@ -38,12 +38,12 @@ pub const Lookup = struct {
     value: ?Elements,
 };
 
-allocator: *mem.Allocator,
+allocator: mem.Allocator,
 root: Node,
 
 const Self = @This();
 
-pub fn init(allocator: *mem.Allocator) Self {
+pub fn init(allocator: mem.Allocator) Self {
     return Self{
         .allocator = allocator,
         .root = Node.init(),

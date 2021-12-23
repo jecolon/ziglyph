@@ -11,7 +11,7 @@ const Node = struct {
     value: ?Decomp = null,
     children: [256]?*Node = [_]?*Node{null} ** 256,
 
-    fn deinit(self: *Node, allocator: *mem.Allocator) void {
+    fn deinit(self: *Node, allocator: mem.Allocator) void {
         for (self.children) |byte| {
             if (byte) |node| {
                 node.deinit(allocator);
@@ -21,10 +21,10 @@ const Node = struct {
     }
 };
 
-allocator: *mem.Allocator,
+allocator: mem.Allocator,
 root: Node = Node{},
 
-pub fn init(allocator: *mem.Allocator) Self {
+pub fn init(allocator: mem.Allocator) Self {
     return Self{
         .allocator = allocator,
     };

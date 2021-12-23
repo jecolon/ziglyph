@@ -116,13 +116,13 @@ pub fn next(self: *DecompFile) ?Entry {
     return entry;
 }
 
-pub fn parseFile(allocator: *mem.Allocator, filename: []const u8) !DecompFile {
+pub fn parseFile(allocator: mem.Allocator, filename: []const u8) !DecompFile {
     var in_file = try std.fs.cwd().openFile(filename, .{});
     defer in_file.close();
     return parse(allocator, in_file.reader());
 }
 
-pub fn parse(allocator: *mem.Allocator, reader: anytype) !DecompFile {
+pub fn parse(allocator: mem.Allocator, reader: anytype) !DecompFile {
     var buf_reader = std.io.bufferedReader(reader);
     var input_stream = buf_reader.reader();
     var entries = std.ArrayList(Entry).init(allocator);
@@ -389,13 +389,13 @@ pub fn compressTo(self: *DecompFile, writer: anytype) !void {
     try buf_writer.flush();
 }
 
-pub fn decompressFile(allocator: *mem.Allocator, filename: []const u8) !DecompFile {
+pub fn decompressFile(allocator: mem.Allocator, filename: []const u8) !DecompFile {
     var in_file = try std.fs.cwd().openFile(filename, .{});
     defer in_file.close();
     return decompress(allocator, in_file.reader());
 }
 
-pub fn decompress(allocator: *mem.Allocator, reader: anytype) !DecompFile {
+pub fn decompress(allocator: mem.Allocator, reader: anytype) !DecompFile {
     var buf_reader = std.io.bufferedReader(reader);
     var in = std.io.bitReader(.Little, buf_reader.reader());
     var entries = std.ArrayList(Entry).init(allocator);

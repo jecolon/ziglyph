@@ -253,7 +253,7 @@ pub fn toAsciiLower(cp: u21) u21 {
 }
 
 /// `toCaseFoldStr` returns the case folded version of `str`. Caller must free returned memory.
-pub fn toCaseFoldStr(allocator: *std.mem.Allocator, str: []const u8) ![]u8 {
+pub fn toCaseFoldStr(allocator: std.mem.Allocator, str: []const u8) ![]u8 {
     var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
     var buf: [4]u8 = undefined;
@@ -279,7 +279,7 @@ test "ziglyph toCaseFoldStr" {
 }
 
 /// `toLowerStr` returns the lowercase version of `s`. Caller must free returned memory with `allocator`.
-pub fn toLowerStr(allocator: *std.mem.Allocator, str: []const u8) ![]u8 {
+pub fn toLowerStr(allocator: std.mem.Allocator, str: []const u8) ![]u8 {
     var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
     var buf: [4]u8 = undefined;
@@ -307,7 +307,7 @@ pub fn toTitle(cp: u21) u21 {
 }
 
 /// `toTitleStr` returns the titlecase version of `str`. Caller must free returned memory with `allocator`.
-pub fn toTitleStr(allocator: *std.mem.Allocator, str: []const u8) ![]u8 {
+pub fn toTitleStr(allocator: std.mem.Allocator, str: []const u8) ![]u8 {
     var words = try WordIterator.init(allocator, str);
     defer words.deinit();
     var result = std.ArrayList(u8).init(allocator);
@@ -358,7 +358,7 @@ pub fn toAsciiUpper(cp: u21) u21 {
 }
 
 /// `toUpperStr` returns the uppercase version of `str`. Caller must free returned memory with `allocator`.
-pub fn toUpperStr(allocator: *std.mem.Allocator, str: []const u8) ![]u8 {
+pub fn toUpperStr(allocator: std.mem.Allocator, str: []const u8) ![]u8 {
     var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
     var buf: [4]u8 = undefined;

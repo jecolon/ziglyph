@@ -19,13 +19,13 @@ const Decomp = DecompFile.Decomp;
 const Trieton = @import("Trieton.zig");
 const Lookup = Trieton.Lookup;
 
-allocator: *mem.Allocator,
+allocator: mem.Allocator,
 arena: std.heap.ArenaAllocator,
 decomp_trie: Trieton,
 
 const Self = @This();
 
-pub fn init(allocator: *mem.Allocator) !Self {
+pub fn init(allocator: mem.Allocator) !Self {
     var self = Self{
         .allocator = allocator,
         .arena = std.heap.ArenaAllocator.init(allocator),
@@ -126,7 +126,7 @@ pub fn decompose(self: Self, cp: u21, nfd: bool) Decomp {
 }
 
 fn getCodePoints(self: *Self, str: []const u8) ![]u21 {
-    var code_points = std.ArrayList(u21).init(&self.arena.allocator);
+    var code_points = std.ArrayList(u21).init(self.arena.allocator());
     var iter = (try unicode.Utf8View.init(str)).iterator();
 
     while (iter.nextCodepoint()) |cp| {
@@ -155,7 +155,7 @@ pub fn normalizeTo(self: *Self, form: Form, str: []const u8) anyerror![]u8 {
 fn normalizeCodePointsTo(self: *Self, form: Form, code_points: []u21) anyerror![]u8 {
     const d_code_points = try self.normalizeCodePointsToCodePoints(form, code_points);
     //var result = try std.ArrayList(u8).initCapacity(&self.arena.allocator, code_points.len * 4);
-    var result = std.ArrayList(u8).init(&self.arena.allocator);
+    var result = std.ArrayList(u8).init(self.arena.allocator());
     var buf: [4]u8 = undefined;
 
     // Encode as UTF-8 bytes.
@@ -192,7 +192,7 @@ pub fn normalizeCodePointsToCodePoints(self: *Self, form: Form, code_points: []u
         }
     }
 
-    var d_code_points = std.ArrayList(u21).init(&self.arena.allocator);
+    var d_code_points = std.ArrayList(u21).init(self.arena.allocator());
 
     // Gather decomposed code points.
     for (code_points) |cp| {
@@ -282,7 +282,7 @@ pub fn composeCodePoints(self: *Self, form: Form, code_points: []u21) anyerror![
 
         if (deleted == 0) return decomposed;
 
-        var composed = try std.ArrayList(u21).initCapacity(&self.arena.allocator, decomposed.len - deleted);
+        var composed = try std.ArrayList(u21).initCapacity(self.arena.allocator(), decomposed.len - deleted);
 
         for (decomposed) |cp| {
             if (cp != 0xFFFD) composed.appendAssumeCapacity(cp);
@@ -437,7 +437,7 @@ pub fn eqlBy(self: *Self, a: []const u8, b: []const u8, mode: CmpMode) !bool {
 
 fn eqlIdent(self: *Self, a: []const u8, b: []const u8) !bool {
     const a_cps = try self.getCodePoints(a);
-    var a_cf = std.ArrayList(u21).init(&self.arena.allocator);
+    var a_cf = std.ArrayList(u21).init(self.arena.allocator());
 
     for (a_cps) |cp| {
         const cf_s = norm_props.toNfkcCaseFold(cp);
@@ -459,7 +459,7 @@ fn eqlIdent(self: *Self, a: []const u8, b: []const u8) !bool {
     }
 
     const b_cps = try self.getCodePoints(b);
-    var b_cf = std.ArrayList(u21).init(&self.arena.allocator);
+    var b_cf = std.ArrayList(u21).init(self.arena.allocator());
 
     for (b_cps) |cp| {
         const cf_s = norm_props.toNfkcCaseFold(cp);
@@ -520,10 +520,10 @@ fn eqlNormIgnore(self: *Self, a: []const u8, b: []const u8) !bool {
     // The long winding road of normalized caseless matching...
     // NFD(CaseFold(NFD(str))) or NFD(CaseFold(str))
     var norm_a = if (requiresPreNfd(code_points_a)) try self.normalizeCodePointsTo(.canon, code_points_a) else a;
-    var cf_a = try case_fold_map.caseFoldStr(&self.arena.allocator, norm_a);
+    var cf_a = try case_fold_map.caseFoldStr(self.arena.allocator(), norm_a);
     norm_a = try self.normalizeTo(.canon, cf_a);
     var norm_b = if (requiresPreNfd(code_points_b)) try self.normalizeCodePointsTo(.canon, code_points_b) else b;
-    var cf_b = try case_fold_map.caseFoldStr(&self.arena.allocator, norm_b);
+    var cf_b = try case_fold_map.caseFoldStr(self.arena.allocator(), norm_b);
     norm_b = try self.normalizeTo(.canon, cf_b);
 
     return mem.eql(u8, norm_a, norm_b);
@@ -565,7 +565,7 @@ test "Normalizer normalizeTo" {
 
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    var allocator = &arena.allocator;
+    var allocator = arena.allocator();
     var normalizer = try init(allocator);
     defer normalizer.deinit();
 

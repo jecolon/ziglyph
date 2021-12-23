@@ -18,7 +18,7 @@ const Normalizer = @import("../ziglyph.zig").Normalizer;
 const props = @import("../ziglyph.zig").prop_list;
 const Trie = @import("CollatorTrie.zig");
 
-allocator: *mem.Allocator,
+allocator: mem.Allocator,
 arena: std.heap.ArenaAllocator,
 implicits: []AllKeysFile.Implicit,
 normalizer: Normalizer,
@@ -27,7 +27,7 @@ table: Trie,
 const Self = @This();
 
 /// `init` produces a new Collator using the Default Unicode Collation Elements Table (DUCET) in `src/data/uca/allkeys.bin`.
-pub fn init(allocator: *mem.Allocator) !Self {
+pub fn init(allocator: mem.Allocator) !Self {
     var self = Self{
         .allocator = allocator,
         .arena = std.heap.ArenaAllocator.init(allocator),
@@ -52,7 +52,7 @@ pub fn init(allocator: *mem.Allocator) !Self {
 
 /// `initWithReader` allows tailoring of the sorting algorithm via a supplied alternate weights table. The `reader`
 /// parameter can be a file, network stream, or anything else that exposes a `std.io.Reader`.
-pub fn initWithReader(allocator: *mem.Allocator, reader: anytype) !Self {
+pub fn initWithReader(allocator: mem.Allocator, reader: anytype) !Self {
     var self = Self{
         .allocator = allocator,
         .arena = std.heap.ArenaAllocator.init(allocator),
@@ -81,7 +81,7 @@ pub fn deinit(self: *Self) void {
 }
 
 fn collationElements(self: *Self, normalized: []const u21) ![]AllKeysFile.Element {
-    var all_elements = std.ArrayList(AllKeysFile.Element).init(&self.arena.allocator);
+    var all_elements = std.ArrayList(AllKeysFile.Element).init(self.arena.allocator());
 
     var code_points = normalized;
     var code_points_len = code_points.len;
@@ -117,7 +117,7 @@ fn collationElements(self: *Self, normalized: []const u21) ![]AllKeysFile.Elemen
 
         if (tail_index > tail_start) {
             const C = code_points[tail_index];
-            var new_key = try self.arena.allocator.alloc(u21, S.len + 1);
+            var new_key = try self.arena.allocator().alloc(u21, S.len + 1);
             mem.copy(u21, new_key, S);
             new_key[new_key.len - 1] = C;
             var new_lookup = self.table.find(new_key);
@@ -125,7 +125,7 @@ fn collationElements(self: *Self, normalized: []const u21) ![]AllKeysFile.Elemen
             if (new_lookup.index == (new_key.len - 1) and new_lookup.value != null) {
                 cp_index = tail_start;
                 // Splice
-                var tmp = try self.arena.allocator.alloc(u21, code_points_len - 1);
+                var tmp = try self.arena.allocator().alloc(u21, code_points_len - 1);
                 mem.copy(u21, tmp, code_points[0..tail_index]);
                 if (tail_index + 1 < code_points_len) {
                     mem.copy(u21, tmp[tail_index..], code_points[tail_index + 1 ..]);
@@ -156,7 +156,7 @@ fn collationElements(self: *Self, normalized: []const u21) ![]AllKeysFile.Elemen
 }
 
 fn sortKeyFromCollationElements(self: *Self, collation_elements: []AllKeysFile.Element) ![]const u16 {
-    var sort_key = std.ArrayList(u16).init(&self.arena.allocator);
+    var sort_key = std.ArrayList(u16).init(self.arena.allocator());
 
     var level: usize = 0;
 
@@ -446,7 +446,7 @@ test "Collator UCA" {
 
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    var allocator = &arena.allocator;
+    var allocator = arena.allocator();
     var buf: [1024]u8 = undefined;
 
     // Skip header.

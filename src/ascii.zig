@@ -305,7 +305,7 @@ test "ascii character classes" {
 
 /// Allocates a lower case copy of `ascii_string`.
 /// Caller owns returned string and must free with `allocator`.
-pub fn allocLowerString(allocator: *std.mem.Allocator, ascii_string: []const u8) ![]u8 {
+pub fn allocLowerString(allocator: std.mem.Allocator, ascii_string: []const u8) ![]u8 {
     const result = try allocator.alloc(u8, ascii_string.len);
     for (result) |*c, i| {
         c.* = toLower(ascii_string[i]);
@@ -321,7 +321,7 @@ test "allocLowerString" {
 
 /// Allocates an upper case copy of `ascii_string`.
 /// Caller owns returned string and must free with `allocator`.
-pub fn allocUpperString(allocator: *std.mem.Allocator, ascii_string: []const u8) ![]u8 {
+pub fn allocUpperString(allocator: std.mem.Allocator, ascii_string: []const u8) ![]u8 {
     const result = try allocator.alloc(u8, ascii_string.len);
     for (result) |*c, i| {
         c.* = toUpper(ascii_string[i]);

@@ -91,7 +91,7 @@ pub const WordIterator = struct {
 
     const Self = @This();
 
-    pub fn init(allocator: *mem.Allocator, str: []const u8) !Self {
+    pub fn init(allocator: mem.Allocator, str: []const u8) !Self {
         if (!unicode.utf8ValidateSlice(str)) return error.InvalidUtf8;
 
         var self = Self{

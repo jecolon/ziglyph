@@ -72,7 +72,7 @@ pub fn codePointWidth(cp: u21, am_width: AmbiguousWidth) i3 {
 
 /// strWidth returns how many cells (or columns) wide `str` should be when rendered in a
 /// fixed-width font.
-pub fn strWidth(allocator: *mem.Allocator, str: []const u8, am_width: AmbiguousWidth) !usize {
+pub fn strWidth(allocator: mem.Allocator, str: []const u8, am_width: AmbiguousWidth) !usize {
     var total: isize = 0;
 
     // ASCII bytes are all width == 1.
@@ -122,7 +122,7 @@ pub fn strWidth(allocator: *mem.Allocator, str: []const u8, am_width: AmbiguousW
 
 /// centers `str` in a new string of width `total_width` (in display cells) using `pad` as padding.
 /// Caller must free returned bytes.
-pub fn center(allocator: *mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
+pub fn center(allocator: mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
     var str_width = try strWidth(allocator, str, .half);
     if (str_width > total_width) return error.StrTooLong;
 
@@ -157,7 +157,7 @@ pub fn center(allocator: *mem.Allocator, str: []const u8, total_width: usize, pa
 
 /// padLeft returns a new string of width `total_width` (in display cells) using `pad` as padding
 /// on the left side.  Caller must free returned bytes.
-pub fn padLeft(allocator: *mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
+pub fn padLeft(allocator: mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
     var str_width = try strWidth(allocator, str, .half);
     if (str_width > total_width) return error.StrTooLong;
 
@@ -185,7 +185,7 @@ pub fn padLeft(allocator: *mem.Allocator, str: []const u8, total_width: usize, p
 
 /// padRight returns a new string of width `total_width` (in display cells) using `pad` as padding
 /// on the right side.  Caller must free returned bytes.
-pub fn padRight(allocator: *mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
+pub fn padRight(allocator: mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
     var str_width = try strWidth(allocator, str, .half);
     if (str_width > total_width) return error.StrTooLong;
 
@@ -214,7 +214,7 @@ pub fn padRight(allocator: *mem.Allocator, str: []const u8, total_width: usize, 
 
 /// Wraps a string approximately at the given number of colums per line. Threshold defines how far the last column of
 /// the last word can be from the edge. Caller must free returned bytes.
-pub fn wrap(allocator: *std.mem.Allocator, str: []const u8, columns: usize, threshold: usize) ![]u8 {
+pub fn wrap(allocator: std.mem.Allocator, str: []const u8, columns: usize, threshold: usize) ![]u8 {
     var iter = try WordIterator.init(allocator, str);
     defer iter.deinit();
     var result = std.ArrayList(u8).init(allocator);
