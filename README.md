@@ -1,6 +1,11 @@
 # ziglyph
 Unicode text processing for the Zig Programming Language.
 
+## In-Depth Articles on Unicode Processing with Zig and Ziglyph
+The [Unicode Processing with Zig](https://zig.news/dude_the_builder/series/6) series of articles over on
+ZigNEWS covers important aspects of Unicode in general and in particular how to use this library to process 
+Unicode text.
+
 ## Looking for an UTF-8 String Type?
 `Zigstr` is a UTF-8 string type that incorporates many of Ziglyph's Unicode processing tools. You can
 learn more in the [Zigstr repo](https://github.com/jecolon/zigstr).
