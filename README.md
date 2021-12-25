@@ -249,7 +249,6 @@ Note that for compile-time versions, you may need to increase the compile-time b
 ```zig
 const Grapheme = @import("ziglyph").Grapheme;
 const GraphemeIterator = Grapheme.GraphemeIterator;
-const ComptimeGraphemeIterator = Grapheme.ComptimeGraphemeIterator; const Sentence = @import("ziglyph").Sentence;
 const SentenceIterator = Sentence.SentenceIterator;
 const ComptimeSentenceIterator = Sentence.ComptimeSentenceIterator;
 const Word = @import("ziglyph").Word;
@@ -270,18 +269,12 @@ test "GraphemeIterator" {
     }
 
     // Need your grapheme clusters at compile time?
-    comptime var ct_iter = ComptimeGraphemeIterator(input){};
-    const n: usize = comptime ct_iter.count();
-    comptime var graphemes: [n]Grapheme = undefined;
     comptime {
-        var ct_i: usize = 0;
-        while (ct_iter.next()) |grapheme| : (ct_i += 1) {
-            graphemes[ct_i] = grapheme;
+        var ct_iter = try GraphemeIterator.init(input);
+        var j = 0;
+        while (ct_iter.next()) |grapheme| : (j += 1) {
+            try testing.expect(grapheme.eql(want[j]));
         }
-    }
-
-    for (graphemes) |grapheme, j| {
-        try testing.expect(grapheme.eql(want[j]));
     }
 }
 
