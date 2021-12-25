@@ -62,7 +62,6 @@ const Type = enum {
 const Token = struct {
     ty: Type,
     code_point: CodePoint,
-    offset: usize = 0,
 
     fn is(self: Token, ty: Type) bool {
         return self.ty == ty;
@@ -89,14 +88,7 @@ pub const GraphemeIterator = struct {
         };
 
         try self.lex();
-
-        if (self.tokens.items.len == 0) return error.NoTokens;
         self.start = self.tokens.items[0];
-
-        // Set token offsets.
-        for (self.tokens.items) |*token, i| {
-            token.offset = i;
-        }
 
         return self;
     }
@@ -210,33 +202,6 @@ pub const GraphemeIterator = struct {
         return true;
     }
 
-    // Token array movement.
-    fn getRelative(self: Self, n: isize) ?Token {
-        var index: usize = self.i orelse 0;
-
-        if (n < 0) {
-            if (index == 0 or -%n > index) return null;
-            index -= @intCast(usize, -%n);
-        } else {
-            const un = @intCast(usize, n);
-            if (index + un >= self.tokens.items.len) return null;
-            index += un;
-        }
-
-        return self.tokens.items[index];
-    }
-
-    fn prevAfterSkip(self: *Self, predicate: TokenPredicate) ?Token {
-        if (self.i == null or self.i.? == 0) return null;
-
-        var i: isize = 1;
-        while (self.getRelative(-i)) |token| : (i += 1) {
-            if (!predicate(token)) return token;
-        }
-
-        return null;
-    }
-
     fn current(self: Self) Token {
         // Assumes self.i is not null.
         return self.tokens.items[self.i.?];
@@ -247,16 +212,11 @@ pub const GraphemeIterator = struct {
     }
 
     fn peek(self: Self) ?Token {
-        return self.getRelative(1);
-    }
-
-    fn peekAfterSkip(self: *Self, predicate: TokenPredicate) ?Token {
-        var i: isize = 1;
-        while (self.getRelative(i)) |token| : (i += 1) {
-            if (!predicate(token)) return token;
+        if (self.i) |i| {
+            return if (i + 1 < self.tokens.items.len) self.tokens.items[i + 1] else null;
         }
 
-        return null;
+        return if (self.tokens.items.len > 0) self.tokens.items[0] else null;
     }
 
     fn advance(self: *Self) ?Token {
@@ -416,7 +376,6 @@ fn getTokens(comptime str: []const u8, comptime n: usize) [n]Token {
         tokens[i] = .{
             .ty = Type.get(cp),
             .code_point = cp,
-            .offset = i,
         };
     }
 
@@ -543,36 +502,9 @@ pub fn ComptimeGraphemeIterator(comptime str: []const u8) type {
             return i;
         }
 
-        // Token array movement.
         pub fn rewind(self: *Self) void {
             self.i = null;
             self.start = self.tokens[0];
-        }
-
-        fn getRelative(self: Self, n: isize) ?Token {
-            var index: usize = self.i orelse 0;
-
-            if (n < 0) {
-                if (index == 0 or -%n > index) return null;
-                index -= @intCast(usize, -%n);
-            } else {
-                const un = @intCast(usize, n);
-                if (index + un >= self.tokens.len) return null;
-                index += un;
-            }
-
-            return self.tokens[index];
-        }
-
-        fn prevAfterSkip(self: *Self, predicate: TokenPredicate) ?Token {
-            if (self.i == null or self.i.? == 0) return null;
-
-            var i: isize = 1;
-            while (self.getRelative(-i)) |token| : (i += 1) {
-                if (!predicate(token)) return token;
-            }
-
-            return null;
         }
 
         fn current(self: Self) Token {
@@ -580,21 +512,12 @@ pub fn ComptimeGraphemeIterator(comptime str: []const u8) type {
             return self.tokens[self.i.?];
         }
 
-        fn last(self: Self) Token {
-            return self.tokens[self.tokens.len - 1];
-        }
-
         fn peek(self: Self) ?Token {
-            return self.getRelative(1);
-        }
-
-        fn peekAfterSkip(self: *Self, predicate: TokenPredicate) ?Token {
-            var i: isize = 1;
-            while (self.getRelative(i)) |token| : (i += 1) {
-                if (!predicate(token)) return token;
+            if (self.i) |i| {
+                return if (i + 1 < self.tokens.len) self.tokens[i + 1] else null;
             }
 
-            return null;
+            return if (self.tokens.len > 0) self.tokens[0] else null;
         }
 
         fn advance(self: *Self) ?Token {
