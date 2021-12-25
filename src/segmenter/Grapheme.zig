@@ -113,11 +113,11 @@ pub const GraphemeIterator = struct {
 
     // Main API.
     pub fn next(self: *Self) ?Grapheme {
-        if (self.advance()) |current_token| {
+        if (self.advance()) |latest_non_ignorable| {
             var end = self.current();
 
-            if (isBreaker(current_token)) {
-                if (current_token.is(.cr)) {
+            if (isBreaker(latest_non_ignorable)) {
+                if (latest_non_ignorable.is(.cr)) {
                     if (self.peek()) |p| {
                         // GB3
                         if (p.is(.lf)) {
@@ -128,7 +128,7 @@ pub const GraphemeIterator = struct {
                 }
             }
 
-            if (current_token.is(.regional)) {
+            if (latest_non_ignorable.is(.regional)) {
                 if (self.peek()) |p| {
                     // GB12
                     if (p.is(.regional) and !isIgnorable(end)) {
@@ -138,7 +138,7 @@ pub const GraphemeIterator = struct {
                 }
             }
 
-            if (current_token.is(.han_l)) {
+            if (latest_non_ignorable.is(.han_l)) {
                 if (self.peek()) |p| {
                     // GB6
                     if ((p.is(.han_l) or p.is(.han_v) or p.is(.han_lv) or p.is(.han_lvt)) and
@@ -150,7 +150,7 @@ pub const GraphemeIterator = struct {
                 }
             }
 
-            if (current_token.is(.han_lv) or current_token.is(.han_v)) {
+            if (latest_non_ignorable.is(.han_lv) or latest_non_ignorable.is(.han_v)) {
                 if (self.peek()) |p| {
                     // GBy
                     if ((p.is(.han_v) or p.is(.han_t)) and !isIgnorable(end)) {
@@ -160,7 +160,7 @@ pub const GraphemeIterator = struct {
                 }
             }
 
-            if (current_token.is(.han_lvt) or current_token.is(.han_t)) {
+            if (latest_non_ignorable.is(.han_lvt) or latest_non_ignorable.is(.han_t)) {
                 if (self.peek()) |p| {
                     // GB8
                     if (p.is(.han_t) and !isIgnorable(end)) {
@@ -170,7 +170,7 @@ pub const GraphemeIterator = struct {
                 }
             }
 
-            if (current_token.is(.xpic)) {
+            if (latest_non_ignorable.is(.xpic)) {
                 if (self.peek()) |p| {
                     // GB11
                     if (p.is(.xpic) and end.is(.zwj)) {
@@ -190,25 +190,9 @@ pub const GraphemeIterator = struct {
         return null;
     }
 
-    // Token array movement.
-    fn forward(self: *Self) bool {
-        if (self.i) |*index| {
-            index.* += 1;
-            if (index.* >= self.tokens.items.len) return false;
-        } else {
-            self.i = 0;
-        }
-
-        return true;
-    }
-
     fn current(self: Self) Token {
         // Assumes self.i is not null.
         return self.tokens.items[self.i.?];
-    }
-
-    fn last(self: Self) Token {
-        return self.tokens.items[self.tokens.items.len - 1];
     }
 
     fn peek(self: Self) ?Token {
@@ -220,35 +204,34 @@ pub const GraphemeIterator = struct {
     }
 
     fn advance(self: *Self) ?Token {
-        const token = if (self.forward()) self.current() else return null;
+        if (self.i) |*index| {
+            index.* += 1;
+            if (index.* >= self.tokens.items.len) return null;
+        } else {
+            if (self.tokens.items.len == 0) return null;
+            self.i = 0;
+        }
+
+        const latest_non_ignorable = self.tokens.items[self.i.?];
+
         // GB9b
-        if (token.is(.prepend)) {
+        if (latest_non_ignorable.is(.prepend)) {
             if (self.peek()) |p| {
                 if (!isBreaker(p)) return self.advance();
             }
         }
         // GB9, GBia
-        if (!isBreaker(token)) _ = self.skipIgnorables(token);
+        // NOTE: This may increment self.i, making self.current() return a different token then latest_non_ignorable.
+        if (!isBreaker(latest_non_ignorable)) self.skipIgnorables();
 
-        return token;
+        return latest_non_ignorable;
     }
 
-    fn run(self: *Self, predicate: TokenPredicate) void {
-        while (self.peek()) |token| {
-            if (!predicate(token)) break;
+    fn skipIgnorables(self: *Self) void {
+        while (self.peek()) |peek_token| {
+            if (!isIgnorable(peek_token)) break;
             _ = self.advance();
         }
-    }
-
-    fn skipIgnorables(self: *Self, end: Token) Token {
-        if (self.peek()) |p| {
-            if (isIgnorable(p)) {
-                self.run(isIgnorable);
-                return self.current();
-            }
-        }
-
-        return end;
     }
 
     // Production.
@@ -398,11 +381,11 @@ pub fn ComptimeGraphemeIterator(comptime str: []const u8) type {
 
         // Main API.
         pub fn next(self: *Self) ?Grapheme {
-            if (self.advance()) |current_token| {
+            if (self.advance()) |latest_non_ignorable| {
                 var end = self.current();
 
-                if (isBreaker(current_token)) {
-                    if (current_token.is(.cr)) {
+                if (isBreaker(latest_non_ignorable)) {
+                    if (latest_non_ignorable.is(.cr)) {
                         if (self.peek()) |p| {
                             // GB3
                             if (p.is(.lf)) {
@@ -413,7 +396,7 @@ pub fn ComptimeGraphemeIterator(comptime str: []const u8) type {
                     }
                 }
 
-                if (current_token.is(.regional)) {
+                if (latest_non_ignorable.is(.regional)) {
                     if (self.peek()) |p| {
                         // GB12
                         if (p.is(.regional) and !isIgnorable(end)) {
@@ -423,7 +406,7 @@ pub fn ComptimeGraphemeIterator(comptime str: []const u8) type {
                     }
                 }
 
-                if (current_token.is(.han_l)) {
+                if (latest_non_ignorable.is(.han_l)) {
                     if (self.peek()) |p| {
                         // GB6
                         if ((p.is(.han_l) or p.is(.han_v) or p.is(.han_lv) or p.is(.han_lvt)) and
@@ -435,7 +418,7 @@ pub fn ComptimeGraphemeIterator(comptime str: []const u8) type {
                     }
                 }
 
-                if (current_token.is(.han_lv) or current_token.is(.han_v)) {
+                if (latest_non_ignorable.is(.han_lv) or latest_non_ignorable.is(.han_v)) {
                     if (self.peek()) |p| {
                         // GBy
                         if ((p.is(.han_v) or p.is(.han_t)) and !isIgnorable(end)) {
@@ -445,7 +428,7 @@ pub fn ComptimeGraphemeIterator(comptime str: []const u8) type {
                     }
                 }
 
-                if (current_token.is(.han_lvt) or current_token.is(.han_t)) {
+                if (latest_non_ignorable.is(.han_lvt) or latest_non_ignorable.is(.han_t)) {
                     if (self.peek()) |p| {
                         // GB8
                         if (p.is(.han_t) and !isIgnorable(end)) {
@@ -455,7 +438,7 @@ pub fn ComptimeGraphemeIterator(comptime str: []const u8) type {
                     }
                 }
 
-                if (current_token.is(.xpic)) {
+                if (latest_non_ignorable.is(.xpic)) {
                     if (self.peek()) |p| {
                         // GB11
                         if (p.is(.xpic) and end.is(.zwj)) {
@@ -473,18 +456,6 @@ pub fn ComptimeGraphemeIterator(comptime str: []const u8) type {
             }
 
             return null;
-        }
-
-        // Token array movement.
-        fn forward(self: *Self) bool {
-            if (self.i) |*index| {
-                index.* += 1;
-                if (index.* >= self.tokens.len) return false;
-            } else {
-                self.i = 0;
-            }
-
-            return true;
         }
 
         pub fn count(self: *Self) usize {
@@ -521,35 +492,34 @@ pub fn ComptimeGraphemeIterator(comptime str: []const u8) type {
         }
 
         fn advance(self: *Self) ?Token {
-            const token = if (self.forward()) self.current() else return null;
+            if (self.i) |*index| {
+                index.* += 1;
+                if (index.* >= self.tokens.len) return null;
+            } else {
+                if (self.tokens.len == 0) return null;
+                self.i = 0;
+            }
+
+            const latest_non_ignorable = self.tokens[self.i.?];
+
             // GB9b
-            if (token.is(.prepend)) {
+            if (latest_non_ignorable.is(.prepend)) {
                 if (self.peek()) |p| {
                     if (!isBreaker(p)) return self.advance();
                 }
             }
             // GB9, GBia
-            if (!isBreaker(token)) _ = self.skipIgnorables(token);
+            // NOTE: This may increment self.i, making self.current() return a different token then latest_non_ignorable.
+            if (!isBreaker(latest_non_ignorable)) self.skipIgnorables();
 
-            return token;
+            return latest_non_ignorable;
         }
 
-        fn run(self: *Self, predicate: TokenPredicate) void {
-            while (self.peek()) |token| {
-                if (!predicate(token)) break;
+        fn skipIgnorables(self: *Self) void {
+            while (self.peek()) |peek_token| {
+                if (!isIgnorable(peek_token)) break;
                 _ = self.advance();
             }
-        }
-
-        fn skipIgnorables(self: *Self, end: Token) Token {
-            if (self.peek()) |p| {
-                if (isIgnorable(p)) {
-                    self.run(isIgnorable);
-                    return self.current();
-                }
-            }
-
-            return end;
         }
 
         // Production.
