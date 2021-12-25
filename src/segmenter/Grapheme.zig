@@ -73,6 +73,7 @@ const TokenList = std.ArrayList(Token);
 /// `GraphemeIterator` iterates a sting one grapheme cluster at-a-time.
 pub const GraphemeIterator = struct {
     bytes: []const u8,
+    current: ?Token = null,
     i: ?usize = null,
     start: ?Token = null,
     tokens: TokenList,
@@ -88,7 +89,6 @@ pub const GraphemeIterator = struct {
         };
 
         try self.lex();
-        self.start = self.tokens.items[0];
 
         return self;
     }
@@ -114,7 +114,7 @@ pub const GraphemeIterator = struct {
     // Main API.
     pub fn next(self: *Self) ?Grapheme {
         if (self.advance()) |latest_non_ignorable| {
-            var end = self.current();
+            var end = self.current.?;
 
             if (isBreaker(latest_non_ignorable)) {
                 if (latest_non_ignorable.is(.cr)) {
@@ -122,7 +122,7 @@ pub const GraphemeIterator = struct {
                         // GB3
                         if (p.is(.lf)) {
                             _ = self.advance();
-                            end = self.current();
+                            end = self.current.?;
                         }
                     }
                 }
@@ -133,7 +133,7 @@ pub const GraphemeIterator = struct {
                     // GB12
                     if (p.is(.regional) and !isIgnorable(end)) {
                         _ = self.advance();
-                        end = self.current();
+                        end = self.current.?;
                     }
                 }
             }
@@ -145,7 +145,7 @@ pub const GraphemeIterator = struct {
                         !isIgnorable(end))
                     {
                         _ = self.advance();
-                        end = self.current();
+                        end = self.current.?;
                     }
                 }
             }
@@ -155,7 +155,7 @@ pub const GraphemeIterator = struct {
                     // GBy
                     if ((p.is(.han_v) or p.is(.han_t)) and !isIgnorable(end)) {
                         _ = self.advance();
-                        end = self.current();
+                        end = self.current.?;
                     }
                 }
             }
@@ -165,7 +165,7 @@ pub const GraphemeIterator = struct {
                     // GB8
                     if (p.is(.han_t) and !isIgnorable(end)) {
                         _ = self.advance();
-                        end = self.current();
+                        end = self.current.?;
                     }
                 }
             }
@@ -175,7 +175,7 @@ pub const GraphemeIterator = struct {
                     // GB11
                     if (p.is(.xpic) and end.is(.zwj)) {
                         _ = self.advance();
-                        end = self.current();
+                        end = self.current.?;
                     }
                 }
             }
@@ -188,11 +188,6 @@ pub const GraphemeIterator = struct {
         }
 
         return null;
-    }
-
-    fn current(self: Self) Token {
-        // Assumes self.i is not null.
-        return self.tokens.items[self.i.?];
     }
 
     fn peek(self: Self) ?Token {
@@ -213,6 +208,7 @@ pub const GraphemeIterator = struct {
         }
 
         const latest_non_ignorable = self.tokens.items[self.i.?];
+        if (self.start == null) self.start = latest_non_ignorable;
 
         // GB9b
         if (latest_non_ignorable.is(.prepend)) {
@@ -221,8 +217,10 @@ pub const GraphemeIterator = struct {
             }
         }
         // GB9, GBia
-        // NOTE: This may increment self.i, making self.current() return a different token then latest_non_ignorable.
+        // NOTE: This may increment self.i, making self.current a different token then latest_non_ignorable.
         if (!isBreaker(latest_non_ignorable)) self.skipIgnorables();
+
+        self.current = self.tokens.items[self.i.?];
 
         return latest_non_ignorable;
     }
