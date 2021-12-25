@@ -68,47 +68,17 @@ const Token = struct {
     }
 };
 
-const TokenList = std.ArrayList(Token);
-
 /// `GraphemeIterator` iterates a sting one grapheme cluster at-a-time.
 pub const GraphemeIterator = struct {
-    bytes: []const u8,
+    cp_iter: CodePointIterator,
     current: ?Token = null,
-    i: ?usize = null,
     start: ?Token = null,
-    tokens: TokenList,
 
     const Self = @This();
 
-    pub fn init(allocator: mem.Allocator, str: []const u8) !Self {
+    pub fn init(str: []const u8) !Self {
         if (!unicode.utf8ValidateSlice(str)) return error.InvalidUtf8;
-
-        var self = Self{
-            .bytes = str,
-            .tokens = TokenList.init(allocator),
-        };
-
-        try self.lex();
-
-        return self;
-    }
-
-    pub fn deinit(self: *Self) void {
-        self.tokens.deinit();
-    }
-
-    fn lex(self: *Self) !void {
-        var iter = CodePointIterator{
-            .bytes = self.bytes,
-            .i = 0,
-        };
-
-        while (iter.next()) |cp| {
-            try self.tokens.append(.{
-                .ty = Type.get(cp),
-                .code_point = cp,
-            });
-        }
+        return Self{ .cp_iter = CodePointIterator{ .bytes = str } };
     }
 
     // Main API.
@@ -190,25 +160,24 @@ pub const GraphemeIterator = struct {
         return null;
     }
 
-    fn peek(self: Self) ?Token {
-        if (self.i) |i| {
-            return if (i + 1 < self.tokens.items.len) self.tokens.items[i + 1] else null;
-        }
+    fn peek(self: *Self) ?Token {
+        const saved_i = self.cp_iter.i;
+        defer self.cp_iter.i = saved_i;
 
-        return if (self.tokens.items.len > 0) self.tokens.items[0] else null;
+        return if (self.cp_iter.next()) |cp| Token{
+            .ty = Type.get(cp),
+            .code_point = cp,
+        } else null;
     }
 
     fn advance(self: *Self) ?Token {
-        if (self.i) |*index| {
-            index.* += 1;
-            if (index.* >= self.tokens.items.len) return null;
-        } else {
-            if (self.tokens.items.len == 0) return null;
-            self.i = 0;
-        }
+        const latest_non_ignorable = if (self.cp_iter.next()) |cp| Token{
+            .ty = Type.get(cp),
+            .code_point = cp,
+        } else return null;
 
-        const latest_non_ignorable = self.tokens.items[self.i.?];
-        if (self.start == null) self.start = latest_non_ignorable;
+        self.current = latest_non_ignorable;
+        if (self.start == null) self.start = latest_non_ignorable; // Happens only at beginning.
 
         // GB9b
         if (latest_non_ignorable.is(.prepend)) {
@@ -219,8 +188,6 @@ pub const GraphemeIterator = struct {
         // GB9, GBia
         // NOTE: This may increment self.i, making self.current a different token then latest_non_ignorable.
         if (!isBreaker(latest_non_ignorable)) self.skipIgnorables();
-
-        self.current = self.tokens.items[self.i.?];
 
         return latest_non_ignorable;
     }
@@ -238,7 +205,7 @@ pub const GraphemeIterator = struct {
         const end = end_token.code_point.end();
 
         return .{
-            .bytes = self.bytes[start..end],
+            .bytes = self.cp_iter.bytes[start..end],
             .offset = start,
         };
     }
@@ -327,8 +294,7 @@ test "Segmentation GraphemeIterator" {
         }
 
         //debug.print("\nline {}: {s}\n", .{ line_no, all_bytes.items });
-        var iter = try GraphemeIterator.init(allocator, all_bytes.items);
-        defer iter.deinit();
+        var iter = try GraphemeIterator.init(all_bytes.items);
 
         // Chaeck.
         for (want.items) |w| {

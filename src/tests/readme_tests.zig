@@ -105,10 +105,8 @@ test "normalizeTo" {
 }
 
 test "GraphemeIterator" {
-    var allocator = std.testing.allocator;
     const input = "H\u{0065}\u{0301}llo";
-    var iter = try GraphemeIterator.init(allocator, input);
-    defer iter.deinit();
+    var iter = try GraphemeIterator.init(input);
 
     const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
 
@@ -210,11 +208,11 @@ test "Code point / string widths" {
     try testing.expectEqual(display_width.codePointWidth('é', .half), 1);
     try testing.expectEqual(display_width.codePointWidth('😊', .half), 2);
     try testing.expectEqual(display_width.codePointWidth('统', .half), 2);
-    try testing.expectEqual(try display_width.strWidth(allocator, "Hello\r\n", .half), 5);
-    try testing.expectEqual(try display_width.strWidth(allocator, "\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
-    try testing.expectEqual(try display_width.strWidth(allocator, "Héllo 🇪🇸", .half), 8);
-    try testing.expectEqual(try display_width.strWidth(allocator, "\u{26A1}\u{FE0E}", .half), 1); // Text sequence
-    try testing.expectEqual(try display_width.strWidth(allocator, "\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
+    try testing.expectEqual(try display_width.strWidth("Hello\r\n", .half), 5);
+    try testing.expectEqual(try display_width.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
+    try testing.expectEqual(try display_width.strWidth("Héllo 🇪🇸", .half), 8);
+    try testing.expectEqual(try display_width.strWidth("\u{26A1}\u{FE0E}", .half), 1); // Text sequence
+    try testing.expectEqual(try display_width.strWidth("\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
 
     // padLeft, center, padRight
     const right_aligned = try display_width.padLeft(allocator, "w😊w", 10, "-");

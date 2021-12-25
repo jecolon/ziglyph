@@ -72,7 +72,7 @@ pub fn codePointWidth(cp: u21, am_width: AmbiguousWidth) i3 {
 
 /// strWidth returns how many cells (or columns) wide `str` should be when rendered in a
 /// fixed-width font.
-pub fn strWidth(allocator: mem.Allocator, str: []const u8, am_width: AmbiguousWidth) !usize {
+pub fn strWidth(str: []const u8, am_width: AmbiguousWidth) !usize {
     var total: isize = 0;
 
     // ASCII bytes are all width == 1.
@@ -94,8 +94,7 @@ pub fn strWidth(allocator: mem.Allocator, str: []const u8, am_width: AmbiguousWi
         return if (total > 0) @intCast(usize, total) else 0;
     }
 
-    var giter = try GraphemeIterator.init(allocator, str);
-    defer giter.deinit();
+    var giter = try GraphemeIterator.init(str);
 
     while (giter.next()) |gc| {
         var cp_iter = (try unicode.Utf8View.init(gc.bytes)).iterator();
@@ -123,10 +122,10 @@ pub fn strWidth(allocator: mem.Allocator, str: []const u8, am_width: AmbiguousWi
 /// centers `str` in a new string of width `total_width` (in display cells) using `pad` as padding.
 /// Caller must free returned bytes.
 pub fn center(allocator: mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
-    var str_width = try strWidth(allocator, str, .half);
+    var str_width = try strWidth(str, .half);
     if (str_width > total_width) return error.StrTooLong;
 
-    var pad_width = try strWidth(allocator, pad, .half);
+    var pad_width = try strWidth(pad, .half);
     if (pad_width > total_width or str_width + pad_width > total_width) return error.PadTooLong;
 
     const margin_width = @divFloor((total_width - str_width), 2);
@@ -158,10 +157,10 @@ pub fn center(allocator: mem.Allocator, str: []const u8, total_width: usize, pad
 /// padLeft returns a new string of width `total_width` (in display cells) using `pad` as padding
 /// on the left side.  Caller must free returned bytes.
 pub fn padLeft(allocator: mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
-    var str_width = try strWidth(allocator, str, .half);
+    var str_width = try strWidth(str, .half);
     if (str_width > total_width) return error.StrTooLong;
 
-    var pad_width = try strWidth(allocator, pad, .half);
+    var pad_width = try strWidth(pad, .half);
     if (pad_width > total_width or str_width + pad_width > total_width) return error.PadTooLong;
 
     const margin_width = total_width - str_width;
@@ -186,10 +185,10 @@ pub fn padLeft(allocator: mem.Allocator, str: []const u8, total_width: usize, pa
 /// padRight returns a new string of width `total_width` (in display cells) using `pad` as padding
 /// on the right side.  Caller must free returned bytes.
 pub fn padRight(allocator: mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
-    var str_width = try strWidth(allocator, str, .half);
+    var str_width = try strWidth(str, .half);
     if (str_width > total_width) return error.StrTooLong;
 
-    var pad_width = try strWidth(allocator, pad, .half);
+    var pad_width = try strWidth(pad, .half);
     if (pad_width > total_width or str_width + pad_width > total_width) return error.PadTooLong;
 
     const margin_width = total_width - str_width;
@@ -227,7 +226,7 @@ pub fn wrap(allocator: std.mem.Allocator, str: []const u8, columns: usize, thres
             continue;
         }
         try result.appendSlice(word.bytes);
-        line_width += try strWidth(allocator, word.bytes, .half);
+        line_width += try strWidth(word.bytes, .half);
 
         if (line_width > columns or columns - line_width <= threshold) {
             try result.append('\n');
@@ -251,8 +250,6 @@ fn isLineBreak(str: []const u8) bool {
 }
 
 test "display_width Width" {
-    var allocator = std.testing.allocator;
-
     try testing.expectEqual(@as(i8, -1), codePointWidth(0x0008, .half)); // \b
     try testing.expectEqual(@as(i8, 0), codePointWidth(0x0000, .half)); // null
     try testing.expectEqual(@as(i8, 0), codePointWidth(0x0005, .half)); // Cf
@@ -278,19 +275,19 @@ test "display_width Width" {
     try testing.expectEqual(@as(i8, 2), codePointWidth('😊', .half));
     try testing.expectEqual(@as(i8, 2), codePointWidth('统', .half));
 
-    try testing.expectEqual(@as(usize, 5), try strWidth(allocator, "Hello\r\n", .half));
-    try testing.expectEqual(@as(usize, 1), try strWidth(allocator, "\u{0065}\u{0301}", .half));
-    try testing.expectEqual(@as(usize, 2), try strWidth(allocator, "\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half));
-    try testing.expectEqual(@as(usize, 8), try strWidth(allocator, "Hello 😊", .half));
-    try testing.expectEqual(@as(usize, 8), try strWidth(allocator, "Héllo 😊", .half));
-    try testing.expectEqual(@as(usize, 8), try strWidth(allocator, "Héllo :)", .half));
-    try testing.expectEqual(@as(usize, 8), try strWidth(allocator, "Héllo 🇪🇸", .half));
-    try testing.expectEqual(@as(usize, 2), try strWidth(allocator, "\u{26A1}", .half)); // Lone emoji
-    try testing.expectEqual(@as(usize, 1), try strWidth(allocator, "\u{26A1}\u{FE0E}", .half)); // Text sequence
-    try testing.expectEqual(@as(usize, 2), try strWidth(allocator, "\u{26A1}\u{FE0F}", .half)); // Presentation sequence
-    try testing.expectEqual(@as(usize, 0), try strWidth(allocator, "A\x08", .half)); // Backspace
-    try testing.expectEqual(@as(usize, 0), try strWidth(allocator, "\x7FA", .half)); // DEL
-    try testing.expectEqual(@as(usize, 0), try strWidth(allocator, "\x7FA\x08\x08", .half)); // never less than o
+    try testing.expectEqual(@as(usize, 5), try strWidth("Hello\r\n", .half));
+    try testing.expectEqual(@as(usize, 1), try strWidth("\u{0065}\u{0301}", .half));
+    try testing.expectEqual(@as(usize, 2), try strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half));
+    try testing.expectEqual(@as(usize, 8), try strWidth("Hello 😊", .half));
+    try testing.expectEqual(@as(usize, 8), try strWidth("Héllo 😊", .half));
+    try testing.expectEqual(@as(usize, 8), try strWidth("Héllo :)", .half));
+    try testing.expectEqual(@as(usize, 8), try strWidth("Héllo 🇪🇸", .half));
+    try testing.expectEqual(@as(usize, 2), try strWidth("\u{26A1}", .half)); // Lone emoji
+    try testing.expectEqual(@as(usize, 1), try strWidth("\u{26A1}\u{FE0E}", .half)); // Text sequence
+    try testing.expectEqual(@as(usize, 2), try strWidth("\u{26A1}\u{FE0F}", .half)); // Presentation sequence
+    try testing.expectEqual(@as(usize, 0), try strWidth("A\x08", .half)); // Backspace
+    try testing.expectEqual(@as(usize, 0), try strWidth("\x7FA", .half)); // DEL
+    try testing.expectEqual(@as(usize, 0), try strWidth("\x7FA\x08\x08", .half)); // never less than o
 }
 
 test "display_width center" {
