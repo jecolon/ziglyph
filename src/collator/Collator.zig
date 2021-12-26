@@ -176,7 +176,7 @@ fn sortKeyFromCollationElements(self: *Self, collation_elements: []AllKeysFile.E
     return sort_key.toOwnedSlice();
 }
 
-fn sortKey(self: *Self, str: []const u8) ![]const u16 {
+pub fn sortKey(self: *Self, str: []const u8) ![]const u16 {
     const normalized = try self.normalizer.normalizeToCodePoints(.canon, str);
     const collation_elements = try self.collationElements(normalized);
 
