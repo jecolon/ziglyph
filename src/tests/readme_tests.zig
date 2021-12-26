@@ -16,7 +16,6 @@ const upper_map = ziglyph.upper_map;
 const display_width = ziglyph.display_width;
 const Word = ziglyph.Word;
 const WordIterator = Word.WordIterator;
-const ComptimeWordIterator = Word.ComptimeWordIterator;
 
 test "ziglyph struct" {
     const z = 'z';
@@ -166,10 +165,8 @@ test "SentenceIterator" {
 }
 
 test "WordIterator" {
-    var allocator = std.testing.allocator;
     const input = "The (quick) fox. Fast! ";
-    var iter = try WordIterator.init(allocator, input);
-    defer iter.deinit();
+    var iter = try WordIterator.init(input);
 
     const want = &[_][]const u8{ "The", " ", "(", "quick", ")", " ", "fox", ".", " ", "Fast", "!", " " };
 
@@ -181,18 +178,12 @@ test "WordIterator" {
     // Need your words at compile time?
     @setEvalBranchQuota(2_000);
 
-    comptime var ct_iter = ComptimeWordIterator(input){};
-    const n: usize = comptime ct_iter.count();
-    comptime var words: [n]Word = undefined;
     comptime {
-        var ct_i: usize = 0;
-        while (ct_iter.next()) |word| : (ct_i += 1) {
-            words[ct_i] = word;
+        var ct_iter = try WordIterator.init(input);
+        var j = 0;
+        while (ct_iter.next()) |word| : (j += 1) {
+            try testing.expect(word.eql(want[j]));
         }
-    }
-
-    for (words) |word, j| {
-        try testing.expect(word.eql(want[j]));
     }
 }
 

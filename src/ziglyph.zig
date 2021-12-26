@@ -23,7 +23,6 @@ pub const Grapheme = @import("segmenter/Grapheme.zig");
 pub const GraphemeIterator = Grapheme.GraphemeIterator;
 pub const Word = @import("segmenter/Word.zig");
 pub const WordIterator = Word.WordIterator;
-pub const ComptimeWordIterator = Word.ComptimeWordIterator;
 pub const Sentence = @import("segmenter/Sentence.zig");
 pub const SentenceIterator = Sentence.SentenceIterator;
 pub const ComptimeSentenceIterator = Sentence.ComptimeSentenceIterator;
@@ -307,8 +306,7 @@ pub fn toTitle(cp: u21) u21 {
 
 /// `toTitleStr` returns the titlecase version of `str`. Caller must free returned memory with `allocator`.
 pub fn toTitleStr(allocator: std.mem.Allocator, str: []const u8) ![]u8 {
-    var words = try WordIterator.init(allocator, str);
-    defer words.deinit();
+    var words = try WordIterator.init(str);
     var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
     var buf: [4]u8 = undefined;

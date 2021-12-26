@@ -253,7 +253,6 @@ const SentenceIterator = Sentence.SentenceIterator;
 const ComptimeSentenceIterator = Sentence.ComptimeSentenceIterator;
 const Word = @import("ziglyph").Word;
 const WordIterator = Word.WordIterator;
-const ComptimeWordIterator = Word.ComptimeWordIterator;
 
 test "GraphemeIterator" {
     var allocator = std.testing.allocator;
@@ -335,18 +334,12 @@ test "WordIterator" {
     // Need your words at compile time?
     @setEvalBranchQuota(2_000);
 
-    comptime var ct_iter = ComptimeWordIterator(input){};
-    const n: usize = comptime ct_iter.count();
-    comptime var words: [n]Word = undefined;
     comptime {
-        var ct_i: usize = 0;
-        while (ct_iter.next()) |word| : (ct_i += 1) {
-            words[ct_i] = word;
+        var ct_iter = try WordIterator.init(input);
+        var j = 0;
+        while (ct_iter.next()) |word| : (j += 1) {
+            try testing.expect(word.eql(want[j]));
         }
-    }
-
-    for (words) |word, j| {
-        try testing.expect(word.eql(want[j]));
     }
 }
 ```

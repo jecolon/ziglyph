@@ -72,77 +72,39 @@ const Type = enum {
 const Token = struct {
     ty: Type,
     code_point: CodePoint,
-    offset: usize = 0,
 
     fn is(self: Token, ty: Type) bool {
         return self.ty == ty;
     }
 };
 
-const TokenList = std.ArrayList(Token);
-
 /// `WordIterator` iterates a Unicde string one word at-a-time. Note that whitespace and punctuation appear as separate 
 /// elements in the iteration.
 pub const WordIterator = struct {
-    bytes: []const u8,
-    i: ?usize = null,
+    cp_iter: CodePointIterator,
+    current: ?Token = null,
     start: ?Token = null,
-    tokens: TokenList,
 
     const Self = @This();
 
-    pub fn init(allocator: mem.Allocator, str: []const u8) !Self {
+    pub fn init(str: []const u8) !Self {
         if (!unicode.utf8ValidateSlice(str)) return error.InvalidUtf8;
-
-        var self = Self{
-            .bytes = str,
-            .tokens = TokenList.init(allocator),
-        };
-
-        try self.lex();
-
-        if (self.tokens.items.len == 0) return error.NoTokens;
-        self.start = self.tokens.items[0];
-
-        // Set token offsets.
-        for (self.tokens.items) |*token, i| {
-            token.offset = i;
-        }
-
-        return self;
-    }
-
-    pub fn deinit(self: *Self) void {
-        self.tokens.deinit();
-    }
-
-    fn lex(self: *Self) !void {
-        var iter = CodePointIterator{
-            .bytes = self.bytes,
-            .i = 0,
-        };
-
-        while (iter.next()) |cp| {
-            try self.tokens.append(.{
-                .ty = Type.get(cp),
-                .code_point = cp,
-            });
-        }
+        return Self{ .cp_iter = CodePointIterator{ .bytes = str } };
     }
 
     // Main API.
     pub fn next(self: *Self) ?Word {
-        if (self.advance()) |current_token| {
-            var end = self.current();
+        if (self.advance()) |latest_non_ignorable| {
+            var end = self.current.?;
             var done = false;
 
-            if (!done and isBreaker(current_token)) {
-                if (current_token.is(.cr)) {
+            if (!done and isBreaker(latest_non_ignorable)) {
+                if (latest_non_ignorable.is(.cr)) {
                     if (self.peek()) |p| {
                         // WB
                         if (p.is(.lf)) {
                             _ = self.advance();
-                            end = self.current();
+                            end = self.current.?;
                             done = true;
                         }
                     }
@@ -154,101 +116,125 @@ pub const WordIterator = struct {
                     // WB3c
                     if (p.is(.xpic)) {
                         _ = self.advance();
-                        end = self.current();
+                        end = self.current.?;
                         done = true;
                     }
                 }
             }
 
-            if (!done and current_token.is(.wsegspace)) {
+            if (!done and latest_non_ignorable.is(.wsegspace)) {
                 if (self.peek()) |p| {
                     // WB3d
                     if (p.is(.wsegspace) and !isIgnorable(end)) {
                         _ = self.advance();
-                        end = self.current();
+                        end = self.current.?;
                         done = true;
                     }
                 }
             }
 
-            if (!done and (isAHLetter(current_token) or current_token.is(.numeric))) {
+            if (!done and (isAHLetter(latest_non_ignorable) or latest_non_ignorable.is(.numeric))) {
                 if (self.peek()) |p| {
                     // WB5, WB8, WB9, WB10
                     if (isAHLetter(p) or p.is(.numeric)) {
                         self.run(isAlphaNum);
-                        end = self.current();
+                        end = self.current.?;
                         done = true;
                     }
                 }
             }
 
-            if (!done and isAHLetter(current_token)) {
+            if (!done and isAHLetter(latest_non_ignorable)) {
                 if (self.peek()) |p| {
                     // WB6, WB7
                     if (p.is(.midletter) or isMidNumLetQ(p)) {
-                        const original_i = self.i; // Save position.
+                        // Save state
+                        const saved_i = self.cp_iter.i;
+                        const saved_current = self.current;
+                        const saved_start = self.start;
 
                         _ = self.advance(); // (MidLetter|MidNumLetQ)
                         if (self.peek()) |pp| {
                             if (isAHLetter(pp)) {
                                 _ = self.advance(); // AHLetter
-                                end = self.current();
+                                end = self.current.?;
                                 done = true;
                             }
                         }
 
-                        if (!done) self.i = original_i; // Restore position.
+                        if (!done) {
+                            // Restore state
+                            self.cp_iter.i = saved_i;
+                            self.current = saved_current;
+                            self.start = saved_start;
+                        }
                     }
                 }
             }
 
-            if (!done and current_token.is(.hletter)) {
+            if (!done and latest_non_ignorable.is(.hletter)) {
                 if (self.peek()) |p| {
                     // WB7a
                     if (p.is(.squote)) {
                         _ = self.advance();
-                        end = self.current();
+                        end = self.current.?;
                         done = true;
                     } else if (p.is(.dquote)) {
                         // WB7b, WB7c
-                        const original_i = self.i; // Save position.
+                        // Save state
+                        const saved_i = self.cp_iter.i;
+                        const saved_current = self.current;
+                        const saved_start = self.start;
 
                         _ = self.advance(); // Double_Quote
                         if (self.peek()) |pp| {
                             if (pp.is(.hletter)) {
                                 _ = self.advance(); // Hebrew_Letter
-                                end = self.current();
+                                end = self.current.?;
                                 done = true;
                             }
                         }
 
-                        if (!done) self.i = original_i; // Restore position.
+                        if (!done) {
+                            // Restore state
+                            self.cp_iter.i = saved_i;
+                            self.current = saved_current;
+                            self.start = saved_start;
+                        }
                     }
                 }
             }
 
-            if (!done and current_token.is(.numeric)) {
+            if (!done and latest_non_ignorable.is(.numeric)) {
                 if (self.peek()) |p| {
                     if (p.is(.midnum) or isMidNumLetQ(p)) {
                         // WB11, WB12
-                        const original_i = self.i; // Save position.
+                        // Save state
+                        const saved_i = self.cp_iter.i;
+                        const saved_current = self.current;
+                        const saved_start = self.start;
 
                         _ = self.advance(); // (MidNum|MidNumLetQ)
                         if (self.peek()) |pp| {
                             if (pp.is(.numeric)) {
                                 _ = self.advance(); // Numeric
-                                end = self.current();
+                                end = self.current.?;
                                 done = true;
                             }
                         }
 
-                        if (!done) self.i = original_i; // Restore position.
+                        if (!done) {
+                            // Restore state
+                            self.cp_iter.i = saved_i;
+                            self.current = saved_current;
+                            self.start = saved_start;
+                        }
                     }
                 }
             }
 
-            if (!done and (isAHLetter(current_token) or current_token.is(.numeric) or current_token.is(.katakana) or
-                current_token.is(.extendnumlet)))
+            if (!done and (isAHLetter(latest_non_ignorable) or latest_non_ignorable.is(.numeric) or latest_non_ignorable.is(.katakana) or
+                latest_non_ignorable.is(.extendnumlet)))
             {
                 while (true) {
                     if (self.peek()) |p| {
@@ -261,20 +247,20 @@ pub const WordIterator = struct {
                                     _ = self.advance(); // (AHLetter|Numeric|Katakana)
                                 }
                             }
-                            end = self.current();
+                            end = self.current.?;
                             done = true;
                         } else break;
                     } else break;
                 }
             }
 
-            if (!done and current_token.is(.extendnumlet)) {
+            if (!done and latest_non_ignorable.is(.extendnumlet)) {
                 while (true) {
                     if (self.peek()) |p| {
                         // WB13b
                         if (isAHLetter(p) or p.is(.numeric) or p.is(.katakana)) {
                             _ = self.advance(); // (AHLetter|Numeric|Katakana)
-                            end = self.current();
+                            end = self.current.?;
                             done = true;
 
                             if (self.peek()) |pp| {
@@ -289,34 +275,34 @@ pub const WordIterator = struct {
                 }
             }
 
-            if (!done and current_token.is(.katakana)) {
+            if (!done and latest_non_ignorable.is(.katakana)) {
                 if (self.peek()) |p| {
                     // WB13
                     if (p.is(.katakana)) {
                         _ = self.advance();
-                        end = self.current();
+                        end = self.current.?;
                         done = true;
                     }
                 }
             }
 
-            if (!done and current_token.is(.regional)) {
+            if (!done and latest_non_ignorable.is(.regional)) {
                 if (self.peek()) |p| {
                     // WB
                     if (p.is(.regional)) {
                         _ = self.advance();
-                        end = self.current();
+                        end = self.current.?;
                         done = true;
                     }
                 }
             }
 
-            if (!done and current_token.is(.xpic)) {
+            if (!done and latest_non_ignorable.is(.xpic)) {
                 if (self.peek()) |p| {
                     // WB
                     if (p.is(.xpic) and end.is(.zwj)) {
                         _ = self.advance();
-                        end = self.current();
+                        end = self.current.?;
                         done = true;
                     }
                 }
@@ -332,73 +318,29 @@ pub const WordIterator = struct {
         return null;
     }
 
-    // Token array movement.
-    fn forward(self: *Self) bool {
-        if (self.i) |*index| {
-            index.* += 1;
-            if (index.* >= self.tokens.items.len) return false;
-        } else {
-            self.i = 0;
-        }
+    fn peek(self: *Self) ?Token {
+        const saved_i = self.cp_iter.i;
+        defer self.cp_iter.i = saved_i;
 
-        return true;
-    }
-
-    // Token array movement.
-    fn getRelative(self: Self, n: isize) ?Token {
-        var index: usize = self.i orelse 0;
-
-        if (n < 0) {
-            if (index == 0 or -%n > index) return null;
-            index -= @intCast(usize, -%n);
-        } else {
-            const un = @intCast(usize, n);
-            if (index + un >= self.tokens.items.len) return null;
-            index += un;
-        }
-
-        return self.tokens.items[index];
-    }
-
-    fn prevAfterSkip(self: *Self, predicate: TokenPredicate) ?Token {
-        if (self.i == null or self.i.? == 0) return null;
-
-        var i: isize = 1;
-        while (self.getRelative(-i)) |token| : (i += 1) {
-            if (!predicate(token)) return token;
-        }
-
-        return null;
-    }
-
-    fn current(self: Self) Token {
-        // Assumes self.i is not null.
-        return self.tokens.items[self.i.?];
-    }
-
-    fn last(self: Self) Token {
-        return self.tokens.items[self.tokens.items.len - 1];
-    }
-
-    fn peek(self: Self) ?Token {
-        return self.getRelative(1);
-    }
-
-    fn peekAfterSkip(self: *Self, predicate: TokenPredicate) ?Token {
-        var i: isize = 1;
-        while (self.getRelative(i)) |token| : (i += 1) {
-            if (!predicate(token)) return token;
-        }
-
-        return null;
+        return if (self.cp_iter.next()) |cp| Token{
+            .ty = Type.get(cp),
+            .code_point = cp,
+        } else null;
     }
 
     fn advance(self: *Self) ?Token {
-        const token = if (self.forward()) self.current() else return null;
-        // WB3a, WB3b
-        if (!isBreaker(token)) _ = self.skipIgnorables(token);
+        const latest_non_ignorable = if (self.cp_iter.next()) |cp| Token{
+            .ty = Type.get(cp),
+            .code_point = cp,
+        } else return null;
 
-        return token;
+        self.current = latest_non_ignorable;
+        if (self.start == null) self.start = latest_non_ignorable; // Happens only at beginning.
+
+        // WB3a, WB3b
+        if (!isBreaker(latest_non_ignorable)) self.skipIgnorables();
+
+        return latest_non_ignorable;
     }
 
     fn run(self: *Self, predicate: TokenPredicate) void {
@@ -408,15 +350,11 @@ pub const WordIterator = struct {
         }
     }
 
-    fn skipIgnorables(self: *Self, end: Token) Token {
-        if (self.peek()) |p| {
-            if (isIgnorable(p)) {
-                self.run(isIgnorable);
-                return self.current();
-            }
+    fn skipIgnorables(self: *Self) void {
+        while (self.peek()) |peek_token| {
+            if (!isIgnorable(peek_token)) break;
+            _ = self.advance();
         }
-
-        return end;
     }
 
     // Production.
@@ -425,7 +363,7 @@ pub const WordIterator = struct {
         const end = end_token.code_point.end();
 
         return .{
-            .bytes = self.bytes[start..end],
+            .bytes = self.cp_iter.bytes[start..end],
             .offset = start,
         };
     }
@@ -496,10 +434,10 @@ test "Segmentation WordIterator" {
         var all_bytes = std.ArrayList(u8).init(allocator);
         defer all_bytes.deinit();
 
-        var sentences = mem.split(u8, line, " ÷ ");
+        var words = mem.split(u8, line, " ÷ ");
         var bytes_index: usize = 0;
 
-        while (sentences.next()) |field| {
+        while (words.next()) |field| {
             var code_points = mem.split(u8, field, " ");
             var cp_buf: [4]u8 = undefined;
             var cp_index: usize = 0;
@@ -526,8 +464,7 @@ test "Segmentation WordIterator" {
         }
 
         //debug.print("\nline {}: {s}\n", .{ line_no, all_bytes.items });
-        var iter = try WordIterator.init(allocator, all_bytes.items);
-        defer iter.deinit();
+        var iter = try WordIterator.init(all_bytes.items);
 
         // Chaeck.
         for (want.items) |w| {
@@ -546,373 +483,14 @@ test "Segmentation WordIterator" {
     }
 }
 
-// Comptime
-fn getTokens(comptime str: []const u8, comptime n: usize) [n]Token {
-    var i: usize = 0;
-    var cp_iter = CodePointIterator{ .bytes = str };
-    var tokens: [n]Token = undefined;
-
-    while (cp_iter.next()) |cp| : (i += 1) {
-        tokens[i] = .{
-            .ty = Type.get(cp),
-            .code_point = cp,
-            .offset = i,
-        };
-    }
-
-    return tokens;
-}
-
-/// `ComptimeWordIterator` is like `WordIterator` but requires a string literal to do its work at compile time.
-pub fn ComptimeWordIterator(comptime str: []const u8) type {
-    const cp_count: usize = unicode.utf8CountCodepoints(str) catch @compileError("Invalid UTF-8.");
-    if (cp_count == 0) @compileError("No code points?");
-    const tokens = getTokens(str, cp_count);
-
-    return struct {
-        bytes: []const u8 = str,
-        i: ?usize = null,
-        start: ?Token = tokens[0],
-        tokens: [cp_count]Token = tokens,
-
-        const Self = @This();
-
-        // Main API.
-        pub fn next(self: *Self) ?Word {
-            if (self.advance()) |current_token| {
-                var end = self.current();
-                var done = false;
-
-                if (!done and isBreaker(current_token)) {
-                    if (current_token.is(.cr)) {
-                        if (self.peek()) |p| {
-                            // WB
-                            if (p.is(.lf)) {
-                                _ = self.advance();
-                                end = self.current();
-                                done = true;
-                            }
-                        }
-                    }
-                }
-
-                if (!done and end.is(.zwj)) {
-                    if (self.peek()) |p| {
-                        // WB3c
-                        if (p.is(.xpic)) {
-                            _ = self.advance();
-                            end = self.current();
-                            done = true;
-                        }
-                    }
-                }
-
-                if (!done and current_token.is(.wsegspace)) {
-                    if (self.peek()) |p| {
-                        // WB3d
-                        if (p.is(.wsegspace) and !isIgnorable(end)) {
-                            _ = self.advance();
-                            end = self.current();
-                            done = true;
-                        }
-                    }
-                }
-
-                if (!done and (isAHLetter(current_token) or current_token.is(.numeric))) {
-                    if (self.peek()) |p| {
-                        // WB5, WB8, WB9, WB10
-                        if (isAHLetter(p) or p.is(.numeric)) {
-                            self.run(isAlphaNum);
-                            end = self.current();
-                            done = true;
-                        }
-                    }
-                }
-
-                if (!done and isAHLetter(current_token)) {
-                    if (self.peek()) |p| {
-                        // WB6, WB7
-                        if (p.is(.midletter) or isMidNumLetQ(p)) {
-                            const original_i = self.i; // Save position.
-
-                            _ = self.advance(); // (MidLetter|MidNumLetQ)
-                            if (self.peek()) |pp| {
-                                if (isAHLetter(pp)) {
-                                    _ = self.advance(); // AHLetter
-                                    end = self.current();
-                                    done = true;
-                                }
-                            }
-
-                            if (!done) self.i = original_i; // Restore position.
-                        }
-                    }
-                }
-
-                if (!done and current_token.is(.hletter)) {
-                    if (self.peek()) |p| {
-                        // WB7a
-                        if (p.is(.squote)) {
-                            _ = self.advance();
-                            end = self.current();
-                            done = true;
-                        } else if (p.is(.dquote)) {
-                            // WB7b, WB7c
-                            const original_i = self.i; // Save position.
-
-                            _ = self.advance(); // Double_Quote
-                            if (self.peek()) |pp| {
-                                if (pp.is(.hletter)) {
-                                    _ = self.advance(); // Hebrew_Letter
-                                    end = self.current();
-                                    done = true;
-                                }
-                            }
-
-                            if (!done) self.i = original_i; // Restore position.
-                        }
-                    }
-                }
-
-                if (!done and current_token.is(.numeric)) {
-                    if (self.peek()) |p| {
-                        if (p.is(.midnum) or isMidNumLetQ(p)) {
-                            // WB11, WB12
-                            const original_i = self.i; // Save position.
-
-                            _ = self.advance(); // (MidNum|MidNumLetQ)
-                            if (self.peek()) |pp| {
-                                if (pp.is(.numeric)) {
-                                    _ = self.advance(); // Numeric
-                                    end = self.current();
-                                    done = true;
-                                }
-                            }
-
-                            if (!done) self.i = original_i; // Restore position.
-                        }
-                    }
-                }
-
-                if (!done and (isAHLetter(current_token) or current_token.is(.numeric) or current_token.is(.katakana) or
-                    current_token.is(.extendnumlet)))
-                {
-                    while (true) {
-                        if (self.peek()) |p| {
-                            // WB13a
-                            if (p.is(.extendnumlet)) {
-                                _ = self.advance(); // ExtendNumLet
-                                if (self.peek()) |pp| {
-                                    if (isAHLetter(pp) or isNumeric(pp) or pp.is(.katakana)) {
-                                        // WB13b
-                                        _ = self.advance(); // (AHLetter|Numeric|Katakana)
-                                    }
-                                }
-                                end = self.current();
-                                done = true;
-                            } else break;
-                        } else break;
-                    }
-                }
-
-                if (!done and current_token.is(.extendnumlet)) {
-                    while (true) {
-                        if (self.peek()) |p| {
-                            // WB13b
-                            if (isAHLetter(p) or p.is(.numeric) or p.is(.katakana)) {
-                                _ = self.advance(); // (AHLetter|Numeric|Katakana)
-                                end = self.current();
-                                done = true;
-
-                                if (self.peek()) |pp| {
-                                    // Chain.
-                                    if (pp.is(.extendnumlet)) {
-                                        _ = self.advance(); // ExtendNumLet
-                                        continue;
-                                    }
-                                }
-                            } else break;
-                        } else break;
-                    }
-                }
-
-                if (!done and current_token.is(.katakana)) {
-                    if (self.peek()) |p| {
-                        // WB13
-                        if (p.is(.katakana)) {
-                            _ = self.advance();
-                            end = self.current();
-                            done = true;
-                        }
-                    }
-                }
-
-                if (!done and current_token.is(.regional)) {
-                    if (self.peek()) |p| {
-                        // WB
-                        if (p.is(.regional)) {
-                            _ = self.advance();
-                            end = self.current();
-                            done = true;
-                        }
-                    }
-                }
-
-                if (!done and current_token.is(.xpic)) {
-                    if (self.peek()) |p| {
-                        // WB
-                        if (p.is(.xpic) and end.is(.zwj)) {
-                            _ = self.advance();
-                            end = self.current();
-                            done = true;
-                        }
-                    }
-                }
-
-                const start = self.start.?;
-                self.start = self.peek();
-
-                // WB
-                return self.emit(start, end);
-            }
-
-            return null;
-        }
-
-        // Token array movement.
-        fn forward(self: *Self) bool {
-            if (self.i) |*index| {
-                index.* += 1;
-                if (index.* >= self.tokens.len) return false;
-            } else {
-                self.i = 0;
-            }
-
-            return true;
-        }
-
-        pub fn count(self: *Self) usize {
-            const original_i = self.i;
-            const original_start = self.start;
-            defer {
-                self.i = original_i;
-                self.start = original_start;
-            }
-
-            self.rewind();
-            var i: usize = 0;
-            while (self.next()) |_| : (i += 1) {}
-
-            return i;
-        }
-
-        // Token array movement.
-        pub fn rewind(self: *Self) void {
-            self.i = null;
-            self.start = self.tokens[0];
-        }
-
-        fn getRelative(self: Self, n: isize) ?Token {
-            var index: usize = self.i orelse 0;
-
-            if (n < 0) {
-                if (index == 0 or -%n > index) return null;
-                index -= @intCast(usize, -%n);
-            } else {
-                const un = @intCast(usize, n);
-                if (index + un >= self.tokens.len) return null;
-                index += un;
-            }
-
-            return self.tokens[index];
-        }
-
-        fn prevAfterSkip(self: *Self, predicate: TokenPredicate) ?Token {
-            if (self.i == null or self.i.? == 0) return null;
-
-            var i: isize = 1;
-            while (self.getRelative(-i)) |token| : (i += 1) {
-                if (!predicate(token)) return token;
-            }
-
-            return null;
-        }
-
-        fn current(self: Self) Token {
-            // Assumes self.i is not null.
-            return self.tokens[self.i.?];
-        }
-
-        fn last(self: Self) Token {
-            return self.tokens[self.tokens.len - 1];
-        }
-
-        fn peek(self: Self) ?Token {
-            return self.getRelative(1);
-        }
-
-        fn peekAfterSkip(self: *Self, predicate: TokenPredicate) ?Token {
-            var i: isize = 1;
-            while (self.getRelative(i)) |token| : (i += 1) {
-                if (!predicate(token)) return token;
-            }
-
-            return null;
-        }
-
-        fn advance(self: *Self) ?Token {
-            const token = if (self.forward()) self.current() else return null;
-            // WB3a, WB3b
-            if (!isBreaker(token)) _ = self.skipIgnorables(token);
-
-            return token;
-        }
-
-        fn run(self: *Self, predicate: TokenPredicate) void {
-            while (self.peek()) |token| {
-                if (!predicate(token)) break;
-                _ = self.advance();
-            }
-        }
-
-        fn skipIgnorables(self: *Self, end: Token) Token {
-            if (self.peek()) |p| {
-                if (isIgnorable(p)) {
-                    self.run(isIgnorable);
-                    return self.current();
-                }
-            }
-
-            return end;
-        }
-
-        // Production.
-        fn emit(self: Self, start_token: Token, end_token: Token) Word {
-            const start = start_token.code_point.offset;
-            const end = end_token.code_point.end();
-
-            return .{
-                .bytes = self.bytes[start..end],
-                .offset = start,
-            };
-        }
-    };
-}
-
-test "Segmentation ComptimeWordIterator" {
-    comptime var ct_iter = ComptimeWordIterator("Hello World"){};
-    const n = comptime ct_iter.count();
-    var words: [n]Word = undefined;
-    comptime {
-        var i: usize = 0;
-        while (ct_iter.next()) |word| : (i += 1) {
-            words[i] = word;
-        }
-    }
-
+test "Segmentation comptime WordIterator" {
     const want = [_][]const u8{ "Hello", " ", "World" };
 
-    for (words) |word, i| {
-        try testing.expect(word.eql(want[i]));
+    comptime {
+        var ct_iter = try WordIterator.init("Hello World");
+        var i = 0;
+        while (ct_iter.next()) |word| : (i += 1) {
+            try testing.expect(word.eql(want[i]));
+        }
     }
 }

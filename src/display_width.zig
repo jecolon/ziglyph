@@ -214,8 +214,7 @@ pub fn padRight(allocator: mem.Allocator, str: []const u8, total_width: usize, p
 /// Wraps a string approximately at the given number of colums per line. Threshold defines how far the last column of
 /// the last word can be from the edge. Caller must free returned bytes.
 pub fn wrap(allocator: std.mem.Allocator, str: []const u8, columns: usize, threshold: usize) ![]u8 {
-    var iter = try WordIterator.init(allocator, str);
-    defer iter.deinit();
+    var iter = try WordIterator.init(str);
     var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
     var line_width: usize = 0;
