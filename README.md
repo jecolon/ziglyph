@@ -255,10 +255,8 @@ const Word = @import("ziglyph").Word;
 const WordIterator = Word.WordIterator;
 
 test "GraphemeIterator" {
-    var allocator = std.testing.allocator;
     const input = "H\u{0065}\u{0301}llo";
-    var iter = try GraphemeIterator.init(allocator, input);
-    defer iter.deinit();
+    var iter = try GraphemeIterator.init(input);
 
     const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
 
@@ -319,10 +317,8 @@ test "SentenceIterator" {
 }
 
 test "WordIterator" {
-    var allocator = std.testing.allocator;
     const input = "The (quick) fox. Fast! ";
-    var iter = try WordIterator.init(allocator, input);
-    defer iter.deinit();
+    var iter = try WordIterator.init(input);
 
     const want = &[_][]const u8{ "The", " ", "(", "quick", ")", " ", "fox", ".", " ", "Fast", "!", " " };
 
@@ -364,11 +360,11 @@ test "Code point / string widths" {
     var allocator = std.testing.allocator;
 
     // strWidth returns usize because it can never be negative, regardless of the code points it contains.
-    try expectEqual(try dw.strWidth(allocator, "Hello\r\n", .half), 5);
-    try expectEqual(try dw.strWidth(allocator, "\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
-    try expectEqual(try dw.strWidth(allocator, "Héllo 🇵🇷", .half), 8);
-    try expectEqual(try dw.strWidth(allocator, "\u{26A1}\u{FE0E}", .half), 1); // Text sequence
-    try expectEqual(try dw.strWidth(allocator, "\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
+    try expectEqual(try dw.strWidth("Hello\r\n", .half), 5);
+    try expectEqual(try dw.strWidth("\u{1F476}\u{1F3FF}\u{0308}\u{200D}\u{1F476}\u{1F3FF}", .half), 2);
+    try expectEqual(try dw.strWidth("Héllo 🇵🇷", .half), 8);
+    try expectEqual(try dw.strWidth("\u{26A1}\u{FE0E}", .half), 1); // Text sequence
+    try expectEqual(try dw.strWidth("\u{26A1}\u{FE0F}", .half), 2); // Presentation sequence
 
     // padLeft, center, padRight
     const right_aligned = try dw.padLeft(allocator, "w😊w", 10, "-");
