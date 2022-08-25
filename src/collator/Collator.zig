@@ -37,7 +37,8 @@ pub fn init(allocator: mem.Allocator) !Self {
     };
 
     const allkeys = @embedFile("../data/uca/allkeys.bin");
-    var reader = std.io.fixedBufferStream(allkeys).reader();
+    var fbs = std.io.fixedBufferStream(allkeys);
+    var reader = fbs.reader();
     var file = try AllKeysFile.decompress(allocator, reader);
     defer file.deinit();
 
@@ -442,7 +443,8 @@ test "Collator UCA" {
     const uca_tests = "src/data/uca/CollationTest_NON_IGNORABLE_SHORT.txt";
     var file = try std.fs.cwd().openFile(uca_tests, .{});
     defer file.close();
-    var buf_reader = std.io.bufferedReader(file.reader()).reader();
+    var bufread = std.io.bufferedReader(file.reader());
+    var buf_reader = bufread.reader();
 
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();

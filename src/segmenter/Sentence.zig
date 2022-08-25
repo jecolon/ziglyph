@@ -340,7 +340,7 @@ pub const SentenceIterator = struct {
 };
 
 // Predicates
-const TokenPredicate = fn (Token) bool;
+const TokenPredicate = std.meta.FnPtr(fn (Token) bool);
 
 fn isNumeric(token: Token) bool {
     return token.ty == .numeric;

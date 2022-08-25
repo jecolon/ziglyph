@@ -78,7 +78,7 @@ const Token = struct {
     }
 };
 
-/// `WordIterator` iterates a Unicde string one word at-a-time. Note that whitespace and punctuation appear as separate 
+/// `WordIterator` iterates a Unicde string one word at-a-time. Note that whitespace and punctuation appear as separate
 /// elements in the iteration.
 pub const WordIterator = struct {
     cp_iter: CodePointIterator,
@@ -370,7 +370,7 @@ pub const WordIterator = struct {
 };
 
 // Predicates
-const TokenPredicate = fn (Token) bool;
+const TokenPredicate = std.meta.FnPtr(fn (Token) bool);
 
 fn isAHLetter(token: Token) bool {
     return token.ty == .aletter or token.ty == .hletter;
