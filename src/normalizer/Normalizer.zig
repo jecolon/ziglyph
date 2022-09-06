@@ -33,7 +33,8 @@ pub fn init(allocator: mem.Allocator) !Self {
     };
 
     const decompositions = @embedFile("../data/ucd/Decompositions.bin");
-    var reader = std.io.fixedBufferStream(decompositions).reader();
+    var fbs = std.io.fixedBufferStream(decompositions);
+    var reader = fbs.reader();
     var file = try DecompFile.decompress(allocator, reader);
     defer file.deinit();
     while (file.next()) |entry| {
