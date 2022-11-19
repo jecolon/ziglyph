@@ -45,3 +45,39 @@ pub const CodePointIterator = struct {
         return cp;
     }
 };
+
+/// `readCodePoint` returns the next code point in the given reader, or null at end-of-stream.
+pub fn readCodePoint(reader: anytype) !?u21 {
+    var buf: [4]u8 = undefined;
+
+    buf[0] = reader.readByte() catch |err| switch (err) {
+        error.EndOfStream => return null,
+        else => return err,
+    };
+
+    if (buf[0] < 128) return @as(u21, buf[0]);
+
+    const len = try unicode.utf8ByteSequenceLength(buf[0]);
+    const read = try reader.read(buf[1..len]);
+
+    if (read < len - 1) return error.InvalidUtf8;
+
+    return switch (len) {
+        2 => try unicode.utf8Decode2(buf[0..len]),
+        3 => try unicode.utf8Decode3(buf[0..len]),
+        4 => try unicode.utf8Decode4(buf[0..len]),
+        else => unreachable,
+    };
+}
+
+test "StreamingCodePointIterator.next" {
+    var buf = "abé😹".*;
+    var fis = std.io.fixedBufferStream(&buf);
+    const reader = fis.reader();
+
+    try std.testing.expectEqual(@as(u21, 'a'), (try readCodePoint(reader)).?);
+    try std.testing.expectEqual(@as(u21, 'b'), (try readCodePoint(reader)).?);
+    try std.testing.expectEqual(@as(u21, 'é'), (try readCodePoint(reader)).?);
+    try std.testing.expectEqual(@as(u21, '😹'), (try readCodePoint(reader)).?);
+    try std.testing.expectEqual(@as(?u21, null), try readCodePoint(reader));
+}

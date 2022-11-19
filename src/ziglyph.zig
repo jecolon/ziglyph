@@ -19,8 +19,10 @@ pub const display_width = @import("display_width.zig");
 // String segmentation.
 pub const CodePoint = @import("segmenter/CodePoint.zig");
 pub const CodePointIterator = CodePoint.CodePointIterator;
+pub const readCodePoint = CodePoint.readCodePoint;
 pub const Grapheme = @import("segmenter/Grapheme.zig");
 pub const GraphemeIterator = Grapheme.GraphemeIterator;
+pub const StreamingGraphemeIterator = Grapheme.StreamingGraphemeIterator;
 pub const Word = @import("segmenter/Word.zig");
 pub const WordIterator = Word.WordIterator;
 pub const Sentence = @import("segmenter/Sentence.zig");
@@ -240,7 +242,7 @@ test "ziglyph isUpperStr" {
     try testing.expect(!try isUpperStr("abc123"));
 }
 
-/// `toLower` returns the lowercase code point for the given code point. It returns the same 
+/// `toLower` returns the lowercase code point for the given code point. It returns the same
 /// code point given if no mapping exists.
 pub fn toLower(cp: u21) u21 {
     return letter.toLower(cp);
@@ -298,7 +300,7 @@ test "ziglyph toLowerStr" {
     try testing.expect(std.mem.eql(u8, "abc123", got));
 }
 
-/// `toTitle` returns the titlecase code point for the given code point. It returns the same 
+/// `toTitle` returns the titlecase code point for the given code point. It returns the same
 /// code point given if no mapping exists.
 pub fn toTitle(cp: u21) u21 {
     return letter.toTitle(cp);
@@ -344,7 +346,7 @@ test "ziglyph toTitleStr" {
     try testing.expectEqualStrings("The Abc123 Brown. Fox", got);
 }
 
-/// `toUpper` returns the uppercase code point for the given code point. It returns the same 
+/// `toUpper` returns the uppercase code point for the given code point. It returns the same
 /// code point given if no mapping exists.
 pub fn toUpper(cp: u21) u21 {
     return letter.toUpper(cp);
