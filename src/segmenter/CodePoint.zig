@@ -70,7 +70,7 @@ pub fn readCodePoint(reader: anytype) !?u21 {
     };
 }
 
-test "StreamingCodePointIterator.next" {
+test "readCodePoint" {
     var buf = "abé😹".*;
     var fis = std.io.fixedBufferStream(&buf);
     const reader = fis.reader();

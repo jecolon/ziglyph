@@ -552,3 +552,19 @@ test "Segmentation StreamingGraphemeIterator" {
         }
     }
 }
+
+test "Simple StreamingGraphemeIterator" {
+    var buf = "abe\u{301}😹".*;
+    var fis = std.io.fixedBufferStream(&buf);
+    const reader = fis.reader();
+    var iter = try StreamingGraphemeIterator(@TypeOf(reader)).init(std.testing.allocator, reader);
+    const want = [_][]const u8{ "a", "b", "e\u{301}", "😹" };
+
+    for (want) |str| {
+        const gc = (try iter.next()).?;
+        defer std.testing.allocator.free(gc.bytes);
+        try std.testing.expect(gc.eql(str));
+    }
+
+    try std.testing.expectEqual(@as(?@This(), null), try iter.next());
+}
