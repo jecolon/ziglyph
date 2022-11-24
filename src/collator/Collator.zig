@@ -178,8 +178,16 @@ fn sortKeyFromCollationElements(self: *Self, collation_elements: []AllKeysFile.E
 }
 
 pub fn sortKey(self: *Self, str: []const u8) ![]const u16 {
-    const normalized = try self.normalizer.normalizeToCodePoints(.canon, str);
-    const collation_elements = try self.collationElements(normalized);
+    var normalized = try self.normalizer.nfd(self.allocator, str);
+    defer normalized.deinit();
+    var cp_list = try std.ArrayList(u21).initCapacity(self.allocator, normalized.slice.len);
+    defer cp_list.deinit();
+
+    const view = try std.unicode.Utf8View.init(normalized.slice);
+    var cp_iter = view.iterator();
+    while (cp_iter.nextCodepoint()) |cp| cp_list.appendAssumeCapacity(cp);
+
+    const collation_elements = try self.collationElements(cp_list.items);
 
     return self.sortKeyFromCollationElements(collation_elements);
 }

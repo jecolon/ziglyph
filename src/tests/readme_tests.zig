@@ -73,33 +73,38 @@ test "normalizeTo" {
     // Canonical Composition (NFC)
     const input_nfc = "Complex char: \u{03D2}\u{0301}";
     const want_nfc = "Complex char: \u{03D3}";
-    const got_nfc = try normalizer.normalizeTo(.composed, input_nfc);
-    try testing.expectEqualSlices(u8, want_nfc, got_nfc);
+    var got_nfc = try normalizer.nfc(std.testing.allocator, input_nfc);
+    defer got_nfc.deinit();
+    try testing.expectEqualSlices(u8, want_nfc, got_nfc.slice);
 
     // Compatibility Composition (NFKC)
     const input_nfkc = "Complex char: \u{03A5}\u{0301}";
     const want_nfkc = "Complex char: \u{038E}";
-    const got_nfkc = try normalizer.normalizeTo(.komposed, input_nfkc);
-    try testing.expectEqualSlices(u8, want_nfkc, got_nfkc);
+    var got_nfkc = try normalizer.nfkc(std.testing.allocator, input_nfkc);
+    defer got_nfkc.deinit();
+    try testing.expectEqualSlices(u8, want_nfkc, got_nfkc.slice);
 
     // Canonical Decomposition (NFD)
     const input_nfd = "Complex char: \u{03D3}";
     const want_nfd = "Complex char: \u{03D2}\u{0301}";
-    const got_nfd = try normalizer.normalizeTo(.canon, input_nfd);
-    try testing.expectEqualSlices(u8, want_nfd, got_nfd);
+    var got_nfd = try normalizer.nfd(std.testing.allocator, input_nfd);
+    defer got_nfd.deinit();
+    try testing.expectEqualSlices(u8, want_nfd, got_nfd.slice);
 
     // Compatibility Decomposition (NFKD)
     const input_nfkd = "Complex char: \u{03D3}";
     const want_nfkd = "Complex char: \u{03A5}\u{0301}";
-    const got_nfkd = try normalizer.normalizeTo(.compat, input_nfkd);
-    try testing.expectEqualSlices(u8, want_nfkd, got_nfkd);
+    var got_nfkd = try normalizer.nfkd(std.testing.allocator, input_nfkd);
+    defer got_nfkd.deinit();
+    try testing.expectEqualSlices(u8, want_nfkd, got_nfkd.slice);
 
     // String comparisons.
-    try testing.expect(try normalizer.eqlBy("foé", "foe\u{0301}", .normalize));
-    try testing.expect(try normalizer.eqlBy("foϓ", "fo\u{03D2}\u{0301}", .normalize));
-    try testing.expect(try normalizer.eqlBy("Foϓ", "fo\u{03D2}\u{0301}", .norm_ignore));
-    try testing.expect(try normalizer.eqlBy("FOÉ", "foe\u{0301}", .norm_ignore)); // foÉ == foé
-    try testing.expect(try normalizer.eqlBy("Foé", "foé", .ident)); // Unicode Identifiers caseless match.
+    try testing.expect(try normalizer.eql(std.testing.allocator, "foé", "foe\u{0301}"));
+    try testing.expect(try normalizer.eql(std.testing.allocator, "foϓ", "fo\u{03D2}\u{0301}"));
+    try testing.expect(try normalizer.eqlCaseless(std.testing.allocator, "Foϓ", "fo\u{03D2}\u{0301}"));
+    try testing.expect(try normalizer.eqlCaseless(std.testing.allocator, "FOÉ", "foe\u{0301}")); // foÉ == foé
+    // Note: eqlIdentifiers is not a method, it's just a function in the Normalizer namespace.
+    try testing.expect(try Normalizer.eqlIdentifiers(std.testing.allocator, "Foé", "foé")); // Unicode Identifiers caseless match.
 }
 
 test "GraphemeIterator" {
