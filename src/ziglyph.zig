@@ -37,7 +37,6 @@ pub const Normalizer = @import("normalizer/Normalizer.zig");
 
 // Auto-Generated
 pub const blocks = @import("autogen/blocks.zig");
-pub const canonicals = @import("autogen/canonicals.zig");
 pub const case_fold_map = @import("autogen/case_folding.zig");
 pub const combining_map = @import("autogen/derived_combining_class.zig");
 pub const derived_core_properties = @import("autogen/derived_core_properties.zig");

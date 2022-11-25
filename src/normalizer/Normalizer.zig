@@ -1,3 +1,7 @@
+//! Normalizer contains functions and methods that implement Unicode Normalization algorithms. You can normalize strings
+//! into NFC, NFKC, NFD, and NFKD normalization forms (see `nfc`, `nfkc`, `nfd`, and `nfkd`). You can also test for
+//! string equality under different parameters related to normalization (see `eql`, `eqlCaseless`, `eqlIdentifiers`).
+
 const std = @import("std");
 
 const ziglyph = @import("../ziglyph.zig");
@@ -97,7 +101,6 @@ fn isHangulPrecomposed(cp: u21) bool {
     return false;
 }
 
-// Hangul Syllable constants.
 const SBase: u21 = 0xAC00;
 const LBase: u21 = 0x1100;
 const VBase: u21 = 0x1161;
@@ -155,13 +158,12 @@ pub fn mapping(self: Self, cp: u21, form: Form) Decomp {
 
 /// `decompose` a code point to the specified normalization form, which should be either `.nfd` or `.nfkd`.
 pub fn decompose(self: Self, cp: u21, form: Form) Decomp {
+    std.debug.assert(form == .nfd or form == .nfkd);
+
     var dc = Decomp{ .form = form };
 
-    // ASCII or NFD quick check.
-    if (cp <= 127 or
-        (form == .nfd and norm_props.isNfd(cp)) or
-        (form == .nfkd and norm_props.isNfkd(cp)))
-    {
+    // ASCII or NFD / NFKD quick checks.
+    if (cp <= 127 or (form == .nfd and norm_props.isNfd(cp)) or (form == .nfkd and norm_props.isNfkd(cp))) {
         dc.cps[0] = cp;
         return dc;
     }
@@ -255,6 +257,7 @@ test "decompose" {
 }
 
 // Some quick checks.
+
 fn onlyAscii(str: []const u8) bool {
     return for (str) |b| {
         if (b > 127) break false;
@@ -269,6 +272,7 @@ fn onlyLatin1(str: []const u8) !bool {
     } else true;
 }
 
+/// Returned from various functions in this namespace. Remember to call `deinit` to free any allocated memory.
 pub const Result = struct {
     allocator: ?std.mem.Allocator = null,
     slice: []const u8,
@@ -303,7 +307,6 @@ pub fn nfkd(self: Self, allocator: std.mem.Allocator, str: []const u8) !Result {
     return self.nfxd(allocator, str, .nfkd);
 }
 
-// Normalize to the specified form.
 fn nfxd(self: Self, allocator: std.mem.Allocator, str: []const u8, form: Form) !Result {
     // Quick checks.
     if (onlyAscii(str)) return Result{ .slice = str };
@@ -380,6 +383,7 @@ test "nfkd !ASCII / alloc" {
 }
 
 // Composition utilities.
+
 fn isHangul(cp: u21) bool {
     return hangul_map.syllableType(cp) != null;
 }
@@ -670,6 +674,7 @@ test "UCD tests" {
     }
 }
 
+/// Tests for equality as per Unicode rules for Identifiers.
 pub fn eqlIdentifiers(allocator: std.mem.Allocator, a: []const u8, b: []const u8) !bool {
     var list_a = try std.ArrayList(u21).initCapacity(allocator, a.len);
     defer list_a.deinit();
@@ -714,6 +719,7 @@ test "eqlIdentifiers" {
     try std.testing.expect(try eqlIdentifiers(std.testing.allocator, "Foé", "foé"));
 }
 
+/// Tests for equality of `a` and `b` after normalizing to NFD.
 pub fn eql(self: Self, allocator: std.mem.Allocator, a: []const u8, b: []const u8) !bool {
     var norm_result_a = try self.nfd(allocator, a);
     defer norm_result_a.deinit();
@@ -757,6 +763,7 @@ fn requiresPreNfd(str: []const u8) !bool {
     } else false;
 }
 
+/// `eqlCaseless` tests for equality of `a` and `b` after normalizing to NFD and ignoring letter case.
 pub fn eqlCaseless(self: Self, allocator: std.mem.Allocator, a: []const u8, b: []const u8) !bool {
     // The long winding road of normalized caseless matching...
     // NFD(CaseFold(NFD(str))) or NFD(CaseFold(str))
