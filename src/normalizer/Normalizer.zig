@@ -791,3 +791,44 @@ test "eqlCaseless" {
     try std.testing.expect(try n.eqlCaseless(std.testing.allocator, "Foϓ", "fo\u{03D2}\u{0301}"));
     try std.testing.expect(try n.eqlCaseless(std.testing.allocator, "FOÉ", "foe\u{0301}")); // foÉ == foé
 }
+
+// FCD
+fn getLeadCcc(self: Self, cp: u21) u8 {
+    const dc = self.mapping(cp, .nfd);
+    return ccc_map.combiningClass(dc.cps[0]);
+}
+
+fn getTrailCcc(self: Self, cp: u21) u8 {
+    const dc = self.mapping(cp, .nfd);
+    const len = for (dc.cps) |dcp, i| {
+        if (dcp == 0) break i;
+    } else dc.cps.len;
+    return ccc_map.combiningClass(dc.cps[len -| 1]);
+}
+
+/// Fast check to detect if a string is already in NFC or NFD form.
+pub fn isFcd(self: Self, str: []const u8) !bool {
+    var prev_ccc: u8 = 0;
+    const view = try std.unicode.Utf8View.init(str);
+    var cp_iter = view.iterator();
+
+    return while (cp_iter.nextCodepoint()) |cp| {
+        const ccc = self.getLeadCcc(cp);
+        if (ccc != 0 and ccc < prev_ccc) break false;
+        prev_ccc = self.getTrailCcc(cp);
+    } else true;
+}
+
+test "isFcd" {
+    var n = try init(std.testing.allocator);
+    defer n.deinit();
+
+    const is_nfc = "José \u{3D3}";
+    try std.testing.expect(try n.isFcd(is_nfc));
+
+    const is_nfd = "Jose\u{301} \u{3d2}\u{301}";
+    try std.testing.expect(try n.isFcd(is_nfd));
+
+    const not_fcd = "Jose\u{301} \u{3d2}\u{315}\u{301}";
+    try std.testing.expect(!try n.isFcd(not_fcd));
+}
