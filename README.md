@@ -175,72 +175,41 @@ else that exposes a `std.io.Reader`. This allows for tailoring of the sorting al
 const Collator = @import("ziglyph").Collator;
 
 test "Collation" {
-    var allocator = std.testing.allocator;
-    var collator = try Collator.init(allocator);
-    defer collator.deinit();
+    var c = try Collator.init(std.testing.allocator);
+    defer c.deinit();
 
-    // Collation weight levels overview:
-    // * .primary: different letters.
-    // * .secondary: could be same letters but with marks (like accents) differ.
-    // * .tertiary: same letters and marks but case is different.
-    // So cab < dab at .primary, and cab < cáb at .secondary, and cáb < Cáb at .tertiary level.
-    testing.expect(collator.tertiaryAsc("abc", "def"));
-    testing.expect(collator.tertiaryDesc("def", "abc"));
+    // Ascending / descending sort
+    var strings = [_][]const u8{ "def", "xyz", "abc" };
+    var want = [_][]const u8{ "abc", "def", "xyz" };
 
-    // At only primary level, José and jose are equal because base letters are the same, only marks 
-    // and case differ, which are .secondary and .tertiary respectively.
-    testing.expect(try collator.orderFn("José", "jose", .primary, .eq));
+    std.sort.sort([]const u8, &strings, c, Collator.ascending);
+    try std.testing.expectEqualSlices([]const u8, &want, &strings);
 
-    // Full Unicode sort.
-    var strings: [3][]const u8 = .{ "xyz", "def", "abc" };
-    collator.sortAsc(&strings);
-    testing.expectEqual(strings[0], "abc");
-    testing.expectEqual(strings[1], "def");
-    testing.expectEqual(strings[2], "xyz");
+    want = [_][]const u8{ "xyz", "def", "abc" };
+    std.sort.sort([]const u8, &strings, c, Collator.descending);
+    try std.testing.expectEqualSlices([]const u8, &want, &strings);
 
-    // ASCII only binary sort. If you know the strings are ASCII only, this is much faster.
-    strings = .{ "xyz", "def", "abc" };
-    collator.sortAsciiAsc(&strings);
-    testing.expectEqual(strings[0], "abc");
-    testing.expectEqual(strings[1], "def");
-    testing.expectEqual(strings[2], "xyz");
+    // Caseless sorting
+    strings = [_][]const u8{ "def", "Abc", "abc" };
+    want = [_][]const u8{ "Abc", "abc", "def" };
+
+    std.sort.sort([]const u8, &strings, c, Collator.ascendingCaseless);
+    try std.testing.expectEqualSlices([]const u8, &want, &strings);
+
+    want = [_][]const u8{ "def", "Abc", "abc" };
+    std.sort.sort([]const u8, &strings, c, Collator.descendingCaseless);
+    try std.testing.expectEqualSlices([]const u8, &want, &strings);
+
+    // Caseless / markless sorting
+    strings = [_][]const u8{ "ábc", "Abc", "abc" };
+    want = [_][]const u8{ "ábc", "Abc", "abc" };
+
+    std.sort.sort([]const u8, &strings, c, Collator.ascendingBase);
+    try std.testing.expectEqualSlices([]const u8, &want, &strings);
+
+    std.sort.sort([]const u8, &strings, c, Collator.descendingBase);
+    try std.testing.expectEqualSlices([]const u8, &want, &strings);
 }
-```
-
-### Tailoring With `allkeys.txt`
-To tailor the sorting algorithm, you can create a modified `allkeys.txt` and generate a new compressed binary `allkeys.bin`
-file from it. Follow these steps:
-
-```sh
-# Change to the Ziglyph source directory.
-cd <path to ziglyph>/src/
-# Build the UDDC tool for your platform.
-zig build-exe -O ReleaseSafe uddc.zig
-# Create a new directory to store the UDDC tool and modified data files.
-mkdir <path to new data dir>
-# Move the tool and copy the data file to the new directory.
-mv uddc <path to new data dir>/
-cp data/uca/allkeys.txt <path to new data dir>/
-# Change into the new data dir.
-cd <path to new data dir>/
-# Modifiy the allkeys.txt file with your favorite editor.
-vim allkeys.txt
-# Generate the new compressed binary allkeys.bin
-./uddc allkeys.txt
-```
-
-After running these commands, you can then use this new allkeys.bin file with the `initWithReader` method:
-
-```zig
-const Collator = @import("ziglyph").Collator;
-
-var file = try std.fs.cwd().openFile("<path to new data dir>/allkeys.bin", .{});
-defer file.close();
-var reader = std.io.bufferedReader(file.reader()).reader();
-var collator = try Collator.initWithReader(allocator, reader);
-defer collator.deinit();
-
-// ...use the collator as usual.
 ```
 
 ## Text Segmentation (Grapheme Clusters, Words, Sentences)

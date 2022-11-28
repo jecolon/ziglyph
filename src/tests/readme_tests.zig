@@ -218,25 +218,40 @@ test "Code point / string widths" {
 }
 
 test "Collation" {
-    var allocator = std.testing.allocator;
-    var collator = try Collator.init(allocator);
-    defer collator.deinit();
+    var c = try Collator.init(std.testing.allocator);
+    defer c.deinit();
 
-    try testing.expect(collator.tertiaryAsc("abc", "def"));
-    try testing.expect(collator.tertiaryDesc("def", "abc"));
-    try testing.expect(try collator.orderFn("José", "jose", .primary, .eq));
+    // Ascending / descending sort
+    var strings = [_][]const u8{ "def", "xyz", "abc" };
+    var want = [_][]const u8{ "abc", "def", "xyz" };
 
-    var strings: [3][]const u8 = .{ "xyz", "def", "abc" };
-    collator.sortAsc(&strings);
-    try testing.expectEqual(strings[0], "abc");
-    try testing.expectEqual(strings[1], "def");
-    try testing.expectEqual(strings[2], "xyz");
+    std.sort.sort([]const u8, &strings, c, Collator.ascending);
+    try std.testing.expectEqualSlices([]const u8, &want, &strings);
 
-    strings = .{ "xyz", "def", "abc" };
-    collator.sortAsciiAsc(&strings);
-    try testing.expectEqual(strings[0], "abc");
-    try testing.expectEqual(strings[1], "def");
-    try testing.expectEqual(strings[2], "xyz");
+    want = [_][]const u8{ "xyz", "def", "abc" };
+    std.sort.sort([]const u8, &strings, c, Collator.descending);
+    try std.testing.expectEqualSlices([]const u8, &want, &strings);
+
+    // Caseless sorting
+    strings = [_][]const u8{ "def", "Abc", "abc" };
+    want = [_][]const u8{ "Abc", "abc", "def" };
+
+    std.sort.sort([]const u8, &strings, c, Collator.ascendingCaseless);
+    try std.testing.expectEqualSlices([]const u8, &want, &strings);
+
+    want = [_][]const u8{ "def", "Abc", "abc" };
+    std.sort.sort([]const u8, &strings, c, Collator.descendingCaseless);
+    try std.testing.expectEqualSlices([]const u8, &want, &strings);
+
+    // Caseless / markless sorting
+    strings = [_][]const u8{ "ábc", "Abc", "abc" };
+    want = [_][]const u8{ "ábc", "Abc", "abc" };
+
+    std.sort.sort([]const u8, &strings, c, Collator.ascendingBase);
+    try std.testing.expectEqualSlices([]const u8, &want, &strings);
+
+    std.sort.sort([]const u8, &strings, c, Collator.descendingBase);
+    try std.testing.expectEqualSlices([]const u8, &want, &strings);
 }
 
 test "display_width wrap" {
