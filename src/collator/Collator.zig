@@ -91,7 +91,8 @@ test "init / deinit" {
     defer c.deinit();
 
     try std.testing.expectEqual(@as(u16, 0xfb00), c.implicits[0].base);
-    try std.testing.expectEqual(@as(usize, 34193), c.ducet.count());
+    //try std.testing.expectEqual(@as(usize, 34193), c.ducet.count()); // All
+    try std.testing.expectEqual(@as(usize, 32130), c.ducet.count()); // NFD only
 }
 
 fn implicitWeight(self: Self, cp: u21) [18]?Element {
