@@ -43,9 +43,9 @@ pub fn init(allocator: std.mem.Allocator) !Self {
 
     // Diff state
     var prev_cp: u21 = 0;
-    var cp_diff: f64 = 0;
+    var cp_diff: isize = 0;
     var prev_l1: u16 = 0;
-    var l1_diff: f64 = 0;
+    var l1_diff: isize = 0;
 
     while (try ak_reader.readUntilDelimiterOrEof(&buf, '\n')) |line| : (line_num += 1) {
         var fields = std.mem.split(u8, line, ";");
@@ -66,8 +66,8 @@ pub fn init(allocator: std.mem.Allocator) !Self {
         var cp_diff_strs = std.mem.split(u8, fields.next().?, " ");
 
         while (cp_diff_strs.next()) |cp_diff_str| : (i += 1) {
-            cp_diff = @intToFloat(f64, try std.fmt.parseInt(isize, cp_diff_str, 16));
-            prev_cp = @floatToInt(u21, @intToFloat(f64, prev_cp) + cp_diff);
+            cp_diff = try std.fmt.parseInt(isize, cp_diff_str, 16);
+            prev_cp = @intCast(u21, @as(isize, prev_cp) + cp_diff);
             cps[i] = prev_cp;
         }
 
@@ -77,8 +77,8 @@ pub fn init(allocator: std.mem.Allocator) !Self {
         while (fields.next()) |element_diff_str| : (i += 1) {
             // i.e. 3D3;-42
             if (std.mem.indexOf(u8, element_diff_str, ".") == null) {
-                l1_diff = @intToFloat(f64, try std.fmt.parseInt(isize, element_diff_str, 16));
-                prev_l1 = @floatToInt(u16, @intToFloat(f64, prev_l1) + l1_diff);
+                l1_diff = try std.fmt.parseInt(isize, element_diff_str, 16);
+                prev_l1 = @intCast(u16, @as(isize, prev_l1) + l1_diff);
 
                 elements[i] = Element{
                     .l1 = prev_l1,
@@ -90,8 +90,8 @@ pub fn init(allocator: std.mem.Allocator) !Self {
             }
 
             var weight_strs = std.mem.split(u8, element_diff_str, ".");
-            l1_diff = @intToFloat(f64, try std.fmt.parseInt(isize, weight_strs.next().?, 16));
-            prev_l1 = @floatToInt(u16, @intToFloat(f64, prev_l1) + l1_diff);
+            l1_diff = try std.fmt.parseInt(isize, weight_strs.next().?, 16);
+            prev_l1 = @intCast(u16, @as(isize, prev_l1) + l1_diff);
             elements[i] = Element{ .l1 = prev_l1 };
 
             var j: usize = 0;
