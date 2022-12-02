@@ -166,10 +166,6 @@ test "normalizeTo" {
 One of the most common operations required by string processing is sorting and ordering comparisons.
 The Unicode Collation Algorithm was developed to attend this area of string processing. The `Collator`
 struct implements the algorithm, allowing for proper sorting and order comparison of Unicode strings.
-Aside from the usual `init` function, there's `initWithReader` which you can use to initialize the 
-struct with an alternate weights table file (`allkeys.bin`), be it a file, a network stream, or anything
-else that exposes a `std.io.Reader`. This allows for tailoring of the sorting algorithm.
-
 
 ```zig
 const Collator = @import("ziglyph").Collator;
@@ -211,6 +207,28 @@ test "Collation" {
     try std.testing.expectEqualSlices([]const u8, &want, &strings);
 }
 ```
+
+### Tailoring with allkeys.txt 
+You can tailor the sorting of Unicode text by modifying the sort element weights found in
+[allkeys.txt.gz](src/data/uca/allkeys.txt.gz). Uncompress the file with `gunzip` and modify it as needed.
+To prepare the file for use with Ziglyph, you need to process and compress the data as follows:
+
+```sh 
+$ cd <path to ziglyph src>/src 
+$ zig build-exe -D ReleaseSafe akcompress.zig 
+$ mkdir <path to temporary dir>
+$ mv akcompress <path to temporary dir>/
+$ cp data/uca/allkeys.txt.gz <path to temporary dir>/
+$ cp data/uca/allkeys-diffs.txt.gz data/uca/allkeys-diffs.txt.gz.bak
+$ cd <path to temporary dir>
+$ gunzip allkeys.txt.gz 
+$ vim allkeys.txt # <- Modify the file
+$ ./akcompress 
+$ gzip -9 allkeys-diffs.txt 
+$ cp allkeys-diffs.txt.gz <path to ziglyph source>/src/data/uca/
+```
+
+Now when you use the `Collator` it will reflect the sort element weights you modified.
 
 ## Text Segmentation (Grapheme Clusters, Words, Sentences)
 Ziglyph has iterators to traverse text as Grapheme Clusters (what most people recognize as *characters*), 
