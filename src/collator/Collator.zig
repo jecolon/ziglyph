@@ -5,9 +5,9 @@ const Normalizer = @import("../ziglyph.zig").Normalizer;
 const props = @import("../ziglyph.zig").prop_list;
 
 const Element = struct {
-    l1: u16,
-    l2: u16,
-    l3: u8,
+    l1: u16 = 0,
+    l2: u16 = 0,
+    l3: u8 = 0,
 };
 
 const Implicit = struct {
@@ -31,7 +31,7 @@ pub fn init(allocator: std.mem.Allocator) !Self {
     errdefer self.deinit();
 
     // allkeys-strip.txt file.
-    const ak_gz_file = @embedFile("../data/uca/allkeys-strip.txt.gz");
+    const ak_gz_file = @embedFile("../data/uca/allkeys-diffs.txt.gz");
     var ak_in_stream = std.io.fixedBufferStream(ak_gz_file);
     var ak_gzip_stream = try std.compress.gzip.gzipStream(allocator, ak_in_stream.reader());
     defer ak_gzip_stream.deinit();
@@ -40,6 +40,8 @@ pub fn init(allocator: std.mem.Allocator) !Self {
     const ak_reader = ak_br.reader();
     var buf: [256]u8 = undefined;
     var line_num: usize = 0;
+    var prev_cp: u21 = 0;
+    var diff: f64 = 0;
 
     while (try ak_reader.readUntilDelimiterOrEof(&buf, '\n')) |line| : (line_num += 1) {
         var fields = std.mem.split(u8, line, ";");
@@ -57,22 +59,56 @@ pub fn init(allocator: std.mem.Allocator) !Self {
 
         var i: usize = 0;
         var cps = [_]u21{0} ** 3;
-        var cp_strs = std.mem.split(u8, fields.next().?, " ");
+        var cp_diff_strs = std.mem.split(u8, fields.next().?, " ");
 
-        while (cp_strs.next()) |cp_str| : (i += 1) {
-            cps[i] = try std.fmt.parseInt(u21, cp_str, 16);
+        while (cp_diff_strs.next()) |cp_diff_str| : (i += 1) {
+            diff = @intToFloat(f64, try std.fmt.parseInt(isize, cp_diff_str, 16));
+            prev_cp = @floatToInt(u21, @intToFloat(f64, prev_cp) + diff);
+            cps[i] = prev_cp;
         }
 
         i = 0;
         var elements = [_]?Element{null} ** 18;
 
         while (fields.next()) |element_str| : (i += 1) {
+            if (element_str.len == 1 and element_str[0] == ')') {
+                elements[0] = Element{};
+                continue;
+            }
+
+            if (std.mem.indexOf(u8, element_str, ".") == null) {
+                elements[i] = Element{
+                    .l1 = try std.fmt.parseInt(u16, element_str, 16),
+                    .l2 = 0x20,
+                    .l3 = 0x2,
+                };
+
+                continue;
+            }
+
             var weight_strs = std.mem.split(u8, element_str, ".");
-            elements[i] = Element{
-                .l1 = try std.fmt.parseInt(u16, weight_strs.next().?, 16),
-                .l2 = try std.fmt.parseInt(u16, weight_strs.next().?, 16),
-                .l3 = try std.fmt.parseInt(u8, weight_strs.next().?, 16),
-            };
+            elements[i] = Element{ .l1 = try std.fmt.parseInt(u16, weight_strs.next().?, 16) };
+
+            var j: usize = 0;
+            while (weight_strs.next()) |weight_str| : (j += 1) {
+                if (weight_str.len == 1 and weight_str[0] == ')') {
+                    elements[i].?.l2 = 0;
+                    elements[i].?.l3 = 0;
+                    break;
+                }
+
+                if (weight_str[0] == '@') {
+                    elements[i].?.l2 = 0x20;
+                    elements[i].?.l3 = try std.fmt.parseInt(u8, weight_str[1..], 16);
+                    break;
+                }
+
+                switch (j) {
+                    0 => elements[i].?.l2 = try std.fmt.parseInt(u16, weight_str, 16),
+                    1 => elements[i].?.l3 = try std.fmt.parseInt(u8, weight_str, 16),
+                    else => unreachable,
+                }
+            }
         }
 
         try self.ducet.put(cps, elements);
