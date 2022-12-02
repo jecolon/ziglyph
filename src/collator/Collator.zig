@@ -40,8 +40,12 @@ pub fn init(allocator: std.mem.Allocator) !Self {
     const ak_reader = ak_br.reader();
     var buf: [256]u8 = undefined;
     var line_num: usize = 0;
+
+    // Diff state
     var prev_cp: u21 = 0;
-    var diff: f64 = 0;
+    var cp_diff: f64 = 0;
+    var prev_l1: u16 = 0;
+    var l1_diff: f64 = 0;
 
     while (try ak_reader.readUntilDelimiterOrEof(&buf, '\n')) |line| : (line_num += 1) {
         var fields = std.mem.split(u8, line, ";");
@@ -62,23 +66,22 @@ pub fn init(allocator: std.mem.Allocator) !Self {
         var cp_diff_strs = std.mem.split(u8, fields.next().?, " ");
 
         while (cp_diff_strs.next()) |cp_diff_str| : (i += 1) {
-            diff = @intToFloat(f64, try std.fmt.parseInt(isize, cp_diff_str, 16));
-            prev_cp = @floatToInt(u21, @intToFloat(f64, prev_cp) + diff);
+            cp_diff = @intToFloat(f64, try std.fmt.parseInt(isize, cp_diff_str, 16));
+            prev_cp = @floatToInt(u21, @intToFloat(f64, prev_cp) + cp_diff);
             cps[i] = prev_cp;
         }
 
         i = 0;
         var elements = [_]?Element{null} ** 18;
 
-        while (fields.next()) |element_str| : (i += 1) {
-            if (element_str.len == 1 and element_str[0] == ')') {
-                elements[0] = Element{};
-                continue;
-            }
+        while (fields.next()) |element_diff_str| : (i += 1) {
+            // i.e. 3D3;-42
+            if (std.mem.indexOf(u8, element_diff_str, ".") == null) {
+                l1_diff = @intToFloat(f64, try std.fmt.parseInt(isize, element_diff_str, 16));
+                prev_l1 = @floatToInt(u16, @intToFloat(f64, prev_l1) + l1_diff);
 
-            if (std.mem.indexOf(u8, element_str, ".") == null) {
                 elements[i] = Element{
-                    .l1 = try std.fmt.parseInt(u16, element_str, 16),
+                    .l1 = prev_l1,
                     .l2 = 0x20,
                     .l3 = 0x2,
                 };
@@ -86,8 +89,10 @@ pub fn init(allocator: std.mem.Allocator) !Self {
                 continue;
             }
 
-            var weight_strs = std.mem.split(u8, element_str, ".");
-            elements[i] = Element{ .l1 = try std.fmt.parseInt(u16, weight_strs.next().?, 16) };
+            var weight_strs = std.mem.split(u8, element_diff_str, ".");
+            l1_diff = @intToFloat(f64, try std.fmt.parseInt(isize, weight_strs.next().?, 16));
+            prev_l1 = @floatToInt(u16, @intToFloat(f64, prev_l1) + l1_diff);
+            elements[i] = Element{ .l1 = prev_l1 };
 
             var j: usize = 0;
             while (weight_strs.next()) |weight_str| : (j += 1) {
