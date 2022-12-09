@@ -370,7 +370,7 @@ pub const WordIterator = struct {
 };
 
 // Predicates
-const TokenPredicate = std.meta.FnPtr(fn (Token) bool);
+const TokenPredicate = *const fn (Token) bool;
 
 fn isAHLetter(token: Token) bool {
     return token.ty == .aletter or token.ty == .hletter;
