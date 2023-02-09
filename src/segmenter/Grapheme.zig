@@ -112,7 +112,11 @@ pub const GraphemeIterator = struct {
         var after_zwj = false;
 
         while (self.peek()) |pcp| {
-            if (cpIsIgnorable(pcp.scalar) or (after_emoji and after_zwj and emoji.isExtendedPictographic(pcp.scalar))) {
+            if (after_emoji and after_zwj and emoji.isExtendedPictographic(pcp.scalar)) {
+                end = pcp.end();
+                _ = self.advance();
+                after_zwj = false;
+            } else if (cpIsIgnorable(pcp.scalar)) {
                 end = pcp.end();
                 _ = self.advance();
                 if (pcp.scalar == '\u{200d}') after_zwj = true;
@@ -480,4 +484,27 @@ test "Simple StreamingGraphemeIterator" {
     }
 
     try std.testing.expectEqual(@as(?@This(), null), try iter.next());
+}
+
+test "Segmentation ZWJ and ZWSP emoji sequences" {
+    const seq_1 = "\u{1F43B}\u{200D}\u{2744}\u{FE0F}";
+    const seq_2 = "\u{1F43B}\u{200D}\u{2744}\u{FE0F}";
+    const with_zwj = seq_1 ++ "\u{200D}" ++ seq_2;
+    const with_zwsp = seq_1 ++ "\u{200B}" ++ seq_2;
+    const no_joiner = seq_1 ++ seq_2;
+
+    var ct_iter = try GraphemeIterator.init(with_zwj);
+    var i: usize = 0;
+    while (ct_iter.next()) |_| : (i += 1) {}
+    try testing.expectEqual(@as(usize, 1), i);
+
+    ct_iter = try GraphemeIterator.init(with_zwsp);
+    i = 0;
+    while (ct_iter.next()) |_| : (i += 1) {}
+    try testing.expectEqual(@as(usize, 3), i);
+
+    ct_iter = try GraphemeIterator.init(no_joiner);
+    i = 0;
+    while (ct_iter.next()) |_| : (i += 1) {}
+    try testing.expectEqual(@as(usize, 2), i);
 }
