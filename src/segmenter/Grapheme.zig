@@ -175,14 +175,14 @@ pub fn StreamingGraphemeIterator(comptime T: type) type {
                 }
 
                 return Grapheme{
-                    .bytes = all_bytes.toOwnedSlice(),
+                    .bytes = try all_bytes.toOwnedSlice(),
                     .offset = 0,
                 };
             }
 
             if (cp == '\x0a' or gbp.isControl(cp)) {
                 return Grapheme{
-                    .bytes = all_bytes.toOwnedSlice(),
+                    .bytes = try all_bytes.toOwnedSlice(),
                     .offset = 0,
                 };
             }
@@ -246,7 +246,7 @@ pub fn StreamingGraphemeIterator(comptime T: type) type {
             }
 
             return Grapheme{
-                .bytes = all_bytes.toOwnedSlice(),
+                .bytes = try all_bytes.toOwnedSlice(),
                 .offset = 0,
             };
         }
@@ -341,7 +341,7 @@ test "Segmentation GraphemeIterator" {
             }
 
             try want.append(Grapheme{
-                .bytes = cp_bytes.toOwnedSlice(),
+                .bytes = try cp_bytes.toOwnedSlice(),
                 .offset = bytes_index,
             });
 
@@ -440,7 +440,7 @@ test "Segmentation StreamingGraphemeIterator" {
             }
 
             try want.append(Grapheme{
-                .bytes = cp_bytes.toOwnedSlice(),
+                .bytes = try cp_bytes.toOwnedSlice(),
                 .offset = bytes_index,
             });
 

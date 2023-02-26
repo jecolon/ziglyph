@@ -456,7 +456,7 @@ test "Segmentation WordIterator" {
             }
 
             try want.append(Word{
-                .bytes = cp_bytes.toOwnedSlice(),
+                .bytes = try cp_bytes.toOwnedSlice(),
                 .offset = bytes_index,
             });
 

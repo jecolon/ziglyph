@@ -33,7 +33,7 @@ pub fn init(allocator: std.mem.Allocator) !Self {
     // allkeys-strip.txt file.
     const ak_gz_file = @embedFile("../data/uca/allkeys-diffs.txt.gz");
     var ak_in_stream = std.io.fixedBufferStream(ak_gz_file);
-    var ak_gzip_stream = try std.compress.gzip.gzipStream(allocator, ak_in_stream.reader());
+    var ak_gzip_stream = try std.compress.gzip.decompress(allocator, ak_in_stream.reader());
     defer ak_gzip_stream.deinit();
 
     var ak_br = std.io.bufferedReader(ak_gzip_stream.reader());
@@ -516,7 +516,7 @@ test "UCA tests" {
 
     const uca_gz_file = try std.fs.cwd().openFile("src/data/uca/CollationTest_NON_IGNORABLE_SHORT.txt.gz", .{});
     defer uca_gz_file.close();
-    var uca_gzip_stream = try std.compress.gzip.gzipStream(allocator, uca_gz_file.reader());
+    var uca_gzip_stream = try std.compress.gzip.decompress(allocator, uca_gz_file.reader());
     defer uca_gzip_stream.deinit();
 
     var uca_br = std.io.bufferedReader(uca_gzip_stream.reader());
