@@ -44,7 +44,7 @@ const number = @import("ziglyph").number; // or const number = ziglyph.number;
 ### Using Zigmod
 
 ```sh
-$ zigmod aq add 1/jecolon/zigstr
+$ zigmod aq add 1/jecolon/ziglyph
 $ zigmod fetch
 ```
 
