@@ -318,7 +318,7 @@ fn nfxd(self: Self, allocator: std.mem.Allocator, str: []const u8, form: Form) !
     var cp_iter = view.iterator();
     while (cp_iter.nextCodepoint()) |cp| {
         const dc = self.decompose(cp, form);
-        const slice = for (dc.cps) |dcp, i| {
+        const slice = for (dc.cps, 0..) |dcp, i| {
             if (dcp == 0) break dc.cps[0..i];
         } else dc.cps[0..];
         try dcp_list.appendSlice(slice);
@@ -800,7 +800,7 @@ fn getLeadCcc(self: Self, cp: u21) u8 {
 
 fn getTrailCcc(self: Self, cp: u21) u8 {
     const dc = self.mapping(cp, .nfd);
-    const len = for (dc.cps) |dcp, i| {
+    const len = for (dc.cps, 0..) |dcp, i| {
         if (dcp == 0) break i;
     } else dc.cps.len;
     return ccc_map.combiningClass(dc.cps[len -| 1]);

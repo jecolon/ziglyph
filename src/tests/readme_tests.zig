@@ -164,7 +164,7 @@ test "SentenceIterator" {
         }
     }
 
-    for (sentences) |sentence, j| {
+    for (sentences, 0..) |sentence, j| {
         try testing.expect(sentence.eql(want[j]));
     }
 }

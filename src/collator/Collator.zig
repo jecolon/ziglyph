@@ -333,7 +333,7 @@ pub fn sortKey(self: Self, allocator: std.mem.Allocator, str: []const u8) ![]con
 
 /// Orders strings `a` and `b` based only on the base characters; case and combining marks are ignored.
 pub fn primaryOrder(a: []const u16, b: []const u16) std.math.Order {
-    return for (a) |weight, i| {
+    return for (a, 0..) |weight, i| {
         if (weight == 0) break .eq; // End of level
         const order = std.math.order(weight, b[i]);
         if (order != .eq) break order;
@@ -344,7 +344,7 @@ pub fn primaryOrder(a: []const u16, b: []const u16) std.math.Order {
 pub fn secondaryOrder(a: []const u16, b: []const u16) std.math.Order {
     var last_level = false;
 
-    return for (a) |weight, i| {
+    return for (a, 0..) |weight, i| {
         if (weight == 0) {
             if (last_level) break .eq else last_level = true;
             continue;
@@ -357,7 +357,7 @@ pub fn secondaryOrder(a: []const u16, b: []const u16) std.math.Order {
 
 /// Orders strings `a` and `b` based on base characters, combining marks, and letter case.
 pub fn tertiaryOrder(a: []const u16, b: []const u16) std.math.Order {
-    return for (a) |weight, i| {
+    return for (a, 0..) |weight, i| {
         const order = std.math.order(weight, b[i]);
         if (order != .eq) break order;
     } else .eq;
@@ -590,7 +590,7 @@ test "UCA tests" {
         if (order == .eq) {
             const len = if (prev_nfd.slice.len > current_nfd.slice.len) current_nfd.slice.len else prev_nfd.slice.len;
 
-            const tie_breaker = for (prev_nfd.slice[0..len]) |prev_cp, i| {
+            const tie_breaker = for (prev_nfd.slice[0..len], 0..) |prev_cp, i| {
                 const cp_order = std.math.order(prev_cp, current_nfd.slice[i]);
                 if (cp_order != .eq) break cp_order;
             } else .eq;
