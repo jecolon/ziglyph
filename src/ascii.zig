@@ -307,7 +307,7 @@ test "ascii character classes" {
 /// Caller owns returned string and must free with `allocator`.
 pub fn allocLowerString(allocator: std.mem.Allocator, ascii_string: []const u8) ![]u8 {
     const result = try allocator.alloc(u8, ascii_string.len);
-    for (result) |*c, i| {
+    for (result, 0..) |*c, i| {
         c.* = toLower(ascii_string[i]);
     }
     return result;
@@ -323,7 +323,7 @@ test "allocLowerString" {
 /// Caller owns returned string and must free with `allocator`.
 pub fn allocUpperString(allocator: std.mem.Allocator, ascii_string: []const u8) ![]u8 {
     const result = try allocator.alloc(u8, ascii_string.len);
-    for (result) |*c, i| {
+    for (result, 0..) |*c, i| {
         c.* = toUpper(ascii_string[i]);
     }
     return result;
@@ -338,7 +338,7 @@ test "allocUpperString" {
 /// Compares strings `a` and `b` case insensitively and returns whether they are equal.
 pub fn eqlIgnoreCase(a: []const u8, b: []const u8) bool {
     if (a.len != b.len) return false;
-    for (a) |a_c, i| {
+    for (a, 0..) |a_c, i| {
         if (toLower(a_c) != toLower(b[i])) return false;
     }
     return true;

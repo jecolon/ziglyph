@@ -38,7 +38,7 @@ pub fn init(allocator: std.mem.Allocator) !Self {
     // Composites file.
     const comp_gz_file = @embedFile("../data/ucd/Composites.txt.gz");
     var comp_in_stream = std.io.fixedBufferStream(comp_gz_file);
-    var comp_gzip_stream = try std.compress.gzip.gzipStream(allocator, comp_in_stream.reader());
+    var comp_gzip_stream = try std.compress.gzip.decompress(allocator, comp_in_stream.reader());
     defer comp_gzip_stream.deinit();
 
     var comp_br = std.io.bufferedReader(comp_gzip_stream.reader());
@@ -57,7 +57,7 @@ pub fn init(allocator: std.mem.Allocator) !Self {
     // Decompositions file.
     const decomp_gz_file = @embedFile("../data/ucd/Decompositions.txt.gz");
     var decomp_in_stream = std.io.fixedBufferStream(decomp_gz_file);
-    var decomp_gzip_stream = try std.compress.gzip.gzipStream(allocator, decomp_in_stream.reader());
+    var decomp_gzip_stream = try std.compress.gzip.decompress(allocator, decomp_in_stream.reader());
     defer decomp_gzip_stream.deinit();
 
     var decomp_br = std.io.bufferedReader(decomp_gzip_stream.reader());
@@ -318,7 +318,7 @@ fn nfxd(self: Self, allocator: std.mem.Allocator, str: []const u8, form: Form) !
     var cp_iter = view.iterator();
     while (cp_iter.nextCodepoint()) |cp| {
         const dc = self.decompose(cp, form);
-        const slice = for (dc.cps) |dcp, i| {
+        const slice = for (dc.cps, 0..) |dcp, i| {
             if (dcp == 0) break dc.cps[0..i];
         } else dc.cps[0..];
         try dcp_list.appendSlice(slice);
@@ -335,7 +335,7 @@ fn nfxd(self: Self, allocator: std.mem.Allocator, str: []const u8, form: Form) !
         dstr_list.appendSliceAssumeCapacity(buf[0..len]);
     }
 
-    return Result{ .allocator = allocator, .slice = dstr_list.toOwnedSlice() };
+    return Result{ .allocator = allocator, .slice = try dstr_list.toOwnedSlice() };
 }
 
 test "nfd ASCII / no-alloc" {
@@ -516,7 +516,7 @@ fn nfxc(self: Self, allocator: std.mem.Allocator, str: []const u8, form: Form) !
                 cstr_list.appendSliceAssumeCapacity(buf[0..len]);
             }
 
-            return Result{ .allocator = allocator, .slice = cstr_list.toOwnedSlice() };
+            return Result{ .allocator = allocator, .slice = try cstr_list.toOwnedSlice() };
         }
 
         // Otherwise update code points list.
@@ -598,7 +598,7 @@ test "UCD tests" {
                     try i_buf.appendSlice(cp_buf[0..len]);
                 }
 
-                input = i_buf.toOwnedSlice();
+                input = try i_buf.toOwnedSlice();
             } else if (field_index == 1) {
                 // NFC, time to test.
                 var w_buf = std.ArrayList(u8).init(allocator);
@@ -800,7 +800,7 @@ fn getLeadCcc(self: Self, cp: u21) u8 {
 
 fn getTrailCcc(self: Self, cp: u21) u8 {
     const dc = self.mapping(cp, .nfd);
-    const len = for (dc.cps) |dcp, i| {
+    const len = for (dc.cps, 0..) |dcp, i| {
         if (dcp == 0) break i;
     } else dc.cps.len;
     return ccc_map.combiningClass(dc.cps[len -| 1]);

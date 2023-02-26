@@ -93,7 +93,7 @@ pub const SentenceIterator = struct {
         self.start = self.tokens.items[0];
 
         // Set token offsets.
-        for (self.tokens.items) |*token, i| {
+        for (self.tokens.items, 0..) |*token, i| {
             token.offset = i;
         }
 
@@ -340,7 +340,7 @@ pub const SentenceIterator = struct {
 };
 
 // Predicates
-const TokenPredicate = std.meta.FnPtr(fn (Token) bool);
+const TokenPredicate = *const fn (Token) bool;
 
 fn isNumeric(token: Token) bool {
     return token.ty == .numeric;
@@ -450,7 +450,7 @@ test "Segmentation SentenceIterator" {
             }
 
             try want.append(Sentence{
-                .bytes = cp_bytes.toOwnedSlice(),
+                .bytes = try cp_bytes.toOwnedSlice(),
                 .offset = bytes_index,
             });
 
@@ -775,7 +775,7 @@ test "Segmentation ComptimeSentenceIterator" {
     ;
     const want = &[_][]const u8{ s1, s2 };
 
-    for (sentences) |sentence, i| {
+    for (sentences, 0..) |sentence, i| {
         try testing.expect(sentence.eql(want[i]));
     }
 }

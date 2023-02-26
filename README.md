@@ -15,10 +15,36 @@ This is pre-1.0 software. Although breaking changes are less frequent with each 
 they still will occur until we reach 1.0.
 
 ## Integrating Ziglyph in your Project
+### Zig Package Manager
+In a `build.zig.zon` file add the following to the dependencies object. Currently only tar.gz urls are supported.
+```zig
+.ziglyph = .{
+    .url = "https://github.com/jecolon/ziglyph/archive/<FULL COMMIT SHA>.tar.gz",
+    .hash = "sha2-256 hash of the tar.gz file",
+}
+```
+
+Then in your `build.zig` file add the following to the `exe` section for the executable where you wish to have Ziglyph available.
+```zig
+const ziglyph = b.dependency("ziglyph", .{
+    .target = target,
+    .optimize = optimize,
+});
+exe.addModule("ziglyph", ziglyph.module("ziglyph"));
+```
+
+Now in the code, you can import components like this:
+
+```zig
+const ziglyph = @import("ziglyph");
+const letter = @import("ziglyph").letter; // or const letter = ziglyph.letter;
+const number = @import("ziglyph").number; // or const number = ziglyph.number;
+```
+
 ### Using Zigmod
 
 ```sh
-$ zigmod aq add 1/jecolon/zigstr
+$ zigmod aq add 1/jecolon/ziglyph
 $ zigmod fetch
 ```
 
@@ -32,28 +58,6 @@ In the `exe` section for the executable where you wish to have Zigstr available,
 
 ```zig
 deps.addAllTo(exe);
-```
-
-### Manually via Git
-In a `libs` subdirectory under the root of your project, clone this repository via
-
-```sh
-$  git clone https://github.com/jecolon/ziglyph.git
-```
-
-Now in your build.zig, you can add:
-
-```zig
-exe.addPackagePath("ziglyph", "libs/ziglyph/src/ziglyph.zig");
-```
-
-to the `exe` section for the executable where you wish to have Ziglyph available. Now in the code, you
-can import components like this:
-
-```zig
-const ziglyph = @import("ziglyph");
-const letter = @import("ziglyph").letter; // or const letter = ziglyph.letter;
-const number = @import("ziglyph").number; // or const number = ziglyph.number;
 ```
 
 ### Using the `ziglyph` Namespace
