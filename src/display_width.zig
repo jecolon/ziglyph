@@ -15,8 +15,8 @@ const isAsciiStr = @import("ascii.zig").isAsciiStr;
 const Word = @import("ziglyph.zig").Word;
 const WordIterator = Word.WordIterator;
 
-/// AmbiguousWidth determines the width of ambiguous characters according to the context. In an 
-/// East Asian context, the width of ambiguous code points should be 2 (full), and 1 (half) 
+/// AmbiguousWidth determines the width of ambiguous characters according to the context. In an
+/// East Asian context, the width of ambiguous code points should be 2 (full), and 1 (half)
 /// in non-East Asian contexts. The most common use case is `half`.
 pub const AmbiguousWidth = enum(u2) {
     half = 1,
