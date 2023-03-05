@@ -2,7 +2,7 @@
 
 /// `isFcx` returns true if `cp` has Full Composition Exclusion.
 pub fn isFcx(cp: u21) bool {
-    return switch(cp) {
+    return switch (cp) {
         0x340...0x341 => true,
         0x343...0x344 => true,
         0x374 => true,
@@ -83,7 +83,7 @@ pub fn isFcx(cp: u21) bool {
 
 /// `isNfd` returns true if `cp` is in Canoical Decomposed Normalization Form.
 pub fn isNfd(cp: u21) bool {
-    return switch(cp) {
+    return switch (cp) {
         0xC0...0xC5 => false,
         0xC7...0xCF => false,
         0xD1...0xD6 => false,
@@ -333,7 +333,7 @@ pub fn isNfd(cp: u21) bool {
 
 /// `isNfc` returns true if `cp` is in Canoical Composed Normalization Form.
 pub fn isNfc(cp: u21) bool {
-    return switch(cp) {
+    return switch (cp) {
         0x340...0x341 => false,
         0x343...0x344 => false,
         0x374 => false,
@@ -414,7 +414,7 @@ pub fn isNfc(cp: u21) bool {
 
 /// `isNfkd` returns true if `cp` is in Compatibility Decomposition Normalization Form.
 pub fn isNfkd(cp: u21) bool {
-    return switch(cp) {
+    return switch (cp) {
         0xA0 => false,
         0xA8 => false,
         0xAA => false,
@@ -969,7 +969,7 @@ pub fn isNfkd(cp: u21) bool {
 
 /// `isNfkc` returns true if `cp` is in Compatibility Composition Normalization Form.
 pub fn isNFKC(cp: u21) bool {
-    return switch(cp) {
+    return switch (cp) {
         0xA0 => false,
         0xA8 => false,
         0xAA => false,
@@ -1371,7 +1371,7 @@ pub fn isNFKC(cp: u21) bool {
 /// The returned string is a comma separated list of code points. Empty string means
 /// map to `cp` itself. "0" means map to nothing.
 pub fn toNfkcCaseFold(cp: u21) []const u8 {
-    return switch(cp) {
+    return switch (cp) {
         0x41 => "61",
         0x42 => "62",
         0x43 => "63",
@@ -7469,7 +7469,7 @@ pub fn toNfkcCaseFold(cp: u21) []const u8 {
 
 /// `changesWhenNfkcCaseFold` returns true if `toNFKCCF` for `cp` results in `cp` itself.
 pub fn changerWhenNfkcCaseFold(cp: u21) bool {
-    return switch(cp) {
+    return switch (cp) {
         0x41...0x5A => true,
         0xA0 => true,
         0xA8 => true,

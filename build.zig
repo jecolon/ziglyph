@@ -4,8 +4,7 @@ pub fn build(b: *Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    b.addModule(.{
-        .name = "ziglyph",
+    _ = b.addModule("ziglyph", .{
         .source_file = .{ .path = "src/ziglyph.zig" },
     });
 
