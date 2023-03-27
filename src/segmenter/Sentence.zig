@@ -93,7 +93,7 @@ pub const SentenceIterator = struct {
         self.start = self.tokens.items[0];
 
         // Set token offsets.
-        for (self.tokens.items, 0..) |*token, i| {
+        for (self.tokens.items) |*token, i| {
             token.offset = i;
         }
 
@@ -775,7 +775,7 @@ test "Segmentation ComptimeSentenceIterator" {
     ;
     const want = &[_][]const u8{ s1, s2 };
 
-    for (sentences, 0..) |sentence, i| {
+    for (sentences) |sentence, i| {
         try testing.expect(sentence.eql(want[i]));
     }
 }
