@@ -156,7 +156,7 @@ test "SentenceIterator" {
 
     comptime var ct_iter = ComptimeSentenceIterator(input){};
     const n = comptime ct_iter.count();
-    var sentences: [n]Sentence = undefined;
+    comptime var sentences: [n]Sentence = undefined;
     comptime {
         var ct_i: usize = 0;
         while (ct_iter.next()) |sentence| : (ct_i += 1) {
@@ -225,32 +225,32 @@ test "Collation" {
     var strings = [_][]const u8{ "def", "xyz", "abc" };
     var want = [_][]const u8{ "abc", "def", "xyz" };
 
-    std.sort.sort([]const u8, &strings, c, Collator.ascending);
+    std.mem.sort([]const u8, &strings, c, Collator.ascending);
     try std.testing.expectEqualSlices([]const u8, &want, &strings);
 
     want = [_][]const u8{ "xyz", "def", "abc" };
-    std.sort.sort([]const u8, &strings, c, Collator.descending);
+    std.mem.sort([]const u8, &strings, c, Collator.descending);
     try std.testing.expectEqualSlices([]const u8, &want, &strings);
 
     // Caseless sorting
     strings = [_][]const u8{ "def", "Abc", "abc" };
     want = [_][]const u8{ "Abc", "abc", "def" };
 
-    std.sort.sort([]const u8, &strings, c, Collator.ascendingCaseless);
+    std.mem.sort([]const u8, &strings, c, Collator.ascendingCaseless);
     try std.testing.expectEqualSlices([]const u8, &want, &strings);
 
     want = [_][]const u8{ "def", "Abc", "abc" };
-    std.sort.sort([]const u8, &strings, c, Collator.descendingCaseless);
+    std.mem.sort([]const u8, &strings, c, Collator.descendingCaseless);
     try std.testing.expectEqualSlices([]const u8, &want, &strings);
 
     // Caseless / markless sorting
     strings = [_][]const u8{ "ábc", "Abc", "abc" };
     want = [_][]const u8{ "ábc", "Abc", "abc" };
 
-    std.sort.sort([]const u8, &strings, c, Collator.ascendingBase);
+    std.mem.sort([]const u8, &strings, c, Collator.ascendingBase);
     try std.testing.expectEqualSlices([]const u8, &want, &strings);
 
-    std.sort.sort([]const u8, &strings, c, Collator.descendingBase);
+    std.mem.sort([]const u8, &strings, c, Collator.descendingBase);
     try std.testing.expectEqualSlices([]const u8, &want, &strings);
 }
 
