@@ -293,7 +293,7 @@ fn canonicalSort(cps: []u21) void {
     while (i < cps.len) : (i += 1) {
         var start: usize = i;
         while (i < cps.len and ccc_map.combiningClass(cps[i]) != 0) : (i += 1) {}
-        std.sort.sort(u21, cps[start..i], {}, cccLess);
+        std.mem.sort(u21, cps[start..i], {}, cccLess);
     }
 }
 

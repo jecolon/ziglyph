@@ -759,7 +759,7 @@ test "Segmentation ComptimeSentenceIterator" {
     ;
     comptime var ct_iter = ComptimeSentenceIterator(input){};
     const n = comptime ct_iter.count();
-    var sentences: [n]Sentence = undefined;
+    comptime var sentences: [n]Sentence = undefined;
     comptime {
         var i: usize = 0;
         while (ct_iter.next()) |sentence| : (i += 1) {

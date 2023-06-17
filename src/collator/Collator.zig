@@ -391,7 +391,7 @@ test "key order with combining" {
     try std.testing.expectEqual(std.math.Order.gt, tertiaryOrder(key_a, key_b));
 }
 
-/// An ascending sort for strings that works with `std.sort.sort`. Because the API requires this function to be
+/// An ascending sort for strings that works with `std.mem.sort`. Because the API requires this function to be
 /// infallible, it just returns `false` on errors.
 pub fn ascending(self: Self, a: []const u8, b: []const u8) bool {
     const key_a = self.sortKey(self.ducet.allocator, a) catch return false;
@@ -402,7 +402,7 @@ pub fn ascending(self: Self, a: []const u8, b: []const u8) bool {
     return tertiaryOrder(key_a, key_b) == .lt;
 }
 
-/// A descending sort for strings that works with `std.sort.sort`. Because the API requires this function to be
+/// A descending sort for strings that works with `std.mem.sort`. Because the API requires this function to be
 /// infallible, it just returns `false` on errors.
 pub fn descending(self: Self, a: []const u8, b: []const u8) bool {
     const key_a = self.sortKey(self.ducet.allocator, a) catch return false;
@@ -420,15 +420,15 @@ test "sort functions" {
     var strings = [_][]const u8{ "def", "xyz", "abc" };
     var want = [_][]const u8{ "abc", "def", "xyz" };
 
-    std.sort.sort([]const u8, &strings, c, ascending);
+    std.mem.sort([]const u8, &strings, c, ascending);
     try std.testing.expectEqualSlices([]const u8, &want, &strings);
 
     want = [_][]const u8{ "xyz", "def", "abc" };
-    std.sort.sort([]const u8, &strings, c, descending);
+    std.mem.sort([]const u8, &strings, c, descending);
     try std.testing.expectEqualSlices([]const u8, &want, &strings);
 }
 
-/// A caseless ascending sort for strings that works with `std.sort.sort`. Because the API requires this function to be
+/// A caseless ascending sort for strings that works with `std.mem.sort`. Because the API requires this function to be
 /// infallible, it just returns `false` on errors.
 pub fn ascendingCaseless(self: Self, a: []const u8, b: []const u8) bool {
     const key_a = self.sortKey(self.ducet.allocator, a) catch return false;
@@ -439,7 +439,7 @@ pub fn ascendingCaseless(self: Self, a: []const u8, b: []const u8) bool {
     return secondaryOrder(key_a, key_b) == .lt;
 }
 
-/// A caseless descending sort for strings that works with `std.sort.sort`. Because the API requires this function to be
+/// A caseless descending sort for strings that works with `std.mem.sort`. Because the API requires this function to be
 /// infallible, it just returns `false` on errors.
 pub fn descendingCaseless(self: Self, a: []const u8, b: []const u8) bool {
     const key_a = self.sortKey(self.ducet.allocator, a) catch return false;
@@ -457,11 +457,11 @@ test "caseless sort functions" {
     var strings = [_][]const u8{ "def", "Abc", "abc" };
     var want = [_][]const u8{ "Abc", "abc", "def" };
 
-    std.sort.sort([]const u8, &strings, c, ascendingCaseless);
+    std.mem.sort([]const u8, &strings, c, ascendingCaseless);
     try std.testing.expectEqualSlices([]const u8, &want, &strings);
 
     want = [_][]const u8{ "def", "Abc", "abc" };
-    std.sort.sort([]const u8, &strings, c, descendingCaseless);
+    std.mem.sort([]const u8, &strings, c, descendingCaseless);
     try std.testing.expectEqualSlices([]const u8, &want, &strings);
 }
 
@@ -472,14 +472,14 @@ test "caseless / markless sort functions" {
     var strings = [_][]const u8{ "ábc", "Abc", "abc" };
     const want = [_][]const u8{ "ábc", "Abc", "abc" };
 
-    std.sort.sort([]const u8, &strings, c, ascendingBase);
+    std.mem.sort([]const u8, &strings, c, ascendingBase);
     try std.testing.expectEqualSlices([]const u8, &want, &strings);
 
-    std.sort.sort([]const u8, &strings, c, descendingBase);
+    std.mem.sort([]const u8, &strings, c, descendingBase);
     try std.testing.expectEqualSlices([]const u8, &want, &strings);
 }
 
-/// An ascending sort for strings that works with `std.sort.sort`. This ignores case and any combining marks like
+/// An ascending sort for strings that works with `std.mem.sort`. This ignores case and any combining marks like
 /// accents.  Because the API requires this function to be infallible, it just returns `false` on errors.
 pub fn ascendingBase(self: Self, a: []const u8, b: []const u8) bool {
     const key_a = self.sortKey(self.ducet.allocator, a) catch return false;
@@ -490,7 +490,7 @@ pub fn ascendingBase(self: Self, a: []const u8, b: []const u8) bool {
     return primaryOrder(key_a, key_b) == .lt;
 }
 
-/// A descending sort for strings that works with `std.sort.sort`. This ignores case and any combining marks like
+/// A descending sort for strings that works with `std.mem.sort`. This ignores case and any combining marks like
 /// accents.  Because the API requires this function to be infallible, it just returns `false` on errors.
 pub fn descendingBase(self: Self, a: []const u8, b: []const u8) bool {
     const key_a = self.sortKey(self.ducet.allocator, a) catch return false;

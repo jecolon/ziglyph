@@ -196,7 +196,7 @@ const combinedTable = init: {
             @as(u9, graph[i]) << @enumToInt(tIndex.Graph) |
             @as(u9, symbol[i]) << @enumToInt(tIndex.Symbol);
     }
-    std.mem.set(u9, table[128..256], 0);
+    @memset(table[128..256], 0);
     break :init table;
 };
 

@@ -13,7 +13,7 @@ test "Segmentation" {
     _ = @import("ziglyph.zig").Sentence;
 }
 
-test "ziglyph" {
+test "ziglyph categories" {
     _ = @import("ziglyph.zig").letter;
     _ = @import("ziglyph.zig").mark;
     _ = @import("ziglyph.zig").number;
