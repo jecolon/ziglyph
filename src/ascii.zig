@@ -186,27 +186,27 @@ const combinedTable = init: {
     comptime var i = 0;
     inline while (i < 128) : (i += 1) {
         table[i] =
-            @as(u9, alpha[i]) << @enumToInt(tIndex.Alpha) |
-            @as(u9, hex[i]) << @enumToInt(tIndex.Hex) |
-            @as(u9, space[i]) << @enumToInt(tIndex.Space) |
-            @as(u9, digit[i]) << @enumToInt(tIndex.Digit) |
-            @as(u9, lower[i]) << @enumToInt(tIndex.Lower) |
-            @as(u9, upper[i]) << @enumToInt(tIndex.Upper) |
-            @as(u9, punct[i]) << @enumToInt(tIndex.Punct) |
-            @as(u9, graph[i]) << @enumToInt(tIndex.Graph) |
-            @as(u9, symbol[i]) << @enumToInt(tIndex.Symbol);
+            @as(u9, alpha[i]) << @intFromEnum(tIndex.Alpha) |
+            @as(u9, hex[i]) << @intFromEnum(tIndex.Hex) |
+            @as(u9, space[i]) << @intFromEnum(tIndex.Space) |
+            @as(u9, digit[i]) << @intFromEnum(tIndex.Digit) |
+            @as(u9, lower[i]) << @intFromEnum(tIndex.Lower) |
+            @as(u9, upper[i]) << @intFromEnum(tIndex.Upper) |
+            @as(u9, punct[i]) << @intFromEnum(tIndex.Punct) |
+            @as(u9, graph[i]) << @intFromEnum(tIndex.Graph) |
+            @as(u9, symbol[i]) << @intFromEnum(tIndex.Symbol);
     }
     @memset(table[128..256], 0);
     break :init table;
 };
 
 fn inTable(c: u8, t: tIndex) bool {
-    return (combinedTable[c] & (@as(u9, 1) << @enumToInt(t))) != 0;
+    return (combinedTable[c] & (@as(u9, 1) << @intFromEnum(t))) != 0;
 }
 
 pub fn isAlNum(c: u8) bool {
-    return (combinedTable[c] & ((@as(u8, 1) << @enumToInt(tIndex.Alpha)) |
-        @as(u8, 1) << @enumToInt(tIndex.Digit))) != 0;
+    return (combinedTable[c] & ((@as(u8, 1) << @intFromEnum(tIndex.Alpha)) |
+        @as(u8, 1) << @intFromEnum(tIndex.Digit))) != 0;
 }
 
 pub fn isAlpha(c: u8) bool {
