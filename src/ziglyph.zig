@@ -109,7 +109,7 @@ pub fn isGraphic(cp: u21) bool {
 }
 
 pub fn isAsciiGraphic(cp: u21) bool {
-    return ascii.isGraph(@intCast(u8, cp));
+    return ascii.isGraph(@as(u8, @intCast(cp)));
 }
 
 // `isHexDigit` detects hexadecimal code points.
@@ -128,7 +128,7 @@ pub fn isPrint(cp: u21) bool {
 }
 
 pub fn isAsciiPrint(cp: u21) bool {
-    return ascii.isPrint(@intCast(u8, cp));
+    return ascii.isPrint(@as(u8, @intCast(cp)));
 }
 
 /// `isControl` detects control characters.
@@ -137,7 +137,7 @@ pub fn isControl(cp: u21) bool {
 }
 
 pub fn isAsciiControl(cp: u21) bool {
-    return ascii.isCntrl(@intCast(u8, cp));
+    return ascii.isCntrl(@as(u8, @intCast(cp)));
 }
 
 pub fn isLetter(cp: u21) bool {
@@ -191,7 +191,7 @@ pub fn isPunct(cp: u21) bool {
 }
 
 pub fn isAsciiPunct(cp: u21) bool {
-    return ascii.isPunct(@intCast(u8, cp));
+    return ascii.isPunct(@as(u8, @intCast(cp)));
 }
 
 /// `isWhiteSpace` detects code points that have the Unicode *WhiteSpace* property.
@@ -200,7 +200,7 @@ pub fn isWhiteSpace(cp: u21) bool {
 }
 
 pub fn isAsciiWhiteSpace(cp: u21) bool {
-    return ascii.isSpace(@intCast(u8, cp));
+    return ascii.isSpace(@as(u8, @intCast(cp)));
 }
 
 // `isSymbol` detects symbols which may include code points commonly considered to be punctuation.
@@ -209,7 +209,7 @@ pub fn isSymbol(cp: u21) bool {
 }
 
 pub fn isAsciiSymbol(cp: u21) bool {
-    return ascii.isSymbol(@intCast(u8, cp));
+    return ascii.isSymbol(@as(u8, @intCast(cp)));
 }
 
 /// `isTitle` detects code points in titlecase, which may be different than uppercase.

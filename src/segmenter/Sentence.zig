@@ -259,9 +259,9 @@ pub const SentenceIterator = struct {
 
         if (n < 0) {
             if (index == 0 or -%n > index) return null;
-            index -= @intCast(usize, -%n);
+            index -= @as(usize, @intCast(-%n));
         } else {
-            const un = @intCast(usize, n);
+            const un = @as(usize, @intCast(n));
             if (index + un >= self.tokens.items.len) return null;
             index += un;
         }
@@ -670,9 +670,9 @@ pub fn ComptimeSentenceIterator(comptime str: []const u8) type {
 
             if (n < 0) {
                 if (index == 0 or -%n > index) return null;
-                index -= @intCast(usize, -%n);
+                index -= @as(usize, @intCast(-%n));
             } else {
-                const un = @intCast(usize, n);
+                const un = @as(usize, @intCast(n));
                 if (index + un >= self.tokens.len) return null;
                 index += un;
             }

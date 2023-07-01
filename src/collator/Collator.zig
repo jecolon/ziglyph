@@ -67,7 +67,7 @@ pub fn init(allocator: std.mem.Allocator) !Self {
 
         while (cp_diff_strs.next()) |cp_diff_str| : (i += 1) {
             cp_diff = try std.fmt.parseInt(isize, cp_diff_str, 16);
-            prev_cp = @intCast(u21, @as(isize, prev_cp) + cp_diff);
+            prev_cp = @as(u21, @intCast(@as(isize, prev_cp) + cp_diff));
             cps[i] = prev_cp;
         }
 
@@ -78,7 +78,7 @@ pub fn init(allocator: std.mem.Allocator) !Self {
             // i.e. 3D3;-42
             if (std.mem.indexOf(u8, element_diff_str, ".") == null) {
                 l1_diff = try std.fmt.parseInt(isize, element_diff_str, 16);
-                prev_l1 = @intCast(u16, @as(isize, prev_l1) + l1_diff);
+                prev_l1 = @as(u16, @intCast(@as(isize, prev_l1) + l1_diff));
 
                 elements[i] = Element{
                     .l1 = prev_l1,
@@ -91,7 +91,7 @@ pub fn init(allocator: std.mem.Allocator) !Self {
 
             var weight_strs = std.mem.split(u8, element_diff_str, ".");
             l1_diff = try std.fmt.parseInt(isize, weight_strs.next().?, 16);
-            prev_l1 = @intCast(u16, @as(isize, prev_l1) + l1_diff);
+            prev_l1 = @as(u16, @intCast(@as(isize, prev_l1) + l1_diff));
             elements[i] = Element{ .l1 = prev_l1 };
 
             var j: usize = 0;
@@ -143,21 +143,21 @@ fn implicitWeight(self: Self, cp: u21) [18]?Element {
 
     if (props.isUnifiedIdeograph(cp) and ((0x4E00 <= cp and cp <= 0x9FFF) or (0xF900 <= cp and cp <= 0xFAFF))) {
         base = 0xFB40;
-        aaaa = base + @intCast(u16, (cp >> 15));
-        bbbb = @intCast(u16, (cp & 0x7FFF)) | 0x8000;
+        aaaa = base + @as(u16, @intCast((cp >> 15)));
+        bbbb = @as(u16, @intCast((cp & 0x7FFF))) | 0x8000;
     } else if (props.isUnifiedIdeograph(cp) and !((0x4E00 <= cp and cp <= 0x9FFF) or (0xF900 <= cp and cp <= 0xFAFF))) {
         base = 0xFB80;
-        aaaa = base + @intCast(u16, (cp >> 15));
-        bbbb = @intCast(u16, (cp & 0x7FFF)) | 0x8000;
+        aaaa = base + @as(u16, @intCast((cp >> 15)));
+        bbbb = @as(u16, @intCast((cp & 0x7FFF))) | 0x8000;
     } else {
         for (self.implicits) |implicit| {
             if (implicit.start <= cp and cp <= implicit.end) {
                 aaaa = implicit.base;
 
                 if (0x18D00 <= cp and cp <= 0x18D8F) {
-                    bbbb = @truncate(u16, (cp - 17000)) | 0x8000;
+                    bbbb = @as(u16, @truncate((cp - 17000))) | 0x8000;
                 } else {
-                    bbbb = @intCast(u16, (cp - implicit.start)) | 0x8000;
+                    bbbb = @as(u16, @intCast((cp - implicit.start))) | 0x8000;
                 }
 
                 break;
@@ -166,8 +166,8 @@ fn implicitWeight(self: Self, cp: u21) [18]?Element {
 
         if (aaaa == 0) {
             base = 0xFBC0;
-            aaaa = base + @intCast(u16, (cp >> 15));
-            bbbb = @intCast(u16, (cp & 0x7FFF)) | 0x8000;
+            aaaa = base + @as(u16, @intCast((cp >> 15)));
+            bbbb = @as(u16, @intCast((cp & 0x7FFF))) | 0x8000;
         }
     }
 

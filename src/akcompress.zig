@@ -145,7 +145,7 @@ fn makeDiffs() !void {
             const cp = try std.fmt.parseInt(isize, cp_str, 16);
 
             if (i == 0) {
-                if (!norm_props.isNfd(@intCast(u21, cp))) continue :lines;
+                if (!norm_props.isNfd(@as(u21, @intCast(cp)))) continue :lines;
             } else {
                 try writer.writeByte(' ');
             }

@@ -13,7 +13,7 @@ pub fn isSymbol(cp: u21) bool {
 
 /// `isAsciiSymbol` detects ASCII only symbols.
 pub fn isAsciiSymbol(cp: u21) bool {
-    return ascii.isSymbol(@intCast(u8, cp));
+    return ascii.isSymbol(@as(u8, @intCast(cp)));
 }
 
 test "symbol isSymbol" {
