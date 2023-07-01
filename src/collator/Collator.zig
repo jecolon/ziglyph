@@ -67,7 +67,7 @@ pub fn init(allocator: std.mem.Allocator) !Self {
 
         while (cp_diff_strs.next()) |cp_diff_str| : (i += 1) {
             cp_diff = try std.fmt.parseInt(isize, cp_diff_str, 16);
-            prev_cp = @as(u21, @intCast(@as(isize, prev_cp) + cp_diff));
+            prev_cp = @intCast(@as(isize, prev_cp) + cp_diff);
             cps[i] = prev_cp;
         }
 
@@ -78,7 +78,7 @@ pub fn init(allocator: std.mem.Allocator) !Self {
             // i.e. 3D3;-42
             if (std.mem.indexOf(u8, element_diff_str, ".") == null) {
                 l1_diff = try std.fmt.parseInt(isize, element_diff_str, 16);
-                prev_l1 = @as(u16, @intCast(@as(isize, prev_l1) + l1_diff));
+                prev_l1 = @intCast(@as(isize, prev_l1) + l1_diff);
 
                 elements[i] = Element{
                     .l1 = prev_l1,
@@ -91,7 +91,7 @@ pub fn init(allocator: std.mem.Allocator) !Self {
 
             var weight_strs = std.mem.split(u8, element_diff_str, ".");
             l1_diff = try std.fmt.parseInt(isize, weight_strs.next().?, 16);
-            prev_l1 = @as(u16, @intCast(@as(isize, prev_l1) + l1_diff));
+            prev_l1 = @intCast(@as(isize, prev_l1) + l1_diff);
             elements[i] = Element{ .l1 = prev_l1 };
 
             var j: usize = 0;

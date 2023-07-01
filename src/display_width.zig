@@ -91,7 +91,7 @@ pub fn strWidth(str: []const u8, am_width: AmbiguousWidth) !usize {
             total += 1;
         }
 
-        return if (total > 0) @as(usize, @intCast(total)) else 0;
+        return if (total > 0) @intCast(total) else 0;
     }
 
     var giter = try GraphemeIterator.init(str);
@@ -116,7 +116,7 @@ pub fn strWidth(str: []const u8, am_width: AmbiguousWidth) !usize {
         }
     }
 
-    return if (total > 0) @as(usize, @intCast(total)) else 0;
+    return if (total > 0) @intCast(total) else 0;
 }
 
 /// centers `str` in a new string of width `total_width` (in display cells) using `pad` as padding.
