@@ -16,7 +16,7 @@ pub fn isPunct(cp: u21) bool {
 
 /// `isAsciiPunct` detects ASCII only punctuation.
 pub fn isAsciiPunct(cp: u21) bool {
-    return ascii.isPunct(@intCast(u8, cp));
+    return ascii.isPunct(@intCast(cp));
 }
 
 test "punct isPunct" {
