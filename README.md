@@ -19,10 +19,12 @@ they still will occur until we reach 1.0.
 In a `build.zig.zon` file add the following to the dependencies object. Currently only tar.gz urls are supported.
 ```zig
 .ziglyph = .{
-    .url = "https://github.com/jecolon/ziglyph/archive/<FULL COMMIT SHA>.tar.gz",
-    .hash = "sha2-256 hash of the tar.gz file",
+    .url = "https://github.com/jecolon/ziglyph/archive/refs/heads/main.tar.gz",
+    .hash = "1220400c10661a8b8c88bed1c195b0f71fc2636a044fd312cc0d9b2b46232424b258",
 }
 ```
+
+If you get a hash mismatch error, update the hash field with whatever hash the compiler tells you it found.
 
 Then in your `build.zig` file add the following to the `exe` section for the executable where you wish to have Ziglyph available.
 ```zig
@@ -30,7 +32,9 @@ const ziglyph = b.dependency("ziglyph", .{
     .target = target,
     .optimize = optimize,
 });
+// for exe, lib, tests, etc.
 exe.addModule("ziglyph", ziglyph.module("ziglyph"));
+exe.linkLibrary(ziglyph.artifact("ziglyph"));
 ```
 
 Now in the code, you can import components like this:
