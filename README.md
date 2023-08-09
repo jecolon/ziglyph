@@ -45,25 +45,6 @@ const letter = @import("ziglyph").letter; // or const letter = ziglyph.letter;
 const number = @import("ziglyph").number; // or const number = ziglyph.number;
 ```
 
-### Using Zigmod
-
-```sh
-$ zigmod aq add 1/jecolon/ziglyph
-$ zigmod fetch
-```
-
-Now in your `build.zig` you add this import:
-
-```zig
-const deps = @import("deps.zig");
-```
-
-In the `exe` section for the executable where you wish to have Zigstr available, add:
-
-```zig
-deps.addAllTo(exe);
-```
-
 ### Using the `ziglyph` Namespace
 The `ziglyph` namespace provides convenient acces to the most frequently-used functions related to Unicode
 code points and strings.
