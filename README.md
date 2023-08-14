@@ -11,6 +11,10 @@ them work.
 This is pre-1.0 software. Although breaking changes are less frequent with each minor version release,
 they will still occur until we reach 1.0.
 
+## Zig Version
+The main branch follows Zig's master branch, which is the latest dev version of Zig. There will also be 
+branches and tags that will work with the previous two (2) stable Zig releases.
+
 ## Integrating Ziglyph in your Project
 ### Zig Package Manager
 In a `build.zig.zon` file add the following to the dependencies object. Currently only tar.gz urls are supported.
