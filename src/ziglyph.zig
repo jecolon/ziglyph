@@ -76,18 +76,18 @@ pub fn isCased(cp: u21) bool {
 }
 
 /// `isCasedStr` returns true when all code points in `str` are either lower, title, or uppercase.
-pub fn isCasedStr(str: []const u8) !bool {
-    var iter = (try unicode.Utf8View.init(str)).iterator();
+pub fn isCasedStr(str: []const u8) bool {
+    var iter = CodePointIterator{ .bytes = str };
 
-    return while (iter.nextCodepoint()) |cp| {
-        if (!isCased(cp)) break false;
+    return while (iter.next()) |cp| {
+        if (!isCased(cp.code)) break false;
     } else true;
 }
 
 test "ziglyph isCasedStr" {
-    try testing.expect(try isCasedStr("abc"));
-    try testing.expect(!try isCasedStr("abc123"));
-    try testing.expect(!try isCasedStr("123"));
+    try testing.expect(isCasedStr("abc"));
+    try testing.expect(!isCasedStr("abc123"));
+    try testing.expect(!isCasedStr("123"));
 }
 
 /// `isDecimal` detects all Unicode decimal numbers.
@@ -158,18 +158,18 @@ pub fn isAsciiLower(cp: u21) bool {
 }
 
 /// `isLowerStr` returns true when all code points in `s` are lowercase.
-pub fn isLowerStr(s: []const u8) !bool {
-    var iter = (try unicode.Utf8View.init(s)).iterator();
+pub fn isLowerStr(str: []const u8) bool {
+    var iter = CodePointIterator{ .bytes = str };
 
-    return while (iter.nextCodepoint()) |cp| {
-        if (isCased(cp) and !isLower(cp)) break false;
+    return while (iter.next()) |cp| {
+        if (isCased(cp.code) and !isLower(cp.code)) break false;
     } else true;
 }
 
 test "ziglyph isLowerStr" {
-    try testing.expect(try isLowerStr("abc"));
-    try testing.expect(try isLowerStr("abc123"));
-    try testing.expect(!try isLowerStr("Abc123"));
+    try testing.expect(isLowerStr("abc"));
+    try testing.expect(isLowerStr("abc123"));
+    try testing.expect(!isLowerStr("Abc123"));
 }
 
 /// `isMark` detects Unicode marks (combining, spacing, etc.)
@@ -227,18 +227,18 @@ pub fn isAsciiUpper(cp: u21) bool {
 }
 
 /// `isUpperStr` returns true when all code points in `str` are uppercase.
-pub fn isUpperStr(str: []const u8) !bool {
-    var iter = (try unicode.Utf8View.init(str)).iterator();
+pub fn isUpperStr(str: []const u8) bool {
+    var iter = CodePointIterator{ .bytes = str };
 
-    return while (iter.nextCodepoint()) |cp| {
-        if (isCased(cp) and !isUpper(cp)) break false;
+    return while (iter.next()) |cp| {
+        if (isCased(cp.code) and !isUpper(cp.code)) break false;
     } else true;
 }
 
 test "ziglyph isUpperStr" {
-    try testing.expect(try isUpperStr("ABC"));
-    try testing.expect(try isUpperStr("ABC123"));
-    try testing.expect(!try isUpperStr("abc123"));
+    try testing.expect(isUpperStr("ABC"));
+    try testing.expect(isUpperStr("ABC123"));
+    try testing.expect(!isUpperStr("abc123"));
 }
 
 /// `toLower` returns the lowercase code point for the given code point. It returns the same
@@ -256,10 +256,10 @@ pub fn toCaseFoldStr(allocator: std.mem.Allocator, str: []const u8) ![]u8 {
     var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
     var buf: [4]u8 = undefined;
-    var iter = (try unicode.Utf8View.init(str)).iterator();
+    var iter = CodePointIterator{ .bytes = str };
 
-    while (iter.nextCodepoint()) |cp| {
-        const cf = letter.toCaseFold(cp);
+    while (iter.next()) |cp| {
+        const cf = letter.toCaseFold(cp.code);
         for (cf) |cfcp| {
             if (cfcp == 0) break;
             const len = try unicode.utf8Encode(cfcp, &buf);
@@ -282,10 +282,10 @@ pub fn toLowerStr(allocator: std.mem.Allocator, str: []const u8) ![]u8 {
     var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
     var buf: [4]u8 = undefined;
-    var iter = (try unicode.Utf8View.init(str)).iterator();
+    var iter = CodePointIterator{ .bytes = str };
 
-    while (iter.nextCodepoint()) |cp| {
-        const len = try unicode.utf8Encode(toLower(cp), &buf);
+    while (iter.next()) |cp| {
+        const len = try unicode.utf8Encode(toLower(cp.code), &buf);
         try result.appendSlice(buf[0..len]);
     }
 
@@ -360,10 +360,10 @@ pub fn toUpperStr(allocator: std.mem.Allocator, str: []const u8) ![]u8 {
     var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
     var buf: [4]u8 = undefined;
-    var iter = (try unicode.Utf8View.init(str)).iterator();
+    var iter = CodePointIterator{ .bytes = str };
 
-    while (iter.nextCodepoint()) |cp| {
-        const len = try unicode.utf8Encode(toUpper(cp), &buf);
+    while (iter.next()) |cp| {
+        const len = try unicode.utf8Encode(toUpper(cp.code), &buf);
         try result.appendSlice(buf[0..len]);
     }
 
