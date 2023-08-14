@@ -5,6 +5,7 @@
 const std = @import("std");
 
 const ziglyph = @import("../ziglyph.zig");
+const CodePointIterator = ziglyph.CodePointIterator;
 const case_fold_map = ziglyph.case_fold_map;
 const ccc_map = ziglyph.combining_map;
 const hangul_map = ziglyph.hangul_map;
@@ -265,10 +266,9 @@ fn onlyAscii(str: []const u8) bool {
 }
 
 fn onlyLatin1(str: []const u8) !bool {
-    const view = try std.unicode.Utf8View.init(str);
-    var cp_iter = view.iterator();
-    return while (cp_iter.nextCodepoint()) |cp| {
-        if (cp > 256) break false;
+    var cp_iter = CodePointIterator{ .bytes = str };
+    return while (cp_iter.next()) |cp| {
+        if (cp.code > 256) break false;
     } else true;
 }
 
@@ -314,10 +314,9 @@ fn nfxd(self: Self, allocator: std.mem.Allocator, str: []const u8, form: Form) !
     var dcp_list = try std.ArrayList(u21).initCapacity(allocator, str.len + str.len / 2);
     defer dcp_list.deinit();
 
-    const view = try std.unicode.Utf8View.init(str);
-    var cp_iter = view.iterator();
-    while (cp_iter.nextCodepoint()) |cp| {
-        const dc = self.decompose(cp, form);
+    var cp_iter = CodePointIterator{ .bytes = str };
+    while (cp_iter.next()) |cp| {
+        const dc = self.decompose(cp.code, form);
         const slice = for (dc.cps, 0..) |dcp, i| {
             if (dcp == 0) break dc.cps[0..i];
         } else dc.cps[0..];
@@ -423,13 +422,12 @@ fn nfxc(self: Self, allocator: std.mem.Allocator, str: []const u8, form: Form) !
     defer d_result.deinit();
 
     // Get code points.
-    const view = try std.unicode.Utf8View.init(d_result.slice);
-    var cp_iter = view.iterator();
+    var cp_iter = CodePointIterator{ .bytes = d_result.slice };
 
     var d_list = try std.ArrayList(u21).initCapacity(allocator, d_result.slice.len);
     defer d_list.deinit();
 
-    while (cp_iter.nextCodepoint()) |cp| d_list.appendAssumeCapacity(cp);
+    while (cp_iter.next()) |cp| d_list.appendAssumeCapacity(cp.code);
 
     // Compose
     const tombstone = 0xe000; // Start of BMP Private Use Area
@@ -692,12 +690,11 @@ pub fn eqlIdentifiers(allocator: std.mem.Allocator, a: []const u8, b: []const u8
     };
 
     for (items) |item| {
-        const view = try std.unicode.Utf8View.init(item.str);
-        var cp_iter = view.iterator();
-        while (cp_iter.nextCodepoint()) |cp| {
-            const nfkcf = norm_props.toNfkcCaseFold(cp);
+        var cp_iter = CodePointIterator{ .bytes = item.str };
+        while (cp_iter.next()) |cp| {
+            const nfkcf = norm_props.toNfkcCaseFold(cp.code);
             switch (nfkcf.len) {
-                0 => item.list.appendAssumeCapacity(cp), // maps to itself
+                0 => item.list.appendAssumeCapacity(cp.code), // maps to itself
                 1 => {}, // ignore
                 else => {
                     // Got list; parse and add it. "x,y,z..."
@@ -755,11 +752,10 @@ fn requiresNfdBeforeCaseFold(cp: u21) bool {
 }
 
 fn requiresPreNfd(str: []const u8) !bool {
-    const view = try std.unicode.Utf8View.init(str);
-    var cp_iter = view.iterator();
+    var cp_iter = CodePointIterator{ .bytes = str };
 
-    return while (cp_iter.nextCodepoint()) |cp| {
-        if (requiresNfdBeforeCaseFold(cp)) break true;
+    return while (cp_iter.next()) |cp| {
+        if (requiresNfdBeforeCaseFold(cp.code)) break true;
     } else false;
 }
 
@@ -809,13 +805,12 @@ fn getTrailCcc(self: Self, cp: u21) u8 {
 /// Fast check to detect if a string is already in NFC or NFD form.
 pub fn isFcd(self: Self, str: []const u8) !bool {
     var prev_ccc: u8 = 0;
-    const view = try std.unicode.Utf8View.init(str);
-    var cp_iter = view.iterator();
+    var cp_iter = CodePointIterator{ .bytes = str };
 
-    return while (cp_iter.nextCodepoint()) |cp| {
-        const ccc = self.getLeadCcc(cp);
+    return while (cp_iter.next()) |cp| {
+        const ccc = self.getLeadCcc(cp.code);
         if (ccc != 0 and ccc < prev_ccc) break false;
-        prev_ccc = self.getTrailCcc(cp);
+        prev_ccc = self.getTrailCcc(cp.code);
     } else true;
 }
 
