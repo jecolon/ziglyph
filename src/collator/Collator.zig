@@ -1,6 +1,7 @@
 const std = @import("std");
 
 const ccc_map = @import("../ziglyph.zig").combining_map;
+const CodePointIterator = @import("../ziglyph.zig").CodePointIterator;
 const Normalizer = @import("../ziglyph.zig").Normalizer;
 const props = @import("../ziglyph.zig").prop_list;
 
@@ -186,9 +187,8 @@ fn getElements(self: Self, allocator: std.mem.Allocator, str: []const u8) ![]con
 
     var cp_list = try std.ArrayList(u21).initCapacity(allocator, normalized.slice.len);
     defer cp_list.deinit();
-    const view = try std.unicode.Utf8View.init(normalized.slice);
-    var cp_iter = view.iterator();
-    while (cp_iter.nextCodepoint()) |cp| cp_list.appendAssumeCapacity(cp);
+    var cp_iter = CodePointIterator{ .bytes = normalized.slice };
+    while (cp_iter.next()) |cp| cp_list.appendAssumeCapacity(cp.code);
 
     var all_elements = std.ArrayList(Element).init(allocator);
     defer all_elements.deinit();
