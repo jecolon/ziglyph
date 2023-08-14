@@ -109,21 +109,21 @@ test "normalizeTo" {
 
 test "GraphemeIterator" {
     const input = "H\u{0065}\u{0301}llo";
-    var iter = try GraphemeIterator.init(input);
+    var iter = GraphemeIterator.init(input);
 
     const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
 
     var i: usize = 0;
     while (iter.next()) |grapheme| : (i += 1) {
-        try testing.expect(grapheme.eql(want[i]));
+        try testing.expect(grapheme.eql(input, want[i]));
     }
 
     // Need your grapheme clusters at compile time?
     comptime {
-        var ct_iter = try GraphemeIterator.init(input);
+        var ct_iter = GraphemeIterator.init(input);
         var j = 0;
         while (ct_iter.next()) |grapheme| : (j += 1) {
-            try testing.expect(grapheme.eql(want[j]));
+            try testing.expect(grapheme.eql(input, want[j]));
         }
     }
 }

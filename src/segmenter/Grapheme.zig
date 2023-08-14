@@ -9,17 +9,17 @@ const unicode = std.unicode;
 const CodePoint = @import("CodePoint.zig");
 const CodePointIterator = CodePoint.CodePointIterator;
 const readCodePoint = CodePoint.readCodePoint;
-const emoji = @import("../ziglyph.zig").emoji_data;
-const gbp = @import("../ziglyph.zig").grapheme_break_property;
+const emoji = @import("../autogen/emoji_data.zig");
+const gbp = @import("../autogen/grapheme_break_property.zig");
 
 pub const Grapheme = @This();
 
-bytes: []const u8,
+len: usize,
 offset: usize,
 
 /// `eql` comparse `str` with the bytes of this grapheme cluster for equality.
-pub fn eql(self: Grapheme, str: []const u8) bool {
-    return mem.eql(u8, self.bytes, str);
+pub fn eql(self: Grapheme, src: []const u8, other: []const u8) bool {
+    return mem.eql(u8, src[self.offset .. self.offset + self.len], other);
 }
 
 /// `GraphemeIterator` iterates a sting one grapheme cluster at-a-time.
@@ -29,122 +29,160 @@ pub const GraphemeIterator = struct {
 
     const Self = @This();
 
-    pub fn init(str: []const u8) !Self {
-        if (!unicode.utf8ValidateSlice(str)) return error.InvalidUtf8;
+    /// Assumes `src` is valid UTF-8.
+    pub fn init(str: []const u8) Self {
         var self = Self{ .cp_iter = CodePointIterator{ .bytes = str } };
         self.buf[1] = self.cp_iter.next();
 
         return self;
     }
 
+    fn advance(self: *Self) void {
+        self.buf[0] = self.buf[1];
+        self.buf[1] = self.cp_iter.next();
+    }
+
     pub fn next(self: *Self) ?Grapheme {
-        const cp = self.advance() orelse return null;
-        const start = cp.offset;
-        var end = cp.end();
+        self.advance();
+        const cp = self.buf[0] orelse return null;
 
-        if (cp.scalar == '\x0d') {
-            if (self.peek()) |pcp| {
-                if (pcp.scalar == '\x0a') {
-                    end = pcp.end();
-                    _ = self.advance();
+        // If at end
+        if (self.buf[1] == null) return Grapheme{ .len = cp.len, .offset = cp.offset };
+
+        const code = cp.code;
+        const gc_start = cp.offset;
+        var gc_len: usize = cp.len;
+
+        // Instant breakers
+        // CR
+        if (code == '\x0d') {
+            if (self.buf[1].?.code == '\x0a') {
+                // CRLF
+                gc_len += 1;
+                self.advance();
+            }
+
+            return Grapheme{ .len = gc_len, .offset = gc_start };
+        }
+        // LF
+        if (code == '\x0a') return Grapheme{ .len = gc_len, .offset = gc_start };
+        // Control
+        if (gbp.isControl(code)) return Grapheme{ .len = gc_len, .offset = gc_start };
+
+        // Common chars
+        if (code < 0xa9) {
+            // Extend / ignorables loop
+            while (self.buf[1]) |next_cp| {
+                const next_code = next_cp.code;
+
+                if (next_code >= 0x300 and isIgnorable(next_code)) {
+                    gc_len += next_cp.len;
+                    self.advance();
+                } else {
+                    break;
                 }
             }
 
-            return Grapheme{
-                .bytes = self.cp_iter.bytes[start..end],
-                .offset = start,
-            };
+            return Grapheme{ .len = gc_len, .offset = gc_start };
         }
 
-        if (cp.scalar == '\x0a' or gbp.isControl(cp.scalar)) {
-            return Grapheme{
-                .bytes = self.cp_iter.bytes[start..end],
-                .offset = start,
-            };
+        // Emoji
+        if (emoji.isExtendedPictographic(code)) {
+            var after_zwj = false;
+
+            // Extend / ignorables loop
+            while (self.buf[1]) |next_cp| {
+                const next_code = next_cp.code;
+
+                if (next_code >= 0x300 and
+                    after_zwj and
+                    emoji.isExtendedPictographic(next_code))
+                {
+                    gc_len += next_cp.len;
+                    self.advance();
+                    after_zwj = false;
+                } else if (next_code >= 0x300 and isIgnorable(next_code)) {
+                    gc_len += next_cp.len;
+                    self.advance();
+                    if (next_code == '\u{200d}') after_zwj = true;
+                } else {
+                    break;
+                }
+            }
+
+            return Grapheme{ .len = gc_len, .offset = gc_start };
         }
 
-        if (gbp.isPrepend(cp.scalar)) {
-            if (self.peek()) |pcp| {
-                if (!cpIsBreaker(pcp.scalar)) {
-                    end = pcp.end();
-                    _ = self.advance();
+        // Han
+        if (0x1100 <= code and code <= 0xd7c6) {
+            const next_cp = self.buf[1].?;
+            const next_code = next_cp.code;
+
+            if (gbp.isL(code)) {
+                if (next_code >= 0x1100 and
+                    (gbp.isL(next_code) or
+                    gbp.isV(next_code) or
+                    gbp.isLv(next_code) or
+                    gbp.isLvt(next_code)))
+                {
+                    gc_len += next_cp.len;
+                    self.advance();
+                }
+            } else if (gbp.isLv(code) or gbp.isV(code)) {
+                if (next_code >= 0x1100 and
+                    (gbp.isV(next_code) or
+                    gbp.isT(next_code)))
+                {
+                    gc_len += next_cp.len;
+                    self.advance();
+                }
+            } else if (gbp.isLvt(code) or gbp.isT(code)) {
+                if (next_code >= 0x1100 and gbp.isT(next_cp.code)) {
+                    gc_len += next_cp.len;
+                    self.advance();
+                }
+            }
+        } else if (0x600 <= code and code <= 0x11f02) {
+            if (gbp.isPrepend(code)) {
+                const next_cp = self.buf[1].?;
+
+                if (isBreaker(next_cp.code)) {
+                    return Grapheme{ .len = gc_len, .offset = gc_start };
+                } else {
+                    gc_len += next_cp.len;
+                    self.advance();
+                }
+            }
+        } else if (0x1f1e6 <= code and code <= 0x1f1ff) {
+            if (gbp.isRegionalIndicator(code)) {
+                const next_cp = self.buf[1].?;
+                const next_code = next_cp.code;
+
+                if (next_code >= 0x1f1e6 and gbp.isRegionalIndicator(next_cp.code)) {
+                    gc_len += next_cp.len;
+                    self.advance();
                 }
             }
         }
 
-        if (gbp.isRegionalIndicator(cp.scalar)) {
-            if (self.peek()) |pcp| {
-                if (gbp.isRegionalIndicator(pcp.scalar)) {
-                    end = pcp.end();
-                    _ = self.advance();
-                }
-            }
-        }
+        // Extend / ignorables loop
+        while (self.buf[1]) |next_cp| {
+            const next_code = next_cp.code;
 
-        if (gbp.isL(cp.scalar)) {
-            if (self.peek()) |pcp| {
-                if (gbp.isL(pcp.scalar) or gbp.isV(pcp.scalar) or gbp.isLv(pcp.scalar) or gbp.isLvt(pcp.scalar)) {
-                    end = pcp.end();
-                    _ = self.advance();
-                }
-            }
-        }
-
-        if (gbp.isLv(cp.scalar) or gbp.isV(cp.scalar)) {
-            if (self.peek()) |pcp| {
-                if (gbp.isV(pcp.scalar) or gbp.isT(pcp.scalar)) {
-                    end = pcp.end();
-                    _ = self.advance();
-                }
-            }
-        }
-
-        if (gbp.isLvt(cp.scalar) or gbp.isT(cp.scalar)) {
-            if (self.peek()) |pcp| {
-                if (gbp.isT(pcp.scalar)) {
-                    end = pcp.end();
-                    _ = self.advance();
-                }
-            }
-        }
-
-        const after_emoji = emoji.isExtendedPictographic(cp.scalar);
-        var after_zwj = false;
-
-        while (self.peek()) |pcp| {
-            if (after_emoji and after_zwj and emoji.isExtendedPictographic(pcp.scalar)) {
-                end = pcp.end();
-                _ = self.advance();
-                after_zwj = false;
-            } else if (cpIsIgnorable(pcp.scalar)) {
-                end = pcp.end();
-                _ = self.advance();
-                if (pcp.scalar == '\u{200d}') after_zwj = true;
+            if (next_code >= 0x300 and isIgnorable(next_code)) {
+                gc_len += next_cp.len;
+                self.advance();
             } else {
                 break;
             }
         }
 
-        return Grapheme{
-            .bytes = self.cp_iter.bytes[start..end],
-            .offset = start,
-        };
-    }
-
-    fn advance(self: *Self) ?CodePoint {
-        self.buf[0] = self.buf[1];
-        self.buf[1] = self.cp_iter.next();
-
-        return self.buf[0];
-    }
-
-    fn peek(self: Self) ?CodePoint {
-        return self.buf[1];
+        return Grapheme{ .len = gc_len, .offset = gc_start };
     }
 };
 
 /// `StreamingGraphemeIterator` iterates a `std.io.Reader` one grapheme cluster at-a-time.
-/// Note that, given the steaming context, the `offset` field of the returned `Grapheme`s is always 0.
+/// Note that, given the steaming context, each grapheme cluster is returned as a slice of bytes.
 pub fn StreamingGraphemeIterator(comptime T: type) type {
     return struct {
         allocator: std.mem.Allocator,
@@ -160,95 +198,133 @@ pub fn StreamingGraphemeIterator(comptime T: type) type {
             return self;
         }
 
-        pub fn next(self: *Self) !?Grapheme {
-            const cp = (try self.advance()) orelse return null;
+        /// Caller must free returned bytes with `allocator` passed to `init`.
+        pub fn next(self: *Self) !?[]u8 {
+            const code = (try self.advance()) orelse return null;
 
             var all_bytes = std.ArrayList(u8).init(self.allocator);
-            try encode_and_append(cp, &all_bytes);
+            errdefer all_bytes.deinit();
 
-            if (cp == '\x0d') {
-                if (self.peek()) |pcp| {
-                    if (pcp == '\x0a') {
-                        try encode_and_append(pcp, &all_bytes);
-                        _ = self.advance() catch unreachable;
-                    }
-                }
+            try encode_and_append(code, &all_bytes);
 
-                return Grapheme{
-                    .bytes = try all_bytes.toOwnedSlice(),
-                    .offset = 0,
-                };
-            }
+            // If at end
+            if (self.buf[1] == null) return try all_bytes.toOwnedSlice();
 
-            if (cp == '\x0a' or gbp.isControl(cp)) {
-                return Grapheme{
-                    .bytes = try all_bytes.toOwnedSlice(),
-                    .offset = 0,
-                };
-            }
-
-            if (gbp.isPrepend(cp)) {
-                if (self.peek()) |pcp| {
-                    if (!cpIsBreaker(pcp)) {
-                        try encode_and_append(pcp, &all_bytes);
-                        _ = self.advance() catch unreachable;
-                    }
-                }
-            }
-
-            if (gbp.isRegionalIndicator(cp)) {
-                if (self.peek()) |pcp| {
-                    if (gbp.isRegionalIndicator(pcp)) {
-                        try encode_and_append(pcp, &all_bytes);
-                        _ = self.advance() catch unreachable;
-                    }
-                }
-            }
-
-            if (gbp.isL(cp)) {
-                if (self.peek()) |pcp| {
-                    if (gbp.isL(pcp) or gbp.isV(pcp) or gbp.isLv(pcp) or gbp.isLvt(pcp)) {
-                        try encode_and_append(pcp, &all_bytes);
-                        _ = self.advance() catch unreachable;
-                    }
-                }
-            }
-
-            if (gbp.isLv(cp) or gbp.isV(cp)) {
-                if (self.peek()) |pcp| {
-                    if (gbp.isV(pcp) or gbp.isT(pcp)) {
-                        try encode_and_append(pcp, &all_bytes);
-                        _ = self.advance() catch unreachable;
-                    }
-                }
-            }
-
-            if (gbp.isLvt(cp) or gbp.isT(cp)) {
-                if (self.peek()) |pcp| {
-                    if (gbp.isT(pcp)) {
-                        try encode_and_append(pcp, &all_bytes);
-                        _ = self.advance() catch unreachable;
-                    }
-                }
-            }
-
-            const after_emoji = emoji.isExtendedPictographic(cp);
-            var after_zwj = false;
-
-            while (self.peek()) |pcp| {
-                if (cpIsIgnorable(pcp) or (after_emoji and after_zwj and emoji.isExtendedPictographic(pcp))) {
-                    try encode_and_append(pcp, &all_bytes);
+            // Instant breakers
+            // CR
+            if (code == '\x0d') {
+                if (self.buf[1].? == '\x0a') {
+                    // CRLF
+                    try encode_and_append(self.buf[1].?, &all_bytes);
                     _ = self.advance() catch unreachable;
-                    if (pcp == '\u{200d}') after_zwj = true;
+                }
+
+                return try all_bytes.toOwnedSlice();
+            }
+            // LF
+            if (code == '\x0a') return try all_bytes.toOwnedSlice();
+            // Control
+            if (gbp.isControl(code)) return try all_bytes.toOwnedSlice();
+
+            // Common chars
+            if (code < 0xa9) {
+                // Extend / ignorables loop
+                while (self.buf[1]) |next_cp| {
+                    if (next_cp >= 0x300 and isIgnorable(next_cp)) {
+                        try encode_and_append(next_cp, &all_bytes);
+                        _ = self.advance() catch unreachable;
+                    } else {
+                        break;
+                    }
+                }
+
+                return try all_bytes.toOwnedSlice();
+            }
+
+            if (emoji.isExtendedPictographic(code)) {
+                var after_zwj = false;
+
+                // Extend / ignorables loop
+                while (self.buf[1]) |next_cp| {
+                    if (next_cp >= 0x300 and
+                        after_zwj and
+                        emoji.isExtendedPictographic(next_cp))
+                    {
+                        try encode_and_append(next_cp, &all_bytes);
+                        _ = self.advance() catch unreachable;
+                        after_zwj = false;
+                    } else if (next_cp >= 0x300 and isIgnorable(next_cp)) {
+                        try encode_and_append(next_cp, &all_bytes);
+                        _ = self.advance() catch unreachable;
+                        if (next_cp == '\u{200d}') after_zwj = true;
+                    } else {
+                        break;
+                    }
+                }
+
+                return try all_bytes.toOwnedSlice();
+            }
+
+            if (0x1100 <= code and code <= 0xd7c6) {
+                const next_cp = self.buf[1].?;
+
+                if (gbp.isL(code)) {
+                    if (next_cp >= 0x1100 and
+                        (gbp.isL(next_cp) or
+                        gbp.isV(next_cp) or
+                        gbp.isLv(next_cp) or
+                        gbp.isLvt(next_cp)))
+                    {
+                        try encode_and_append(next_cp, &all_bytes);
+                        _ = self.advance() catch unreachable;
+                    }
+                } else if (gbp.isLv(code) or gbp.isV(code)) {
+                    if (next_cp >= 0x1100 and
+                        (gbp.isV(next_cp) or
+                        gbp.isT(next_cp)))
+                    {
+                        try encode_and_append(next_cp, &all_bytes);
+                        _ = self.advance() catch unreachable;
+                    }
+                } else if (gbp.isLvt(code) or gbp.isT(code)) {
+                    if (next_cp >= 0x1100 and gbp.isT(next_cp)) {
+                        try encode_and_append(next_cp, &all_bytes);
+                        _ = self.advance() catch unreachable;
+                    }
+                }
+            } else if (0x600 <= code and code <= 0x11f02) {
+                if (gbp.isPrepend(code)) {
+                    const next_cp = self.buf[1].?;
+
+                    if (isBreaker(next_cp)) {
+                        return try all_bytes.toOwnedSlice();
+                    } else {
+                        try encode_and_append(next_cp, &all_bytes);
+                        _ = self.advance() catch unreachable;
+                    }
+                }
+            } else if (0x1f1e6 <= code and code <= 0x1f1ff) {
+                if (gbp.isRegionalIndicator(code)) {
+                    const next_cp = self.buf[1].?;
+
+                    if (next_cp >= 0x1f1e6 and gbp.isRegionalIndicator(next_cp)) {
+                        try encode_and_append(next_cp, &all_bytes);
+                        _ = self.advance() catch unreachable;
+                    }
+                }
+            }
+
+            // Extend / ignorables loop
+            while (self.buf[1]) |next_cp| {
+                if (next_cp >= 0x300 and isIgnorable(next_cp)) {
+                    try encode_and_append(next_cp, &all_bytes);
+                    _ = self.advance() catch unreachable;
                 } else {
                     break;
                 }
             }
 
-            return Grapheme{
-                .bytes = try all_bytes.toOwnedSlice(),
-                .offset = 0,
-            };
+            return try all_bytes.toOwnedSlice();
         }
 
         fn advance(self: *Self) !?u21 {
@@ -271,13 +347,11 @@ pub fn StreamingGraphemeIterator(comptime T: type) type {
 }
 
 // Predicates
-const CodePointPredicate = fn (u21) bool;
-
-fn cpIsBreaker(cp: u21) bool {
+fn isBreaker(cp: u21) bool {
     return cp == '\x0d' or cp == '\x0a' or gbp.isControl(cp);
 }
 
-fn cpIsIgnorable(cp: u21) bool {
+fn isIgnorable(cp: u21) bool {
     return gbp.isExtend(cp) or gbp.isSpacingmark(cp) or cp == '\u{200d}';
 }
 
@@ -285,7 +359,7 @@ test "Segmentation GraphemeIterator" {
     var path_buf: [1024]u8 = undefined;
     var path = try std.fs.cwd().realpath(".", &path_buf);
     // Check if testing in this library path.
-    if (!mem.endsWith(u8, path, "ziglyph")) return;
+    if (!mem.endsWith(u8, path, "zg2")) return;
 
     var allocator = std.testing.allocator;
     var file = try std.fs.cwd().openFile("src/data/ucd/GraphemeBreakTest.txt", .{});
@@ -309,47 +383,35 @@ test "Segmentation GraphemeIterator" {
 
         // Iterate over fields.
         var want = std.ArrayList(Grapheme).init(allocator);
-        defer {
-            for (want.items) |snt| {
-                allocator.free(snt.bytes);
-            }
-            want.deinit();
-        }
+        defer want.deinit();
 
         var all_bytes = std.ArrayList(u8).init(allocator);
         defer all_bytes.deinit();
 
-        var sentences = mem.split(u8, line, " ÷ ");
+        var graphemes = mem.split(u8, line, " ÷ ");
         var bytes_index: usize = 0;
 
-        while (sentences.next()) |field| {
+        while (graphemes.next()) |field| {
             var code_points = mem.split(u8, field, " ");
             var cp_buf: [4]u8 = undefined;
             var cp_index: usize = 0;
-            var first: u21 = undefined;
-            var cp_bytes = std.ArrayList(u8).init(allocator);
-            defer cp_bytes.deinit();
+            var gc_len: usize = 0;
 
             while (code_points.next()) |code_point| {
                 if (mem.eql(u8, code_point, "×")) continue;
                 const cp: u21 = try std.fmt.parseInt(u21, code_point, 16);
-                if (cp_index == 0) first = cp;
                 const len = try unicode.utf8Encode(cp, &cp_buf);
                 try all_bytes.appendSlice(cp_buf[0..len]);
-                try cp_bytes.appendSlice(cp_buf[0..len]);
                 cp_index += len;
+                gc_len += len;
             }
 
-            try want.append(Grapheme{
-                .bytes = try cp_bytes.toOwnedSlice(),
-                .offset = bytes_index,
-            });
-
+            try want.append(Grapheme{ .len = gc_len, .offset = bytes_index });
             bytes_index += cp_index;
         }
 
         //debug.print("\nline {}: {s}\n", .{ line_no, all_bytes.items });
-        var iter = try GraphemeIterator.init(all_bytes.items);
+        var iter = GraphemeIterator.init(all_bytes.items);
 
         // Chaeck.
         for (want.items) |w| {
@@ -362,8 +424,7 @@ test "Segmentation GraphemeIterator" {
             //    debug.print("line {}: g:({x})\n", .{ line_no, b });
             //}
             //debug.print("line {}: w:({s}), g:({s})\n", .{ line_no, w.bytes, g.bytes });
-            try testing.expectEqualStrings(w.bytes, g.bytes);
-            try testing.expectEqual(w.offset, g.offset);
+            try testing.expect(w.eql(all_bytes.items, all_bytes.items[g.offset .. g.offset + g.len]));
         }
     }
 }
@@ -372,10 +433,11 @@ test "Segmentation comptime GraphemeIterator" {
     const want = [_][]const u8{ "H", "é", "l", "l", "o" };
 
     comptime {
-        var ct_iter = try GraphemeIterator.init("Héllo");
+        const src = "Héllo";
+        var ct_iter = GraphemeIterator.init(src);
         var i = 0;
         while (ct_iter.next()) |grapheme| : (i += 1) {
-            try testing.expect(grapheme.eql(want[i]));
+            try testing.expect(grapheme.eql(src, want[i]));
         }
     }
 }
@@ -384,7 +446,7 @@ test "Segmentation StreamingGraphemeIterator" {
     var path_buf: [1024]u8 = undefined;
     var path = try std.fs.cwd().realpath(".", &path_buf);
     // Check if testing in this library path.
-    if (!mem.endsWith(u8, path, "ziglyph")) return;
+    if (!mem.endsWith(u8, path, "zg2")) return;
 
     var allocator = std.testing.allocator;
     var file = try std.fs.cwd().openFile("src/data/ucd/GraphemeBreakTest.txt", .{});
@@ -407,10 +469,10 @@ test "Segmentation StreamingGraphemeIterator" {
         //debug.print("\nline {}: {s}\n", .{ line_no, line });
 
         // Iterate over fields.
-        var want = std.ArrayList(Grapheme).init(allocator);
+        var want = std.ArrayList([]const u8).init(allocator);
         defer {
             for (want.items) |snt| {
-                allocator.free(snt.bytes);
+                allocator.free(snt);
             }
             want.deinit();
         }
@@ -425,25 +487,19 @@ test "Segmentation StreamingGraphemeIterator" {
             var code_points = mem.split(u8, field, " ");
             var cp_buf: [4]u8 = undefined;
             var cp_index: usize = 0;
-            var first: u21 = undefined;
             var cp_bytes = std.ArrayList(u8).init(allocator);
-            defer cp_bytes.deinit();
+            errdefer cp_bytes.deinit();
 
             while (code_points.next()) |code_point| {
                 if (mem.eql(u8, code_point, "×")) continue;
                 const cp: u21 = try std.fmt.parseInt(u21, code_point, 16);
-                if (cp_index == 0) first = cp;
                 const len = try unicode.utf8Encode(cp, &cp_buf);
                 try all_bytes.appendSlice(cp_buf[0..len]);
                 try cp_bytes.appendSlice(cp_buf[0..len]);
                 cp_index += len;
             }
 
-            try want.append(Grapheme{
-                .bytes = try cp_bytes.toOwnedSlice(),
-                .offset = bytes_index,
-            });
-
+            try want.append(try cp_bytes.toOwnedSlice());
             bytes_index += cp_index;
         }
 
@@ -454,9 +510,9 @@ test "Segmentation StreamingGraphemeIterator" {
         var iter = try StreamingGraphemeIterator(@TypeOf(reader)).init(std.testing.allocator, reader);
 
         // Chaeck.
-        for (want.items) |w| {
-            const g = (try iter.next()).?;
-            defer std.testing.allocator.free(g.bytes);
+        for (want.items) |wstr| {
+            const gstr = (try iter.next()).?;
+            defer std.testing.allocator.free(gstr);
             //debug.print("\n", .{});
             //for (w.bytes) |b| {
             //    debug.print("line {}: w:({x})\n", .{ line_no, b });
@@ -465,7 +521,7 @@ test "Segmentation StreamingGraphemeIterator" {
             //    debug.print("line {}: g:({x})\n", .{ line_no, b });
             //}
             //debug.print("line {}: w:({s}), g:({s})\n", .{ line_no, w.bytes, g.bytes });
-            try testing.expectEqualStrings(w.bytes, g.bytes);
+            try testing.expectEqualStrings(wstr, gstr);
         }
     }
 }
@@ -479,11 +535,11 @@ test "Simple StreamingGraphemeIterator" {
 
     for (want) |str| {
         const gc = (try iter.next()).?;
-        defer std.testing.allocator.free(gc.bytes);
-        try std.testing.expect(gc.eql(str));
+        defer std.testing.allocator.free(gc);
+        try std.testing.expectEqualStrings(gc, str);
     }
 
-    try std.testing.expectEqual(@as(?@This(), null), try iter.next());
+    try std.testing.expectEqual(@as(?[]u8, null), try iter.next());
 }
 
 test "Segmentation ZWJ and ZWSP emoji sequences" {
@@ -493,17 +549,17 @@ test "Segmentation ZWJ and ZWSP emoji sequences" {
     const with_zwsp = seq_1 ++ "\u{200B}" ++ seq_2;
     const no_joiner = seq_1 ++ seq_2;
 
-    var ct_iter = try GraphemeIterator.init(with_zwj);
+    var ct_iter = GraphemeIterator.init(with_zwj);
     var i: usize = 0;
     while (ct_iter.next()) |_| : (i += 1) {}
     try testing.expectEqual(@as(usize, 1), i);
 
-    ct_iter = try GraphemeIterator.init(with_zwsp);
+    ct_iter = GraphemeIterator.init(with_zwsp);
     i = 0;
     while (ct_iter.next()) |_| : (i += 1) {}
     try testing.expectEqual(@as(usize, 3), i);
 
-    ct_iter = try GraphemeIterator.init(no_joiner);
+    ct_iter = GraphemeIterator.init(no_joiner);
     i = 0;
     while (ct_iter.next()) |_| : (i += 1) {}
     try testing.expectEqual(@as(usize, 2), i);

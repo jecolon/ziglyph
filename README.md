@@ -220,9 +220,7 @@ Now when you use the `Collator` it will reflect the sort element weights you mod
 Ziglyph has iterators to traverse text as Grapheme Clusters (what most people recognize as *characters*), 
 Words, and Sentences. All of these text segmentation functions adhere to the Unicode Text Segmentation rules,
 which may surprise you in terms of what's included and excluded at each break point. Test before assuming any
-results! There are also non-allocating compile-time versions for use with string literals or embedded files.
-Note that for compile-time versions, you may need to increase the compile-time branch evaluation quota via
-`@setEvalBranchQuota`.
+results!
 
 ```zig
 const Grapheme = @import("ziglyph").Grapheme;
@@ -234,21 +232,21 @@ const WordIterator = Word.WordIterator;
 
 test "GraphemeIterator" {
     const input = "H\u{0065}\u{0301}llo";
-    var iter = try GraphemeIterator.init(input);
+    var iter = GraphemeIterator.init(input);
 
     const want = &[_][]const u8{ "H", "\u{0065}\u{0301}", "l", "l", "o" };
 
     var i: usize = 0;
     while (iter.next()) |grapheme| : (i += 1) {
-        try testing.expect(grapheme.eql(want[i]));
+        try testing.expect(grapheme.eql(input, want[i]));
     }
 
     // Need your grapheme clusters at compile time?
     comptime {
-        var ct_iter = try GraphemeIterator.init(input);
+        var ct_iter = GraphemeIterator.init(input);
         var j = 0;
         while (ct_iter.next()) |grapheme| : (j += 1) {
-            try testing.expect(grapheme.eql(want[j]));
+            try testing.expect(grapheme.eql(input, want[j]));
         }
     }
 }

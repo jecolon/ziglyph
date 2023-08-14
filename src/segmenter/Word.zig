@@ -45,25 +45,25 @@ const Type = enum {
 
     fn get(cp: CodePoint) Type {
         var ty: Type = .any;
-        if (0x000D == cp.scalar) ty = .cr;
-        if (0x000A == cp.scalar) ty = .lf;
-        if (0x200D == cp.scalar) ty = .zwj;
-        if (0x0022 == cp.scalar) ty = .dquote;
-        if (0x0027 == cp.scalar) ty = .squote;
-        if (wbp.isAletter(cp.scalar)) ty = .aletter;
-        if (wbp.isExtend(cp.scalar)) ty = .extend;
-        if (wbp.isExtendnumlet(cp.scalar)) ty = .extendnumlet;
-        if (wbp.isFormat(cp.scalar)) ty = .format;
-        if (wbp.isHebrewLetter(cp.scalar)) ty = .hletter;
-        if (wbp.isKatakana(cp.scalar)) ty = .katakana;
-        if (wbp.isMidletter(cp.scalar)) ty = .midletter;
-        if (wbp.isMidnum(cp.scalar)) ty = .midnum;
-        if (wbp.isMidnumlet(cp.scalar)) ty = .midnumlet;
-        if (wbp.isNewline(cp.scalar)) ty = .newline;
-        if (wbp.isNumeric(cp.scalar)) ty = .numeric;
-        if (wbp.isRegionalIndicator(cp.scalar)) ty = .regional;
-        if (wbp.isWsegspace(cp.scalar)) ty = .wsegspace;
-        if (emoji.isExtendedPictographic(cp.scalar)) ty = .xpic;
+        if (0x000D == cp.code) ty = .cr;
+        if (0x000A == cp.code) ty = .lf;
+        if (0x200D == cp.code) ty = .zwj;
+        if (0x0022 == cp.code) ty = .dquote;
+        if (0x0027 == cp.code) ty = .squote;
+        if (wbp.isAletter(cp.code)) ty = .aletter;
+        if (wbp.isExtend(cp.code)) ty = .extend;
+        if (wbp.isExtendnumlet(cp.code)) ty = .extendnumlet;
+        if (wbp.isFormat(cp.code)) ty = .format;
+        if (wbp.isHebrewLetter(cp.code)) ty = .hletter;
+        if (wbp.isKatakana(cp.code)) ty = .katakana;
+        if (wbp.isMidletter(cp.code)) ty = .midletter;
+        if (wbp.isMidnum(cp.code)) ty = .midnum;
+        if (wbp.isMidnumlet(cp.code)) ty = .midnumlet;
+        if (wbp.isNewline(cp.code)) ty = .newline;
+        if (wbp.isNumeric(cp.code)) ty = .numeric;
+        if (wbp.isRegionalIndicator(cp.code)) ty = .regional;
+        if (wbp.isWsegspace(cp.code)) ty = .wsegspace;
+        if (emoji.isExtendedPictographic(cp.code)) ty = .xpic;
 
         return ty;
     }
@@ -360,7 +360,7 @@ pub const WordIterator = struct {
     // Production.
     fn emit(self: Self, start_token: Token, end_token: Token) Word {
         const start = start_token.code_point.offset;
-        const end = end_token.code_point.end();
+        const end = end_token.code_point.offset + end_token.code_point.len;
 
         return .{
             .bytes = self.cp_iter.bytes[start..end],

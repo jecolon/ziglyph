@@ -1,50 +1,85 @@
 //! `CodePoint` represents a Unicode code point wit hrealted functionality.
 
 const std = @import("std");
-const unicode = std.unicode;
 
-bytes: []const u8,
+code: u21,
+len: u3,
 offset: usize,
-scalar: u21,
 
 const CodePoint = @This();
-
-/// `end` returns the index of the byte after this code points last byte in the source string.
-pub fn end(self: CodePoint) usize {
-    return self.offset + self.bytes.len;
-}
 
 /// `CodePointIterator` iterates a string one code point at-a-time.
 pub const CodePointIterator = struct {
     bytes: []const u8,
     i: usize = 0,
 
-    pub fn next(it: *CodePointIterator) ?CodePoint {
-        if (it.i >= it.bytes.len) {
-            return null;
+    pub fn next(self: *CodePointIterator) ?CodePoint {
+        if (self.i >= self.bytes.len) return null;
+
+        if (self.bytes[self.i] < 128) {
+            // ASCII fast path
+            var cp = CodePoint{
+                .code = self.bytes[self.i],
+                .len = 1,
+                .offset = self.i,
+            };
+
+            self.i += 1;
+
+            return cp;
         }
 
         var cp = CodePoint{
-            .bytes = undefined,
-            .offset = it.i,
-            .scalar = undefined,
+            .code = undefined,
+            .len = blk: {
+                break :blk switch (self.bytes[self.i]) {
+                    0b0000_0000...0b0111_1111 => 1,
+                    0b1100_0000...0b1101_1111 => 2,
+                    0b1110_0000...0b1110_1111 => 3,
+                    0b1111_0000...0b1111_0111 => 4,
+                    else => unreachable,
+                };
+            },
+            .offset = self.i,
         };
 
-        const cp_len = unicode.utf8ByteSequenceLength(it.bytes[it.i]) catch unreachable;
-        it.i += cp_len;
-        cp.bytes = it.bytes[it.i - cp_len .. it.i];
+        self.i += cp.len;
+        const cp_bytes = self.bytes[self.i - cp.len .. self.i];
 
-        cp.scalar = switch (cp.bytes.len) {
-            1 => @as(u21, cp.bytes[0]),
-            2 => unicode.utf8Decode2(cp.bytes) catch unreachable,
-            3 => unicode.utf8Decode3(cp.bytes) catch unreachable,
-            4 => unicode.utf8Decode4(cp.bytes) catch unreachable,
+        cp.code = switch (cp.len) {
+            2 => (@as(u21, (cp_bytes[0] & 0b00011111)) << 6) | (cp_bytes[1] & 0b00111111),
+
+            3 => (((@as(u21, (cp_bytes[0] & 0b00001111)) << 6) |
+                (cp_bytes[1] & 0b00111111)) << 6) |
+                (cp_bytes[2] & 0b00111111),
+
+            4 => (((((@as(u21, (cp_bytes[0] & 0b00000111)) << 6) |
+                (cp_bytes[1] & 0b00111111)) << 6) |
+                (cp_bytes[2] & 0b00111111)) << 6) |
+                (cp_bytes[3] & 0b00111111),
+
             else => unreachable,
         };
 
         return cp;
     }
+
+    pub fn peek(self: *CodePointIterator) ?CodePoint {
+        const saved_i = self.i;
+        defer self.i = saved_i;
+        return self.next();
+    }
 };
+
+test "CodePointIterator peek" {
+    var iter = CodePointIterator{ .bytes = "Hi" };
+
+    try std.testing.expectEqual(@as(u21, 'H'), iter.next().?.code);
+    try std.testing.expectEqual(@as(u21, 'i'), iter.peek().?.code);
+    try std.testing.expectEqual(@as(u21, 'i'), iter.next().?.code);
+    try std.testing.expectEqual(@as(?CodePoint, null), iter.peek());
+    try std.testing.expectEqual(@as(?CodePoint, null), iter.next());
+}
 
 /// `readCodePoint` returns the next code point in the given reader, or null at end-of-stream.
 pub fn readCodePoint(reader: anytype) !?u21 {
@@ -57,15 +92,29 @@ pub fn readCodePoint(reader: anytype) !?u21 {
 
     if (buf[0] < 128) return @as(u21, buf[0]);
 
-    const len = try unicode.utf8ByteSequenceLength(buf[0]);
+    const len: u3 = switch (buf[0]) {
+        0b1100_0000...0b1101_1111 => 2,
+        0b1110_0000...0b1110_1111 => 3,
+        0b1111_0000...0b1111_0111 => 4,
+        else => return error.InvalidUtf8,
+    };
+
     const read = try reader.read(buf[1..len]);
 
     if (read < len - 1) return error.InvalidUtf8;
 
     return switch (len) {
-        2 => try unicode.utf8Decode2(buf[0..len]),
-        3 => try unicode.utf8Decode3(buf[0..len]),
-        4 => try unicode.utf8Decode4(buf[0..len]),
+        2 => (@as(u21, (buf[0] & 0b00011111)) << 6) | (buf[1] & 0b00111111),
+
+        3 => (((@as(u21, (buf[0] & 0b00001111)) << 6) |
+            (buf[1] & 0b00111111)) << 6) |
+            (buf[2] & 0b00111111),
+
+        4 => (((((@as(u21, (buf[0] & 0b00000111)) << 6) |
+            (buf[1] & 0b00111111)) << 6) |
+            (buf[2] & 0b00111111)) << 6) |
+            (buf[3] & 0b00111111),
+
         else => unreachable,
     };
 }

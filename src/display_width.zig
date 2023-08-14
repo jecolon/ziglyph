@@ -94,10 +94,10 @@ pub fn strWidth(str: []const u8, am_width: AmbiguousWidth) !usize {
         return if (total > 0) @intCast(total) else 0;
     }
 
-    var giter = try GraphemeIterator.init(str);
+    var giter = GraphemeIterator.init(str);
 
     while (giter.next()) |gc| {
-        var cp_iter = (try unicode.Utf8View.init(gc.bytes)).iterator();
+        var cp_iter = (try unicode.Utf8View.init(str[gc.offset .. gc.offset + gc.len])).iterator();
 
         while (cp_iter.nextCodepoint()) |cp| {
             var w = codePointWidth(cp, am_width);

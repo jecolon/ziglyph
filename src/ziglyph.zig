@@ -319,16 +319,16 @@ pub fn toTitleStr(allocator: std.mem.Allocator, str: []const u8) ![]u8 {
         while (code_points.next()) |cp| {
             var len: usize = 0;
 
-            if (!got_f and isCased(cp.scalar)) {
+            if (!got_f and isCased(cp.code)) {
                 // First cased is titlecase.
-                len = try unicode.utf8Encode(toTitle(cp.scalar), &buf);
+                len = try unicode.utf8Encode(toTitle(cp.code), &buf);
                 got_f = true;
-            } else if (isCased(cp.scalar)) {
+            } else if (isCased(cp.code)) {
                 // Subsequent cased are lowercase.
-                len = try unicode.utf8Encode(toLower(cp.scalar), &buf);
+                len = try unicode.utf8Encode(toLower(cp.code), &buf);
             } else {
                 // Uncased remain the same.
-                len = try unicode.utf8Encode(cp.scalar, &buf);
+                len = try unicode.utf8Encode(cp.code, &buf);
             }
 
             try result.appendSlice(buf[0..len]);

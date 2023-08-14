@@ -39,20 +39,20 @@ const Type = enum {
 
     fn get(cp: CodePoint) Type {
         var ty: Type = .any;
-        if (0x000D == cp.scalar) ty = .cr;
-        if (0x000A == cp.scalar) ty = .lf;
-        if (sbp.isLower(cp.scalar)) ty = .lower;
-        if (sbp.isUpper(cp.scalar)) ty = .upper;
-        if (sbp.isOletter(cp.scalar)) ty = .oletter;
-        if (sbp.isNumeric(cp.scalar)) ty = .numeric;
-        if (sbp.isSep(cp.scalar)) ty = .sep;
-        if (sbp.isSp(cp.scalar)) ty = .sp;
-        if (sbp.isClose(cp.scalar)) ty = .close;
-        if (sbp.isAterm(cp.scalar)) ty = .aterm;
-        if (sbp.isSterm(cp.scalar)) ty = .sterm;
-        if (sbp.isScontinue(cp.scalar)) ty = .scontinue;
-        if (sbp.isExtend(cp.scalar)) ty = .extend;
-        if (sbp.isFormat(cp.scalar)) ty = .format;
+        if (0x000D == cp.code) ty = .cr;
+        if (0x000A == cp.code) ty = .lf;
+        if (sbp.isLower(cp.code)) ty = .lower;
+        if (sbp.isUpper(cp.code)) ty = .upper;
+        if (sbp.isOletter(cp.code)) ty = .oletter;
+        if (sbp.isNumeric(cp.code)) ty = .numeric;
+        if (sbp.isSep(cp.code)) ty = .sep;
+        if (sbp.isSp(cp.code)) ty = .sp;
+        if (sbp.isClose(cp.code)) ty = .close;
+        if (sbp.isAterm(cp.code)) ty = .aterm;
+        if (sbp.isSterm(cp.code)) ty = .sterm;
+        if (sbp.isScontinue(cp.code)) ty = .scontinue;
+        if (sbp.isExtend(cp.code)) ty = .extend;
+        if (sbp.isFormat(cp.code)) ty = .format;
 
         return ty;
     }
@@ -330,7 +330,7 @@ pub const SentenceIterator = struct {
     // Production.
     fn emit(self: Self, start_token: Token, end_token: Token) Sentence {
         const start = start_token.code_point.offset;
-        const end = end_token.code_point.end();
+        const end = end_token.code_point.offset + end_token.code_point.len;
 
         return .{
             .bytes = self.bytes[start..end],
@@ -741,7 +741,7 @@ pub fn ComptimeSentenceIterator(comptime str: []const u8) type {
         // Production.
         fn emit(self: Self, start_token: Token, end_token: Token) Sentence {
             const start = start_token.code_point.offset;
-            const end = end_token.code_point.end();
+            const end = end_token.code_point.offset + end_token.code_point.len;
 
             return .{
                 .bytes = self.bytes[start..end],
