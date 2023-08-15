@@ -8,14 +8,6 @@ pub fn build(b: *Build) void {
         .source_file = .{ .path = "src/ziglyph.zig" },
     });
 
-    const lib = b.addStaticLibrary(.{
-        .name = "ziglyph",
-        .root_source_file = .{ .path = "src/ziglyph.zig" },
-        .target = target,
-        .optimize = optimize,
-    });
-    b.installArtifact(lib);
-
     var main_tests = b.addTest(.{
         .root_source_file = .{ .path = "src/tests.zig" },
         .target = target,

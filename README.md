@@ -35,7 +35,6 @@ const ziglyph = b.dependency("ziglyph", .{
 });
 // for exe, lib, tests, etc.
 exe.addModule("ziglyph", ziglyph.module("ziglyph"));
-exe.linkLibrary(ziglyph.artifact("ziglyph"));
 ```
 
 Now in the code, you can import components like this:
