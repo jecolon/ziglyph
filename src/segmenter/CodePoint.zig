@@ -1,4 +1,4 @@
-//! `CodePoint` represents a Unicode code point wit hrealted functionality.
+//! `CodePoint` represents a Unicode code point by its code, length, and offset in the source bytes.
 
 const std = @import("std");
 
@@ -8,7 +8,7 @@ offset: usize,
 
 const CodePoint = @This();
 
-/// `CodePointIterator` iterates a string one code point at-a-time.
+/// `CodePointIterator` iterates a string one `CodePoint` at-a-time.
 pub const CodePointIterator = struct {
     bytes: []const u8,
     i: usize = 0,
@@ -81,7 +81,7 @@ test "CodePointIterator peek" {
     try std.testing.expectEqual(@as(?CodePoint, null), iter.next());
 }
 
-/// `readCodePoint` returns the next code point in the given reader, or null at end-of-stream.
+/// `readCodePoint` returns the next code point code as a `u21` in the given reader, or null at end-of-input.
 pub fn readCodePoint(reader: anytype) !?u21 {
     var buf: [4]u8 = undefined;
 

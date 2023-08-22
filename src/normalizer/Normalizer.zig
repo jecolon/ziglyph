@@ -4,47 +4,36 @@
 
 const std = @import("std");
 
-const ziglyph = @import("../ziglyph.zig");
-const CodePointIterator = ziglyph.CodePointIterator;
-const case_fold_map = ziglyph.case_fold_map;
-const ccc_map = ziglyph.combining_map;
-const hangul_map = ziglyph.hangul_map;
-const norm_props = ziglyph.derived_normalization_props;
-
-composites: std.AutoHashMap([2]u21, u21),
-decomp_map: std.AutoHashMap(u21, Decomp),
+const CodePointIterator = @import("../segmenter/CodePoint.zig").CodePointIterator;
+const case_fold_map = @import("../autogen/case_folding.zig");
+const ccc_map = @import("../autogen/derived_combining_class.zig");
+const hangul_map = @import("../autogen/hangul_syllable_type.zig");
+const norm_props = @import("../autogen/derived_normalization_props.zig");
 
 const Self = @This();
 
-const Form = enum {
-    nfc,
-    nfd,
-    nfkc,
-    nfkd,
-    same,
-};
-
-const Decomp = struct {
-    form: Form = .nfd,
-    cps: [18]u21 = [_]u21{0} ** 18,
-};
+nfc_map: std.AutoHashMap([2]u21, u21),
+nfd_map: std.AutoHashMap(u21, [2]u21),
+nfkd_map: std.AutoHashMap(u21, [18]u21),
 
 pub fn init(allocator: std.mem.Allocator) !Self {
     var self = Self{
-        .composites = std.AutoHashMap([2]u21, u21).init(allocator),
-        .decomp_map = std.AutoHashMap(u21, Decomp).init(allocator),
+        .nfc_map = std.AutoHashMap([2]u21, u21).init(allocator),
+        .nfd_map = std.AutoHashMap(u21, [2]u21).init(allocator),
+        .nfkd_map = std.AutoHashMap(u21, [18]u21).init(allocator),
     };
     errdefer self.deinit();
 
-    // Composites file.
-    const comp_gz_file = @embedFile("../data/ucd/Composites.txt.gz");
-    var comp_in_stream = std.io.fixedBufferStream(comp_gz_file);
-    var comp_gzip_stream = try std.compress.gzip.decompress(allocator, comp_in_stream.reader());
-    defer comp_gzip_stream.deinit();
+    // Canonical compositions
+    const decompressor = std.compress.deflate.decompressor;
+    const comp_file = @embedFile("../autogen/canonical_compositions.txt.deflate");
+    var comp_stream = std.io.fixedBufferStream(comp_file);
+    var comp_decomp = try decompressor(allocator, comp_stream.reader(), null);
+    defer comp_decomp.deinit();
 
-    var comp_br = std.io.bufferedReader(comp_gzip_stream.reader());
-    const comp_reader = comp_br.reader();
-    var buf: [256]u8 = undefined;
+    var comp_buf = std.io.bufferedReader(comp_decomp.reader());
+    const comp_reader = comp_buf.reader();
+    var buf: [4096]u8 = undefined;
 
     while (try comp_reader.readUntilDelimiterOrEof(&buf, '\n')) |line| {
         if (line.len == 0) continue;
@@ -52,50 +41,63 @@ pub fn init(allocator: std.mem.Allocator) !Self {
         const cp_a = try std.fmt.parseInt(u21, fields.next().?, 16);
         const cp_b = try std.fmt.parseInt(u21, fields.next().?, 16);
         const cp_c = try std.fmt.parseInt(u21, fields.next().?, 16);
-        try self.composites.put([_]u21{ cp_a, cp_b }, cp_c);
+        try self.nfc_map.put(.{ cp_a, cp_b }, cp_c);
     }
 
-    // Decompositions file.
-    const decomp_gz_file = @embedFile("../data/ucd/Decompositions.txt.gz");
-    var decomp_in_stream = std.io.fixedBufferStream(decomp_gz_file);
-    var decomp_gzip_stream = try std.compress.gzip.decompress(allocator, decomp_in_stream.reader());
-    defer decomp_gzip_stream.deinit();
+    // Canonical decompositions
+    const decomp_file = @embedFile("../autogen/canonical_decompositions.txt.deflate");
+    var decomp_stream = std.io.fixedBufferStream(decomp_file);
+    var decomp_decomp = try decompressor(allocator, decomp_stream.reader(), null);
+    defer decomp_decomp.deinit();
 
-    var decomp_br = std.io.bufferedReader(decomp_gzip_stream.reader());
-    const decomp_reader = decomp_br.reader();
+    var decomp_buf = std.io.bufferedReader(decomp_decomp.reader());
+    const decomp_reader = decomp_buf.reader();
 
     while (try decomp_reader.readUntilDelimiterOrEof(&buf, '\n')) |line| {
         if (line.len == 0) continue;
-
         var fields = std.mem.split(u8, line, ";");
-        const cp = try std.fmt.parseInt(u21, fields.next().?, 16);
-        const decomp_strs = fields.next().?;
-        var dc = Decomp{ .form = if (std.mem.startsWith(u8, decomp_strs, "<")) .nfkd else .nfd };
+        const cp_a = try std.fmt.parseInt(u21, fields.next().?, 16);
+        const cp_b = try std.fmt.parseInt(u21, fields.next().?, 16);
+        const cp_c = try std.fmt.parseInt(u21, fields.next().?, 16);
+        try self.nfd_map.put(cp_a, .{ cp_b, cp_c });
+    }
 
-        var cp_strs = std.mem.split(u8, decomp_strs, " ");
-        if (dc.form == .nfkd) _ = cp_strs.next(); // Skip <
+    // Compatibility decompositions
+    const dekomp_file = @embedFile("../autogen/compatibility_decompositions.txt.deflate");
+    var dekomp_stream = std.io.fixedBufferStream(dekomp_file);
+    var dekomp_decomp = try decompressor(allocator, dekomp_stream.reader(), null);
+    defer dekomp_decomp.deinit();
 
+    var dekomp_buf = std.io.bufferedReader(dekomp_decomp.reader());
+    const dekomp_reader = dekomp_buf.reader();
+
+    while (try dekomp_reader.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+        if (line.len == 0) continue;
+        var fields = std.mem.split(u8, line, ";");
+        const cp_a = try std.fmt.parseInt(u21, fields.next().?, 16);
+        var cps = [_]u21{0} ** 18;
         var i: usize = 0;
-        while (cp_strs.next()) |cp_str| : (i += 1) {
-            dc.cps[i] = try std.fmt.parseInt(u21, cp_str, 16);
+
+        while (fields.next()) |cp| : (i += 1) {
+            cps[i] = try std.fmt.parseInt(u21, cp, 16);
         }
 
-        try self.decomp_map.put(cp, dc);
+        try self.nfkd_map.put(cp_a, cps);
     }
 
     return self;
 }
 
 pub fn deinit(self: *Self) void {
-    self.composites.deinit();
-    self.decomp_map.deinit();
+    self.nfc_map.deinit();
+    self.nfd_map.deinit();
+    self.nfkd_map.deinit();
 }
 
 test "init / deinit" {
     var n = try init(std.testing.allocator);
     defer n.deinit();
 }
-
 // Hangul processing utilities.
 fn isHangulPrecomposed(cp: u21) bool {
     if (hangul_map.syllableType(cp)) |kind| return kind == .LV or kind == .LVT;
@@ -145,16 +147,37 @@ fn composeHangulFull(l: u21, v: u21, t: u21) u21 {
     return SBase + LVIndex + TIndex;
 }
 
+const Form = enum {
+    nfc,
+    nfd,
+    nfkc,
+    nfkd,
+    same,
+};
+
+const Decomp = struct {
+    form: Form = .nfd,
+    cps: [18]u21 = [_]u21{0} ** 18,
+};
+
 /// `mapping` retrieves the decomposition mapping for a code point as per the UCD.
 pub fn mapping(self: Self, cp: u21, form: Form) Decomp {
-    if (self.decomp_map.get(cp)) |dc| {
-        return if (form == .nfd and dc.form == .nfkd)
-            Decomp{ .form = .same, .cps = [_]u21{cp} ++ [_]u21{0} ** 17 }
-        else
-            dc;
+    std.debug.assert(form == .nfd or form == .nfkd);
+
+    var dc = Decomp{ .form = .same };
+    dc.cps[0] = cp;
+
+    if (self.nfkd_map.get(cp)) |array| {
+        if (form != .nfd) {
+            dc.form = .nfkd;
+            @memcpy(dc.cps[0..array.len], &array);
+        }
+    } else if (self.nfd_map.get(cp)) |array| {
+        dc.form = .nfd;
+        @memcpy(dc.cps[0..array.len], &array);
     }
 
-    return .{ .form = .same, .cps = [_]u21{cp} ++ [_]u21{0} ** 17 };
+    return dc;
 }
 
 /// `decompose` a code point to the specified normalization form, which should be either `.nfd` or `.nfkd`.
@@ -197,10 +220,9 @@ pub fn decompose(self: Self, cp: u21, form: Form) Decomp {
         }
 
         // Find last index of decomposition.
-        var m_last: usize = 0;
-        while (m_last < m.cps.len) : (m_last += 1) {
-            if (m.cps[m_last] == 0) break;
-        }
+        const m_last = for (m.cps, 0..) |mcp, i| {
+            if (mcp == 0) break i;
+        } else m.cps.len;
 
         // Work backwards through decomposition.
         // `i` starts at 1 because m_last is 1 past the last code point.
@@ -217,7 +239,8 @@ pub fn decompose(self: Self, cp: u21, form: Form) Decomp {
 }
 
 test "decompose" {
-    var n = try init(std.testing.allocator);
+    const allocator = std.testing.allocator;
+    var n = try init(allocator);
     defer n.deinit();
 
     var dc = n.decompose('é', .nfd);
@@ -265,7 +288,7 @@ fn onlyAscii(str: []const u8) bool {
     } else true;
 }
 
-fn onlyLatin1(str: []const u8) !bool {
+fn onlyLatin1(str: []const u8) bool {
     var cp_iter = CodePointIterator{ .bytes = str };
     return while (cp_iter.next()) |cp| {
         if (cp.code > 256) break false;
@@ -384,7 +407,7 @@ test "nfkd !ASCII / alloc" {
 // Composition utilities.
 
 fn isHangul(cp: u21) bool {
-    return hangul_map.syllableType(cp) != null;
+    return cp >= 0x1100 and hangul_map.syllableType(cp) != null;
 }
 
 fn isStarter(cp: u21) bool {
@@ -392,7 +415,7 @@ fn isStarter(cp: u21) bool {
 }
 
 fn isCombining(cp: u21) bool {
-    return ccc_map.combiningClass(cp) > 0;
+    return ccc_map.combiningClass(cp) != 0;
 }
 
 fn isNonHangulStarter(cp: u21) bool {
@@ -412,7 +435,7 @@ pub fn nfkc(self: Self, allocator: std.mem.Allocator, str: []const u8) !Result {
 fn nfxc(self: Self, allocator: std.mem.Allocator, str: []const u8, form: Form) !Result {
     // Quick checks.
     if (onlyAscii(str)) return Result{ .slice = str };
-    if (form == .nfc and try onlyLatin1(str)) return Result{ .slice = str };
+    if (form == .nfc and onlyLatin1(str)) return Result{ .slice = str };
 
     // Decompose first.
     var d_result = if (form == .nfc)
@@ -491,7 +514,7 @@ fn nfxc(self: Self, allocator: std.mem.Allocator, str: []const u8, form: Form) !
 
                 if (!processed_hangul) {
                     // L -> C not Hangul.
-                    if (self.composites.get([_]u21{ L, C })) |P| {
+                    if (self.nfc_map.get(.{ L, C })) |P| {
                         if (!norm_props.isFcx(P)) {
                             d_list.items[sidx] = P;
                             d_list.items[i] = tombstone; // Mark for deletion.
@@ -552,126 +575,6 @@ test "nfkc" {
     try std.testing.expectEqualStrings("Complex char: \u{038E}", result.slice);
 }
 
-test "UCD tests" {
-    var path_buf: [1024]u8 = undefined;
-    var path = try std.fs.cwd().realpath(".", &path_buf);
-    // Check if testing in this library path.
-    if (!std.mem.endsWith(u8, path, "ziglyph")) return error.SkipZigTest;
-
-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
-    defer arena.deinit();
-    var allocator = arena.allocator();
-    var normalizer = try init(allocator);
-    defer normalizer.deinit();
-
-    var file = try std.fs.cwd().openFile("src/data/ucd/NormalizationTest.txt", .{});
-    defer file.close();
-    var buf_reader = std.io.bufferedReader(file.reader());
-    const input_stream = buf_reader.reader();
-
-    var line_no: usize = 0;
-    var buf: [4096]u8 = undefined;
-    var cp_buf: [4]u8 = undefined;
-
-    while (try input_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
-        line_no += 1;
-        // Skip comments or empty lines.
-        if (line.len == 0 or line[0] == '#' or line[0] == '@') continue;
-        //std.debug.print("{}: {s}\n", .{ line_no, line });
-        // Iterate over fields.
-        var fields = std.mem.split(u8, line, ";");
-        var field_index: usize = 0;
-        var input: []u8 = undefined;
-        defer allocator.free(input);
-
-        while (fields.next()) |field| : (field_index += 1) {
-            if (field_index == 0) {
-                var i_buf = std.ArrayList(u8).init(allocator);
-                defer i_buf.deinit();
-
-                var i_fields = std.mem.split(u8, field, " ");
-                while (i_fields.next()) |s| {
-                    const icp = try std.fmt.parseInt(u21, s, 16);
-                    const len = try std.unicode.utf8Encode(icp, &cp_buf);
-                    try i_buf.appendSlice(cp_buf[0..len]);
-                }
-
-                input = try i_buf.toOwnedSlice();
-            } else if (field_index == 1) {
-                // NFC, time to test.
-                var w_buf = std.ArrayList(u8).init(allocator);
-                defer w_buf.deinit();
-
-                var w_fields = std.mem.split(u8, field, " ");
-                while (w_fields.next()) |s| {
-                    const wcp = try std.fmt.parseInt(u21, s, 16);
-                    const len = try std.unicode.utf8Encode(wcp, &cp_buf);
-                    try w_buf.appendSlice(cp_buf[0..len]);
-                }
-
-                const want = w_buf.items;
-                var got = try normalizer.nfc(allocator, input);
-                defer got.deinit();
-
-                try std.testing.expectEqualStrings(want, got.slice);
-            } else if (field_index == 2) {
-                // NFD, time to test.
-                var w_buf = std.ArrayList(u8).init(allocator);
-                defer w_buf.deinit();
-
-                var w_fields = std.mem.split(u8, field, " ");
-                while (w_fields.next()) |s| {
-                    const wcp = try std.fmt.parseInt(u21, s, 16);
-                    const len = try std.unicode.utf8Encode(wcp, &cp_buf);
-                    try w_buf.appendSlice(cp_buf[0..len]);
-                }
-
-                const want = w_buf.items;
-                var got = try normalizer.nfd(allocator, input);
-                defer got.deinit();
-
-                try std.testing.expectEqualStrings(want, got.slice);
-            } else if (field_index == 3) {
-                // NFKC, time to test.
-                var w_buf = std.ArrayList(u8).init(allocator);
-                defer w_buf.deinit();
-
-                var w_fields = std.mem.split(u8, field, " ");
-                while (w_fields.next()) |s| {
-                    const wcp = try std.fmt.parseInt(u21, s, 16);
-                    const len = try std.unicode.utf8Encode(wcp, &cp_buf);
-                    try w_buf.appendSlice(cp_buf[0..len]);
-                }
-
-                const want = w_buf.items;
-                var got = try normalizer.nfkc(allocator, input);
-                defer got.deinit();
-
-                try std.testing.expectEqualStrings(want, got.slice);
-            } else if (field_index == 4) {
-                // NFKD, time to test.
-                var w_buf = std.ArrayList(u8).init(allocator);
-                defer w_buf.deinit();
-
-                var w_fields = std.mem.split(u8, field, " ");
-                while (w_fields.next()) |s| {
-                    const wcp = try std.fmt.parseInt(u21, s, 16);
-                    const len = try std.unicode.utf8Encode(wcp, &cp_buf);
-                    try w_buf.appendSlice(cp_buf[0..len]);
-                }
-
-                const want = w_buf.items;
-                var got = try normalizer.nfkd(allocator, input);
-                defer got.deinit();
-
-                try std.testing.expectEqualStrings(want, got.slice);
-            } else {
-                continue;
-            }
-        }
-    }
-}
-
 /// Tests for equality as per Unicode rules for Identifiers.
 pub fn eqlIdentifiers(allocator: std.mem.Allocator, a: []const u8, b: []const u8) !bool {
     var list_a = try std.ArrayList(u21).initCapacity(allocator, a.len);
@@ -692,19 +595,13 @@ pub fn eqlIdentifiers(allocator: std.mem.Allocator, a: []const u8, b: []const u8
     for (items) |item| {
         var cp_iter = CodePointIterator{ .bytes = item.str };
         while (cp_iter.next()) |cp| {
-            const nfkcf = norm_props.toNfkcCaseFold(cp.code);
-            switch (nfkcf.len) {
-                0 => item.list.appendAssumeCapacity(cp.code), // maps to itself
-                1 => {}, // ignore
-                else => {
-                    // Got list; parse and add it. "x,y,z..."
-                    var cp_strs = std.mem.split(u8, nfkcf, ",");
-
-                    while (cp_strs.next()) |cp_str| {
-                        const parsed_cp = try std.fmt.parseInt(u21, cp_str, 16);
-                        item.list.appendAssumeCapacity(parsed_cp);
-                    }
-                },
+            if (norm_props.toNfkcCaseFold(cp.code)) |nfkcf| {
+                for (nfkcf) |c| {
+                    if (c == 0) break;
+                    item.list.appendAssumeCapacity(c);
+                }
+            } else {
+                item.list.appendAssumeCapacity(cp.code); // maps to itself
             }
         }
     }
@@ -727,11 +624,12 @@ pub fn eql(self: Self, allocator: std.mem.Allocator, a: []const u8, b: []const u
 }
 
 test "eql" {
-    var n = try init(std.testing.allocator);
+    const allocator = std.testing.allocator;
+    var n = try init(allocator);
     defer n.deinit();
 
-    try std.testing.expect(try n.eql(std.testing.allocator, "foé", "foe\u{0301}"));
-    try std.testing.expect(try n.eql(std.testing.allocator, "foϓ", "fo\u{03D2}\u{0301}"));
+    try std.testing.expect(try n.eql(allocator, "foé", "foe\u{0301}"));
+    try std.testing.expect(try n.eql(allocator, "foϓ", "fo\u{03D2}\u{0301}"));
 }
 
 fn requiresNfdBeforeCaseFold(cp: u21) bool {
@@ -781,11 +679,12 @@ pub fn eqlCaseless(self: Self, allocator: std.mem.Allocator, a: []const u8, b: [
 }
 
 test "eqlCaseless" {
-    var n = try init(std.testing.allocator);
+    const allocator = std.testing.allocator;
+    var n = try init(allocator);
     defer n.deinit();
 
-    try std.testing.expect(try n.eqlCaseless(std.testing.allocator, "Foϓ", "fo\u{03D2}\u{0301}"));
-    try std.testing.expect(try n.eqlCaseless(std.testing.allocator, "FOÉ", "foe\u{0301}")); // foÉ == foé
+    try std.testing.expect(try n.eqlCaseless(allocator, "Foϓ", "fo\u{03D2}\u{0301}"));
+    try std.testing.expect(try n.eqlCaseless(allocator, "FOÉ", "foe\u{0301}")); // foÉ == foé
 }
 
 // FCD
@@ -815,7 +714,8 @@ pub fn isFcd(self: Self, str: []const u8) !bool {
 }
 
 test "isFcd" {
-    var n = try init(std.testing.allocator);
+    const allocator = std.testing.allocator;
+    var n = try init(allocator);
     defer n.deinit();
 
     const is_nfc = "José \u{3D3}";

@@ -1,12 +1,9 @@
-//! `Sentence` represents a sentence within a Unicode string.
+//! `Sentence` represents a sentence within a UTF-8 encoded string.
 
 const std = @import("std");
-const debug = std.debug;
-const mem = std.mem;
-const testing = std.testing;
 const unicode = std.unicode;
 
-const sbp = @import("../ziglyph.zig").sentence_break_property;
+const sbp = @import("../autogen/sentence_break_property.zig");
 const CodePoint = @import("CodePoint.zig");
 const CodePointIterator = CodePoint.CodePointIterator;
 
@@ -17,7 +14,7 @@ offset: usize,
 
 /// `eql` compares `str` with the bytes of this sentence for equality.
 pub fn eql(self: Sentence, str: []const u8) bool {
-    return mem.eql(u8, self.bytes, str);
+    return std.mem.eql(u8, self.bytes, str);
 }
 
 const Type = enum {
@@ -79,7 +76,7 @@ pub const SentenceIterator = struct {
 
     const Self = @This();
 
-    pub fn init(allocator: mem.Allocator, str: []const u8) !Self {
+    pub fn init(allocator: std.mem.Allocator, str: []const u8) !Self {
         if (!unicode.utf8ValidateSlice(str)) return error.InvalidUtf8;
 
         var self = Self{
@@ -394,10 +391,10 @@ test "Segmentation SentenceIterator" {
     var path_buf: [1024]u8 = undefined;
     var path = try std.fs.cwd().realpath(".", &path_buf);
     // Check if testing in this library path.
-    if (!mem.endsWith(u8, path, "ziglyph")) return;
+    if (!std.mem.endsWith(u8, path, "zg3")) return;
 
     var allocator = std.testing.allocator;
-    var file = try std.fs.cwd().openFile("src/data/ucd/SentenceBreakTest.txt", .{});
+    var file = try std.fs.cwd().openFile("zig-cache/_ziglyph-data/ucd/auxiliary/SentenceBreakTest.txt", .{});
     defer file.close();
     var buf_reader = std.io.bufferedReader(file.reader());
     var input_stream = buf_reader.reader();
@@ -410,11 +407,10 @@ test "Segmentation SentenceIterator" {
         if (raw.len == 0 or raw[0] == '#' or raw[0] == '@') continue;
 
         // Clean up.
-        var line = mem.trimLeft(u8, raw, "÷ ");
-        if (mem.indexOf(u8, line, " ÷\t#")) |octo| {
+        var line = std.mem.trimLeft(u8, raw, "÷ ");
+        if (std.mem.indexOf(u8, line, " ÷\t#")) |octo| {
             line = line[0..octo];
         }
-        //debug.print("\nline {}: {s}\n", .{ line_no, line });
 
         // Iterate over fields.
         var want = std.ArrayList(Sentence).init(allocator);
@@ -428,11 +424,11 @@ test "Segmentation SentenceIterator" {
         var all_bytes = std.ArrayList(u8).init(allocator);
         defer all_bytes.deinit();
 
-        var sentences = mem.split(u8, line, " ÷ ");
+        var sentences = std.mem.split(u8, line, " ÷ ");
         var bytes_index: usize = 0;
 
         while (sentences.next()) |field| {
-            var code_points = mem.split(u8, field, " ");
+            var code_points = std.mem.split(u8, field, " ");
             var cp_buf: [4]u8 = undefined;
             var cp_index: usize = 0;
             var first: u21 = undefined;
@@ -440,7 +436,7 @@ test "Segmentation SentenceIterator" {
             defer cp_bytes.deinit();
 
             while (code_points.next()) |code_point| {
-                if (mem.eql(u8, code_point, "×")) continue;
+                if (std.mem.eql(u8, code_point, "×")) continue;
                 const cp: u21 = try std.fmt.parseInt(u21, code_point, 16);
                 if (cp_index == 0) first = cp;
                 const len = try unicode.utf8Encode(cp, &cp_buf);
@@ -464,16 +460,8 @@ test "Segmentation SentenceIterator" {
         // Chaeck.
         for (want.items) |w| {
             const g = (iter.next()).?;
-            //debug.print("\n", .{});
-            //for (w.bytes) |b| {
-            //    debug.print("line {}: w:({x})\n", .{ line_no, b });
-            //}
-            //for (g.bytes) |b| {
-            //    debug.print("line {}: g:({x})\n", .{ line_no, b });
-            //}
-            //debug.print("line {}: w:({s}), g:({s})\n", .{ line_no, w.bytes, g.bytes });
-            try testing.expectEqualStrings(w.bytes, g.bytes);
-            try testing.expectEqual(w.offset, g.offset);
+            try std.testing.expectEqualStrings(w.bytes, g.bytes);
+            try std.testing.expectEqual(w.offset, g.offset);
         }
     }
 }
@@ -776,6 +764,6 @@ test "Segmentation ComptimeSentenceIterator" {
     const want = &[_][]const u8{ s1, s2 };
 
     for (sentences, 0..) |sentence, i| {
-        try testing.expect(sentence.eql(want[i]));
+        try std.testing.expect(sentence.eql(want[i]));
     }
 }

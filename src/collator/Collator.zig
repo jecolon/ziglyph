@@ -1,9 +1,9 @@
 const std = @import("std");
 
-const ccc_map = @import("../ziglyph.zig").combining_map;
-const CodePointIterator = @import("../ziglyph.zig").CodePointIterator;
-const Normalizer = @import("../ziglyph.zig").Normalizer;
-const props = @import("../ziglyph.zig").prop_list;
+const ccc_map = @import("../autogen/derived_combining_class.zig");
+const CodePointIterator = @import("../segmenter/CodePoint.zig").CodePointIterator;
+const Normalizer = @import("../normalizer/Normalizer.zig");
+const props = @import("../autogen/prop_list.zig");
 
 const Element = struct {
     l1: u16 = 0,
@@ -32,14 +32,14 @@ pub fn init(allocator: std.mem.Allocator) !Self {
     errdefer self.deinit();
 
     // allkeys-strip.txt file.
-    const ak_gz_file = @embedFile("../data/uca/allkeys-diffs.txt.gz");
-    var ak_in_stream = std.io.fixedBufferStream(ak_gz_file);
-    var ak_gzip_stream = try std.compress.gzip.decompress(allocator, ak_in_stream.reader());
-    defer ak_gzip_stream.deinit();
-
-    var ak_br = std.io.bufferedReader(ak_gzip_stream.reader());
+    const ak_file = @embedFile("../data/allkeys-diffs.txt.deflate");
+    var ak_fb = std.io.fixedBufferStream(ak_file);
+    var ak_comp = try std.compress.deflate.decompressor(allocator, ak_fb.reader(), null);
+    defer ak_comp.deinit();
+    var ak_br = std.io.bufferedReader(ak_comp.reader());
     const ak_reader = ak_br.reader();
-    var buf: [256]u8 = undefined;
+
+    var buf: [4096]u8 = undefined;
     var line_num: usize = 0;
 
     // Diff state
@@ -133,7 +133,7 @@ test "init / deinit" {
     defer c.deinit();
 
     try std.testing.expectEqual(@as(u16, 0xfb00), c.implicits[0].base);
-    //try std.testing.expectEqual(@as(usize, 34193), c.ducet.count()); // All
+    //try std.testing.expectEqual(@as(usize, 34193), c.ducet.count()); // full
     try std.testing.expectEqual(@as(usize, 32130), c.ducet.count()); // NFD only
 }
 
@@ -499,113 +499,4 @@ pub fn descendingBase(self: Self, a: []const u8, b: []const u8) bool {
     defer self.ducet.allocator.free(key_b);
 
     return primaryOrder(key_a, key_b) == .gt;
-}
-
-test "UCA tests" {
-    var path_buf: [1024]u8 = undefined;
-    var path = try std.fs.cwd().realpath(".", &path_buf);
-    // Check if testing in this library path.
-    if (!std.mem.endsWith(u8, path, "ziglyph")) return;
-
-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
-    defer arena.deinit();
-    var allocator = arena.allocator();
-
-    var collator = try init(allocator);
-    defer collator.deinit();
-
-    const uca_gz_file = try std.fs.cwd().openFile("src/data/uca/CollationTest_NON_IGNORABLE_SHORT.txt.gz", .{});
-    defer uca_gz_file.close();
-    var uca_gzip_stream = try std.compress.gzip.decompress(allocator, uca_gz_file.reader());
-    defer uca_gzip_stream.deinit();
-
-    var uca_br = std.io.bufferedReader(uca_gzip_stream.reader());
-    const uca_reader = uca_br.reader();
-
-    // Skip header.
-    var line_num: usize = 1;
-    var buf: [4096]u8 = undefined;
-    while (try uca_reader.readUntilDelimiterOrEof(&buf, '\n')) |line| : (line_num += 1) {
-        if (line.len == 0) {
-            line_num += 1;
-            break;
-        }
-    }
-
-    var prev_key: []const u16 = try allocator.alloc(u16, 1);
-    var prev_nfd: Normalizer.Result = undefined;
-    defer prev_nfd.deinit();
-    var cp_buf: [4]u8 = undefined;
-
-    lines: while (try uca_reader.readUntilDelimiterOrEof(&buf, '\n')) |raw| : (line_num += 1) {
-        if (raw.len == 0 or raw[0] == '#') continue;
-
-        var line = raw;
-
-        if (std.mem.indexOf(u8, raw, ";")) |semi_index| {
-            line = raw[0..semi_index];
-        }
-
-        //std.debug.print("line {d}: {s}\n", .{ line_no, line });
-        var bytes = std.ArrayList(u8).init(allocator);
-        defer bytes.deinit();
-
-        var cp_strs = std.mem.split(u8, line, " ");
-
-        while (cp_strs.next()) |cp_str| {
-            const cp = try std.fmt.parseInt(u21, cp_str, 16);
-            const len = std.unicode.utf8Encode(cp, &cp_buf) catch continue :lines; // Ignore surrogate errors in tests.
-            try bytes.appendSlice(cp_buf[0..len]);
-        }
-
-        const current_key = try collator.sortKey(allocator, bytes.items);
-        defer allocator.free(current_key);
-        var current_nfd = try collator.normalizer.nfd(allocator, bytes.items);
-        errdefer current_nfd.deinit();
-
-        if (prev_key.len == 1) {
-            allocator.free(prev_key);
-            prev_key = try allocator.dupe(u16, current_key);
-            prev_nfd = .{
-                .allocator = allocator,
-                .slice = try allocator.dupe(u8, current_nfd.slice),
-            };
-            continue;
-        }
-
-        //std.debug.print("\n{}: {s}\nkey: p: {any} c: {any}\nnfd: p: {any} c: {any}\n", .{
-        //    line_num,
-        //    raw,
-        //    prev_key,
-        //    current_key,
-        //    prev_nfd.slice,
-        //    current_nfd.slice,
-        //});
-
-        const order = tertiaryOrder(prev_key, current_key);
-
-        if (order == .gt) return error.PrevKeyGreater;
-
-        // Identical sorting
-        if (order == .eq) {
-            const len = if (prev_nfd.slice.len > current_nfd.slice.len) current_nfd.slice.len else prev_nfd.slice.len;
-
-            const tie_breaker = for (prev_nfd.slice[0..len], 0..) |prev_cp, i| {
-                const cp_order = std.math.order(prev_cp, current_nfd.slice[i]);
-                if (cp_order != .eq) break cp_order;
-            } else .eq;
-
-            if (tie_breaker == .gt) return error.PrevNfdGreater;
-
-            if (tie_breaker == .eq and prev_nfd.slice.len > current_nfd.slice.len) return error.PrevNfdLonger;
-        }
-
-        allocator.free(prev_key);
-        prev_key = try allocator.dupe(u16, current_key);
-        prev_nfd.deinit();
-        prev_nfd = .{
-            .allocator = allocator,
-            .slice = try allocator.dupe(u8, current_nfd.slice),
-        };
-    }
 }

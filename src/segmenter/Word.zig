@@ -1,15 +1,12 @@
-//! `Word` represents a single word within a Unicde string.
+//! `Word` represents a single word within a UTF-8 encoded string by its bytes and offset.
 
 const std = @import("std");
-const debug = std.debug;
-const mem = std.mem;
-const testing = std.testing;
 const unicode = std.unicode;
 
-const wbp = @import("../ziglyph.zig").word_break_property;
+const wbp = @import("../autogen/word_break_property.zig");
 const CodePoint = @import("CodePoint.zig");
 const CodePointIterator = CodePoint.CodePointIterator;
-const emoji = @import("../ziglyph.zig").emoji_data;
+const emoji = @import("../autogen/emoji_data.zig");
 
 pub const Word = @This();
 
@@ -18,7 +15,7 @@ offset: usize,
 
 /// `eal` compares `str` with the bytes of this word for equality.
 pub fn eql(self: Word, str: []const u8) bool {
-    return mem.eql(u8, self.bytes, str);
+    return std.mem.eql(u8, self.bytes, str);
 }
 
 const Type = enum {
@@ -400,10 +397,10 @@ test "Segmentation WordIterator" {
     var path_buf: [1024]u8 = undefined;
     var path = try std.fs.cwd().realpath(".", &path_buf);
     // Check if testing in this library path.
-    if (!mem.endsWith(u8, path, "ziglyph")) return;
+    if (!std.mem.endsWith(u8, path, "zg3")) return;
 
     var allocator = std.testing.allocator;
-    var file = try std.fs.cwd().openFile("src/data/ucd/WordBreakTest.txt", .{});
+    var file = try std.fs.cwd().openFile("zig-cache/_ziglyph-data/ucd/auxiliary/WordBreakTest.txt", .{});
     defer file.close();
     var buf_reader = std.io.bufferedReader(file.reader());
     var input_stream = buf_reader.reader();
@@ -416,11 +413,10 @@ test "Segmentation WordIterator" {
         if (raw.len == 0 or raw[0] == '#' or raw[0] == '@') continue;
 
         // Clean up.
-        var line = mem.trimLeft(u8, raw, "÷ ");
-        if (mem.indexOf(u8, line, " ÷\t#")) |octo| {
+        var line = std.mem.trimLeft(u8, raw, "÷ ");
+        if (std.mem.indexOf(u8, line, " ÷\t#")) |octo| {
             line = line[0..octo];
         }
-        //debug.print("\nline {}: {s}\n", .{ line_no, line });
 
         // Iterate over fields.
         var want = std.ArrayList(Word).init(allocator);
@@ -434,11 +430,11 @@ test "Segmentation WordIterator" {
         var all_bytes = std.ArrayList(u8).init(allocator);
         defer all_bytes.deinit();
 
-        var words = mem.split(u8, line, " ÷ ");
+        var words = std.mem.split(u8, line, " ÷ ");
         var bytes_index: usize = 0;
 
         while (words.next()) |field| {
-            var code_points = mem.split(u8, field, " ");
+            var code_points = std.mem.split(u8, field, " ");
             var cp_buf: [4]u8 = undefined;
             var cp_index: usize = 0;
             var first: u21 = undefined;
@@ -446,7 +442,7 @@ test "Segmentation WordIterator" {
             defer cp_bytes.deinit();
 
             while (code_points.next()) |code_point| {
-                if (mem.eql(u8, code_point, "×")) continue;
+                if (std.mem.eql(u8, code_point, "×")) continue;
                 const cp: u21 = try std.fmt.parseInt(u21, code_point, 16);
                 if (cp_index == 0) first = cp;
                 const len = try unicode.utf8Encode(cp, &cp_buf);
@@ -463,22 +459,13 @@ test "Segmentation WordIterator" {
             bytes_index += cp_index;
         }
 
-        //debug.print("\nline {}: {s}\n", .{ line_no, all_bytes.items });
         var iter = try WordIterator.init(all_bytes.items);
 
         // Chaeck.
         for (want.items) |w| {
             const g = (iter.next()).?;
-            //debug.print("\n", .{});
-            //for (w.bytes) |b| {
-            //    debug.print("line {}: w:({x})\n", .{ line_no, b });
-            //}
-            //for (g.bytes) |b| {
-            //    debug.print("line {}: g:({x})\n", .{ line_no, b });
-            //}
-            //debug.print("line {}: w:({s}), g:({s})\n", .{ line_no, w.bytes, g.bytes });
-            try testing.expectEqualStrings(w.bytes, g.bytes);
-            try testing.expectEqual(w.offset, g.offset);
+            try std.testing.expectEqualStrings(w.bytes, g.bytes);
+            try std.testing.expectEqual(w.offset, g.offset);
         }
     }
 }
@@ -490,7 +477,7 @@ test "Segmentation comptime WordIterator" {
         var ct_iter = try WordIterator.init("Hello World");
         var i = 0;
         while (ct_iter.next()) |word| : (i += 1) {
-            try testing.expect(word.eql(want[i]));
+            try std.testing.expect(word.eql(want[i]));
         }
     }
 }

@@ -1,34 +1,19 @@
-test "ziglyph" {
+test {
+    _ = @import("normalizer/Normalizer.zig");
+    _ = @import("collator/Collator.zig");
+
+    _ = @import("segmenter/CodePoint.zig");
+    _ = @import("segmenter/Grapheme.zig");
+    _ = @import("segmenter/Sentence.zig");
+    _ = @import("segmenter/Word.zig");
+
+    _ = @import("category/letter.zig");
+    _ = @import("category/mark.zig");
+    _ = @import("category/number.zig");
+    _ = @import("category/punct.zig");
+
     _ = @import("ziglyph.zig");
-}
+    _ = @import("display_width.zig");
 
-test "Normalizer" {
-    _ = @import("ziglyph.zig").Normalizer;
-}
-
-test "Segmentation" {
-    _ = @import("ziglyph.zig").CodePoint;
-    _ = @import("ziglyph.zig").Grapheme;
-    _ = @import("ziglyph.zig").Word;
-    _ = @import("ziglyph.zig").Sentence;
-}
-
-test "ziglyph categories" {
-    _ = @import("ziglyph.zig").letter;
-    _ = @import("ziglyph.zig").mark;
-    _ = @import("ziglyph.zig").number;
-    _ = @import("ziglyph.zig").punct;
-    _ = @import("ziglyph.zig").symbol;
-}
-
-test "Collator" {
-    _ = @import("ziglyph.zig").Collator;
-}
-
-test "display_width" {
-    _ = @import("ziglyph.zig").display_width;
-}
-
-test "README" {
-    _ = @import("tests/readme_tests.zig");
+    _ = @import("readme_tests.zig");
 }

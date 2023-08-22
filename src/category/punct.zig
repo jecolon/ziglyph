@@ -1,10 +1,8 @@
 //! `punct` containes functions related to Unicode punctuation code points; category (P).
 
 const std = @import("std");
-const testing = std.testing;
 
-const ascii = @import("../ascii.zig");
-const cats = @import("../ziglyph.zig").derived_general_category;
+const cats = @import("../autogen/derived_general_category.zig");
 
 /// `isPunct` detects punctuation characters. Note some punctuation maybe considered symbols by Unicode.
 pub fn isPunct(cp: u21) bool {
@@ -14,37 +12,31 @@ pub fn isPunct(cp: u21) bool {
         cats.isOtherPunctuation(cp);
 }
 
-/// `isAsciiPunct` detects ASCII only punctuation.
-pub fn isAsciiPunct(cp: u21) bool {
-    return ascii.isPunct(@intCast(cp));
-}
-
 test "punct isPunct" {
-    try testing.expect(isAsciiPunct('!'));
-    try testing.expect(isPunct('!'));
-    try testing.expect(isPunct('?'));
-    try testing.expect(isPunct(','));
-    try testing.expect(isPunct('.'));
-    try testing.expect(isPunct(':'));
-    try testing.expect(isPunct(';'));
-    try testing.expect(isPunct('\''));
-    try testing.expect(isPunct('"'));
-    try testing.expect(isPunct('¿'));
-    try testing.expect(isPunct('¡'));
-    try testing.expect(isPunct('-'));
-    try testing.expect(isPunct('('));
-    try testing.expect(isPunct(')'));
-    try testing.expect(isPunct('{'));
-    try testing.expect(isPunct('}'));
-    try testing.expect(isPunct('–'));
+    try std.testing.expect(isPunct('!'));
+    try std.testing.expect(isPunct('?'));
+    try std.testing.expect(isPunct(','));
+    try std.testing.expect(isPunct('.'));
+    try std.testing.expect(isPunct(':'));
+    try std.testing.expect(isPunct(';'));
+    try std.testing.expect(isPunct('\''));
+    try std.testing.expect(isPunct('"'));
+    try std.testing.expect(isPunct('¿'));
+    try std.testing.expect(isPunct('¡'));
+    try std.testing.expect(isPunct('-'));
+    try std.testing.expect(isPunct('('));
+    try std.testing.expect(isPunct(')'));
+    try std.testing.expect(isPunct('{'));
+    try std.testing.expect(isPunct('}'));
+    try std.testing.expect(isPunct('–'));
     // Punct? in Unicode.
-    try testing.expect(isPunct('@'));
-    try testing.expect(isPunct('#'));
-    try testing.expect(isPunct('%'));
-    try testing.expect(isPunct('&'));
-    try testing.expect(isPunct('*'));
-    try testing.expect(isPunct('_'));
-    try testing.expect(isPunct('/'));
-    try testing.expect(isPunct('\\'));
-    try testing.expect(!isPunct('\u{0003}'));
+    try std.testing.expect(isPunct('@'));
+    try std.testing.expect(isPunct('#'));
+    try std.testing.expect(isPunct('%'));
+    try std.testing.expect(isPunct('&'));
+    try std.testing.expect(isPunct('*'));
+    try std.testing.expect(isPunct('_'));
+    try std.testing.expect(isPunct('/'));
+    try std.testing.expect(isPunct('\\'));
+    try std.testing.expect(!isPunct('\u{0003}'));
 }

@@ -2,7 +2,7 @@ const std = @import("std");
 const testing = std.testing;
 
 // Import structs.
-const ziglyph = @import("../ziglyph.zig");
+const ziglyph = @import("ziglyph.zig");
 const Collator = ziglyph.Collator;
 const Grapheme = ziglyph.Grapheme;
 const GraphemeIterator = Grapheme.GraphemeIterator;
@@ -12,7 +12,7 @@ const punct = ziglyph.punct;
 const Sentence = ziglyph.Sentence;
 const SentenceIterator = Sentence.SentenceIterator;
 const ComptimeSentenceIterator = Sentence.ComptimeSentenceIterator;
-const upper_map = ziglyph.upper_map;
+const upper_map = ziglyph.uppercase;
 const display_width = ziglyph.display_width;
 const Word = ziglyph.Word;
 const WordIterator = Word.WordIterator;
