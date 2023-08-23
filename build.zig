@@ -55,16 +55,16 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_main_tests.step);
 
     // Internal tests
-    const internal_tests = b.addTest(.{
-        .root_source_file = .{ .path = "src/internal_tests.zig" },
+    const unicode_tests = b.addTest(.{
+        .root_source_file = .{ .path = "src/unicode_tests.zig" },
         .target = target,
         .optimize = optimize,
     });
     // Main tests run step
-    const run_internal_tests = b.addRunArtifact(internal_tests);
+    const run_unicode_tests = b.addRunArtifact(unicode_tests);
     // Main tests top level step
-    const internal_test_step = b.step("internal-test", "Run internal library tests");
-    internal_test_step.dependOn(&run_internal_tests.step);
+    const unicode_test_step = b.step("unicode-test", "Run Unicode tests.");
+    unicode_test_step.dependOn(&run_unicode_tests.step);
 
     // allkeys.txt compression
     const ak_exe = b.addExecutable(.{
