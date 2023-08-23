@@ -19,6 +19,11 @@ pub fn eql(self: Grapheme, src: []const u8, other: []const u8) bool {
     return std.mem.eql(u8, src[self.offset .. self.offset + self.len], other);
 }
 
+/// `slice` returns the bytes that correspond to this grapheme cluster in `src`.
+pub fn slice(self: Grapheme, src: []const u8) []const u8 {
+    return src[self.offset .. self.offset + self.len];
+}
+
 /// `GraphemeIterator` iterates a sting of UTF-8 encoded bytes one grapheme cluster at-a-time.
 pub const GraphemeIterator = struct {
     buf: [2]?CodePoint = [_]?CodePoint{ null, null },
