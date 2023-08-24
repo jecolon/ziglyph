@@ -17,14 +17,15 @@ branches and tags that will work with the previous two (2) stable Zig releases.
 
 ## Integrating Ziglyph in your Project
 ### Zig Package Manager
-In a `build.zig.zon` file add the following to the dependencies object. Currently only tar.gz urls are supported.
+In the `build.zig.zon` file, add the following to the dependencies object.
+
 ```zig
 .ziglyph = .{
-    .url = "https://github.com/jecolon/ziglyph/archive/refs/heads/main.tar.gz",
+    .url = "https://github.com/jecolon/ziglyph/archive/refs/tags/v0.11.1.tar.gz",
 }
 ```
 
-When the compiler produces a hash mismatch error, add the `.hash` field under the `.url` field
+The compiler will produce a hash mismatch error, add the `.hash` field to `build.zig.zon`
 with the hash the compiler tells you it found.
 
 Then in your `build.zig` file add the following to the `exe` section for the executable where you wish to have Ziglyph available.
