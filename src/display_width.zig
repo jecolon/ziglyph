@@ -123,18 +123,21 @@ pub fn strWidth(str: []const u8, am_width: AmbiguousWidth) !usize {
 }
 
 /// centers `str` in a new string of width `total_width` (in display cells) using `pad` as padding.
+/// If the length of `str` and `total_width` have different parity, the right side of `str` will
+/// receive one additional pad. This makes sure the returned string fills the requested width.
 /// Caller must free returned bytes.
 pub fn center(allocator: std.mem.Allocator, str: []const u8, total_width: usize, pad: []const u8) ![]u8 {
     var str_width = try strWidth(str, .half);
     if (str_width > total_width) return error.StrTooLong;
+    if (str_width == total_width) return try allocator.dupe(u8, str);
 
     var pad_width = try strWidth(pad, .half);
     if (pad_width > total_width or str_width + pad_width > total_width) return error.PadTooLong;
 
     const margin_width = @divFloor((total_width - str_width), 2);
     if (pad_width > margin_width) return error.PadTooLong;
-
-    const pads = @divFloor(margin_width, pad_width) * 2;
+    const extra_pad: usize = if (total_width % 2 != str_width % 2) 1 else 0;
+    const pads = @divFloor(margin_width, pad_width) * 2 + extra_pad;
 
     var result = try allocator.alloc(u8, pads * pad.len + str.len);
     var bytes_index: usize = 0;
@@ -149,7 +152,7 @@ pub fn center(allocator: std.mem.Allocator, str: []const u8, total_width: usize,
     bytes_index += str.len;
 
     pads_index = 0;
-    while (pads_index < pads / 2) : (pads_index += 1) {
+    while (pads_index < pads / 2 + extra_pad) : (pads_index += 1) {
         std.mem.copy(u8, result[bytes_index..], pad);
         bytes_index += pad.len;
     }
@@ -295,13 +298,43 @@ test "display_width Width" {
 test "display_width center" {
     var allocator = std.testing.allocator;
 
+    // Input and width both have odd length
     var centered = try center(allocator, "abc", 9, "*");
-    defer allocator.free(centered);
     try std.testing.expectEqualSlices(u8, "***abc***", centered);
 
+    // Input and width both have even length
     allocator.free(centered);
     centered = try center(allocator, "w😊w", 10, "-");
     try std.testing.expectEqualSlices(u8, "---w😊w---", centered);
+
+    // Input has even length, width has odd length
+    allocator.free(centered);
+    centered = try center(allocator, "1234", 9, "-");
+    try std.testing.expectEqualSlices(u8, "--1234---", centered);
+
+    // Input has odd length, width has even length
+    allocator.free(centered);
+    centered = try center(allocator, "123", 8, "-");
+    try std.testing.expectEqualSlices(u8, "--123---", centered);
+
+    // Input is the same length as the width
+    allocator.free(centered);
+    centered = try center(allocator, "123", 3, "-");
+    try std.testing.expectEqualSlices(u8, "123", centered);
+
+    // Input is empty
+    allocator.free(centered);
+    centered = try center(allocator, "", 3, "-");
+    try std.testing.expectEqualSlices(u8, "---", centered);
+
+    // Input is empty and width is zero
+    allocator.free(centered);
+    centered = try center(allocator, "", 0, "-");
+    try std.testing.expectEqualSlices(u8, "", centered);
+
+    // Input is longer than the width, which is an error
+    allocator.free(centered);
+    try std.testing.expectError(error.StrTooLong, center(allocator, "123", 2, "-"));
 }
 
 test "display_width padLeft" {
