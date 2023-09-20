@@ -1,4 +1,8 @@
 # ziglyph
+## ⚠️ Attention! Ziglyph has moved to Codeberg!
+Visit the repo at: https://codeberg.org/dude_the_builder/ziglyph and update your dependencies! This GitHub 
+repo will be deleted on September 30, 2023 11:59 PM (AST-4).
+
 Unicode text processing for the Zig Programming Language.
 
 ## In-Depth Articles on Unicode Processing with Zig and Ziglyph
